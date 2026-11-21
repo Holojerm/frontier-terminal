@@ -10,9 +10,9 @@ enabled: true
 
 ## Purpose
 
-The Worker spools every failure worth the owner's attention into `ops_events`; the fleet dashboard
-mails the owner from `GET /api/fleet`. Nothing else triages that spool. Every six hours, this
-routine reads it and handles each failure in one of three ways:
+The Worker spools every failure worth the owner's attention into `ops_events`; the fleet
+dashboard mails the owner from `GET /api/fleet`. Nothing else triages that spool. Every six
+hours, this routine reads it and handles each failure in one of three ways:
 
 - it fixes the failures `routines.config.md` › **Mechanical fixes** declares safe to fix end
   to end;

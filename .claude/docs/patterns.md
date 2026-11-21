@@ -1,8 +1,8 @@
-# Code patterns — Vue, API routes, database, forms
+# Code patterns: Vue, API routes, database
 
-The worked examples: a `<script setup>` component, a validated API route, Drizzle queries, error handling, and performance defaults. Copy these shapes rather than inventing new ones.
+Worked examples: a `<script setup>` component, a validated API route, Drizzle queries, error handling, and performance defaults. Copy these shapes instead of inventing new ones.
 
-> **Load this when:** writing a new component, API route, or database query — especially on your first change in this repo.
+> **Load this when:** writing a new component, API route, or database query, especially on your first change in this repo.
 > Canonical index: [AGENTS.md](../../AGENTS.md).
 
 ---
@@ -44,20 +44,20 @@ const displayName = computed(() => user.value?.name ?? 'Unknown')
 ## API Routes
 
 ```typescript
-// server/api/providers/[slug].get.ts
+// layers/<name>/server/api/providers/[slug].get.ts
 // File naming: [method].ts suffix = HTTP method (get, post, put, delete, patch)
 //
-// Every route here is public and read-only — there is no session to check.
+// Every route is public and read-only; there is no session to check.
 // A route that takes input validates it with Zod and rate-limits itself.
 
-import { z } from 'zod'
+import { z } from 'zod' // zod is not auto-imported
 
 const querySchema = z.object({
   limit: z.coerce.number().int().min(1).max(200).default(50),
 })
 
 export default defineEventHandler(async (event) => {
-  await rateLimit(event, { name: 'providers', limit: 60, windowSeconds: 60 })
+  await rateLimitTerminal(event, { name: 'providers', limit: 60, windowSeconds: 60 })
 
   // 1. Route params
   const slug = getRouterParam(event, 'slug')
@@ -67,36 +67,42 @@ export default defineEventHandler(async (event) => {
   const query = await getValidatedQuery(event, querySchema.parse)
 
   // 3. Database query via Drizzle
-  // `db` and `schema` are auto-imported by @nuxthub/core — do NOT import manually
+  // `db` and `schema` are auto-imported by @nuxthub/core; don't import them
   const rows = await db.query.opsEvents.findMany({ limit: query.limit })
 
   if (rows.length === 0) throw createError({ statusCode: 404, message: 'Not found' })
 
-  // 4. Shape the response explicitly — return the fields the client needs, with
-  //    dates serialized, rather than spreading the row.
+  // 4. Return the fields the client needs, with dates serialized, instead of
+  //    spreading the row.
   return rows.map((row) => ({ id: row.id, createdAt: row.createdAt.toISOString() }))
 })
 ```
 
 ## Database (Drizzle + D1)
 
-- **Schema lives in `server/db/schema.ts`** — one file, all tables.
+- **Tables live in each layer's `server/db/tables/`.** `server/db/schema.ts` is the composition
+  root: the template's ops tables plus a re-export of the layers' tables.
 - **Always export inferred types**: `export type User = typeof users.$inferSelect`
-- **`db` and `schema` are auto-imported** by `@nuxthub/core` Nitro-wide — they work in `server/api/`, `server/utils/`, `server/middleware/`, `server/plugins/`, `server/routes/`. Never import or instantiate Drizzle manually.
-- **Migrations**: Run `bun db:generate` after schema changes, commit migration files.
-- **Local dev DB**: NuxtHub creates `.data/db/sqlite.db` on first `bun dev`. This is NOT the same file as `.wrangler/state/v3/d1/` — do not write via `wrangler d1 execute --local`, the dev server won't read it. Anything that writes to the local DB from outside the app should open NuxtHub's path directly with `bun:sqlite`.
+- **`db` and `schema` are auto-imported** by `@nuxthub/core` Nitro-wide (`server/` and every
+  layer's `server/`). Never import or instantiate Drizzle manually. Query operators (`eq`, `gt`,
+  `sql`…) are imported from `drizzle-orm`.
+- **Migrations**: run `bun db:generate` after schema changes and commit the migration files.
+- **Local dev DB**: `.data/db/sqlite.db`, not `.wrangler/state/v3/d1/`; see
+  [gotchas.md](gotchas.md) › Local D1 lives in two places.
 
 ```typescript
-// Good — db and schema are auto-imported, no import statement needed
+import { gt, sql } from 'drizzle-orm'
+
+// Good: db and schema are auto-imported
 const recent = await db.select().from(schema.opsEvents).where(gt(schema.opsEvents.createdAt, since))
 
-// Bad — raw SQL unless absolutely necessary
+// Bad: raw SQL unless absolutely necessary
 await db.run(sql`SELECT * FROM users`)
 ```
 
 ### Product code reaches the app's template files through registries
 
-The app's template files stay the template's. The product layers register what is their own from
+The app's template files stay the template's. The product layers register their own entries from
 Nitro plugins; tests call the same `register…()` function, because plugins don't run under vitest.
 
 - **Fleet counters**: `registerFleetExtraContributor({ key, collect })` in
@@ -144,7 +150,7 @@ hash is the template's.
 
 - **Updating**: `bun run layers:pull --all` re-pulls every locked layer at its recorded ref
   (`main` unless you passed `--ref`). `--sha <commit>` takes one exact commit without changing
-  which ref the layer follows. The PR diff is exactly what the template changed.
+  which ref the layer follows. The PR diff is what the template changed.
 - **Customizing**: app files shadow a layer's components, pages and API routes. `server/utils`
   cannot be shadowed (the layer's export wins), so change server behaviour through an
   extension point or upstream in the template.
@@ -154,17 +160,14 @@ hash is the template's.
 
 ---
 
-
 ## Error Handling
 
-- **Client-side**: Use `<UAlert>` for user-facing errors. Never expose raw error messages.
-- **Server-side**: Always throw `createError({ statusCode, message })`. Nitro handles the rest.
-- **Loading states**: Use NuxtUI's `loading` prop on buttons, `<USkeleton>` for content.
+- **Client-side**: `<UAlert>` for user-facing errors. Never expose raw error messages.
+- **Server-side**: throw `createError({ statusCode, message })`. Nitro handles the rest.
+- **Loading states**: NuxtUI's `loading` prop on buttons, `<USkeleton>` for content.
 
 ## Performance
 
 - **Prefer server-side data fetching** (`useFetch` with `await` in `<script setup>`) for initial page loads.
 - **Lazy-load heavy components**: `const HeavyChart = defineAsyncComponent(() => import('./HeavyChart.vue'))`
-- **Raw payloads go to R2** via `blob` (auto-imported) — never store a fetched document body in D1.
-
-
+- **Raw payloads go to R2** via `blob` (auto-imported). Never store a fetched document body in D1.

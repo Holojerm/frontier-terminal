@@ -1,53 +1,67 @@
-# Gotchas — silent failure modes
+# Gotchas: silent failure modes
 
-Failures this repo has actually hit that produce **no error**: wrong-file databases, migrations that never run, empty sitemaps, rate limiters that quietly do nothing. If something appears to work but produces no output, the answer is probably here.
+Failures this repo has hit that produce **no error**: wrong-file databases, migrations that never run, empty sitemaps, rate limiters that do nothing. If something appears to work but produces no output, the answer is probably here.
 
 > **Load this when:** debugging anything that fails quietly, touching D1/migrations/deploy config, adding a cron task or a custom `definePageMeta` key, or working in a git worktree.
 > Canonical index: [AGENTS.md](../../AGENTS.md).
 
 ---
 
-Sharp edges that have bitten this template before — read before forking or before debugging "why doesn't this work."
-
 ## Local D1 lives in two places — only one is real
 
-NuxtHub serves the dev DB from `.data/db/sqlite.db`. Wrangler's own local D1 sandbox lives at `.wrangler/state/v3/d1/`. Migrations applied via `bun run db:migrate` or direct writes via `wrangler d1 execute --local` land in the **wrangler** path, which the dev server does NOT read. Anything that writes to the local dev DB from outside the app must open the NuxtHub path directly with `bun:sqlite`. The two only converge in production.
+NuxtHub serves the dev DB from `.data/db/sqlite.db`. Wrangler's own local D1 sandbox lives at
+`.wrangler/state/v3/d1/`. Migrations applied with `bun run db:migrate` and writes with
+`wrangler d1 execute --local` land in the **wrangler** path, which the dev server does not read.
+Anything that writes to the local dev DB from outside the app opens the NuxtHub path directly
+with `bun:sqlite`. The two only converge in production.
 
-An empty local DB is normal on a fresh checkout, and it hides bugs. Filling it is in [`local-data.md`](local-data.md).
+An empty local DB is normal on a fresh checkout, and it hides bugs. Filling it is in
+[`local-data.md`](local-data.md).
 
 ## NuxtHub applies dev migrations in directory order — patched to sort
 
-NuxtHub (0.10.8 through 0.10.12, the latest checked) lists `.data/db/migrations/` with no sort, and on APFS directory order is not name order. A fresh `.data/db/sqlite.db` on a Mac therefore ran `0018` then `0009`, which failed (`no such table: entitlements`) before `0000` ever ran, and every data route returned 503 "Database unavailable". `patches/@nuxthub%2Fcore@0.10.12.patch` (bun's `patchedDependencies`) sorts the filtered list by name, the order drizzle-kit numbers them. Production is unaffected: `wrangler d1 migrations apply` sorts its own list. When upgrading NuxtHub, `bun install` does **not** fail on the stale patch: it prints one `no longer applies` warning and drops the entry from `bun.lock`, so the bug comes back with CI green. `bun run patches:check` (part of `bun run ci`) now catches this: it fails when a `patchedDependencies` key names a version that isn't the one installed. Re-cut it with `bun patch @nuxthub/core` (unless upstream sorts by then) and check `bun.lock` still has a `patchedDependencies` entry. A DB already broken this way is easiest rebuilt: move `.data/db/sqlite.db` aside and start `bun dev`.
+NuxtHub (0.10.8 through 0.10.12, the latest checked) lists `.data/db/migrations/` with no sort,
+and on APFS directory order is not name order. A fresh `.data/db/sqlite.db` on a Mac ran `0018`
+before `0000`, failed (`no such table: entitlements`), and every data route returned 503
+"Database unavailable". `patches/@nuxthub%2Fcore@0.10.12.patch` (bun's `patchedDependencies`)
+sorts the list by name, the order drizzle-kit numbers them. Production is unaffected:
+`wrangler d1 migrations apply` sorts its own list.
+
+When upgrading NuxtHub, `bun install` does not fail on the stale patch: it prints one
+`no longer applies` warning and drops the entry from `bun.lock`, so the bug comes back with CI
+green. `bun run patches:check` (part of `bun run ci`) fails when a `patchedDependencies` key
+names a version that isn't the one installed. Re-cut it with `bun patch @nuxthub/core` (unless
+upstream sorts by then) and check `bun.lock` still has a `patchedDependencies` entry. A DB
+already broken this way is easiest rebuilt: move `.data/db/sqlite.db` aside and start `bun dev`.
 
 ## Production D1 is migrated only by `deploy:ci`
 
 Locally this is invisible: NuxtHub's dev plugin (`applyMigrationsDuringDev`) applies
-`server/db/migrations/` to `.data/db/sqlite.db` on every dev boot, so schema changes just
-appear. Production has no equivalent.
+`server/db/migrations/` to `.data/db/sqlite.db` on every dev boot. Production has no equivalent.
 
-`wrangler deploy` does not apply D1 migrations, and NuxtHub's `applyMigrationsDuringBuild`
-step runs against the **libsql driver's local file on the build machine** (`hub.db` resolves
-to `sqlite`/`libsql` here, not the `d1` driver), so it never touches your remote database.
-The `.sql` files are copied into `.output/server/db/migrations/` and the generated
-`wrangler.json` points `migrations_dir` at them — but nothing ever runs them.
+`wrangler deploy` does not apply D1 migrations, and NuxtHub's `applyMigrationsDuringBuild` step
+runs against the **libsql driver's local file on the build machine** (`hub.db` resolves to
+`sqlite`/`libsql` here, not the `d1` driver), so it never touches the remote database. The
+`.sql` files are copied into `.output/server/db/migrations/` and the generated `wrangler.json`
+points `migrations_dir` at them, but nothing runs them. A deploy that adds a table ships a
+Worker querying a table that does not exist, and it shows up as a 500 on a route that worked in
+dev.
 
-So a deploy that adds a table ships a Worker querying a table that does not exist, and the
-failure surfaces as a 500 on a route that worked perfectly in dev.
-
-**Workers Builds closes that gap with its deploy command, `bun run deploy:ci`.** It runs
-`db:migrate:remote`, then `wrangler --cwd .output deploy`, so the schema lands before the
-code that needs it. Three consequences:
+Workers Builds closes the gap with its deploy command, `bun run deploy:ci`: it runs
+`db:migrate:remote`, then `wrangler --cwd .output deploy`, so the schema lands before the code
+that needs it. Three consequences:
 
 - The build token needs **D1 Edit**. The token Workers Builds generates has only Workers
-  Scripts, KV, R2 and Routes permissions. Without D1 Edit the migrate step fails and the
-  deploy never runs. The app keeps serving the previous build, and `deploy_drift` reports it.
+  Scripts, KV, R2 and Routes permissions. Without D1 Edit the migrate step fails and the deploy
+  never runs. The app keeps serving the previous build, and `deploy_drift` reports it.
 - Migrations must be **expand-only**: add tables and nullable or defaulted columns. The
-  previous build serves traffic between the migrate step and the deploy, and it serves
-  everything if the deploy fails. Drop or rename only in a later release, once no deployed
-  code reads the old shape.
-- `migrations_table` matters. The script reads the root `wrangler.toml` (default
-  `d1_migrations`), so do not alternate it with the `_hub_migrations` table that
-  `.output/server/wrangler.json` names.
+  previous build serves traffic between the migrate step and the deploy, and serves everything
+  if the deploy fails. Drop or rename only in a later release, once no deployed code reads the
+  old shape.
+- Stay on one `migrations_table`. The script reads the root `wrangler.toml`, which sets none,
+  so it tracks state in wrangler's default `d1_migrations`; the generated
+  `.output/server/wrangler.json` names `_hub_migrations`. Alternating makes each think nothing
+  has been applied.
 
 A manual `bun run deploy` still skips migrations. Run this yourself after one:
 
@@ -55,102 +69,86 @@ A manual `bun run deploy` still skips migrations. Run this yourself after one:
 bun run db:migrate:remote
 ```
 
-One wrinkle if you script it: the root `wrangler.toml` sets no `migrations_table`, so that
-command tracks state in wrangler's default `d1_migrations`, while the generated
-`.output/server/wrangler.json` sets `migrations_table = "_hub_migrations"`. Both work; pick
-one and stay on it, because alternating makes each think nothing has been applied.
-
-`GET /api/status` reports the gap: `migrations.pending` lists every migration in the repo
-that the deployed database has not applied. It is what the portfolio dashboard polls, and
-the quickest way to check by hand after a deploy —
-`curl -H "Authorization: Bearer $NUXT_FLEET_TOKEN" https://<app>/api/status | jq .migrations`
-(it 404s until `NUXT_FLEET_TOKEN` is set; see `.claude/docs/fleet.md`).
+`GET /api/status` (public) reports the gap: `migrations.pending` lists every migration in the
+repo that the deployed database has not applied. The portfolio dashboard polls it, and it is
+the quickest check by hand after a deploy:
+`curl https://frontierterm.com/api/status | jq .migrations` (see [fleet.md](fleet.md)).
 
 ## An index existing does not mean D1 uses it
 
-D1 keeps no planner statistics, so SQLite picks an index by rule of thumb, and an
-`ORDER BY` can win over a more selective seek. The coverage query read 13k rows a call
-because two "newest row of this source" subqueries seeked on the instant alone, where
-a tick starts every source at once. Nothing fails: the rows are right, the bill and
-the latency are not.
+D1 keeps no planner statistics, so SQLite picks an index by rule of thumb, and an `ORDER BY`
+can win over a more selective seek. The coverage query read 13k rows a call because two "newest
+row of this source" subqueries seeked on the instant alone, where a tick starts every source at
+once. Nothing fails: the rows are right, the bill and the latency are not.
 
-- Read the plan and the cost on production, not locally (local `ANALYZE` data changes
-  the choice): `bunx wrangler d1 execute frontier-terminal-db --remote --json --command
+- Read the plan and the cost on production, not locally (local `ANALYZE` data changes the
+  choice): `bunx wrangler d1 execute frontier-terminal-db --remote --json --command
   "explain query plan …"`, then run the statement and read `meta.rows_read`.
-- `bunx wrangler d1 insights frontier-terminal-db --sort-by=reads --time-period=1d`
-  ranks what production runs by rows read.
-- Name the index (`indexed by <name>`) where the choice matters. A partial index is
-  used only by a query that repeats its `WHERE` (`READ_RUN_STATUSES`), an expression
-  index only by the same expression with the same literal.
-  `layers/core/test/query-plans.test.ts` holds those plans.
-- drizzle-kit writes an expression index wrong (it quotes the expression as column
-  names): correct that statement in the generated migration by hand.
+- `bunx wrangler d1 insights frontier-terminal-db --sort-by=reads --time-period=1d` ranks what
+  production runs by rows read.
+- Name the index (`indexed by <name>`) where the choice matters. A partial index is used only by
+  a query that repeats its `WHERE` (`READ_RUN_STATUSES`), an expression index only by the same
+  expression with the same literal. `layers/core/test/query-plans.test.ts` holds those plans.
+- drizzle-kit writes an expression index wrong (it quotes the expression as column names):
+  correct that statement in the generated migration by hand.
 
 ## NuxtHub rewrites the generated wrangler config
 
 `wrangler.toml` is an input, not the deployed config. `nuxt build` writes
-`.output/server/wrangler.json` and wrangler deploys that. Nitro copies your `wrangler.toml`
-into it verbatim — bindings, `[triggers]`, `[[ratelimits]]` all survive, verified — and then
-`@nuxthub/core` rewrites the file on Nuxt's `close` hook (`processWranglerConfigFile`),
-deleting any `env` key. This repo has a single environment, so nothing is lost; if one is
-ever added, know that it is selected at **build** time (`CLOUDFLARE_ENV=<name>`), not with
-`wrangler --env`, because the generated file contains no environments by the time wrangler
-reads it.
+`.output/server/wrangler.json` and wrangler deploys that. Nitro copies `wrangler.toml` into it
+verbatim (bindings, `[triggers]` and `[[ratelimits]]` all survive), then `@nuxthub/core`
+rewrites the file on Nuxt's `close` hook (`processWranglerConfigFile`), deleting any `env` key.
+This repo has a single environment, so nothing is lost. If one is ever added, it is selected at
+**build** time (`CLOUDFLARE_ENV=<name>`), not with `wrangler --env`, because the generated file
+has no environments by the time wrangler reads it.
 
 ## A cron task needs the same string in two files
 
-`nitro.scheduledTasks` (nuxt.config.ts) maps a cron expression to task names; `[triggers]
-crons` (wrangler.toml) tells Cloudflare when to fire. The join is an **exact string match**
-on the expression, so `"0 4 * * *"` and `"0 04 * * *"` are different keys — Cloudflare wakes
-the Worker on schedule, `runCronTasks` finds nothing, and the handler returns success. No
-error, no log line. If a task never runs, compare those two strings before anything else.
+`nitro.scheduledTasks` (nuxt.config.ts) maps a cron expression to task names; `[triggers] crons`
+(wrangler.toml) tells Cloudflare when to fire. The join is an **exact string match** on the
+expression, so `"0 4 * * *"` and `"0 04 * * *"` are different keys: Cloudflare wakes the Worker,
+`runCronTasks` finds nothing, and the handler returns success with no log line. If a task never
+runs, compare those two strings first.
 
-`bun run crons:check` (in `bun run ci`) compares them for you, both directions, and also
-fails when a scheduled task name has no file under `server/tasks/`. The map is declared
-once as `SCHEDULED_TASKS` at the top of `nuxt.config.ts` and handed to both
-`nitro.scheduledTasks` and `runtimeConfig.scheduledTasks` (what `/api/status` reports) —
-keep it there; the gate can read an inline literal too, but one map is harder to get wrong.
+`bun run crons:check` (in `bun run ci`) compares them both ways, and fails when a scheduled task
+name has no file under `server/tasks/`. Keep the map declared once as `SCHEDULED_TASKS` at the
+top of `nuxt.config.ts`, handed to both `nitro.scheduledTasks` and `runtimeConfig.scheduledTasks`
+(what `/api/status` reports).
 
-A task that is wired correctly can still stop: the cron stops firing, the run is killed at
-the CPU limit, or it throws every tick. Every task file therefore ends in
-`export default withHeartbeat(task)` (`layers/core/server/utils/task-heartbeat.ts`),
-which records each run in `task_heartbeats`, and the freshness checks in `ops:watch`
-spool `task_silent` when a task has not completed in one missed run plus half an interval
-(`layers/core/server/utils/freshness.ts`). `layers/terminal/test/freshness.test.ts`
-fails the build on a task file without it. A task that cannot carry the wrapper (one in a
-vendored layer) gets a check of its own in `TASK_CHECK_OVERRIDES`, with the reason.
+A correctly wired task can still stop: the cron stops firing, the run is killed at the CPU
+limit, or it throws every tick. So every task file ends in `export default withHeartbeat(task)`
+(`layers/core/server/utils/task-heartbeat.ts`), which records each run in `task_heartbeats`, and
+the freshness checks in `ops:watch` spool `task_silent` when a task has not completed in one
+missed run plus half an interval (`layers/core/server/utils/freshness.ts`).
+`layers/terminal/test/freshness.test.ts` fails the build on a task file without it. A task that
+cannot carry the wrapper (one in a vendored layer) gets a check of its own in
+`TASK_CHECK_OVERRIDES`, with the reason.
 
-No custom Worker entry is needed for a background surface: the `cloudflare_module`
-preset already exports `scheduled()` (which calls `runCronTasks` when
-`nitro.experimental.tasks` is on) and `queue()` (which dispatches the `cloudflare:queue`
-Nitro hook), plus `email`, `tail` and `trace`. Hook them from `server/plugins/`; do not
-hand-write an entry that re-exports `fetch`, because it will rot the next time Nitro changes
-one of them.
+No custom Worker entry is needed for a background job: the `cloudflare_module` preset already
+exports `scheduled()` (which calls `runCronTasks` when `nitro.experimental.tasks` is on) and
+`queue()` (which dispatches the `cloudflare:queue` Nitro hook), plus `email`, `tail` and
+`trace`. Hook them from `server/plugins/`. Don't hand-write an entry that re-exports `fetch`: it
+rots the next time Nitro changes one of them.
 
-Note that Nitro **skips scheduled tasks under vitest** (`isTest` in its task runtime). Put
-the logic in a `server/utils/` function that takes `db` (and any binding it needs) as an
-argument and test that, as `server/utils/ops.ts` does — a test driving the task wrapper
-tests the shim.
+Nitro **skips scheduled tasks under vitest** (`isTest` in its task runtime). Put the logic in a
+`server/utils/` function that takes `db` (and any binding it needs) as an argument and test
+that, as `server/utils/ops.ts` does. A test driving the task wrapper tests the shim.
 
-Anything a sweep filters on needs an **index**. A `LIMIT` bounds rows *deleted*, not rows
-*examined* — so an unindexed predicate full-scans the table on every tick and gets slower
-as the table grows. `ops_events` is pruned by `created_at`, which every read of it filters on, for exactly this reason.
+Anything a sweep filters on needs an **index**. A `LIMIT` bounds rows deleted, not rows
+examined, so an unindexed predicate full-scans the table every tick and slows as the table
+grows. That is why `ops_events` is pruned by `created_at`, which every read of it filters on.
 
 ## The dev server caches its DB connection — external writes need a restart
 
-Anything writing to `.data/db/sqlite.db` with `bun:sqlite` writes the file correctly, but a
-**running** dev server keeps its own libsql connection and will keep returning the old rows.
-Observed directly on the template this came from: insert a row while `bun dev` is up and the
-API still reports the old state, with the row plainly visible in the file. Restart the dev
-server (or touch `nuxt.config.ts`) and it appears immediately.
-
-So: write before starting the dev server, or restart after writing. Don't go debugging the query.
+A `bun:sqlite` write to `.data/db/sqlite.db` lands in the file, but a running dev server keeps
+its own libsql connection and keeps returning the old rows. Write before starting the dev
+server, or restart it (or touch `nuxt.config.ts`) after writing. Don't debug the query.
 
 ## With no `node` on the PATH, `nuxt dev` silently runs under Bun — and SSR breaks
 
-The `nuxt` bin's shebang asks for Node. On a machine that has only Bun, `bun run dev:app` and
-the Playwright suites' web server run `nuxt dev` **on Bun itself**, with no warning. CI never
-does: the browser-suites workflow runs `actions/setup-node` from `.node-version`.
+The `nuxt` bin's shebang asks for Node. On a machine with only Bun, `bun run dev:app` and the
+Playwright suites' web server run `nuxt dev` on Bun itself, with no warning. CI never does: the
+browser-suites workflow runs `actions/setup-node` from `.node-version`.
 
 Under Bun, every page that renders a component importing `zod` (the subscribe form, through
 `layers/alerts/shared/utils/subscribe.ts`) returns 500:
@@ -159,18 +157,18 @@ Under Bun, every page that renders a component importing `zod` (the subscribe fo
 the module for its default export, the `z` namespace, which lacks `z` itself. The error text is
 JavaScriptCore's, not V8's: that is the tell that Node is not what is running.
 
-The fix is the environment, not the app: install the Node that `.node-version` names
+Fix the environment, not the app: install the Node that `.node-version` names
 (`mise use -g node@24`). `which node` should print a path before you trust a local browser run.
-`vite.ssr.noExternal: ['zod']` makes the pages render under Bun, but it is a workaround for an
-environment CI does not have — do not commit it.
+`vite.ssr.noExternal: ['zod']` makes the pages render under Bun, but it works around an
+environment CI does not have. Don't commit it.
 
 ## An auto-import that typechecks can still be missing at runtime
 
 Nuxt writes every auto-imported name to `.nuxt/types/nitro-imports.d.ts` (server) and
-`.nuxt/imports.d.ts` (app) and the typecheck reads those lists. Injection is a separate step:
+`.nuxt/imports.d.ts` (app), and the typecheck reads those lists. Injection is a separate step:
 unimport scans each file it transforms for the names it uses and adds their imports. NuxtHub's
-`db`, `kv` and `blob` go through the same `addServerImports` path as our own utils, so they are
-not special. A `ReferenceError: x is not defined` with a green typecheck has one of three causes:
+`db`, `kv` and `blob` go through the same `addServerImports` path as our own utils. A
+`ReferenceError: x is not defined` with a green typecheck has one of three causes:
 
 - **Stale `.nuxt`.** A util was added, renamed or moved since the last `nuxt prepare`, dev or
   build. Run `bunx nuxt prepare`. vitest and `globals:check` read the same lists
@@ -183,139 +181,133 @@ not special. A `ReferenceError: x is not defined` with a green typecheck has one
   only after a division (`D1_MAX_BOUND_PARAMS / COLUMNS`, read as a regex literal) or only
   inside a template literal's `${}` is not seen, and a module-level destructuring of the same
   name (`const { kv } = …`) hides it for the whole file. vitest scans the JavaScript after
-  esbuild, so a cast passes there and fails only in the build. The switch to auto-imports
-  checked every dropped import with unimport's own `detectImports`, on both, and kept the 19
-  it would have lost. Keep the import where a name is used like that.
+  esbuild, so a cast passes there and fails only in the build. Keep the import where a name is
+  used like that.
 
-The `kv`/`db` `ReferenceError` once seen in `server/utils/rate-limit.ts` was one of these; its
-cause was never recorded. When an auto-import sits on a path that fails open, check the running
-logs, not just the type checker.
+When an auto-import sits on a path that fails open (such as `kv`/`db` in
+`server/utils/rate-limit.ts`), check the running logs, not just the type checker.
 
 ## A `fatal` 404 pages the owner unless `server/error.ts` is in the chain
 
 Nitro's default error handler `console.error`s every error marked `fatal`, 404s included, and
 Nuxt's handler calls it without `silent`. Workers Issues files each of those lines as an issue
-and the fleet dashboard mails it as Critical, so a crawler asking for `/alerts/<stale id>` sent
-"[Critical] Workers issue … No such alert". `server/error.ts` un-flags `fatal` on anything
-below 500, and the `nitro:config` hook in `nuxt.config.ts` puts it ahead of Nuxt's handler.
-Don't move it to `nitro.errorHandler`: setting that key stops Nuxt registering its own handler,
-and the error pages go with it. To check it after an upgrade, serve a build
-(`npx wrangler --cwd .output dev`), request a missing slug, and look for `[request error] [fatal]`.
+and the fleet dashboard mails it as Critical, so a crawler asking for a stale alert id pages
+the owner. `server/error.ts` un-flags `fatal` on anything below 500, and the `nitro:config` hook
+in `nuxt.config.ts` puts it ahead of Nuxt's handler. Don't move it to `nitro.errorHandler`:
+setting that key stops Nuxt registering its own handler, and the error pages go with it. To
+check it after an upgrade, serve a build (`npx wrangler --cwd .output dev`), request a missing
+slug, and look for `[request error] [fatal]`.
 
 ## Custom `definePageMeta` keys need two opt-ins, and fail silently without them
 
-`sitemap.xml` and `llms.txt` are built from `definePageMeta({ publicPage: … })`, collected by
-a hook in `nuxt.config.ts`. Three things have to be right, and getting any of them wrong
-produces an **empty sitemap** rather than an error:
+`sitemap.xml` and `llms.txt` are built from `definePageMeta({ publicPage: … })`, collected by a
+hook in `nuxt.config.ts`. Getting any of these wrong produces an **empty sitemap**, not an error:
 
 1. **`experimental.extraPageMetaExtractionKeys: ['publicPage']`.** Nuxt's build-time
    `definePageMeta` scanner only extracts a fixed allowlist (`name`, `path`, `middleware`, …).
-   Without this, a custom key is discarded and replaced with a `__nuxt_dynamic_meta_key`
-   marker — the hook then sees every page as unmarked.
-2. **Collect in `pages:resolved`, not `pages:extend`.** Extraction happens *between* the two
+   Without this, a custom key is replaced with a `__nuxt_dynamic_meta_key` marker and the hook
+   sees every page as unmarked.
+2. **Collect in `pages:resolved`, not `pages:extend`.** Extraction happens between the two
    hooks. In `pages:extend`, `page.meta` is still `null` for every page.
 3. **Write to the Nitro instance too.** Nitro is already initialised by `pages:resolved`, so
    `nuxt.options.runtimeConfig` alone is too late; `useNitro().options.runtimeConfig` is what
    ends up in the bundle. `nuxt.config.ts` sets both.
 
-Also: values must be JSON-serializable *literals*. An interpolated string or a referenced
-constant fails `isSerializable` and is dropped, silently, the same way.
+Values must be JSON-serializable literals. An interpolated string or a referenced constant
+fails `isSerializable` and is dropped the same way.
 
 ## `nuxt typecheck` checks `server/` only when the root tsconfig is solution-style
 
 Nuxt 4 generates four projects (`.nuxt/tsconfig.app.json`, `.server.json`, `.shared.json`,
 `.node.json`). `nuxt typecheck`, and the checker inside `nuxt dev` and `nuxt build`, run
 `vue-tsc -b` over all four only when the root `tsconfig.json` has `references`, `"files": []`
-and no `include`. Until 2026-11 it was `"extends": "./.nuxt/tsconfig.json"`, the legacy config
-that excludes `server/**`, so nothing under `server/` or `layers/*/server/` was ever
-typechecked and the gate stayed green. Fixing it surfaced six real errors here: three
-`defineTask` calls with more than one result shape needing an explicit result type
-(`layers/social/server/tasks/social/post.ts`, `layers/alerts/server/tasks/social/digest.ts`,
-`layers/terminal/server/tasks/dev/fixtures.ts`, `server/tasks/seo/indexnow.ts`), one function
-with a parameter type narrower than what it called (`layers/core/server/pipeline/rate-limit.ts`
-› `isRateLimitRun`, now `Pick<RunSummary, 'status' | 'detail'>`), and one handler missing a
-`noImplicitReturns` return (`server/middleware/canonical-host.ts`).
+and no `include`. The legacy `"extends": "./.nuxt/tsconfig.json"` excludes `server/**`, so
+nothing under `server/` or `layers/*/server/` is typechecked and the gate stays green.
 
 - Keep the root `tsconfig.json` as it is. Compiler options go in `nuxt.config.ts` ›
   `typescript.tsConfig`; set in the root file they reach no project.
-- A removed auto-import is now `TS2304` in the gate. It does not cover a name that typechecks
-  but is not injected (the gotcha above), and nothing typechecks `test/` or `scripts/`.
+- A removed auto-import is `TS2304` in the gate. That does not cover a name that typechecks but
+  is not injected (the gotcha above), and nothing typechecks `test/` or `scripts/`.
 
 ## NuxtUI v4 needs an explicit CSS entry
 
-`app/assets/css/main.css` must contain `@import "tailwindcss"; @import "@nuxt/ui";` and be listed under `css:` in `nuxt.config.ts`. Without this, NuxtUI's generated theme (`.nuxt/ui.css`) doesn't get bundled — pages render in browser default fonts/colors with no Tailwind utilities working. Already wired up in this template; don't remove either piece.
+`app/assets/css/main.css` must contain `@import "tailwindcss"; @import "@nuxt/ui";` and be
+listed under `css:` in `nuxt.config.ts`. Without it, NuxtUI's generated theme (`.nuxt/ui.css`)
+isn't bundled, and pages render in browser default fonts and colors with no Tailwind utilities.
+Don't remove either piece.
 
 ## Parallel agent worktrees are supported — keep them that way
 
 Agents can work in isolated git worktrees under `.claude/worktrees/<name>` (gitignored), several
 at once. Everything in `bun run ci` is scoped to the checkout it runs in, so a sibling worktree
-full of half-finished or deleted code cannot contaminate your run. That is a property worth
-stating, because it is easy to break and the breakage is confusing rather than loud.
+full of half-finished or deleted code cannot contaminate your run. That is easy to break, and
+the breakage is confusing, not loud.
 
-How each gate stays scoped — **match this when you add a gate**:
+How each gate stays scoped (match this when you add a gate):
 
 | Gate | Why a sibling worktree can't reach it |
 | --- | --- |
 | `lint` | `.oxlintrc.json` › `ignorePatterns` lists `.claude/**` |
-| `design:check` / `seo:check` / `brand:check` | Walk `ROOT/app`, `ROOT/app/pages`, and fixed root-relative asset paths |
+| `design:check` / `seo:check` / `brand:check` | Walk `ROOT/app`, each layer's `app/`, and fixed root-relative asset paths |
 | `globals:check` | Walks `ROOT/server` and `ROOT/layers/*/server` |
-| `test` | `vitest.config.ts` › `include` is `test/**` + `server/**`, relative to the checkout |
+| `test` | `vitest.config.ts` › `include` is `test/**`, `server/**` and `layers/*/test/**`, relative to the checkout |
 | `typecheck` | The root `tsconfig.json` has no files of its own, and Nuxt's generated `.nuxt/tsconfig.*` use scoped includes (`../app/**/*`, `../server/**/*`), not a root glob |
-| `test:a11y` | Per-checkout port — see below |
-| `build` | Nuxt only reads `app/`, `server/`, `shared/` |
+| `test:a11y` | Per-checkout port (see below) |
+| `build` | Nuxt only reads `app/`, `server/`, `shared/` and `layers/` |
 
-Three rules follow, and each one exists because something broke it:
+Three rules, each one because something broke it:
 
-1. **A gate takes its scan root from the checkout** — not a walk upward, not a bare `**/*` glob.
+1. **A gate takes its scan root from the checkout**: not a walk upward, not a bare `**/*` glob.
 2. **A gate that binds a port derives it** via `scripts/worktree-port.ts`. Never hardcode one.
 3. **A gate never writes to a tracked file.** `nuxt-mcp` rewrites `.mcp.json` with the live dev
-   server URL on every boot, and `test:a11y` used to boot one — so a green run ended with a dirty
-   tree, and `git add -A` would commit a throwaway port. Two guards now: the rewrite is disabled
-   whenever `NUXT_DEVTOOLS=false` (`nuxt.config.ts` › `modules`), which is exactly the automated
-   case, and `.mcp.json` is untracked entirely (`.mcp.json.example` is the shared copy), so the
-   rewrite has nothing to dirty even when it does run.
+   server URL on every boot. Two guards: the rewrite is off whenever `NUXT_DEVTOOLS=false`
+   (`nuxt.config.ts` › `modules`), which is the automated case, and `.mcp.json` is untracked
+   (`.mcp.json.example` is the shared copy), so the rewrite has nothing to dirty even when it
+   runs.
 
 ## `bun dev` gets a per-worktree hostname
 
-`bun dev` runs `scripts/dev.ts`, which hands portless an explicit hostname instead of letting it
-infer one: the bare configured name in the main checkout (`my-app.localhost` — unchanged), and
-`<worktree-dir>.my-app.localhost` in a linked worktree. It prints the host on startup.
+`bun dev` runs `scripts/dev.ts`, which hands portless an explicit hostname: the bare configured
+name in the main checkout (`my-app.localhost`), and `<worktree-dir>.my-app.localhost` in a
+linked worktree. It prints the host on startup.
 
-The wrapper exists because portless's own worktree prefix is derived from the **branch**, and a
-branch is not a unique key for a worktree. Three ways that collides, all of them silent:
+portless's own worktree prefix comes from the **branch**, and a branch is not a unique key for a
+worktree. Three ways that collides, all silent:
 
 | Case | portless alone | Why it happens |
 | --- | --- | --- |
-| Worktree checked out on `main` | `my-app.localhost` — same as the main checkout | `main`/`master` are treated as default branches and skipped |
-| Detached-HEAD worktree | `my-app.localhost` | Branch reads as `HEAD`, also skipped — and Claude Code creates detached worktrees |
+| Worktree checked out on `main` | `my-app.localhost`, same as the main checkout | `main`/`master` are treated as default branches and skipped |
+| Detached-HEAD worktree | `my-app.localhost` | Branch reads as `HEAD`, also skipped (Claude Code creates detached worktrees) |
 | `feat/pricing` vs `claude/pricing` | both `pricing.my-app.localhost` | The prefix is only the branch's last path segment |
 
-The worktree *directory* has none of those problems: git won't create two worktrees at one path,
-so it's unique by construction and — unlike the branch — doesn't change under you. That's what
-keeps the URL stable when you switch branches inside a worktree.
+The worktree directory is unique (git won't create two worktrees at one path) and doesn't change
+when you switch branches, so the URL stays stable.
 
 `scripts/dev.ts` uses the positional `portless <name> <cmd>` form, which takes the name verbatim.
-`portless run --name` would stack its branch prefix on top: still unique, but the hostname would
-move every time the branch did. `bun dev:app` bypasses the proxy entirely.
+`portless run --name` would stack its branch prefix on top, and the hostname would move every
+time the branch did. `bun dev:app` bypasses the proxy entirely.
 
 **An agent session can't start the proxy.** When it isn't running, portless wants `sudo` to
 bind 443, and a shell with no TTY can't answer the prompt, so `bun dev` exits with "Proxy is
 not running and no TTY is available for sudo". Use `bunx nuxt dev --port <n>` with a port of
-your own (`bun dev:app` assumes 3000, which another checkout may hold). For Playwright
-scripts against `nuxt dev`, wait on `load` and a selector: with devtools on, the HMR
-websocket keeps `networkidle` from ever firing.
-
-> **Historical note.** This section used to warn that `vue-tsc` picked up `.claude/worktrees/`
-> and to fix it with `rm -rf .claude/worktrees/<old>`. That is no longer true on Nuxt 4.5: the
-> generated tsconfigs scope their includes, and a worktree containing deliberately unbuildable
-> code now passes `bun typecheck` untouched. Believing the old note is the more expensive
-> mistake, because it argues against running agents in parallel at all.
+your own (`bun dev:app` assumes 3000, which another checkout may hold). For Playwright scripts
+against `nuxt dev`, wait on `load` and a selector: with devtools on, the HMR websocket keeps
+`networkidle` from ever firing.
 
 ## Workers Builds: dashboard Worker name must match `wrangler.toml`
 
-CI/CD runs on Cloudflare Workers Builds (repo connected in the dashboard under Worker → Settings → Build). The Worker's name in the dashboard must exactly match `name` in the root `wrangler.toml`, or every build fails before it starts. Build settings live in the dashboard, not in the repo: build command `bun run ci`, deploy command `bun run deploy:ci` (migrates production D1, then deploys; needs D1 Edit on the build token, see above).
+CI/CD runs on Cloudflare Workers Builds (repo connected in the dashboard under Worker → Settings
+→ Build). The Worker's name in the dashboard must match `name` in the root `wrangler.toml`, or
+every build fails before it starts. Build settings live in the dashboard, not in the repo: build
+command `bun run ci`, deploy command `bun run deploy:ci` (migrates production D1, then deploys;
+needs D1 Edit on the build token, see above).
 
-**A build that fails to start is not retried.** "Build failed to initialize and was timed out" means the build environment never came up, and Workers Builds leaves production on the previous commit. The ops digest reports it as `deploy_drift` (`layers/reliability/server/pipeline/deploy-watch.ts`) once main has been ahead of `/api/status` → `build.sha` for one tick. To retry without an empty commit, start a build on the `main` trigger with the **full** sha. A short sha fails at clone with "error occurred while fetching repository":
+**A build that fails to start is not retried.** "Build failed to initialize and was timed out"
+means the build environment never came up, and production stays on the previous commit.
+`deploy_drift` (`layers/reliability/server/pipeline/deploy-watch.ts`) reports it once main has
+been ahead of `/api/status` → `build.sha` for one tick. To retry without an empty commit, start a
+build on the `main` trigger with the **full** sha. A short sha fails at clone with "error
+occurred while fetching repository":
 
 ```bash
 cf builds triggers list --external-script-id "$(cf workers scripts search --name frontier-terminal | jq -r '.[0].id')"
@@ -325,84 +317,62 @@ cf builds logs get <build-uuid>
 
 ## Production can break with CI green — three ways it has, and the guard for each
 
-All three happened on 2026-11-04. Dev, vitest, typecheck and the build pass each one.
+Dev, vitest, typecheck and the build pass each one.
 
-| Failure | What happened | Guard |
+| Failure | Cause | Guard |
 | --- | --- | --- |
-| A cron invocation runs out of memory | google-careers (~20 MB) joined the six-hourly survey; the 18:00 tick died `exceededMemory` and lost every source it had not recorded | `layers/terminal/test/pipeline/payload-budget.test.ts`, in `bun run test` |
-| A deploy is refused | #169 called `crypto.randomUUID()` at module load, through a factory's default parameter; Cloudflare rejected the deploy (error 10021) and production stayed on the previous commit | `bun run globals:check`, in `bun run ci` |
-| The deploy lands broken, or never lands | nothing on GitHub turned red for the refused deploy above | `.github/workflows/post-deploy-smoke.yml` runs `bun run smoke` after every push to main |
+| A cron invocation runs out of memory | google-careers (~20 MB) joined the six-hourly survey; the tick died `exceededMemory` and lost every source it had not recorded | `layers/terminal/test/pipeline/payload-budget.test.ts`, in `bun run test` |
+| A deploy is refused | `crypto.randomUUID()` called at module load, through a factory's default parameter; Cloudflare rejected the deploy (error 10021) and production stayed on the previous commit | `bun run globals:check`, in `bun run ci` |
+| The deploy lands broken, or never lands | nothing on GitHub turns red for a refused deploy | `.github/workflows/post-deploy-smoke.yml` runs `bun run smoke` after every push to main |
 
-**Payload budget.** The test sizes every source each cron invocation fetches — the poll
-lanes in `scopes.ts`, the derived families at their production counts, and the survey's
-recipes — from `fixtures/manifest.json` › `raw_bytes`, or `raw_bytes:` on a sources.yaml
-entry with no fixture. It fails when a source over 16 MiB shares a lane, or a lane totals
-over 112 MiB; the test's header gives the evidence for both numbers. The survey sits at
-~109 MiB, so its next big source needs a lane of its own (#164 shows how: a scope, a task, a
-cron string in both files). Sizes are as recorded, so recapturing a grown fixture is what
-lets the gate see upstream growth.
+**Payload budget.** The test sizes every source each cron invocation fetches (the poll lanes in
+`scopes.ts`, the derived families at their production counts, and the survey's recipes) from
+`fixtures/manifest.json` › `raw_bytes`, or `raw_bytes:` on a sources.yaml entry with no
+fixture. It fails when a source over 16 MiB shares a lane, or a lane totals over 112 MiB; the
+test's header gives the evidence for both numbers. The survey sits at ~109 MiB, so its next big
+source needs a lane of its own: a scope, a task, and a cron string in both files. Sizes are as
+recorded, so recapturing a grown fixture is what lets the gate see upstream growth.
 
-**Module load.** Workers run each module's top level once, in global scope, and refuse
-random values, timers and I/O there; the clock reads 1970 there instead. `globals:check`
-parses `server/` and `layers/*/server/` and flags `crypto.randomUUID`,
-`crypto.getRandomValues`, `Math.random`, `setTimeout`, `setInterval`, `fetch`, `Date.now`
-and an argument-less `new Date()` outside a function, and follows module-scope calls into
-functions it can resolve (same file, a relative or alias import, or one of our own Nitro
-auto-imports), up to three calls deep, including omitted parameters' defaults. It does not
-follow method calls or re-exports. Fix by making the value on first use, as #170 did;
-`// global-scope-ok: <why>` silences a line that is safe. The gate checks itself on #169's
-pattern before every scan, because the TypeScript parser it uses cannot load in vitest.
+**Module load.** Workers run each module's top level once, in global scope, and refuse random
+values, timers and I/O there; the clock reads 1970 there instead. `globals:check` parses
+`server/` and `layers/*/server/` and flags `crypto.randomUUID`, `crypto.getRandomValues`,
+`Math.random`, `setTimeout`, `setInterval`, `fetch`, `Date.now` and an argument-less
+`new Date()` outside a function. It follows module-scope calls into functions it can resolve
+(same file, a relative or alias import, or one of our own Nitro auto-imports), up to three calls
+deep, including omitted parameters' defaults. It does not follow method calls or re-exports.
+Fix by making the value on first use; `// global-scope-ok: <why>` silences a line that is safe.
+The gate checks itself on the refused-deploy pattern before every scan, because the TypeScript
+parser it uses cannot load in vitest.
 
-**Smoke.** The workflow polls `/api/status` for up to 20 minutes until `build.sha` is the
-pushed commit (a deploy that never lands fails here), then requires `status: ok`, no pending
-migrations, a cron map equal to `SCHEDULED_TASKS`, and a 200 from `/`, `/alerts`,
-`/revenue`, `/exposure`, `/data`, `/api/overview` and `/api/coverage`. A failure is a red
-check on the main commit and a GitHub email to whoever merged. It is not in `deploy:ci`:
-by then the deploy has happened, and a deploy that is refused never reaches that step. Run
-it by hand with `bun run smoke -- --wait 0`.
+**Smoke.** The workflow polls `/api/status` for up to 20 minutes until `build.sha` is the pushed
+commit (a deploy that never lands fails here), then requires `status: ok`, no pending
+migrations, a cron map equal to `SCHEDULED_TASKS`, and a 200 from `/`, `/alerts`, `/revenue`,
+`/exposure`, `/data`, `/api/overview` and `/api/coverage`. A failure is a red check on the main
+commit and a GitHub email to whoever merged. It is not in `deploy:ci`: by then the deploy has
+happened, and a refused deploy never reaches that step. Run it by hand with
+`bun run smoke -- --wait 0`.
 
 ## The browser suites run in GitHub Actions, NOT in `bun run ci`
 
-They used to be in `ci`. They were moved on 2026-08-22, because Workers Builds
-**cannot run a browser** and the two documented fixes were both tried and both failed —
-so don't move them back without reading this.
+Workers Builds cannot run a browser, so don't move them back into `ci`. The build image ships no
+Chromium system libraries (`error while loading shared libraries: libatk-1.0.so.0`), and the
+documented fix, `playwright install --with-deps chromium`, needs root, which the image doesn't
+give (`su: Authentication failure`). So `.github/workflows/browser-suites.yml` runs
+`bun run ci:browser` on the merge queue's drafts, on the Mac mini's runner VM (GitHub's ubuntu
+runners as the fallback), where `--with-deps` succeeds. Everything else stays in Workers Builds:
+lint, the design/brand/mirror/seo gates, typecheck, the unit tests and the build. Those block a
+**deploy**; the browser suites block a **merge**. The build command lives in the Cloudflare
+dashboard, not the repo, so the fix is a workflow file, which a fork inherits.
 
-What was observed, on every branch, since the moment the repo was connected:
+**`test:a11y` is two Playwright projects**, `a11y` and `csp`, so the Content-Security-Policy
+gate lives in the Action too. A broken CSP fails silently, which is what that gate exists to
+catch. Deleting the workflow deletes the CSP gate, and nothing will tell you.
 
-```
-error while loading shared libraries: libatk-1.0.so.0: cannot open shared object file
-  at globalSetup (the warm-up script the suites had then)
-```
-
-The build image ships no Chromium system libraries. The documented fix is
-`playwright install --with-deps chromium`, and it cannot work either, because the
-image is non-root:
-
-```
-$ playwright install --with-deps chromium
-Switching to root user to install dependencies...
-Password: su: Authentication failure
-```
-
-So `.github/workflows/browser-suites.yml` runs `bun run ci:browser` on GitHub's
-ubuntu runners, where `--with-deps` succeeds. Everything else stayed in Workers
-Builds: lint, the design/brand/mirror/seo gates, typecheck, the unit tests and the
-build. Those block a **deploy**; the browser suites block a **merge**.
-
-**`test:a11y` is TWO Playwright projects, not one** — `a11y` and `csp`. So the
-Content-Security-Policy gate now lives in the Action too. That is the trap: a broken CSP
-fails silently, in exactly the way that gate exists to catch. Deleting that workflow
-deletes the CSP gate, and nothing will tell you.
-
-The other half of the original note still stands: because the *build command* lives in the
-Cloudflare dashboard rather than the repo, a fork cannot fix this by editing `ci` alone —
-which is why the fix is a workflow file, something a fork inherits automatically.
 - **The suites run against the production build, not `nuxt dev`.** `playwright.config.ts` →
   `webServer` runs `test/server/start.ts`: `nuxt build`, the migrations into a fresh
   `.data-browser`, the fixture fill (`test/server/fill.ts`), then `wrangler dev` on `.output`.
-  The dev server didn't fit: the merge-queue VM (3 CPUs, 5 GB) SIGKILLed it at `/prices` in
-  three queue runs in a row on 2026-11-20. Measured that day on the Mac mini, one worker as on
-  CI:
+  The dev server didn't fit: the merge-queue VM (3 CPUs, 5 GB) SIGKILLed it at `/prices`.
+  Measured on the Mac mini, one worker as on CI:
 
   | | dev server | built Worker |
   | --- | --- | --- |
@@ -411,34 +381,33 @@ which is why the fix is a workflow file, something a fork inherits automatically
   | `bun run test:a11y` wall time | 136s | 114s |
 
   Nothing compiles on a first visit, so there is no warm-up pass, and the CSP suite reads the
-  headers that ship. `/prices` is the slowest test either way (~8s, most of it axe on 1.7 MB
-  of HTML).
+  headers that ship. `/prices` is the slowest test either way (~8s, most of it axe on 1.7 MB of
+  HTML).
 - **That build skips the server minify.** `BROWSER_SUITE_BUILD=1` sets `nitro.minify: false`
   (`nuxt.config.ts`). The worker preset minifies with terser, in-process: 4.8 GB peak with it,
   3.2 GB without, and the markup and headers the suites check don't change. V8 caps its heap at
   about a quarter of RAM, ~1.25 GB on the VM, and the build needs ~1.5 GB, so `start.ts` runs it
   with `--max-old-space-size=2048`. If the VM ever kills the build, look there first.
-- **`reuseExistingServer: false` is deliberate.** A server already on the suite's port wasn't
-  started from this build and this store. A stale one makes the run fail to boot rather than
-  report on something else: kill it, don't flip the flag.
-- **The port is derived from the checkout path**, not fixed (`scripts/worktree-port.ts`,
-  range 3100–3899). Every worktree gets its own, so parallel agents don't collide and a
-  `bun run dev:app` on 3000 doesn't either. It's deterministic, so the same checkout always
-  gets the same port and you can open it by hand mid-run — `bun run test:a11y` prints it.
-  Set `A11Y_PORT` to pin a value. Any future suite that binds a port must use this helper.
+- **`reuseExistingServer: false` is on purpose.** A server already on the suite's port wasn't
+  started from this build and this store. A stale one makes the run fail to boot instead of
+  reporting on something else: kill it, don't flip the flag.
+- **The port is derived from the checkout path** (`scripts/worktree-port.ts`, range 3100–3899).
+  Every worktree gets its own, so parallel agents don't collide and a `bun run dev:app` on 3000
+  doesn't either. It's deterministic, so you can open it by hand mid-run (`bun run test:a11y`
+  prints it). Set `A11Y_PORT` to pin a value. Any future suite that binds a port must use this
+  helper.
 - **The fill runs beside the Worker, not in it.** `/_nitro/tasks` exists only under `nuxt dev`,
   so `fill.ts` runs `fillFromFixtures` in Bun through wrangler's `getPlatformProxy`, on the D1
   and R2 files `wrangler dev` then serves. `--persist-to` adds a `v3/` that `getPlatformProxy`
   doesn't, which is why the fill opens `<store>/v3`. It needs
   `--tsconfig-override=.nuxt/tsconfig.server.json` for the layer's `#server` imports. Without
   rows the sweep only judges empty states ([`local-data.md`](local-data.md)).
-- **One worker on CI.** Two workers OOM'd the dev server on 2026-11-07. The build leaves room
-  for two, but one fits the job and the axe pass on `/prices` is the peak. If a SIGKILL line
-  appears again, sample `free -m` and `ps` in the workflow step before guessing.
+- **One worker on CI.** Two workers OOM'd the dev server. The build leaves room for two, but one
+  fits the job, and the axe pass on `/prices` is the peak. If a SIGKILL line appears again,
+  sample `free -m` and `ps` in the workflow step before guessing.
 - **Traces are recorded on the CI retry only** (`trace: 'on-first-retry'`). Locally, rerun a
   failure with `--trace on`.
 
 ## Don't add `nuxt-mcp-toolkit` config under `mcp:` in `nuxt.config.ts`
 
-If you ever pull in `@nuxtjs/mcp-toolkit` (not currently installed), its `ModuleOptions` augmentation doesn't surface as a top-level `mcp:` key in `defineNuxtConfig` — TypeScript will reject it. Configure via `defineMcpHandler` in `server/mcp/index.ts` instead. <!-- refs-check-ignore: hypothetical, the module is not installed -->
-
+If you ever pull in `@nuxtjs/mcp-toolkit` (not installed), its `ModuleOptions` augmentation doesn't surface as a top-level `mcp:` key in `defineNuxtConfig`, so TypeScript rejects it. Configure via `defineMcpHandler` in `server/mcp/index.ts` instead. <!-- refs-check-ignore: hypothetical, the module is not installed -->

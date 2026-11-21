@@ -6,23 +6,25 @@ Create a new server API route following the project's conventions.
 `/scaffold-api [path] [method?]`
 
 Examples:
-- `/scaffold-api workouts` → creates `server/api/workouts.get.ts`
-- `/scaffold-api workouts/[id] put` → creates `server/api/workouts/[id].put.ts`
-- `/scaffold-api workouts post` → creates `server/api/workouts.post.ts`
+- `/scaffold-api workouts` → creates `layers/<domain>/server/api/workouts.get.ts`
+- `/scaffold-api workouts/[id] put` → creates `layers/<domain>/server/api/workouts/[id].put.ts`
+- `/scaffold-api workouts post` → creates `layers/<domain>/server/api/workouts.post.ts`
 
 Default method is `get` if not specified.
 
-## Before writing the file — there is no gate
+## Before writing the file: there is no gate
 
-Every route in this app is public and read-only: there are no accounts, so there is no
-session to require and no server-side auth middleware. What a public route owes instead is
-a `rateLimit(event, { name, limit, windowSeconds })` call and Zod validation on every input.
-A route that writes anything does not belong under `server/api/` at all — writes happen in
-`server/tasks/` (the pipeline) and are never reachable from a request.
+Every route in this app is public: there are no accounts, so there is no session to require
+and no server-side auth middleware. A public route owes a
+`rateLimit(event, { name, limit, windowSeconds })` call (`rateLimitTerminal()` with the same
+options on a product route) and Zod validation on every input. A new route is a read: pipeline
+writes happen in each layer's `server/tasks/`, never from a request. The only writers are the
+bearer-gated `/api/judge/*` and `/api/gdelt/*` and the weekly digest's `/api/subscribe/*`.
 
 ## Instructions
 
-Create the file at `server/api/[path].[method].ts`.
+Create the file at `layers/<domain>/server/api/[path].[method].ts` (product code lives in its
+domain's layer; root `server/api/` holds template routes only).
 
 ### GET route (read)
 
@@ -68,27 +70,26 @@ export default defineEventHandler(async (event) => {
 
 ### Where the logic goes
 
-Anything with real branching belongs in `server/utils/*.ts` as a function taking
-the Drizzle client as its **first argument**, not inline in the handler. That's
-what lets the workerd vitest suite drive it against a real D1 binding without
-booting Nitro. See `server/utils/fleet-status.ts` and `test/fleet-status.test.ts`
-for the pattern.
+Anything with real branching belongs in a `server/utils/*.ts` function taking the Drizzle
+client as its **first argument**, not inline in the handler, so the workerd vitest suite can
+drive it against a real D1 binding without booting Nitro. See `server/utils/fleet-status.ts`
+and `test/fleet-status.test.ts` for the pattern.
 
 Handlers stay thin: rate-limit, validate, call, shape.
 
 ### Rules
 
-- **File naming**: `[path].[method].ts` — the method suffix IS the HTTP method
-- **Rate-limit every route** — it is public, and the limiter is its only abuse control
-- **`db` and `schema` are auto-imported** — never `useDB()`, never `hubDatabase()`, <!-- refs-check-ignore: names the deprecated APIs a fork must NOT use -->
-  never a manual `drizzle()` call
-- **Reference tables as `schema.<table>`** in routes (server utils that import
-  the schema module directly use `tables.<table>` — follow the file you're in)
-- **Always validate input with Zod** — `getValidatedQuery` for query strings,
-  schema declared at module scope
-- **No `any` types** — use Zod-inferred types or the `$inferSelect` exports
-- **Always `createError({ statusCode, message })`** — never throw raw errors
-- **Serialize dates** with `.toISOString()`; return an explicit shape, not the raw row
+- **File naming**: `[path].[method].ts`; the method suffix is the HTTP method.
+- **Rate-limit every route**: it is public, and the limiter is its only abuse control.
+- **`db` and `schema` are auto-imported**: never `useDB()`, never `hubDatabase()`, <!-- refs-check-ignore: names the deprecated APIs a fork must NOT use -->
+  never a manual `drizzle()` call.
+- **Reference tables as `schema.<table>`** in routes (server utils that import the schema
+  module directly use `tables.<table>`; follow the file you're in).
+- **Validate input with Zod**: `getValidatedQuery` for query strings, schema declared at
+  module scope.
+- **No `any` types**: use Zod-inferred types or the `$inferSelect` exports.
+- **Always `createError({ statusCode, message })`**: never throw raw errors.
+- **Serialize dates** with `.toISOString()`; return an explicit shape, not the raw row.
 
 After creating the file, output:
 - The full file path and HTTP method

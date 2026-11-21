@@ -1,46 +1,44 @@
-# Agent tooling — MCP servers, skills, commands, routines
+# Agent tooling: MCP servers, skills, commands, routines
 
-What ships in `.mcp.json.example` and `.claude/`: the MCP servers available for live introspection, the NuxtUI skill, the slash commands, and the cloud routines.
+What ships in `.mcp.json.example` and `.claude/`.
 
 > **Load this when:** configuring Claude Code for this repo, wiring a new MCP server, or adding a cloud routine.
 > Canonical index: [AGENTS.md](../../AGENTS.md).
 
 ---
 
-This project ships with Claude Code configuration in `.mcp.json.example` and `.claude/`.
-
 ## MCP Servers (`.mcp.json.example`)
 
-`.mcp.json` itself is **untracked** (`.gitignore`). Copy the example once:
+`.mcp.json` is untracked (`.gitignore`). Copy the example once:
 
 ```bash
 cp .mcp.json.example .mcp.json
 ```
 
-Two reasons it is not in the repository. It is machine-local — it names servers and hostnames a
-given machine can reach — and `nuxt-mcp` rewrites it on every `bun dev` with that machine's dev
-URL, so tracking it means a public repo carrying one developer's hostnames plus an unasked-for
-diff after every dev session.
+It stays out of the repo because it is machine-local (it names servers and hostnames one
+machine can reach), and `nuxt-mcp` rewrites it with that machine's dev URL on every `bun dev`.
+Tracked, it would put one developer's hostnames in a public repo and leave a diff after every
+dev session.
 
 | Server | Type | Purpose |
 | --- | --- | --- |
-| `cloudflare-docs` | Remote HTTP | Workers, D1, KV, R2, Pages documentation — always active |
-| `cloudflare-bindings` | Remote HTTP | Workers bindings and API reference — always active |
-| `nuxt-ui` | Remote HTTP | NuxtUI v4 component API docs, composables, templates, migration guide — always active |
-| `github` | Remote HTTP | GitHub repo/PR/issue context — requires `GITHUB_TOKEN` env var |
-| `nuxt` | Local SSE | Live project introspection (pages, components, auto-imports, config) — requires `bun dev` |
-| `drizzle` | Local stdio | Schema introspection against `server/db/schema.ts` |
+| `cloudflare-docs` | Remote HTTP | Workers, D1, KV, R2, Pages documentation (no credentials) |
+| `cloudflare-bindings` | Remote HTTP | Workers bindings and API reference (no credentials) |
+| `nuxt-ui` | Remote HTTP | NuxtUI v4 component API docs, composables, templates, migration guide (no credentials) |
+| `github` | Remote HTTP | GitHub repo/PR/issue context; needs `GITHUB_TOKEN` (a PAT with repo read scope) |
+| `nuxt` | Local SSE | Live project introspection (pages, components, auto-imports, config); needs `bun dev` |
+| `drizzle` | Local stdio | Schema introspection against `server/db/schema.ts`, via `bunx` |
 
-**Setup notes:**
-- `cloudflare-*` and `nuxt-ui` work with no credentials — always available.
-- For GitHub MCP: set `GITHUB_TOKEN` in your shell (a PAT with repo read scope is enough).
-- For live Nuxt introspection: start `bun dev` before opening Claude Code. The `nuxt` server URL in `.mcp.json` is `https://<portless-name>.localhost/__mcp/sse` and must match the `portless.name` in `package.json`.
-- **In a linked worktree the dev host is different** — see the worktree section below. `bun dev` prints the host it's using, and `nuxt-mcp` repoints your `.mcp.json` at it on boot so introspection keeps working. Since the file is untracked, that rewrite is now invisible to git.
-- Drizzle MCP works automatically via `bunx`.
+For live Nuxt introspection, start `bun dev` before opening Claude Code. The `nuxt` server URL
+is `https://<portless-name>.localhost/__mcp/sse` and must match `portless.name` in
+`package.json`. A linked worktree gets a different host ([gotchas.md](gotchas.md) › `bun dev`
+gets a per-worktree hostname); `bun dev` prints it, and `nuxt-mcp` repoints `.mcp.json` at it
+on boot.
 
 ## NuxtUI Skill (`.claude/skills/nuxt-ui/`)
 
-Installed via `npx skills add nuxt/ui --agent claude-code`. Provides Claude with deep knowledge of NuxtUI's component patterns, theming system, and composables. Complements the `nuxt-ui` MCP server (which provides live API lookups).
+Installed with `npx skills add nuxt/ui --agent claude-code`. It covers NuxtUI's component
+patterns, theming and composables; the `nuxt-ui` MCP server adds live API lookups.
 
 ## Slash Commands (`.claude/commands/`)
 
@@ -56,12 +54,12 @@ Installed via `npx skills add nuxt/ui --agent claude-code`. Provides Claude with
 
 ## Cloud Routines (`.claude/routines/`)
 
-Repo-shipped definitions for cloud agents that run on a schedule. **All ship default-inactive**
-— `/routines sync` registers them (disabled) in your claude.ai account, and each one is
-enabled explicitly. The `enabled:` flag mirrors that account state rather than setting it:
-after enabling one, flip its frontmatter to match, because a run whose file says
-`enabled: false` hard-stops (`_shared.md` rule 8). Routines coordinate through an `ops-journal` branch (never merged to
-`main`, so journal commits don't trigger deploys). Before enabling one: fill in
+Repo-shipped definitions for scheduled cloud agents. All ship inactive: `/routines sync`
+registers them (disabled) in your claude.ai account, and each is enabled explicitly. The
+`enabled:` flag mirrors the account state instead of setting it, so after enabling one, flip
+its frontmatter to match: a run whose file says `enabled: false` hard-stops (`_shared.md`
+rule 8). Routines coordinate through an `ops-journal` branch, never merged to `main`, so
+journal commits don't trigger deploys. Before enabling one, fill in
 `.claude/routines/routines.config.md`, connect the connectors it needs at
-claude.ai/customize/connectors, then `/routines sync`. Full docs in
+claude.ai/customize/connectors, then `/routines sync`. Full docs:
 [.claude/routines/README.md](../routines/README.md).

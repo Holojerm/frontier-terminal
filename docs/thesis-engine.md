@@ -1,46 +1,44 @@
 # Thesis engine — plan
 
-Written 2026-10-08. This file is the record.
-
 ## Summary
 
-A personal research instrument, built in public on Frontier Terminal. Investment theses are bound to open, sourced datasets and scored against reality over time: measured signals where a number exists, LLM-judged signals where the evidence is fuzzy. It is built for Jeremy first; others can follow, request datasets, and later fork theses.
+A personal research instrument, built in public on Frontier Terminal. Investment theses are bound to open, sourced datasets and scored against reality over time: measured signals where a number exists, LLM-judged signals where the evidence is fuzzy. It is built for Jeremy first. Others can follow, request datasets, and later fork theses.
 
-Frontier Terminal is the engine, and its first thesis is Anthropic, read off the seven axes it already tracks, with the other frontier labs as its comparison set.
+Frontier Terminal is the engine. Its first thesis is Anthropic, read off the axes it already tracks, with the other frontier labs as its comparison set.
 
 ## Decisions
 
-- **Frontier Terminal is the engine.** Anthropic is the first thesis; new theses join the same app, not a new one.
-- **The thesis layer is core.** Datasets exist to test claims, not as a product on their own. *Reversed 2026-11-19: the terminal's data is the product and theses sit on top (see [Revisions](#revisions)).*
+- **Frontier Terminal is the engine.** Anthropic is the first thesis. New theses join the same app.
+- **The thesis layer is core.** Datasets exist to test claims. *Reversed: the terminal's data is the product and theses sit on top (see [Revisions](#revisions)).*
 - **Signals can be measured or judged.** A number from a recipe, or an LLM verdict on grounded change rows, as Frontier Terminal's judge already does.
-- **No public-company line.** Private companies count; the frontier labs are already among the largest. One size floor applies to all.
+- **No public-company line.** Private companies count (the frontier labs are already among the largest). One size floor applies to all.
 - **The size floor is a $10B valuation:** market cap for a public company, the last priced round for a private one. It applies to the thesis's company, not its comparison set.
-- **Theses build understanding, not trades.** The digest exists to move conviction in a thesis, up or down, with reasons; it does not time entries, size positions or call exits. It leads with what counts against each thesis.
-- **Data and recipes are fully open.** If money ever comes, it comes from the platform, not the data. *Revised in part 2026-11-04: see [Revisions](#revisions).*
+- **Theses build understanding, not trades.** The digest moves conviction in a thesis, up or down, with reasons. It doesn't time entries, size positions or call exits. It leads with what counts against each thesis.
+- **Data and recipes are fully open.** If money ever comes, it comes from the platform. *Revised in part: see [Revisions](#revisions).*
 - **Jeremy gates requests.** No queue promise, no SLA.
 - **Hobby-first.** It succeeds if it is useful to one person.
 
 ## The model
 
-- **Thesis.** A short statement about one company, with a horizon, a position disclosure, and a comparison set of direct competitors tracked alongside it. Revisions are dated, with a reason. A thesis can instead be about a group taken as one subject (the Compute thesis is about the frontier labs together); the group is a `group` entry in `layers/core/shared/utils/companies.ts`, and the thesis carries its own title.
+- **Thesis.** A short statement about one company, with a horizon, a position disclosure, and a comparison set of direct competitors tracked alongside it. Revisions are dated, with a reason. A thesis can instead be about a group taken as one subject (the Compute thesis is about the frontier labs together). The group is a `group` entry in `layers/core/shared/utils/companies.ts`, and the thesis carries its own title.
 - **Claim.** One of 3–5 things the thesis rests on, each with a kill condition written before the data arrives.
 - **Signal.** The evidence a claim is checked against, measured or judged.
 - **Measured signal.** A number a recipe produces, such as a list price or an open-role count.
-- **Judged signal.** An LLM's rating of fuzzy evidence against a rubric written with the claim, such as "is this lab's launch cadence accelerating?" Every verdict cites the change rows it read and passes a grounding gate before it lands.
+- **Judged signal.** An LLM's rating of fuzzy evidence against a rubric written with the claim, such as "is this lab's launch cadence accelerating?" Every verdict cites the change rows it read and passes a grounding gate before it is stored.
 - **Recipe.** A source URL plus an extractor that AI writes and a plain script re-runs.
-- **Dataset.** The time series a recipe produces. Every snapshot is kept; it cannot be backfilled. The exception is a source that answers for a past date (a search by day): those rows are counted later and marked `retrospective` (`docs/source-audit.md`, 2026-11-20).
-- **Claim status.** Holding, weakening, broken or unresolved, set by the kill condition, not by mood. A judged signal moves it only through its rubric.
+- **Dataset.** The time series a recipe produces. Every snapshot is kept, and it can't be backfilled. The exception is a source that answers for a past date (a search by day): those rows are counted later and marked `retrospective` (`docs/source-audit.md`, 2026-11-20).
+- **Claim status.** Holding, weakening, broken or unresolved, set by the kill condition. A judged signal moves it only through its rubric.
 
 ## MVP scope
 
 **In**
 
-- First thesis: Anthropic, bullish, with OpenAI, Google and xAI as its comparison set, on the seven axes already tracked: [`docs/theses/anthropic.md`](theses/anthropic.md).
-- Second thesis: one company outside the labs (Cloudflare is the candidate), as the test that the engine is general.
-- One recipe per measured signal, every snapshot kept; one rubric per judged signal.
+- First thesis: Anthropic, bullish, with the other eight tracked labs as its comparison set: [`docs/theses/anthropic.md`](theses/anthropic.md).
+- Second thesis: Cloudflare, a company outside the labs, as the test that the engine is general.
+- One recipe per measured signal, every snapshot kept. One rubric per judged signal.
 - Claim status computed from kill conditions.
-- A weekly digest of only the changes that touch a claim. This is the product; everything else is setup.
-- Thesis pages with revision history on the existing public site; datasets stay in the existing CSV and JSON exports.
+- A weekly digest of only the changes that touch a claim. This is the product, and everything else is setup.
+- Thesis pages with revision history on the existing public site. Datasets stay in the existing CSV and JSON exports.
 - Recipes live in this repo.
 - A request form, gated by Jeremy.
 
@@ -55,23 +53,23 @@ Frontier Terminal is the engine, and its first thesis is Anthropic, read off the
 
 - **Home:** this repo and deployment. The pipeline (fetch, normalize, diff, store), D1, R2 and Workers cron are already the bottom half.
 - **New:** thesis definitions in `layers/theses/server/theses/`; `claim_readings` and the append-only `claim_status_changes` beside `snapshots`, `entities` and `changes`, written after each survey tick; `GET /api/theses`; thesis pages; the weekly digest.
-- **Measured signals:** AI writes and repairs extractors at dev time; plain code runs them on the cron.
-- **Judged signals:** the existing judge routine (a claude.ai routine on the subscription, hourly) widens from "is this change significant?" to "what does it mean for this claim?". The Worker picks each judged claim's candidate events from the pending changes and computes their numbers (`layers/theses/server/theses/candidates.ts`); the judge returns one verdict per candidate; the Worker re-runs the schema and grounding gate before storing it in `claim_verdicts`.
+- **Measured signals:** AI writes and repairs extractors at dev time, and plain code runs them on the cron.
+- **Judged signals:** the existing judge routine (a claude.ai routine on the subscription, hourly) widens from "is this change significant?" to "what does it mean for this claim?". The Worker picks each judged claim's candidate events from the pending changes and computes their numbers (`layers/theses/server/theses/candidates.ts`). The judge returns one verdict per candidate. The Worker re-runs the schema and grounding gate before storing it in `claim_verdicts`.
 - **Digest:** `theses:digest` emails every claim's status, the week's moves and verdicts, recipe failures behind a claim, and anything awaiting confirmation, Mondays 13:00 UTC (`layers/theses/server/theses/digest.ts`). Evidence against the thesis comes first: claims are ordered broken, weakening, unresolved, holding, and verdicts that count toward a kill condition lead the week's ratings.
 - **Fallback runner:** the Mac mini, for sources that block cloud IPs or need a real browser.
 - **Breakage:** a recipe that fails or returns an outlier is flagged, never silently skipped.
-- **Recipes:** a company outside the four labs gets its data from recipes (`server/registries/recipes.ts`): a public URL and a plain extractor, run on the survey tick before the theses are evaluated, into `recipe_observations`, with the raw bytes in R2 and a failed run flagged in `recipe_runs` and the ops digest. They never touch the lab tables, panels, alert rules or the lab judge. Recipe signals compute year-over-year growth, trailing sums, and sums of keys; a recipe-items claim has the judge rate each observation (a changelog entry) once.
-- **Adding a company:** add it to `layers/core/shared/utils/companies.ts`; one file per recipe in its domain's `server/recipes/` with a fixture and a test, listed in `server/registries/recipes.ts`; one thesis file in `layers/theses/server/theses/` listed in its registry; its journal page under `docs/theses/`. Every recipe also gets an entry in `sources.yaml` `recipe_sources` (its terms, `rights` and caveats), which `/api/coverage` shows beside its last run; `layers/core/test/terminal-sources.test.ts` fails without it.
-- **Generalize late:** the parser contracts name the four labs today; they widen when the second thesis needs it, not before.
+- **Recipes:** a company outside the labs gets its data from recipes (`server/registries/recipes.ts`): a public URL and a plain extractor, run on the survey tick before the theses are evaluated, into `recipe_observations`, with the raw bytes in R2 and a failed run flagged in `recipe_runs` and the ops digest. They never touch the lab tables, panels, alert rules or the lab judge. Recipe signals compute year-over-year growth, trailing sums, and sums of keys. A recipe-items claim has the judge rate each observation (a changelog entry) once.
+- **Adding a company:** add it to `layers/core/shared/utils/companies.ts`; one file per recipe in its domain's `server/recipes/` with a fixture and a test, listed in `server/registries/recipes.ts`; one thesis file in `layers/theses/server/theses/` listed in its registry; its journal page under `docs/theses/`. Every recipe also gets an entry in `sources.yaml` `recipe_sources` (its terms, `rights` and caveats), which `/api/coverage` shows beside its last run. `layers/core/test/terminal-sources.test.ts` fails without it.
+- **Generalize late:** parser contracts widen only when a thesis needs it.
 
 ## Rules of the road
 
 **Data**
 
-- Recipes are MIT; data is CC-BY. *From 2026-11-04: the last 90 days are CC BY, older data CC BY-NC (see [Revisions](#revisions)).*
-- Only public, no-login sources. Terms forbid redistribution → publish the recipe and derived number, not the raw snapshot. robots.txt says no → skip.
+- Recipes are MIT. The last 90 days of data are CC BY, older data CC BY-NC (see [Revisions](#revisions)).
+- Only public, no-login sources. If terms forbid redistribution, publish the recipe and derived number, not the raw snapshot. If robots.txt says no, skip it.
 - Every data point carries its source URL, snapshot time and recipe version.
-- Errors are corrected in public with a dated note; history is never rewritten.
+- Errors are corrected in public with a dated note. History is never rewritten.
 
 **Requests**
 
@@ -107,7 +105,7 @@ The first is enough to keep going as a hobby.
 
 ## Monetization, if ever
 
-The Dune model: public data and theses free; paid platform. Candidates are private theses and overlays, faster refresh and more compute, API and exports, alerts, and team seats. None of it is built until others want to fork privately.
+The Dune model: public data and theses free, a paid platform. Candidates are private theses and overlays, faster refresh and more compute, API and exports, alerts, and team seats. None of it is built until others want to fork privately.
 
 ## Revisions
 
@@ -119,12 +117,12 @@ The Dune model: public data and theses free; paid platform. Candidates are priva
 - Bulk exports of tables that grow over time default to the last 90 days. `?history=full` serves every row, each labeled with its license.
 - Data published before 2026-11-04 stays CC BY 4.0. Upstream data keeps its own license, and raw public facts such as SEC filings aren't ours to restrict.
 
-Why: revenue can come from the history and from terms, without closing anything. The recent window stays open for any use, and the full history stays open for non-commercial use. The platform ideas above still stand.
+Why: revenue can come from the history and from terms without closing anything. The recent window stays open for any use, and the full history for non-commercial use. The platform ideas above still stand.
 
 **2026-11-17: commercial licensing is paused.** The site sells nothing while the pause lasts.
 
 - No page, `/llms.txt` line, or API message offers a paid license, an API key, the licensed S3 bucket, or webhooks. `/contact` is for corrections and press.
-- The license split above stays. The last 90 days are CC BY 4.0, and the full history is CC BY-NC 4.0, for non-commercial use only.
+- The license split above stays: the last 90 days are CC BY 4.0, and the full history is CC BY-NC 4.0, for non-commercial use only.
 - The key code stays in place, unadvertised. A key issued before the pause works until it expires, and none is issued during it.
 
 **2026-11-19: the terminal is the product, and theses are a layer on top.** Frontier Terminal is a terminal of fundamentals on the frontier AI labs and the public companies tied to them. Theses are the retail-facing angle, built on that data.
@@ -146,5 +144,4 @@ Why: revenue can come from the history and from terms, without closing anything.
 
 ## Open questions
 
-- Is Cloudflare the right second thesis, or would a less familiar company test the engine better?
 - Does the weekly digest replace the Atom alert feed or sit beside it?

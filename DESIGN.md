@@ -3,27 +3,25 @@
 The visual design system for this app, in the portable [DESIGN.md](https://designmd.app/)
 format that Claude Code, Codex, Cursor, and friends read directly.
 
-**This file is the source of truth.** `app/assets/css/main.css` and `app/app.config.ts` are
-*compiled from it* — run `/design-sync` after editing this file, never hand-edit the two
-generated files and expect them to survive. `bun run design:check` enforces that app code uses
-only the tokens declared here.
+This file is the source of truth. `app/assets/css/main.css` and `app/app.config.ts` are
+compiled from it by `/design-sync`, so run that after editing here. Hand edits to the two
+generated files don't survive. `bun run design:check` enforces that app code uses only the
+tokens declared here.
 
-The brand mark works the same way one level out: `/logo-sync` writes
-`app/components/Brand/Logo.vue` from the Brand mark section below, `bun run brand:generate`
-derives the favicon, app icon, and share image from that component, and `bun run brand:check`
-fails the build when they fall out of sync.
+The brand mark works the same way: `/logo-sync` writes `app/components/Brand/Logo.vue` from
+the Brand mark section below, `bun run brand:generate` derives the favicon, app icon and share
+image from that component, and `bun run brand:check` fails the build when they drift.
 
-> **Scope note:** this file means what a visitor sees and reads — color, type, space, motion,
-> component behavior, and the voice of the copy. Architectural rationale and stack decisions
-> live in `AGENTS.md`, not here.
+This file covers what a visitor sees and reads (color, type, space, motion, component behavior,
+and the voice of the copy). Architecture and stack decisions live in `AGENTS.md`.
 
 ---
 
 ## Identity
 
-Frontier Terminal is an instrument, not a publication. Someone opens it to find out what a
-lab's API costs this morning, how many people it is hiring, and what it told the SEC — and to
-see where that number came from. The design serves that and nothing else.
+Frontier Terminal is an instrument. Someone opens it to find out what a lab's API costs this
+morning, how many people it is hiring, what it told the SEC, and where each number came from.
+The design serves that and nothing else.
 
 - **Personality:** instrumented, dense, unsentimental
 - **References:** a trading terminal's information density; EDGAR's refusal to decorate;
@@ -34,14 +32,14 @@ see where that number came from. The design serves that and nothing else.
   the way a monitor wall does, tables run at `text-sm` with tight rows, and the few pages of
   running text keep a reading column.
 - **One design language:** every page is built from the primitives in Component behavior ›
-  Terminal primitives. A page that hand-rolls a table, a card, an empty state, or a source
-  footer is a page that will drift; the primitive is the fix, not a local copy.
-- **Motion:** minimal. Motion confirms, it never decorates.
+  Terminal primitives. A page that hand-rolls a table, a card, an empty state or a source
+  footer will drift, so fix the primitive instead of keeping a local copy.
+- **Motion:** minimal. Motion confirms and never decorates.
 - **Iconography:** Lucide (`i-lucide-*`), bundled locally via `@iconify-json/lucide`. Line
-  icons at default weight — never emoji, never a second icon family.
-- **Color mode:** **dark-first.** Dark is the primary design target and the fallback when a
-  visitor expresses no preference; light is a first-class equal, checked in the same axe sweep,
-  never an afterthought. Every design decision here is made in dark and then verified in light.
+  icons at default weight. Never emoji, never a second icon family.
+- **Color mode:** dark-first. Dark is the primary design target and the fallback when a
+  visitor states no preference. Light is a first-class equal, checked in the same axe sweep.
+  Every decision is made in dark, then verified in light.
 
 ### Never
 
@@ -49,22 +47,22 @@ see where that number came from. The design serves that and nothing else.
 - More than one accent color visible in a single viewport
 - Pure black (`#000`) or pure white (`#fff`) as a surface color
 - Emoji as UI iconography
-- A figure rendered without its source link and its fetch timestamp within reach — provenance
-  is the product, so a design that hides it is a wrong design
+- A figure rendered without its source link and its fetch timestamp within reach (provenance
+  is the product)
 
 ---
 
 ## Brand mark
 
-**A frontier, and the edge that has crossed it.** A dim rule runs the full width — the line
-everything on this site is measured against — and above it a solid mass climbs in three steps
+A frontier, and the edge that has crossed it. A dim rule runs the full width (the line
+everything on this site is measured against), and above it a solid mass climbs in three steps
 from left to right. Two elements, one flat fill, one opacity step.
 
-Abstract rather than a letterform on purpose: `bun run rename` cannot rewrite a picture, so an
-initial would still spell the template's name long after the app stopped being called that.
+It is abstract on purpose: `bun run rename` can't rewrite a picture, so an initial would keep
+spelling the template's name after a rename.
 
-**The mark lives in `app/components/Brand/Logo.vue`, and nowhere else.** Every standalone
-file is derived from that component by `bun run brand:generate`:
+The mark lives in `app/components/Brand/Logo.vue` and nowhere else. `bun run brand:generate`
+derives every standalone file from that component:
 
 | Generated file | Size | What it is |
 |---|---|---|
@@ -78,8 +76,7 @@ file is derived from that component by `bun run brand:generate`:
 | `emails/theme.generated.css` | — | The Tailwind theme `bun run email:build` compiles emails with — the `email-*` roles below as hex, plus the font stacks. Email clients do not support CSS variables. |
 
 `bun run brand:check` (part of `bun run ci`) fails the build when those files no longer match
-the component. A favicon a redesign behind the app is the normal outcome otherwise; nothing
-about it ever throws.
+the component. Without it, a favicon left behind by a redesign throws no error.
 
 ### Construction
 
@@ -89,7 +86,7 @@ about it ever throws.
 - **The rule:** full width, 2.5 units tall, at `opacity .5`, separated from the mass above it
   by a 2-unit gap. It is the reference line, so it never competes with the reading.
 - **The mass:** one closed path, three treads of 8.5/8.5/9 units rising 4 → 9 → 13.5 units
-  above the rule. Connected, not three bars — this is one edge, not a chart.
+  above the rule. It is one connected edge, so it never reads as a bar chart.
 - **Corners:** square. The mark is drawn at instrument precision; `--ui-radius` softens
   controls, not readings.
 - **Fill:** `currentColor`, one flat fill plus a single opacity step. No stroke, no gradient,
@@ -100,9 +97,9 @@ about it ever throws.
 
 ### Color roles
 
-A PNG has no color mode, so each role below resolves to a concrete ramp token rather than a
-`--ui-*` alias — the aliases flip between light and dark, and a file has to pick one. This app
-is dark-first, so the files that can only pick one pick dark.
+A PNG has no color mode, so each role below resolves to a concrete ramp token instead of a
+`--ui-*` alias (the aliases flip between light and dark, and a file has to pick one). This app
+is dark-first, so those files pick dark.
 
 | Role | Token | Where it lands | Measured |
 |---|---|---|---|
@@ -126,22 +123,22 @@ is dark-first, so the files that can only pick one pick dark.
 | `email-warn` | `--color-amber-800` | Ops alert tone for anything unclassified (`warning`, 7.09) | — |
 | `email-good` | `--color-emerald-700` | Ops alert tone for recoveries (`success`, 5.36) | — |
 
-`icon-ink` is the **400**, not the 600 the in-app accent resolves to in light mode: on a
-zinc-950 ground the 600 measures 3.51:1 and the 400 measures 7.01:1. An icon is read at 16px
-on someone else's dark dock, which is the hardest case this palette has.
+`icon-ink` is the 400, where the in-app accent uses the 600 in light mode. On a zinc-950
+ground the 600 measures 3.51:1 and the 400 measures 7.01:1. An icon is read at 16px on someone
+else's dark dock, the hardest case this palette has.
 
-In-app the mark takes `text-primary` and inherits the color mode for free. These roles exist
-only for the files that can't — a PNG, a JSON manifest, and email, which has neither a color
-mode nor CSS variables. The `email-*` rows follow the semantic assignments in Color: tones use
-the same shades the app does, so a failure reads as `error` in the inbox too.
+In-app the mark takes `text-primary` and follows the color mode. These roles exist only for
+the files that can't: a PNG, a JSON manifest, and email, which has neither a color mode nor CSS
+variables. The `email-*` tones use the same shades as the semantic assignments in Color, so a
+failure reads as `error` in the inbox too.
 
 ### Never
 
 - A second mark. If a surface seems to need a different logo, the logo is wrong.
 - Effects: shadow, gradient, outline, rotation, or animation on the mark.
 - The wordmark in anything but the display face at weight 500 (DESIGN.md › Typography).
-- Hand-editing anything in `public/` — or `shared/utils/brand-colors.generated.ts` — that
-  this pipeline generates.
+- Hand-editing anything in `public/` (or `shared/utils/brand-colors.generated.ts`) that this
+  pipeline generates.
 
 ---
 
@@ -149,9 +146,9 @@ the same shades the app does, so a failure reads as `error` in the inbox too.
 
 ### Primary ramp — `iris`
 
-A cool blue-violet. The one accent, and deliberately not a status hue: this site spends green
-on "up", red on "down", amber on "notable" and sky on "for information", so the brand cannot
-have any of them without saying something it does not mean.
+A cool blue-violet, and the one accent. It is deliberately not a status hue. The site spends
+green on "up", red on "down", amber on "notable" and sky on "for information", so a brand in
+any of them would say something it doesn't mean.
 
 | Shade | Hex | Shade | Hex |
 |---|---|---|---|
@@ -174,13 +171,12 @@ have any of them without saying something it does not mean.
 | `warning` | `amber` | Reversible risk, notable changes |
 | `error` | `rose` | Failure, destructive actions, critical alerts |
 
-`zinc` rather than `slate` for the neutral: with a violet accent a blue-tinted grey makes the
-whole page one hue, and the accent stops being an accent.
+The neutral is `zinc` because with a violet accent a blue-tinted `slate` makes the whole page
+one hue, and the accent stops standing out.
 
 Semantic colors resolve one to three steps darker than NuxtUI's 500 default in light mode, and
-to **400** in dark. This is not taste — NuxtUI's defaults fail WCAG AA in light mode in both
-directions that matter, as text on their own 10% tint (`subtle` alerts and badges) and as white
-text on the solid fill (`solid` buttons).
+to 400 in dark. NuxtUI's defaults fail WCAG AA in light mode both as text on their own 10% tint
+(`subtle` alerts and badges) and as white text on the solid fill (`solid` buttons).
 
 Light mode, measured against `bg-default` (white) and `bg-elevated` (zinc-100):
 
@@ -206,11 +202,9 @@ Dark mode, measured against `bg-default` (zinc-900) and `bg-elevated` (zinc-800)
 
 Warning needs 800 specifically in light; amber-700 reaches only 4.39:1 on its tint.
 
-`iris-600` was chosen over `iris-500` for the light-mode primary precisely so the table above
-has no exception in it: at 500 the accent measures 3.76:1 on its own tint and 4.25:1 on the
-page, both under AA. The template this app was forked from shipped a primary that failed as
-`variant="subtle"` and documented the failure as a rule to remember. A shade that passes is
-cheaper than a rule.
+The light-mode primary is `iris-600` so the table above has no exception. At 500 the accent
+measures 3.76:1 on its own tint and 4.25:1 on the page, both under AA. A shade that passes is
+cheaper than a rule to remember.
 
 ### Surface and text rules
 
@@ -229,12 +223,11 @@ Use the semantic utility, never a numbered scale. `text-gray-900` is a build fai
 | Default border | `border-default` |
 | Emphasized border | `border-accented` |
 
-One pairing the token names do not warn you about, and it is a light-mode-only trap:
-**secondary text on an elevated surface is `text-toned`, not `text-muted`.** zinc-500 on
-zinc-100 is 4.39:1 — under AA — while it clears on the page ground (4.83). A panel or card that
-carries its own `bg-elevated` uses `text-toned` (7.02) for captions and stamps. Dark mode has
-no equivalent problem: `text-muted` resolves to zinc-400, which reads 6.75 on the page and 5.68
-on an elevated surface.
+One light-mode trap the token names don't warn about: secondary text on an elevated surface is
+`text-toned`, not `text-muted`. zinc-500 on zinc-100 is 4.39:1 (under AA), though it clears on
+the page ground (4.83). A panel or card with its own `bg-elevated` uses `text-toned` (7.02) for
+captions and stamps. Dark mode has no such problem: `text-muted` resolves to zinc-400, which
+reads 6.75 on the page and 5.68 on an elevated surface.
 
 ---
 
@@ -249,12 +242,11 @@ on an elevated surface.
 | `font-mono` | JetBrains Mono, 400 | Code, IDs, keyboard keys, tabular data |
 
 Headings are set in the mono face at weight 500 with `-0.03em` tracking. Display and data are
-the same family at two weights, which is the whole typographic argument of the site: a heading
-here names a reading, so it is set in the face the readings are set in. Body copy is the one
-thing that is not an instrument, so it gets a proportional face.
+one family at two weights, because a heading here names a reading and so uses the readings'
+face. Body copy isn't an instrument, so it gets a proportional face.
 
-Two webfonts, not three. A mono display face costs nothing extra because `font-mono` was
-already loading it.
+That makes two webfonts. The mono display face costs nothing extra because `font-mono` already
+loads it.
 
 ### Scale
 
@@ -270,19 +262,19 @@ already loading it.
 | `text-4xl` | 2.5rem | 1.15 |
 | `text-5xl` | 3.125rem | 1.05 |
 
-The top three steps are shorter than the template's, because a monospaced face sets roughly 15%
-wider per character: an `h1` of "Frontier Terminal" at 3rem mono overruns a phone before it
-says anything. Body copy stays at `text-base` with a 1.65 line height — looser than Tailwind's
-default, because the prose pages are for reading. Never set arbitrary sizes (`text-[13px]`).
+The top three steps are shorter than the template's because a monospaced face sets about 15%
+wider per character (an `h1` of "Frontier Terminal" at 3rem mono overruns a phone). Body copy
+stays at `text-base` with a 1.65 line height, looser than Tailwind's default, because the prose
+pages are for reading. Never set arbitrary sizes (`text-[13px]`).
 
-`text-xs` is also the floor: no text sets smaller, on a phone or anywhere. NuxtUI's `sm` and `xs`
-badges and SVG chart labels were the places that did (10px and 8px), so `app.config.ts` sets both
-badge sizes to `text-xs` and charts draw their labels at 12.
+`text-xs` is the floor: no text sets smaller, anywhere. NuxtUI's `sm` and `xs` badges default to
+10px and 8px, so `app.config.ts` sets both badge sizes to `text-xs`. SVG charts draw their
+labels at 12.
 
 ### Roles
 
-A size names a role, and each role has one size. The primitives apply these; a page never
-picks a heading size of its own.
+A size names a role, and each role has one size. The primitives apply these. A page never picks
+a heading size of its own.
 
 | Role | Size | Token | Set by |
 |---|---|---|---|
@@ -297,20 +289,19 @@ picks a heading size of its own.
 | Table body | `text-sm`, `text-xs` nested | `text-default` | `TerminalTable` |
 | Provenance, captions | `text-xs` | `text-toned` | `TerminalSources`, `TerminalProvenanceTag` |
 
-An `h1` at `text-2xl` rather than `4xl`: this is an instrument, and a page title names the
-screen the way a terminal function key does. The data below it is the content.
+The `h1` is `text-2xl` because a page title names the screen the way a terminal function key
+does. The data below it is the content.
 
 ---
 
 ## Space, shape, elevation
 
-- **Spacing:** standard Tailwind scale only — 1, 2, 3, 4, 6, 8, 12, 16, 24. No invented values.
+- **Spacing:** standard Tailwind scale only (1, 2, 3, 4, 6, 8, 12, 16, 24). No invented values.
 - **Container:** `120rem` max width (`--ui-container`), tuned for 1440–1920px screens: two
   panels side by side on a laptop, three on a wide monitor, and no dead margin either side of
-  a 1920px window. Use `<UContainer>` for page shells — it
-  reads this variable; a hardcoded `max-w-*` will not. Running text never takes the full
-  width: prose sits in `max-w-2xl`, and `TerminalPage`'s `narrow` prop caps a prose page at
-  `max-w-3xl`.
+  a 1920px window. Use `<UContainer>` for page shells, since it reads this variable and a
+  hardcoded `max-w-*` won't. Running text never takes the full width: prose sits in
+  `max-w-2xl`, and `TerminalPage`'s `narrow` prop caps a prose page at `max-w-3xl`.
 - **Rhythm:** `gap-6` between panels, `p-3` inside them, `py-2 px-3` per table cell. Panels
   tile with `grid gap-6 lg:grid-cols-2` (add `2xl:grid-cols-3` for small ones); below `lg`
   everything is one column. Panels that share a row carry tables of the same row count, so
@@ -328,17 +319,17 @@ screen the way a terminal function key does. The data below it is the content.
 
 - Duration `150ms` for state changes, `200ms` for entrances. Nothing slower.
 - Easing: `ease-out` entering, `ease-in` leaving.
-- Respect `prefers-reduced-motion` — all non-essential motion drops to zero duration.
+- Respect `prefers-reduced-motion`: all non-essential motion drops to zero duration.
 - No entrance animation on page content. Skeletons over spinners for loads above 300ms.
 
 ---
 
 ## Component behavior
 
-- **Buttons:** NuxtUI defaults already carry `font-medium` and derive radius from `--ui-radius`
-  — no override needed. Primary = solid iris, secondary = outline neutral, destructive = solid
+- **Buttons:** NuxtUI defaults already carry `font-medium` and derive radius from `--ui-radius`,
+  so no override. Primary = solid iris, secondary = outline neutral, destructive = solid
   error. One primary button per view.
-- **Cards:** NuxtUI `subtle` variant — elevated surface, hairline ring, no shadow. Padding
+- **Cards:** NuxtUI `subtle` variant (elevated surface, hairline ring, no shadow). Padding
   stays on the component default (`p-4`, `p-6` from `sm`), which is already mobile-first.
 - **Inputs:** 1px border, `bg-default`. Focus shows a 2px primary ring, never a glow.
 - **Focus:** every interactive element has a visible focus-visible ring. Never `outline: none`
@@ -346,40 +337,40 @@ screen the way a terminal function key does. The data below it is the content.
 - **Navigation:** two rows, like a terminal's command line over its function keys. The top
   row is the mark, a **Labs** menu (one lab across every axis), and the settings menu.
   Below it, from `lg` up, the **axis bar**: one `UNavigationMenu` with the entry points as
-  links — Overview, then Alerts and Theses — and the axes grouped under two menus by the
-  question they answer: **Economics** (Prices, Revenue, Demand, Compute) and **Operations**
-  (Hiring, Releases, Incidents, Disclosures), each item with a one-line description. A group
-  is marked active when any page in it is. Grouped rather than flat since the eleventh axis:
-  a flat row no longer fit one line at `lg` and weighed every axis the same. Reference pages
-  (`About`, `Data`, `License`) live in the footer, where a reader already looks for exports
-  and the disclaimer.
+  links (Overview, then Alerts and Theses) and the axes grouped under two menus by the
+  question they answer: **Economics** (Prices, Revenue, Ground truth, Signals, Exposure,
+  Dependencies, Demand, Compute, Hardware, Power) and **Operations** (Hiring, Releases,
+  Incidents, Disclosures), each item with a one-line description. A group is marked active
+  when any page in it is. The axes are grouped because a flat row didn't fit one line at `lg`
+  and weighed every axis the same. Reference pages (About, Data, License, Contact, Privacy)
+  live in the footer, where a reader already looks for exports and the disclaimer.
 
   Below `lg` the axis bar collapses into a right-side `USlideover` behind an `i-lucide-menu`
-  trigger. The drawer carries the *whole* site map, the entry points, both axis groups, the
-  labs and the footer's reference pages, because below `lg` it is the only navigation affordance there is. Drawer
-  rows are `size="lg"` and `block`, left-aligned — full-width rows are the easiest thing on a
-  screen to hit — and each group is introduced by a real heading, not a styled `div`. The
-  drawer closes on route change, not on click, so redirects close it too. Never let either
-  row wrap to two lines or scroll sideways.
-- **Links:** inline prose links are `text-primary` **and** underlined (see Accessibility ›
-  Contrast). Standalone links in navigation or footers are colour-only by design.
-- **Long-form content:** markdown renders through NuxtUI's `Prose*`
-  components, which already read the token layer. Two of their defaults contradict this file
-  and are overridden in `app.config.ts` under `ui.prose`: `h1`–`h3` drop `font-bold` in favour
-  of the display face's own 500, and inline links get a real `underline` instead of a
-  hover-only bottom border. Measure is `max-w-2xl` — a reading column, not the full container.
+  trigger. The drawer carries the whole site map (the entry points, both axis groups, the labs
+  and the footer's reference pages), because below `lg` it is the only navigation there is.
+  Drawer rows are `size="lg"` and `block`, left-aligned, since full-width rows are the easiest
+  thing on a screen to hit. Each group is introduced by a real heading, not a styled `div`.
+  The drawer closes on route change instead of on click, so redirects close it too. Never let
+  either row wrap to two lines or scroll sideways.
+- **Links:** inline prose links are `text-primary` and underlined (see Accessibility ›
+  Contrast). Standalone links in navigation or footers are color-only by design.
+- **Long-form content:** markdown renders through NuxtUI's `Prose*` components, which already
+  read the token layer. Two of their defaults contradict this file and are overridden in
+  `app.config.ts` under `ui.prose`: `h1`–`h3` drop `font-bold` for the display face's own 500,
+  and inline links get a real `underline` instead of a hover-only bottom border. Measure is
+  `max-w-2xl`.
 - **Empty states and gaps:** one line saying what is absent, one saying why, at most one
-  action. No illustrations. A gap is a finding — "No public feed", "No SEC filing reports
-  this lab's revenue" — so it is stated in the place the number would have been, never as a
-  zero and never as a bare dash. `TerminalGap` renders both forms.
+  action. No illustrations. A gap is a finding ("No public feed", "No SEC filing reports
+  this lab's revenue"), so it is stated where the number would have been, never as a zero or
+  a bare dash. `TerminalGap` renders both forms.
 - **Alerts:** the description renders at full opacity. NuxtUI dims it to 90%, which takes
-  info-700 on its own tint from 5.06:1 to 3.9:1 — below AA — for the one line of an alert that
-  carries the actual content.
+  info-700 on its own tint from 5.06:1 to 3.9:1 (below AA) on the line that carries the
+  alert's content.
 - **Tables:** `font-mono` for numeric columns, right-aligned. Row separators, not zebra
   striping. The first column is the row header (`<th scope="row">`). A row whose source has
   nothing to show keeps its label and its source cells and states the gap in one cell spanning
-  the rest. `UTable` cannot express either — every cell is a `td` and a `colspan` does not
-  remove its neighbors — so every table is `TerminalTable`.
+  the rest. `UTable` can't express either (every cell is a `td`, and a `colspan` doesn't
+  remove its neighbors), so every table is `TerminalTable`.
 - **Repeated gaps:** labs that state the same gap share one line after the rows with figures
   (`TerminalTable` `foldGaps`): the gap, then the labs, each with its own reason behind an info
   control. A column that would repeat one reason down most rows is a group line over those
@@ -390,15 +381,15 @@ screen the way a terminal function key does. The data below it is the content.
   `stack: 'hide'` drops a secondary column. A table left to scroll sideways fades at the edge it
   clips, so the reader can see there is more.
 - **Scroll:** a page never scrolls a box inside a scroll for its main reading. The page's
-  primary table — the release list, the incident log, the price catalog, the alerts — runs as
+  primary table (the release list, the incident log, the price catalog, the alerts) runs as
   long as its rows (`TerminalTable` `flow`), with its header sticky under the site header.
-  So does a table whose rows are all the reading, like the like-for-like price matrix: a cap
-  that hides four of nine labs is a clipped reading, not a scroll box.
+  So does a table whose rows are all the reading, like the like-for-like price matrix, where
+  a cap would hide four of nine labs.
   A secondary table in a multi-panel layout scrolls in its own box, capped at 70% of the
   small viewport height (`70svh`, never `dvh`: a dvh cap resizes as the mobile URL bar shows
-  and hides, and the page jumps mid-scroll), header sticky to the box. A box that scrolls is a named, focusable region
-  so a keyboard can scroll it. Its clipped edges fade (a mask, dropped while the box has
-  focus so the focus ring shows).
+  and hides, and the page jumps mid-scroll), header sticky to the box. A box that scrolls is a
+  named, focusable region so a keyboard can scroll it. Its clipped edges fade (a mask, dropped
+  while the box has focus so the focus ring shows).
 - **Source cells:** a citation in a table cell is one line: the host as a link, the age and
   exact fetch stamp in its tooltip and a screen-reader `<time>`. The panel footer prints every
   source with its visible age, so provenance stays within reach while a row stays one line.
@@ -411,7 +402,7 @@ screen the way a terminal function key does. The data below it is the content.
   tab is in `?tab=`, every tab renders on the server and stays in the document, and an
   anchor into a closed tab opens it. The overview and single-question pages never tab.
 - **Charts:** drawn at their box's own pixel width, so a chart fills its panel and its labels
-  stay `10px` at any width.
+  stay 12px at any width.
 - **Settings:** one `i-lucide-settings-2` button opens `TerminalSettings`, a popover with color
   mode, time zone, clock, date form, relative ages, dollar-figure form, row spacing, and a lab
   watchlist. Every setting lives in this browser's localStorage and applies after hydration,
@@ -424,26 +415,28 @@ screen the way a terminal function key does. The data below it is the content.
   filing period, a UTC-day chart bucket) is a UTC date and never shifts. It reads through
   `useStamps().day`, in the reader's date form. A filing period, a filing date or a planned
   date reads through `useStamps().date`, which always names the year: `day` drops the current
-  year, and the server-rendered page has no clock to tell which year that is. A column keeps one form all the way down: a
-  "When" column is absolute, never relative for its first rows and absolute after. Starred labs reorder
-  only lists in registry order, never a ranking, a timeline or a chart's stack.
+  year, and the server-rendered page has no clock to tell which year that is. A column keeps
+  one form all the way down: a "When" column is absolute, never relative for its first rows and
+  absolute after. Starred labs reorder only lists in registry order, never a ranking, a
+  timeline or a chart's stack.
 - **Deltas:** a sign the reader can see, never a color: `+12`, `−3` (U+2212), `±0`. Formatted
   once, in `layers/core/shared/utils/terminal-format.ts`. So is every other figure: a negative
   is `grouped()` (never `toLocaleString`'s hyphen), a GPU-hour price is `gpuHour()` at two
   decimals with `exactUsd()` in its tooltip, a count too big for a cell is `compactCount()`, a
   percent is `percent()` (prose), `sharePct()` (a 0..1 share, one decimal) or `signedPercent()`
   (an error against a filed figure), a stated round figure is `roundBillions()`, a filed one
-  beside it is `preciseUsd()`, and
-  a vendor's enum or key (`SOFTWARE_ENGINEERING`, `batch_long_context`, `NVIDIA CORP`) reads
-  through `boardLabel()`, `tierLabel()` or `edgarName()`. A delta takes `text-muted` beside its figure;
-  green and red would read as good and bad, and a price rise is neither. No component
-  calls `toLocaleString` or `toFixed` itself; a test fails on it.
+  beside it is `preciseUsd()`, and a vendor's enum or key (`SOFTWARE_ENGINEERING`,
+  `batch_long_context`, `NVIDIA CORP`) reads through `boardLabel()`, `tierLabel()` or
+  `edgarName()`. A delta takes `text-muted` beside its figure, because green and red would read
+  as good and bad, and a price rise is neither. No component calls `toLocaleString` or
+  `toFixed` itself. A test fails on it.
 
 ### Terminal primitives
 
-Every page is composed from these, in `layers/core/app/components/Terminal/`. They own the classes; a page
-passes data and copy. Their prop shapes live in `layers/core/app/types/terminal-ui.ts`, and the words for a
-feed with nothing to show live once in `layers/core/app/utils/feed-gap.ts`.
+Every page is composed from these, in `layers/core/app/components/Terminal/`. They own the
+classes, and a page passes data and copy. Their prop shapes live in
+`layers/core/app/types/terminal-ui.ts`, and the words for a feed with nothing to show live once
+in `layers/core/app/utils/feed-gap.ts`.
 
 | Primitive | What it is | Replaces |
 |---|---|---|
@@ -463,7 +456,7 @@ feed with nothing to show live once in `layers/core/app/utils/feed-gap.ts`.
 
 Surfaces: the page and every panel body are `bg-default`, so secondary text there is
 `text-muted`. The panel header strip is `bg-muted`, so its note is `text-toned`. Nothing on
-a reading page sits on `bg-elevated`; that surface is for popovers and the drawer.
+a reading page sits on `bg-elevated`. That surface is for popovers and the drawer.
 
 ---
 
@@ -476,11 +469,11 @@ anything a visitor reads.
 
 ## Accessibility
 
-WCAG 2.2 AA is the floor, not the goal. Two gates enforce it, and they see different
-things: `bun run design:check` reads source for patterns a regex can catch, and
-`bun run test:a11y` runs axe in a real browser against every public route in **both** color
-modes, which is the only way to check a rendered contrast ratio. What neither can judge —
-whether a label actually describes its field, whether alt text is meaningful — is on review.
+WCAG 2.2 AA is the floor. Two gates enforce it, and they see different things.
+`bun run design:check` reads source for patterns a regex can catch. `bun run test:a11y` runs
+axe in a real browser against every public route in both color modes, the only way to check a
+rendered contrast ratio. What neither can judge (whether a label describes its field, whether
+alt text is meaningful) is left to review.
 
 ### Contrast
 
@@ -491,17 +484,17 @@ whether a label actually describes its field, whether alt text is meaningful —
 | Borders, focus rings, icons that carry meaning | 3:1 |
 | Disabled text, decorative rules | none |
 
-The semantic tokens in Color are vetted at both ends of the color-mode switch. A numbered
-scale is a build failure precisely because `text-zinc-500` can pass in light mode and fail
-in dark — the token layer *is* the contrast guarantee.
+The semantic tokens in Color are vetted in both color modes. A numbered scale is a build
+failure because `text-zinc-500` can pass in light mode and fail in dark. The token layer is
+the contrast guarantee.
 
 **Never convey state by color alone.** Every status pairs its color with an icon or a word.
 `<UBadge color="error" icon="i-lucide-x">Failed</UBadge>`, never a bare red dot.
 
-The same rule catches inline links: a link inside a paragraph is **underlined**
-(`underline underline-offset-2`), because `text-primary` alone distinguishes it from the
-surrounding prose by color only. Links that are already unmistakably links by position —
-nav items, footer rows, buttons — don't need it.
+The same rule covers inline links: a link inside a paragraph is underlined
+(`underline underline-offset-2`), because `text-primary` alone sets it apart from the
+surrounding prose by color only. Links that are plainly links by position (nav items, footer
+rows, buttons) don't need it.
 
 ### Keyboard and focus
 
@@ -509,8 +502,8 @@ nav items, footer rows, buttons — don't need it.
 - A visible `focus-visible` ring on everything focusable: 2px, `primary`. Suppressing the
   outline without replacing it is a build failure.
 - No positive `tabindex`. `tabindex="-1"` is for programmatic focus targets only.
-- Handlers go on a `<button>`, an `<a>`, or a NuxtUI component — never a `<div @click>`.
-  That is where roles and keyboard support come from for free.
+- Handlers go on a `<button>`, an `<a>`, or a NuxtUI component, never a `<div @click>`.
+  Those bring roles and keyboard support for free.
 - A skip link is the first focusable element on the page, pointing at `#main`.
 
 ### Structure and labels
@@ -518,21 +511,20 @@ nav items, footer rows, buttons — don't need it.
 - `<html lang>` is set (`nuxt.config.ts` → `app.head.htmlAttrs`).
 - One `<h1>` per page. Heading levels never skip.
 - Landmarks on every page: `header`, `nav`, `main` (id `main`), `footer`.
-- Every image and avatar carries `alt`. Decorative images take `alt=""` — an empty string,
-  not a missing attribute.
+- Every image and avatar carries `alt`. Decorative images take `alt=""` (an empty string,
+  not a missing attribute).
 - Form fields get a visible label through `<UFormField>`. A placeholder is not a label.
-- Icon-only buttons need `aria-label`. An icon with no accessible name is an unlabeled
-  button to a screen reader.
+- Icon-only buttons need `aria-label`, or a screen reader announces an unlabeled button.
 
 ### Viewport and touch
 
 - **Height:** `min-h-dvh`, never `min-h-screen`. Mobile browser chrome makes `100vh` taller
   than the visible viewport, which hides the bottom of the page under the URL bar.
 - **Overscroll:** the page doesn't bounce. `main.css` sets `overscroll-behavior-y: none` on
-  `html` and `body`, so scrolling past the top or bottom stops dead on iOS and on Mac
-  trackpads instead of rubber-banding the sticky header and page background. It is
-  vertical only: the horizontal swipe-back gesture still navigates. The cost is the
-  browser's pull-to-refresh on mobile, which these apps don't need.
+  `html` and `body`, so scrolling past the top or bottom stops on iOS and Mac trackpads
+  instead of rubber-banding the sticky header and page background. It is vertical only, so
+  horizontal swipe-back still navigates. It costs the mobile browser's pull-to-refresh, which
+  this app doesn't need.
 - **Width:** a page never scrolls sideways at 375px. Wide tables scroll in their own
   `overflow-x-auto` box, and that box is `relative`: an absolutely positioned child (an
   `sr-only` caption or "Actions" header) with no positioned ancestor inside the box escapes
@@ -541,21 +533,21 @@ nav items, footer rows, buttons — don't need it.
   (`bottom-safe`, `right-safe`) so it clears the iOS home bar and the notch in landscape.
   The `viewport-fit=cover` meta in `nuxt.config.ts` is what makes those insets non-zero.
 - **Target size:** two floors, because one number can't serve both a mouse and a thumb.
-  - **24x24px everywhere** (WCAG 2.5.8, AA). NuxtUI's `sm` and `md` sizes clear this on
-    their own; `size="xs"` does not reliably, so it is desktop-dense-chrome only.
-  - **44x44px on coarse pointers.** Apply the `min-touch` utility, which is scoped to
-    `@media (pointer: coarse)` — it buys the thumb its target without inflating the
+  - 24x24px everywhere (WCAG 2.5.8, AA). NuxtUI's `sm` and `md` sizes clear this on their
+    own. `size="xs"` doesn't reliably, so it is for dense desktop chrome only.
+  - 44x44px on coarse pointers. Apply the `min-touch` utility, scoped to
+    `@media (pointer: coarse)`, so the thumb gets its target without inflating the
     mouse-driven UI, whose 29-33px controls are the density this system is for.
 
-  Every icon-only control gets `min-touch`; `design:check` enforces that one, because an
-  icon-only button is the case that ends up smallest and is hardest to spot by eye.
-  Anything pinned to a viewport edge or acting as a primary mobile action gets it too.
+  Every icon-only control gets `min-touch`, and `design:check` enforces it, because an
+  icon-only button ends up smallest and is hardest to spot by eye. Anything pinned to a
+  viewport edge or acting as a primary mobile action gets it too.
 
-  Links inside a table clear the 24px floor with vertical padding, not bigger type: `TerminalTable`
-  gives every inline `td`/`th` link `py-1.5`, and an inline box spends that padding outside the
-  line, so rows keep their density. A link that is a flex item or `inline-flex` carries
-  `min-h-6` itself.
-- **Motion:** `prefers-reduced-motion` is honored globally in `main.css` (see Motion) — no
+  Links inside a table clear the 24px floor with vertical padding instead of bigger type:
+  `TerminalTable` gives every inline `td`/`th` link `py-1.5`, and an inline box spends that
+  padding outside the line, so rows keep their density. A link that is a flex item or
+  `inline-flex` carries `min-h-6` itself.
+- **Motion:** `prefers-reduced-motion` is honored globally in `main.css` (see Motion). No
   component should re-implement it.
 
 ---
@@ -577,7 +569,7 @@ nav items, footer rows, buttons — don't need it.
 | Touch-target floor | `main.css` → `@utility min-touch` |
 | Semantic shade choices | `main.css` → `:root`/`.dark` → `--ui-primary` … `--ui-error` |
 
-The Brand mark section compiles through a second, smaller pipeline of its own:
+The Brand mark section compiles through a second pipeline:
 
 | This file | Destination | Run by |
 |---|---|---|
@@ -587,7 +579,7 @@ The Brand mark section compiles through a second, smaller pipeline of its own:
 Four rules land outside the generated files, because no CSS variable can express them:
 `<html lang>` and `viewport-fit=cover` live in `app.head` in `nuxt.config.ts`, the dark-first
 fallback lives in `colorMode` there, and the skip link lives in `app/layouts/default.vue`.
-`/design-sync` does not own those — leave them alone.
+`/design-sync` doesn't own those, so leave them alone.
 
-Verify the result at `/design-system` in dev — every token and component state on one page,
-in both color modes.
+Verify the result at `/design-system` in dev, which shows every token and component state on
+one page in both color modes.
