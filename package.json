@@ -110,6 +110,7 @@
     "portless": "^0.18.0",
     "satori": "^0.63.2",
     "typescript": "^6.0.3",
+    "unimport": "5.7.0",
     "vitest": "^5.1.0",
     "vue-tsc": "^3.3.14",
     "wrangler": "^4.164.0"
