@@ -10,6 +10,12 @@ import * as tables from '#server/db/schema'
 import { recordOpsEvent } from '#server/utils/ops'
 import { contentHash, contentHashOfText } from '#layers/core/server/pipeline/contracts'
 import type { SourceFetcher } from '#layers/core/server/pipeline/fetch'
+import {
+  activeRelay,
+  isRelayed,
+  relayedBytes,
+  type RelayStore,
+} from '#layers/core/server/pipeline/relay'
 import type { PipelineDb } from '#layers/core/server/pipeline/store'
 import { ercotFacts, ercotListings, ercotReportLinks, type ErcotReportLink } from './ercot-reports'
 import { pdfPages } from '#layers/core/server/pipeline/pdf-text'
@@ -24,20 +30,35 @@ export interface ErcotDeps {
   /** R2, binary. */
   put(key: string, body: Uint8Array, contentType: string): Promise<void>
   fetch?: typeof globalThis.fetch
+  /** ERCOT refuses Workers' egress; defaults to the registered relay (core relay.ts). */
+  relay?: RelayStore | null
   userAgent: string
   now: Date
 }
 
 export interface ErcotRunReport {
   listed: number
-  read: { url: string; status: 'read' | 'none' | 'failed'; facts: number; detail: string | null }[]
+  read: {
+    url: string
+    status: 'read' | 'none' | 'failed' | 'pending'
+    facts: number
+    detail: string | null
+  }[]
   listing_failures: string[]
 }
 
 async function fetchPdf(
   url: string,
   deps: ErcotDeps,
-): Promise<{ ok: true; bytes: Uint8Array } | { ok: false; detail: string }> {
+): Promise<{ ok: true; bytes: Uint8Array } | { ok: false; detail: string; pending?: true }> {
+  const relay = isRelayed(url) ? (deps.relay ?? activeRelay()) : null
+  if (relay) {
+    const got = await relayedBytes(relay, url)
+    if (got.ok) return { ok: true, bytes: got.body }
+    return got.pending
+      ? { ok: false, detail: got.detail, pending: true }
+      : { ok: false, detail: got.detail }
+  }
   const res = await (deps.fetch ?? globalThis.fetch)(url, {
     headers: { 'User-Agent': deps.userAgent, Accept: 'application/pdf' },
     signal: AbortSignal.timeout(60_000),
@@ -77,6 +98,9 @@ async function readReport(db: PipelineDb, link: ErcotReportLink, deps: ErcotDeps
     ok: false as const,
     detail: `fetch threw: ${String(e)}`,
   }))
+  // Left unsettled, so the next run asks again once the relay has it.
+  if (!got.ok && 'pending' in got)
+    return { url: link.url, status: 'pending' as const, facts: 0, detail: got.detail }
   if (!got.ok) return settle('failed', 0, got.detail, null)
   let facts
   try {
@@ -115,7 +139,7 @@ export async function runErcotLargeLoads(db: PipelineDb, deps: ErcotDeps): Promi
       ext: 'html',
     })
     if (!page.ok) {
-      listing_failures.push(`${listing.url}: ${page.detail}`)
+      if (!('skipped' in page)) listing_failures.push(`${listing.url}: ${page.detail}`)
       continue
     }
     for (const l of ercotReportLinks(page.text, listing.series)) links.set(l.url, l)
