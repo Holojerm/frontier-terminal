@@ -12,7 +12,10 @@ import { gpuObservations } from '../../../../compute/server/recipes/gpu-prices'
 import type { ArchiveEra } from '../../../../pricing/server/pipeline/archive/eras'
 import type { GpuEra } from '../../../../compute/server/pipeline/archive/gpu-eras'
 import type { LimitsEra } from '../../../../pricing/server/pipeline/archive/limits-eras'
-import { liveDepartment, type HiringEra } from './hiring-eras'
+import {
+  liveDepartment,
+  type HiringEra,
+} from '../../../../talent/server/pipeline/archive/hiring-eras'
 import type { StatusEra } from './status-eras'
 import { captureInstant, captureUrl, type CdxCapture } from './wayback'
 import type { ArchiveAxis } from '../../../../core/server/utils/archive-floor'
@@ -26,7 +29,7 @@ export type ArchivedRateLimitRow = typeof tables.archivedRateLimits.$inferInsert
 
 export const ARCHIVED_BASIS = 'archived'
 
-/** The lab axes, whose archived rows answer an as_of before the live record (terminal-archive.ts). */
+/** The lab axes, whose archived rows answer an as_of before the live record (each axis's terminal-*-archive.ts). */
 export type { ArchiveAxis }
 
 /**

@@ -41,7 +41,7 @@ import { CLAIM_TABLES } from '#layers/terminal/server/export-tables/theses'
 import { PRESS_TABLES } from '#layers/terminal/server/export-tables/press'
 import { RECIPE_TABLES } from '#layers/terminal/server/export-tables/recipes'
 import { GRID_LOAD_TABLES } from '#layers/compute/server/export-tables/grid-load'
-import { LISTED_HIRING_TABLES } from '#layers/terminal/server/export-tables/listed-hiring'
+import { LISTED_HIRING_TABLES } from '#layers/talent/server/export-tables/listed-hiring'
 import { EXPOSURE_TABLES } from '#layers/terminal/server/export-tables/exposure'
 import { REFERENCE_TABLES } from '#layers/terminal/server/export-tables/reference'
 import { SIGNAL_TABLES } from '#layers/terminal/server/export-tables/signals'
@@ -75,7 +75,7 @@ export const EXPORT_TABLES: Readonly<Record<string, ExportTable>> = {
 export const EXPORT_TABLE_NAMES = Object.keys(EXPORT_TABLES)
 
 /**
- * The tables read from Internet Archive copies (terminal-archive.ts). They
+ * The tables read from Internet Archive copies (each axis's terminal-*-archive.ts). They
  * answer as_of by when the Archive saw the page, so an instant before our
  * first snapshot is not refused, and no paid license relabels them.
  */

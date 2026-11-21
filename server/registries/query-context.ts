@@ -7,7 +7,7 @@ import { readFiledFactSources } from '#layers/core/server/utils/terminal-sources
 import { parseDerivedSourcesBlock } from '#layers/terminal/server/pipeline/derived'
 import { parseRevenueFilersBlock } from '#layers/terminal/server/pipeline/parsers/sec/revenue-filers'
 import { parseCikWhitelistBlock } from '#layers/terminal/server/pipeline/parsers/sec/whitelist'
-import { parseDepartmentClusters } from '#layers/terminal/server/utils/terminal-clusters'
+import { parseDepartmentClusters } from '#layers/talent/server/utils/terminal-clusters'
 
 export const QUERY_CONTEXT_BLOCKS = {
   /** department_clusters: the buildout signal's department terms. */

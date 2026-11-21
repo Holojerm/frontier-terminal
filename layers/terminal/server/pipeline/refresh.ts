@@ -17,10 +17,12 @@ import { modelFloorAlerts } from './model-floor'
 import { prospectusFloorAlerts } from './prospectus-floor'
 import type { SourceFetcher } from '#layers/core/server/pipeline/fetch'
 import type { RawStore } from '#layers/core/server/pipeline/raw'
-import { derivedKeyOf, laneFor } from '#server/registries/lanes'
+import { derivedKeyOf, laneFor, PAYLOAD_REDACTIONS } from '#server/registries/lanes'
 import { TICK_INPUTS, type TickInputs } from '#server/registries/lane-context'
 import {
   contextFingerprint,
+  redactPayload,
+  TransientParseError,
   type ContextBlock,
   type ParseContext,
   type TickInput,
@@ -37,7 +39,6 @@ import { manifestFixtures } from '#layers/core/server/pipeline/parsers/fixture-p
 import { parsePendingFilersBlock } from './parsers/sec/pending-filers'
 import { parseRevenueFilersBlock } from './parsers/sec/revenue-filers'
 import { parseCikWhitelistBlock } from './parsers/sec/whitelist'
-import { JoinRaceError } from './parsers/hiring/common'
 import { includeSources, type FetchSource } from '#layers/core/server/pipeline/sources'
 import {
   applyDiff,
@@ -55,7 +56,6 @@ import {
   type GoodSnapshot,
   type PipelineDb,
 } from '#layers/core/server/pipeline/store'
-import { redactPayload } from './redact'
 
 // One poll tick: fetch → hash → snapshot → parse → normalize → diff → store,
 // per source, with every stage's outcome written to source_runs.
@@ -182,7 +182,7 @@ async function fetchAndSnapshot(
     } satisfies Fetched
   }
 
-  const text = redactPayload(source.url, outcome.text)
+  const text = redactPayload(PAYLOAD_REDACTIONS, source.url, outcome.text)
   const content_hash = contentHashOfText(text)
   const unchanged = prior !== null && prior.content_hash === content_hash
 
@@ -602,7 +602,7 @@ export async function runRefresh(
   // Only side payloads live for the whole tick; parseAndStore reads nothing
   // else from this map. A side is fetched just before the first source that
   // joins against it, so the pair stays as close in time as the Greenhouse
-  // join race needs (JoinRaceError), and is reused when its own turn comes.
+  // join race needs (TransientParseError), and is reused when its own turn comes.
   const sideIds = new Set(sources.flatMap((s) => laneFor(s.source_id)?.sides ?? []))
   const bySource = new Map(sources.map((s) => [s.source_id, s]))
   const byId = new Map<string, Fetched>()
@@ -623,7 +623,8 @@ export async function runRefresh(
     if (fetched.cooling) continue
     let outcome: Outcome
     // A failure the next tick clears was a blip. Two classes are known to
-    // self-resolve: the Greenhouse snapshot race, which says so by type, and a
+    // self-resolve: a parser's own race (TransientParseError: the Greenhouse
+    // snapshot race), which says so by type, and a
     // 403 from a vendor edge that turns away the odd request (OpenAI's docs
     // host refused four polls in a day while every other one succeeded).
     let transient = fetched.refused
@@ -636,7 +637,7 @@ export async function runRefresh(
         inputs,
       )
     } catch (err) {
-      transient ||= err instanceof JoinRaceError
+      transient ||= err instanceof TransientParseError
       outcome = quiet('failed', describeError(err), fetched.body?.snapshot.id ?? null)
     }
     const detail = outcome.detail?.slice(0, DETAIL_MAX) ?? null

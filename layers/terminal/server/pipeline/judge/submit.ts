@@ -20,9 +20,12 @@ import { applySupplierReadings, type SupplierReport } from '../../suppliers/revi
 import { applyGuidanceReadings, type GuidanceReviewReport } from '../../calls/review'
 import { applyPowerSiteReadings, type PowerSiteReport } from '#layers/compute/server/power/review'
 import { applyTrackRecordVerdicts, type TrackRecordVerdictReport } from '../track-record/review'
-import { parseDepartmentClusters, type DepartmentCluster } from '../../utils/terminal-clusters'
+import {
+  parseDepartmentClusters,
+  type DepartmentCluster,
+} from '../../../../talent/server/utils/terminal-clusters'
 import { effectiveClassMap } from '#layers/pricing/server/pipeline/class-map'
-import { clampHiringAlerts, type FloorClamp } from '../hiring-floor'
+import { clampHiringAlerts, type FloorClamp } from '../../../../talent/server/pipeline/hiring-floor'
 import { clampRoutineAlerts } from './severity-gates'
 import { applyClassMappings } from '#layers/pricing/server/pipeline/judge/class-map'
 import type { RawReader } from '#layers/core/server/pipeline/raw'
@@ -39,7 +42,7 @@ import { rejectFalseDelistings, stillListedRemovals } from './still-listed'
 // POST /api/judge/alerts, minus the request: raw body -> schema gate ->
 // cursor check -> the offered window -> grounding against the cited change
 // rows as D1 holds them -> no still-listed model called delisted -> the hiring
-// materiality floor (layers/terminal/server/pipeline/hiring-floor.ts) -> the
+// materiality floor (layers/talent/server/pipeline/hiring-floor.ts) -> the
 // class-map re-mappings -> the severity gates (severity-gates.ts) -> stamping ->
 // the one write chokepoint -> a judge_runs row. Every model-output
 // rejection is a return value and an ops event, never an exception; only

@@ -77,6 +77,7 @@ export * from '../../layers/core/server/db/schema'
 export * from '../../layers/terminal/server/db/schema'
 export * from '../../layers/compute/server/db/schema'
 export * from '../../layers/pricing/server/db/schema'
+export * from '../../layers/talent/server/db/schema'
 export * from '../../layers/social/server/db/schema'
 
 // Rate-limit counters: one row per caller, endpoint and window, moved by one

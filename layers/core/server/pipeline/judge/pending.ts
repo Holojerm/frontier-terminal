@@ -25,7 +25,7 @@ export const JUDGE_CHANGE_LIMIT = 200
 
 /**
  * Normalized-payload fields a job board rewrites without changing the
- * posting. The names are the parser output's (layers/terminal/server/pipeline/parsers/hiring):
+ * posting. The names are the parser output's (layers/talent/server/pipeline/parsers/hiring):
  * Ashby's `publishedAt` lands as `published_at`, and Greenhouse's
  * `first_published` / `updated_at` as `published_at` / `updated_at`.
  */

@@ -347,7 +347,7 @@ async function archivedBeforeOwnFloor(
 /**
  * /api/prices as of an instant before this site's first fetch: each lab's
  * price list from its newest readable Internet Archive capture by then
- * (terminal-archive.ts). The matrix maps today's classes, which name no
+ * (terminal-price-archive.ts). The matrix maps today's classes, which name no
  * archived-era model, so it is built over no rows and every cell says so.
  */
 async function archivedPrices(

@@ -126,5 +126,45 @@ export function contextFingerprint(
   return contentHash({ parser_version: PARSER_VERSION, source_url: sourceUrl, ...blocks })
 }
 
+/**
+ * A parse failure the next tick is expected to clear, thrown by a parser that
+ * knows its own blip (a Greenhouse board and its /departments feed fetched a
+ * second apart). The refresh records the run either way but raises the ops
+ * event only when the next tick has not cleared it.
+ */
+export class TransientParseError extends Error {}
+
+/**
+ * Fields a source returns that name people, removed before a payload is
+ * hashed, archived to R2 or parsed: a domain's entry in
+ * server/registries/lanes.ts › PAYLOAD_REDACTIONS. The content hash and the
+ * archived object are of the redacted text, so the archive never holds the
+ * removed fields.
+ */
+export interface PayloadRedaction {
+  /** True for the fetched URLs this redaction applies to. */
+  matches: (url: string) => boolean
+  /** The payload as it may be stored. May throw on a body it cannot read. */
+  redact: (text: string) => string
+}
+
+/** The payload as it may be stored. A body a redaction cannot read is left for the parser to reject. */
+export function redactPayload(
+  redactions: readonly PayloadRedaction[],
+  url: string,
+  text: string,
+): string {
+  let out = text
+  for (const r of redactions) {
+    if (!r.matches(url)) continue
+    try {
+      out = r.redact(out)
+    } catch {
+      // Unparseable: stored as fetched, and the parser rejects it.
+    }
+  }
+  return out
+}
+
 /** A lane whose page is the current set and joins no side. */
 export const setLane = (parse: Lane['parse']): Lane => ({ sides: [], removals: 'set', parse })

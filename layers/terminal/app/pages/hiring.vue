@@ -12,8 +12,8 @@ import type {
   HiringHistoryData,
   HiringHistoryProvider,
 } from '../../shared/utils/terminal-types'
-import type { PayData } from '../../shared/utils/recipe-views'
-import type { ListedHiringData } from '../../shared/utils/listed-hiring'
+import type { PayData } from '../../../talent/shared/utils/pay'
+import type { ListedHiringData } from '../../../talent/shared/utils/listed-hiring'
 import type { TableColumn } from '#layers/core/app/types/terminal-ui'
 
 const watchlist = useWatchlist()

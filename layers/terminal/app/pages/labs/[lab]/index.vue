@@ -29,7 +29,8 @@ import type {
   SpendData,
 } from '../../../../shared/utils/terminal-types'
 import type { LimitsData } from '#layers/pricing/shared/utils/limits'
-import type { AdoptionData, ParentsData, PayData } from '../../../../shared/utils/recipe-views'
+import type { PayData } from '../../../../../talent/shared/utils/pay'
+import type { AdoptionData, ParentsData } from '../../../../shared/utils/recipe-views'
 // Inert for a dynamic route: the collecting hook skips paths with a
 // parameter, and sitemap.xml / llms.txt append the lab pages from
 // layers/terminal/shared/utils/terminal-lab-summary.ts. Declared anyway — the seo gate's
