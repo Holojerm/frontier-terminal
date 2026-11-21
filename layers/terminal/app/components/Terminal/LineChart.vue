@@ -96,7 +96,8 @@ const xAt = (i: number): number => {
   return PAD.value.l + ((times.value[i]! - t0) / span) * inner
 }
 const yAt = (v: number): number =>
-  PAD.value.t + (1 - (v - yMin.value) / (yMax.value - yMin.value)) * (H.value - PAD.value.t - PAD.value.b)
+  PAD.value.t +
+  (1 - (v - yMin.value) / (yMax.value - yMin.value)) * (H.value - PAD.value.t - PAD.value.b)
 
 const yTicks = computed(() =>
   [0, 0.25, 0.5, 0.75, 1].map((f) => yMin.value + f * (yMax.value - yMin.value)),
