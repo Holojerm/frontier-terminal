@@ -11,7 +11,7 @@ definePageMeta({
     priority: '0.7',
     title: 'Signals',
     summary:
-      'Every series we track (package downloads, the Ramp AI Index, OpenRouter share, GPU prices, probe strain, open roles, launches, price cuts, filed revenue) tested against the stocks it should lead: correlation with forward returns less SPY at 1, 5, 20 and 60 trading days, and event studies, with the newest third held out. Also dated forward calls, scored when the filing prints. Research, not investment advice.',
+      'Every series we track (package downloads, the Ramp AI Index, OpenRouter share, GPU prices, probe strain, open roles at the labs and the listed companies, launches, price cuts, filed revenue, call guidance against filings, Taiwan monthly revenue, Korea chip exports, grid load) tested against the stocks it should lead: correlation with forward returns less SPY at 1, 5, 20 and 60 trading days, and event studies, with the newest third held out. Also dated forward calls, scored when the filing prints. Research, not investment advice.',
   },
 })
 
