@@ -1176,11 +1176,30 @@
       "path": "fixtures/identifiers/sec-company-tickers-exchange.json",
       "source_id": "identifiers-sec-company-tickers",
       "source_url": "https://www.sec.gov/files/company_tickers_exchange.json",
-      "fetched_at": "2026-11-05T04:42:32Z",
+      "fetched_at": "2026-11-21T01:44:43Z",
       "http_status": 200,
-      "raw_bytes": 522049,
-      "trim": "data cut to the 22 rows whose CIK is a tracked company (of 10409); fields and values untouched.",
-      "note": "SEC’s CIK, name, ticker and exchange file, fetched with the SEC User-Agent (FrontierTerminal contact@frontierterm.com). The CIK check for entity_identifiers. Anthropic, PBC is listed as ANT with a null exchange (not yet trading)."
+      "raw_bytes": 521795,
+      "trim": "data cut to the 22 rows whose CIK is a tracked company (of 10399), in the file's order; fields and values untouched.",
+      "note": "SEC’s CIK, name, ticker and exchange file, fetched with the SEC User-Agent (FrontierTerminal contact@frontierterm.com). The CIK check for entity_identifiers. Re-fetched after Anthropic's IPO priced: Anthropic, PBC is listed as ANT on Nasdaq (the 2026-11-05 fetch had a null exchange)."
+    },
+    {
+      "path": "fixtures/sec/prospectus-anthropic-424b4-cover.html",
+      "source_id": "identifiers-anthropic-424b4",
+      "source_url": "https://www.sec.gov/Archives/edgar/data/2130357/000162828026074944/anthropicpbc-424b4.htm",
+      "fetched_at": "2026-11-21T01:44:53Z",
+      "http_status": 200,
+      "raw_bytes": 14400530,
+      "trim": "the first 9,283 bytes, unchanged: the facing page and prospectus cover through the block that closes the listing sentence.",
+      "note": "Anthropic, PBC's final prospectus (424B4, filed 2026-11-19): initial public offering price $83.00 a share; approved to list Class A common stock on the Nasdaq Global Select Market under the symbol “ANT.” The evidence for the listed status in entity_securities and entity_identifiers."
+    },
+    {
+      "path": "fixtures/sec/anthropic-fwp-pricing.html",
+      "source_id": "identifiers-anthropic-fwp-pricing",
+      "source_url": "https://www.sec.gov/Archives/edgar/data/2130357/000162828026074937/anthropicpbc-fwppricing.htm",
+      "fetched_at": "2026-11-21T01:50:06Z",
+      "http_status": 200,
+      "raw_bytes": 18371,
+      "note": "Anthropic, PBC's pricing term sheet (free writing prospectus dated 2026-11-18, filed 2026-11-19), untrimmed: Symbol ANT (Nasdaq Global Select Market), price to public $83.00, pricing date November 18, trade date November 19, settlement date November 20, 2026. The evidence for the first trade date in entity_securities and entity_identifiers."
     },
     {
       "path": "fixtures/sec/edgar-submissions-anthropic.json",

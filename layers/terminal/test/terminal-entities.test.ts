@@ -79,7 +79,6 @@ describe('ENTITY_SECURITIES', () => {
     expect(SEC_REVENUE_CRWV.url({ now: new Date(), newest: null })).toContain(`CIK${crwv.cik}`)
 
     const ant = ENTITY_SECURITIES.find((r) => r.symbol === 'ANT')!
-    expect(ant.listing_status).toBe('registered')
     const index = fixtureText('fixtures/sec/filing-index-anthropic-s-1.html')
     expect(index).toContain(`cik=${Number(ant.cik)}`)
     const prospectus = fixtureText('fixtures/sec/prospectus-anthropic-s-1.html')
@@ -88,6 +87,29 @@ describe('ENTITY_SECURITIES', () => {
       .replace(/&#8220;/g, '“')
       .replace(/&#8221;/g, '”')
     expect(prospectus).toMatch(/Nasdaq Global Select Market\s*under the\s*symbol\s*“ANT\.”/)
+  })
+
+  it('lists Anthropic as trading on the final prospectus’s word', () => {
+    const ant = ENTITY_SECURITIES.find((r) => r.symbol === 'ANT')!
+    expect(ant.listing_status).toBe('listed')
+    expect(ant.source_url).toContain('anthropicpbc-424b4.htm')
+    const cover = fixtureText('fixtures/sec/prospectus-anthropic-424b4-cover.html')
+      .replace(/<[^>]+>/g, ' ')
+      .replace(/&#160;|&nbsp;/g, ' ')
+      .replace(/&#8220;/g, '“')
+      .replace(/&#8221;/g, '”')
+      .replace(/\s+/g, ' ')
+    expect(cover).toContain('The initial public offering price per share is $83.00')
+    expect(cover).toMatch(
+      /approved to list our Class A common stock on the Nasdaq Global Select Market under the symbol “ANT\.”/,
+    )
+    const pricing = fixtureText('fixtures/sec/anthropic-fwp-pricing.html')
+      .replace(/<[^>]+>/g, ' ')
+      .replace(/&#58;/g, ':')
+      .replace(/\s+/g, ' ')
+    expect(pricing).toContain('Symbol: ANT (Nasdaq Global Select Market)')
+    expect(pricing).toContain('Trade Date: November 19, 2026')
+    expect(ant.note).toContain('trading since 2026-11-19')
   })
 
   it('gives each security the MIC and FIGI OpenFIGI lists for its symbol', () => {

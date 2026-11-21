@@ -27,7 +27,7 @@ import { judgeFreshnessCheck } from '../pipeline/judge/watchdog'
 import { GKG_READY_MS, stampIso } from '../pipeline/track-record/gkg'
 import { oldestUnread } from '../pipeline/track-record/search'
 import { heartbeatLoader, taskHeartbeatCheck, type FreshnessCheck } from './freshness'
-import { ENTITY_IDENTIFIERS } from './terminal-identifiers'
+import { ENTITY_IDENTIFIERS, type EntityIdentifier } from './terminal-identifiers'
 
 const HOUR_MS = 60 * 60 * 1000
 
@@ -106,14 +106,16 @@ export const LISTING_REVIEW_MS = HOUR_MS
  * trading". That filing is the work owed: it stays owed until the rows are
  * re-checked and no longer say "registered".
  */
-export const listingStatusCheck: FreshnessCheck = {
+export const listingStatusCheckOf = (
+  identifiers: readonly Pick<EntityIdentifier, 'entity_id' | 'listing_status'>[],
+): FreshnessCheck => ({
   key: 'listing-status',
   label: 'A registered filer’s listing status (terminal-identifiers.ts, terminal-entities.ts)',
   kind: 'listing_status_stale',
   maxAgeMs: LISTING_REVIEW_MS,
   path: '/api/identifiers',
   async evidence(db) {
-    const registered = ENTITY_IDENTIFIERS.filter((e) => e.listing_status === 'registered')
+    const registered = identifiers.filter((e) => e.listing_status === 'registered')
     if (registered.length === 0) return { owedSince: null }
     const fileDate = sql<string | null>`json_extract(${tables.entities.payload}, '$.file_date')`
     const [priced] = await db
@@ -139,7 +141,9 @@ export const listingStatusCheck: FreshnessCheck = {
       note: `${priced.source_id.replace('edgar-submissions-', '')} filed a 424B4 on ${priced.fileDate} and is still listed as registered`,
     }
   },
-}
+})
+
+export const listingStatusCheck = listingStatusCheckOf(ENTITY_IDENTIFIERS)
 
 /**
  * Scheduled tasks whose freshness is checked from their own rows instead of

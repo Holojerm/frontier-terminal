@@ -77,14 +77,14 @@ export const ENTITY_SECURITIES: readonly EntitySecurity[] = [
     cik: '0002130357',
     symbol: 'ANT',
     exchange: 'Nasdaq Global Select Market',
-    listing_status: 'registered',
-    note: 'Proposed symbol, not yet trading. The S-1 of 2026-10-26 says Anthropic has applied to list its Class A common stock on the Nasdaq Global Select Market under the symbol “ANT.” We took the CIK from that filing (export filers).',
+    listing_status: 'listed',
+    note: 'Listed, trading since 2026-11-19. The final prospectus (424B4) of 2026-11-19 prices the IPO at $83.00 a share and says Anthropic has been approved to list its Class A common stock on the Nasdaq Global Select Market under the symbol “ANT.” The pricing term sheet (FWP) gives the trade date as 2026-11-19. We took the CIK from the S-1 of 2026-10-26 (export filers).',
     mic: 'XNGS',
     figi: 'BBG0118LR3N0',
     disclosed_in: null,
     source_url:
-      'https://www.sec.gov/Archives/edgar/data/2130357/000162828026067168/anthropicpbc-sx1.htm',
-    checked_on: CHECKED,
+      'https://www.sec.gov/Archives/edgar/data/2130357/000162828026074944/anthropicpbc-424b4.htm',
+    checked_on: '2026-11-21',
   },
   {
     entity: 'anthropic',
