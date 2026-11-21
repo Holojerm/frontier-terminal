@@ -107,8 +107,8 @@ export const sourceRunStatusEnum = z.enum([
   'absent',
 ])
 // 'tripwire': an off-cycle poll of the model catalogs (layers/terminal/server/pipeline/tripwire.ts).
-// 'careers': the sources too big to share the survey's invocation (CAREERS_SOURCES in scopes.ts).
-// 'filings': the registration filings, ~14 MB a prospectus (REGISTRATION_PREFIXES in scopes.ts).
+// 'careers': the sources too big to share the survey's invocation (layers/talent/server/pipeline/scopes.ts › CAREERS_SOURCES).
+// 'filings': the registration filings, ~14 MB a prospectus (layers/terminal/server/pipeline/scopes.ts › REGISTRATION_PREFIXES).
 export const pollScopeEnum = z.enum(['edgar', 'survey', 'tripwire', 'careers', 'filings'])
 export type PollScope = z.infer<typeof pollScopeEnum>
 

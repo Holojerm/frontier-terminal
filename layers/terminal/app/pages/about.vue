@@ -11,7 +11,7 @@ import {
   LICENSE_SPLIT_EFFECTIVE,
   LICENSE_WINDOW_DAYS,
 } from '#shared/utils/license'
-import { CORRECTIONS } from '../../shared/utils/corrections'
+import { CORRECTIONS } from '#layers/core/shared/utils/corrections'
 import type { CoverageData } from '../../shared/utils/terminal-types'
 
 definePageMeta({

@@ -5,6 +5,7 @@ import {
   type EntityRow,
   type Provenance,
 } from './contracts'
+import type { FetchSource } from './sources'
 import type { PipelineDb } from './store'
 import type { LaneBlocks, TickInputs } from '#server/registries/lane-context'
 
@@ -168,3 +169,16 @@ export function redactPayload(
 
 /** A lane whose page is the current set and joins no side. */
 export const setLane = (parse: Lane['parse']): Lane => ({ sides: [], removals: 'set', parse })
+
+/**
+ * Alerts a domain raises from one source's changes by reading the store, after
+ * the lane's own: server/registries/lanes.ts › CHANGE_ALERTS, run in order.
+ */
+export type ChangeAlertRule = (
+  db: PipelineDb,
+  sourceId: string,
+  changes: readonly ChangeRow[],
+) => Promise<AlertRow[]>
+
+/** Sources a domain derives from the store each tick: server/registries/lanes.ts › DERIVED_SOURCES. */
+export type SourceDeriver = (db: PipelineDb, sourcesYaml: string) => Promise<FetchSource[]>

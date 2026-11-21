@@ -61,5 +61,24 @@ export const DOMAIN_LAYERS = {
       'app/utils/hiring-archive.ts',
     ],
   },
-  terminal: { uses: ['core', 'compute', 'pricing', 'talent'] },
+  reliability: {
+    uses: ['core', 'pricing'],
+    public: [
+      // Its queries (incidents, the incident archive, the probes, the reliability record), which
+      // the lab page, the tear sheet, the overview, the theses and the signals read.
+      'server/utils/',
+      // The OpenRouter id-to-lab map, which the shell's rankings and spend reads share.
+      'server/pipeline/parsers/openrouter.ts',
+      // Its parser manifest, which the shell's manifest imports.
+      'server/pipeline/parsers.manifest.ts',
+      // The status-feed archive eras the shell's backfill rows read.
+      'server/pipeline/archive/status-eras.ts',
+      // The probe placements the shell's capacity signals read.
+      'server/pipeline/probes/placement.ts',
+      // The deploy watch the shell's ops watch and freshness read, and the deploy checks feed.ts reads.
+      'server/pipeline/deploy-watch.ts',
+      'server/pipeline/reliability/deploys.ts',
+    ],
+  },
+  terminal: { uses: ['core', 'compute', 'pricing', 'talent', 'reliability'] },
 } satisfies LayerTable

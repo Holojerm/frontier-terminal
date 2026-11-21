@@ -27,7 +27,7 @@ import type {
 } from '../../shared/utils/terminal-types'
 
 import * as tables from '#server/db/schema'
-import { providerOfOpenRouterId } from '../pipeline/parsers/openrouter'
+import { providerOfOpenRouterId } from '../../../reliability/server/pipeline/parsers/openrouter'
 import type { PipelineDb } from '#layers/core/server/pipeline/store'
 import { sourceReads, type QueryContext } from '#layers/core/server/utils/terminal-db'
 import { byString, num, parseJson, str } from '#layers/core/server/utils/terminal-json'

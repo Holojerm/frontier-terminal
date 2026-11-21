@@ -6,7 +6,8 @@
 
 import { queryDisclosures } from '../utils/terminal-disclosures'
 import { serveTerminal, terminalDb } from '#layers/core/server/utils/terminal-handler'
-import { disclosuresForLab, labQuerySchema } from '../utils/terminal-lab-cuts'
+import { labQuerySchema } from '#layers/core/server/utils/lab-query'
+import { disclosuresForLab } from '../utils/terminal-lab-cuts'
 import { rateLimitTerminal } from '#layers/core/server/utils/api-access'
 
 export default defineEventHandler(async (event) => {

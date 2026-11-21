@@ -10,7 +10,7 @@ import {
   windowRows,
   windowUrl,
 } from '../../server/pipeline/rankings-history'
-import { runRefresh, type RefreshDeps } from '../../server/pipeline/refresh'
+import { runRefresh, type RefreshDeps } from '../../../core/server/pipeline/refresh'
 import type { RawStore } from '#layers/core/server/pipeline/raw'
 import { fixtureText } from '#layers/core/test/pipeline/fixtures'
 

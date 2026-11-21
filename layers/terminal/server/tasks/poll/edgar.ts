@@ -1,5 +1,5 @@
 // Cron task: poll the EDGAR feeds and the model catalogs every 30 minutes
-// (layers/terminal/server/pipeline/scopes.ts).
+// (layers/core/server/pipeline/scopes.ts).
 //
 // Scheduled from nuxt.config.ts (SCHEDULED_TASKS) and matched by the
 // [triggers] crons entry in wrangler.toml; `bun run crons:check` fails the
@@ -21,7 +21,7 @@ import { filedFactsSkip, runFiledFacts } from '../../exposure/ingest'
 import { createFetcher } from '#layers/core/server/pipeline/fetch'
 import { unstorageLockStore } from '#layers/core/server/pipeline/lock'
 import { blobRawReader, blobRawStore } from '#layers/core/server/pipeline/raw'
-import { runPoll } from '../../pipeline/poll'
+import { runPoll } from '#layers/core/server/pipeline/poll'
 import { paceSec } from '#layers/core/server/pipeline/sec-pace'
 import { warmAfterPoll } from '#layers/core/server/utils/cache-warm-task'
 import { withHeartbeat } from '#layers/core/server/utils/task-heartbeat'

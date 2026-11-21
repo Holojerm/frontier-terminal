@@ -14,9 +14,9 @@ import {
   periodBefore,
   segmentTarget,
 } from '../../server/pipeline/parsers/sec/xbrl-segment'
-import { runRefresh } from '../../server/pipeline/refresh'
+import { runRefresh } from '../../../core/server/pipeline/refresh'
 import type { RawStore } from '#layers/core/server/pipeline/raw'
-import { sourceIdsForScope } from '../../server/pipeline/scopes'
+import { sourceIdsForScope } from '../../../core/server/pipeline/scopes'
 import { includeSources } from '#layers/core/server/pipeline/sources'
 import { terminalStamps } from '#layers/core/server/utils/terminal-cache'
 import { queryContext } from '#layers/core/server/utils/terminal-db'

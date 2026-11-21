@@ -163,14 +163,14 @@ enabled = true
 # `bun run crons:check` (part of `bun run ci`) fails the build on a mismatch.
 #
 #   "*/30 * * * *"  ops:watch  — freshness + launch-coverage checks, then prunes ops_events
-#                   poll:edgar — the two SEC feeds (layers/terminal/server/pipeline/scopes.ts)
+#                   poll:edgar — the two SEC feeds (layers/core/server/pipeline/scopes.ts)
 #   "0 */6 * * *"   poll:survey — every include source: pricing, hiring, EDGAR,
 #                   status pages, OpenRouter rankings — except the careers and filings lanes
 #   "17 */6 * * *"  poll:careers — the ~20 MB Google careers feed, alone, so its
 #                   memory never shares the survey's invocation
-#                   (CAREERS_SOURCES in layers/terminal/server/pipeline/scopes.ts)
+#                   (CAREERS_SOURCES in layers/talent/server/pipeline/scopes.ts)
 #   "47 */6 * * *"  poll:filings — the S-1 indexes and ~14 MB prospectuses, for the
-#                   same reason (REGISTRATION_PREFIXES in the same file)
+#                   same reason (REGISTRATION_PREFIXES in layers/terminal/server/pipeline/scopes.ts)
 #   "*/5 * * * *"   poll:tripwire — parses the four model catalogs and polls
 #                   them off-cycle only when they differ from the store
 #                   cache:warm — re-renders the public pages after a deploy or poll
@@ -193,7 +193,7 @@ enabled = true
 #   "29 5 * * TUE"  power:verify — re-reads each utility, regulator and company page the
 #                   power-sites table cites (layers/compute/server/power/verify.ts)
 #   "7 * * * *"     probes:latency — one timed streaming request per lab's flagship model
-#                   (layers/terminal/server/pipeline/probes/), alone in its invocation
+#                   (layers/reliability/server/pipeline/probes/), alone in its invocation
 #   "40 6 * * *"    signals:prices — Databento daily closes once EQUS.SUMMARY has the US session,
 #                   plus the one-off hourly backfill (layers/terminal/server/signals/market.ts)
 #   "10 7 * * *"    signals:run — the signals harness over those closes
@@ -256,7 +256,7 @@ max_retries = 5
 # ─── Probe placement ─────────────────────────────────────────────────────────
 # The hourly latency probes run inside a Durable Object made with a location
 # hint, so every probe leaves from one place instead of whichever colo ran the
-# cron (layers/terminal/server/pipeline/probes/placement.ts). The class is
+# cron (layers/reliability/server/pipeline/probes/placement.ts). The class is
 # Nitro's own: the `cloudflare-durable` preset (nuxt.config.ts) exports
 # `$DurableObject`, which runs the app inside the object. A Worker's cron and
 # its fetch path can't be placed otherwise: `[placement]` moves only fetch
@@ -343,7 +343,7 @@ NUXT_INDEXNOW_KEY = "fe2738e740b8c6b06a20d76ab1877559"
 #                                (layers/core/server/pipeline/fetch.ts). Unset = that source is
 #                                recorded 'skipped' each tick, never fetched anonymously.
 #                                Also pays for the hourly latency probes
-#                                (layers/terminal/server/pipeline/probes/), which need credit on
+#                                (layers/reliability/server/pipeline/probes/), which need credit on
 #                                the account; unset = no probe runs.
 #   NUXT_RESEND_API_KEY          Resend API key for public digest subscriptions
 #                                (layers/terminal/server/utils/resend.ts). Needs the

@@ -143,7 +143,7 @@ export const sourceRuns = sqliteTable(
     removed: integer('removed').notNull(),
     modified: integer('modified').notNull(),
     source_url: text('source_url').notNull(),
-    // Two hashes (JSON, layers/terminal/server/pipeline/refresh.ts › ParseBasis): what the
+    // Two hashes (JSON, layers/core/server/pipeline/refresh.ts › ParseBasis): what the
     // parse read (the page, its side snapshots, the class-map cells citing
     // it) and what it read them with (parser version, config, URL). The next
     // tick skips the parse only when both match. NULL for a failed run, a

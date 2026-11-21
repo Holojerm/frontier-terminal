@@ -20,7 +20,7 @@ import sourcesYaml from 'raw:~~/sources.yaml'
 
 import { createFetcher } from '#layers/core/server/pipeline/fetch'
 import { unstorageLockStore } from '#layers/core/server/pipeline/lock'
-import { runPoll } from '../../pipeline/poll'
+import { runPoll } from '#layers/core/server/pipeline/poll'
 import { blobRawStore } from '#layers/core/server/pipeline/raw'
 import { paceSec } from '#layers/core/server/pipeline/sec-pace'
 import { KIND_READ_FAILED, runPowerSiteReads } from '#layers/compute/server/power/ingest'

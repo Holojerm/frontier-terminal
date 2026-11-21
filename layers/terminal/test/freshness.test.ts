@@ -11,7 +11,7 @@ import {
   driftFirstSeenKey,
   fetchMainHead,
   parseRefAdvertisement,
-} from '../server/pipeline/deploy-watch'
+} from '../../reliability/server/pipeline/deploy-watch'
 import type { LockStore } from '#layers/core/server/pipeline/lock'
 import {
   FRESHNESS_CHECK_FAILED_KIND,

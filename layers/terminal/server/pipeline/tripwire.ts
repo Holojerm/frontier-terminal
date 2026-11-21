@@ -6,8 +6,8 @@ import { effectiveClassMap } from '#layers/pricing/server/pipeline/class-map'
 import { laneFor } from '#server/registries/lanes'
 import { withPollLock } from '#layers/core/server/pipeline/lock'
 import { manifestFixtures } from '#layers/core/server/pipeline/parsers/fixture-provenance'
-import type { PollDeps } from './poll'
-import { runRefresh, type RefreshReport } from './refresh'
+import type { PollDeps } from '#layers/core/server/pipeline/poll'
+import { runRefresh, type RefreshReport } from '#layers/core/server/pipeline/refresh'
 import { includeSources, type FetchSource } from '#layers/core/server/pipeline/sources'
 
 // The launch tripwire, every five minutes: fetch each lab's model catalog,

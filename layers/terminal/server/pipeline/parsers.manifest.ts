@@ -13,17 +13,10 @@ import './parsers/sec/xbrl-segment'
 import './parsers/sec/filing-index'
 import './parsers/sec/prospectus-revenue'
 import './parsers/sec/prospectus'
-// Status pages (capacity strain)
-import './parsers/status/openai-status'
-import './parsers/status/anthropic-status'
-import './parsers/status/google-cloud-status'
-import './parsers/status/mistral-status'
-import './parsers/status/xai-status'
-import './parsers/status/deepseek-status'
+// Status pages and the OpenRouter model catalog (the reliability layer's own manifest)
+import '#layers/reliability/server/pipeline/parsers.manifest'
 // Misalignment disclosures
 import './parsers/disclosures/openai-misalignment-reports'
 import './parsers/disclosures/openai-misalignment-report'
-// OpenRouter drift check (cross-check only)
-import './parsers/openrouter'
 // OpenRouter usage rankings (demand share)
 import './parsers/openrouter-rankings'

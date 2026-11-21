@@ -2607,7 +2607,7 @@ archive_sources:
       impact where the feed prints one, start, end and components, as the
       live lanes take them. Taken once per backfill run: every copy of each
       feed (one a month of Google Cloud's), 2023-01 to the day each live
-      status lane began (layers/terminal/server/pipeline/archive/status-eras.ts).
+      status lane began (layers/reliability/server/pipeline/archive/status-eras.ts).
       Read 2026-11-21.
     rights: not-cleared
     caveats: >-
