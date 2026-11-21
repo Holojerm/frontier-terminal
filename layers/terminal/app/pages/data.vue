@@ -246,10 +246,9 @@ const tabs = [
             <span class="font-mono">.json</span>.
             <span class="font-mono">entity_identifiers</span> has each company’s CIK, LEI, ticker,
             and FIGI, and <span class="font-mono">entity_securities</span> maps each lab to the
-            securities that carry it. We no longer export
-            <span class="font-mono">rankings_daily</span>. OpenRouter licenses its rankings CC BY
-            4.0 but says they aren’t to be re-served as a competing free API. So the per-lab shares
-            stay on
+            securities that carry it. We don’t export <span class="font-mono">rankings_daily</span>.
+            OpenRouter licenses its rankings CC BY 4.0 but says they aren’t to be re-served as a
+            competing free API. So the per-lab shares stay on
             <NuxtLink to="/rankings" class="text-primary underline underline-offset-2"
               >/rankings</NuxtLink
             >

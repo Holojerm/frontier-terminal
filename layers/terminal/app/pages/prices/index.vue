@@ -71,7 +71,7 @@ useSeo({
       >
         <TerminalGap
           v-if="prices.rows.length === 0"
-          title="No model rows yet."
+          title="No models listed yet."
           reason="Prices appear after our first check of each vendor page."
           :action="{ label: 'See coverage', to: '/data#coverage' }"
         />
