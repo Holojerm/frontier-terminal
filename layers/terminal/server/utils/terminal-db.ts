@@ -20,7 +20,7 @@
 // server/utils/fleet-status.ts uses) so layers/terminal/test/terminal-db.test.ts drives them
 // against the workerd D1.
 
-import { and, count, eq, inArray, max, min, sql } from 'drizzle-orm'
+import { and, eq, inArray, max, min, sql } from 'drizzle-orm'
 import { isSetLane } from '../pipeline/lane-removals'
 import type {
   CoverageData,
@@ -41,6 +41,7 @@ import { parseDerivedSourcesBlock, type DerivedTemplate } from '../pipeline/deri
 import { parseRevenueFilersBlock, type RevenueFilers } from '../pipeline/parsers/sec/revenue-filers'
 import { parseCikWhitelistBlock, type CikWhitelist } from '../pipeline/parsers/sec/whitelist'
 import { RECIPES } from '../theses/recipes/registry'
+import { countedTotals, countsByKey } from './row-counts'
 import type { PipelineDb } from '../pipeline/store'
 import type { DataFreshness } from '#server/utils/seo'
 import { parseDepartmentClusters, type DepartmentCluster } from './terminal-clusters'
@@ -306,24 +307,22 @@ export async function firstSnapshotPerSource(
 }
 
 export async function tableCounts(db: PipelineDb): Promise<TableCounts> {
-  const total = async (
-    table: typeof tables.entities | typeof tables.changes | typeof tables.alerts,
-  ) => {
-    const [row] = await db.select({ total: count() }).from(table)
-    return row?.total ?? 0
-  }
-  // snapshots and source_runs from source_stats: count(*) reads every row.
-  const [logged] = await db
-    .select({
-      snapshots: sql<number>`coalesce(sum(${tables.sourceStats.snapshot_count}), 0)`,
-      source_runs: sql<number>`coalesce(sum(${tables.sourceStats.run_count}), 0)`,
-    })
-    .from(tables.sourceStats)
+  // snapshots and source_runs from source_stats, the rest from row_counts:
+  // count(*) reads every row.
+  const [[logged], totals] = await Promise.all([
+    db
+      .select({
+        snapshots: sql<number>`coalesce(sum(${tables.sourceStats.snapshot_count}), 0)`,
+        source_runs: sql<number>`coalesce(sum(${tables.sourceStats.run_count}), 0)`,
+      })
+      .from(tables.sourceStats),
+    countedTotals(db),
+  ])
   return {
     snapshots: logged?.snapshots ?? 0,
-    entities: await total(tables.entities),
-    changes: await total(tables.changes),
-    alerts: await total(tables.alerts),
+    entities: totals.entities,
+    changes: totals.changes,
+    alerts: totals.alerts,
     source_runs: logged?.source_runs ?? 0,
   }
 }
@@ -413,10 +412,7 @@ async function recipeCoverage(db: PipelineDb, ctx: QueryContext): Promise<Recipe
       from json_each(${ids}) ids
       join recipe_runs r on r.id = (select r1.id from recipe_runs r1
         where r1.recipe_id = ids.value order by r1.started_at desc limit 1)`),
-    db
-      .select({ recipe_id: tables.recipeObservations.recipe_id, n: count() })
-      .from(tables.recipeObservations)
-      .groupBy(tables.recipeObservations.recipe_id),
+    countsByKey(db, 'recipe_observations'),
     db.all<{ recipe_id: string; source_url: string; fetched_at: string }>(
       sql`select o.recipe_id as recipe_id, o.source_url as source_url, o.fetched_at as fetched_at
       from json_each(${ids}) ids
@@ -425,7 +421,6 @@ async function recipeCoverage(db: PipelineDb, ctx: QueryContext): Promise<Recipe
     ),
   ])
   const runOf = new Map(runs.map((r) => [r.recipe_id, r]))
-  const countOf = new Map(counts.map((r) => [r.recipe_id, r.n]))
   const newestOf = new Map(newest.map((r) => [r.recipe_id, r]))
   return RECIPES.map((recipe) => {
     const run = runOf.get(recipe.id)
@@ -443,7 +438,7 @@ async function recipeCoverage(db: PipelineDb, ctx: QueryContext): Promise<Recipe
             detail: run.detail,
           }
         : null,
-      observations: countOf.get(recipe.id) ?? 0,
+      observations: counts.get(recipe.id) ?? 0,
       newest: stored ? { source_url: stored.source_url, fetched_at: stored.fetched_at } : null,
       caveat: audit?.caveat ?? null,
       terms: audit?.terms ?? null,
@@ -455,14 +450,11 @@ async function recipeCoverage(db: PipelineDb, ctx: QueryContext): Promise<Recipe
 export async function queryCoverage(db: PipelineDb, ctx: QueryContext): Promise<CoverageData> {
   const [{ stamps, runs }, counts, totals, [first]] = await Promise.all([
     sourceReads(db),
-    db
-      .select({ source_id: tables.entities.source_id, n: count() })
-      .from(tables.entities)
-      .groupBy(tables.entities.source_id),
+    countsByKey(db, 'entities'),
     tableCounts(db),
     db.select({ at: min(tables.sourceStats.first_fetched_at) }).from(tables.sourceStats),
   ])
-  const entityCount = new Map(counts.map((c) => [c.source_id, c.n]))
+  const entityCount = counts
 
   const sources: SourceCoverage[] = ctx.registry.sources.map((source) => {
     const stamp = stamps.get(source.source_id)

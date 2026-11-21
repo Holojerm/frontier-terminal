@@ -185,6 +185,52 @@ export const sourceStats = sqliteTable('source_stats', {
   last_run_at: text('last_run_at'),
 })
 
+// Alert citations — which lab and entity type each alert's cited changes
+// carry, one row per distinct (alert, provider, entity_type). The lab and
+// topic filters on /alerts read it. Without it they opened every alert's
+// change_ids array and looked up each cited change (9.5k rows a call for 911
+// alerts).
+//
+// Written by the alerts_cites trigger (migration 0060) on every insert into
+// alerts, so no alert writer has to know about it. Alerts and changes are
+// append-only and a change is always stored before the alert citing it, so
+// the rows never go stale.
+export const alertCites = sqliteTable(
+  'alert_cites',
+  {
+    alert_id: text('alert_id').notNull(),
+    provider: text('provider').notNull(),
+    entity_type: text('entity_type').notNull(),
+  },
+  (t) => [
+    primaryKey({ columns: [t.alert_id, t.provider, t.entity_type] }),
+    index('alert_cites_provider_idx').on(t.provider, t.entity_type, t.alert_id),
+    index('alert_cites_type_idx').on(t.entity_type, t.alert_id),
+  ],
+)
+
+// Row counts — how many rows a table holds per key: entities per source_id,
+// changes per entity_type, recipe_observations per recipe_id, alerts under ''.
+// SQLite answers count(*) by reading every row, and the coverage panel, the
+// overview and the fleet endpoint each asked several times a tick (24M rows a
+// day). A total is the sum over a table's keys.
+//
+// Kept by insert and delete triggers on each counted table (migration 0060),
+// so a writer cannot forget it. The key columns are identity columns that no
+// writer updates; a new writer that did would need an update trigger too.
+// Never INSERT OR REPLACE into a counted table: SQLite replaces the old row
+// without firing its delete trigger, so the row is counted twice. Upsert with
+// ON CONFLICT, as every writer does.
+export const rowCounts = sqliteTable(
+  'row_counts',
+  {
+    table_name: text('table_name').notNull(),
+    key: text('key').notNull(),
+    n: integer('n').notNull(),
+  },
+  (t) => [primaryKey({ columns: [t.table_name, t.key] })],
+)
+
 export type Snapshot = typeof snapshots.$inferSelect
 
 export type Entity = typeof entities.$inferSelect
