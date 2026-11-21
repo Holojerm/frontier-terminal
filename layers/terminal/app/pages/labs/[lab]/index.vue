@@ -503,7 +503,7 @@ const tabs = computed(() => [
             <div class="border-t border-default p-3">
               <TerminalGap
                 v-if="labSkus === 0"
-                title="No SKU rows for this lab yet."
+                title="No SKUs for this lab yet."
                 :action="{ label: 'See coverage', to: '/data#coverage' }"
               />
               <TerminalPriceTable v-else :prices="prices.data.value" bare />
@@ -570,7 +570,7 @@ const tabs = computed(() => [
               v-if="rankings.data.value?.status === 'ok' && topModels.length"
               :providers="topModels"
             />
-            <TerminalGap v-else title="No rankings rows yet." />
+            <TerminalGap v-else title="No rankings data yet." />
           </TerminalPanel>
 
           <TerminalPanel
@@ -579,7 +579,7 @@ const tabs = computed(() => [
             note="This lab’s OpenRouter tokens at its list prices, per model. Shares are of the tracked labs’ total (not all OpenRouter traffic)."
           >
             <TerminalSpendShare v-if="spendOf" :spend="spendOf" />
-            <TerminalGap v-else title="No rankings rows yet." />
+            <TerminalGap v-else title="No rankings data yet." />
           </TerminalPanel>
 
           <TerminalPanel

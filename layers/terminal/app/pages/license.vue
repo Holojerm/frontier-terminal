@@ -15,6 +15,7 @@ import {
   DATA_LICENSE,
   HISTORY_LICENSE,
   HISTORY_PARAM,
+  LICENSE_SPLIT_EFFECTIVE,
   LICENSE_WINDOW_DAYS,
 } from '#shared/utils/license'
 import type { CoverageData } from '../../shared/utils/terminal-types'
@@ -111,11 +112,11 @@ useSeo({
       </div>
     </TerminalPanel>
 
-    <TerminalPanel id="change" title="What changed on 2026-11-04">
+    <TerminalPanel id="change" :title="`Data we published before ${LICENSE_SPLIT_EFFECTIVE}`">
       <div class="max-w-2xl space-y-3 text-default">
         <p>
-          Before 2026-11-04 all of our data was {{ DATA_LICENSE.short }}. The age split applies to
-          data we publish from that day on.
+          Before {{ LICENSE_SPLIT_EFFECTIVE }} all of our data was {{ DATA_LICENSE.short }}. The age
+          split applies to data we publish from that day on.
         </p>
         <p>
           Anything we published before then stays {{ DATA_LICENSE.short }}, however old it gets.
