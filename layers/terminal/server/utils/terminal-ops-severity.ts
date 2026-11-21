@@ -143,6 +143,10 @@ export const TERMINAL_OPS_SEVERITY: Record<string, OpsKindPolicy> = {
   // ercot-large-loads.ts): an EIA-930 file or an ERCOT report it could not
   // fetch or read, or ERCOT's listing pages linking no report.
   grid_load_read_failed: { severity: 'warning' },
+  // The listed companies' job boards (layers/terminal/server/listed-hiring/read.ts):
+  // a board that answered an error, a payload its reader did not recognise, or
+  // a board that emptied at once. Each names the board.
+  listed_hiring_read_failed: { severity: 'warning' },
   // A stored capex-guidance sentence is not in its stored release, or no
   // longer reads as its figure: the parser and the store disagree.
   guidance_unverified: { severity: 'warning' },

@@ -246,6 +246,8 @@ describe('an empty store renders an honest empty state, never a throw', () => {
       'signal_results',
       'grid_load_days',
       'ercot_large_load_facts',
+      'listed_jobs',
+      'listed_hiring_reads',
     ])
   })
 

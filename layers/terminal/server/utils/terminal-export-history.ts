@@ -231,6 +231,13 @@ export const EXPORT_HISTORY: Readonly<Record<string, HistoryRule>> = {
     'fetched_at',
     tables.ercotLargeLoadFacts.posted,
   ),
+  listed_jobs: whole('it holds every role the boards have listed, open or closed.'),
+  listed_hiring_reads: windowed(
+    ['read_at'],
+    'read_at, when we read the board',
+    'read_at',
+    tables.listedHiringReads.read_at,
+  ),
 }
 
 /** The license window's rule for a registered table. */

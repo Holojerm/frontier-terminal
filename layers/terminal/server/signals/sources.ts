@@ -225,6 +225,30 @@ export function createLoader(deps: LoadDeps) {
           points: points.filter((p): p is Point => p.value !== null),
         }
       }
+      case 'listed_hiring': {
+        // One point per successful read, as counted then; the harness keeps
+        // each week's last. A failed read has no count and is no point.
+        const rows = await deps.db
+          .select({
+            read_at: tables.listedHiringReads.read_at,
+            total: tables.listedHiringReads.total,
+            datacenter: tables.listedHiringReads.datacenter,
+          })
+          .from(tables.listedHiringReads)
+          .where(
+            and(
+              eq(tables.listedHiringReads.board_id, source.board),
+              eq(tables.listedHiringReads.status, 'read'),
+            ),
+          )
+          .orderBy(tables.listedHiringReads.read_at)
+        const points: Point[] = []
+        for (const r of rows) {
+          const value = source.metric === 'total' ? r.total : r.datacenter
+          if (value !== null) points.push({ date: r.read_at.slice(0, 10), value })
+        }
+        return { kind: 'points', points }
+      }
       case 'ercot_large_loads': {
         // The first report to state a month: what was public then. A later
         // report's restatement would be a value nobody had at the time.

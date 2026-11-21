@@ -2185,6 +2185,78 @@
       "http_status": 200,
       "raw_bytes": 249063,
       "trim": "the unit line and the revenue table kept; the WordPress page around them dropped"
+    },
+    {
+      "path": "fixtures/listed-hiring/coreweave-greenhouse.json",
+      "source_id": "listed-coreweave-greenhouse",
+      "source_url": "https://boards-api.greenhouse.io/v1/boards/coreweave/departments",
+      "fetched_at": "2026-11-21T07:06:37Z",
+      "http_status": 200,
+      "raw_bytes": 321283,
+      "trim": "none — committed whole"
+    },
+    {
+      "path": "fixtures/listed-hiring/nebius-greenhouse.json",
+      "source_id": "listed-nebius-greenhouse",
+      "source_url": "https://boards-api.greenhouse.io/v1/boards/nebius/departments",
+      "fetched_at": "2026-11-21T07:06:37Z",
+      "http_status": 200,
+      "raw_bytes": 300083,
+      "trim": "none — committed whole"
+    },
+    {
+      "path": "fixtures/listed-hiring/galaxy-greenhouse.json",
+      "source_id": "listed-galaxy-greenhouse",
+      "source_url": "https://boards-api.greenhouse.io/v1/boards/galaxydigitalservices/departments",
+      "fetched_at": "2026-11-21T07:06:37Z",
+      "http_status": 200,
+      "raw_bytes": 38659,
+      "trim": "none — committed whole"
+    },
+    {
+      "path": "fixtures/listed-hiring/hut8-greenhouse.json",
+      "source_id": "listed-hut8-greenhouse",
+      "source_url": "https://boards-api.greenhouse.io/v1/boards/hut8/departments",
+      "fetched_at": "2026-11-21T07:06:37Z",
+      "http_status": 200,
+      "raw_bytes": 32003,
+      "trim": "none — committed whole"
+    },
+    {
+      "path": "fixtures/listed-hiring/cipher-greenhouse.json",
+      "source_id": "listed-cipher-greenhouse",
+      "source_url": "https://boards-api.greenhouse.io/v1/boards/cipherminingtechnologiesinc/departments",
+      "fetched_at": "2026-11-21T07:06:37Z",
+      "http_status": 200,
+      "raw_bytes": 4965,
+      "trim": "none — committed whole"
+    },
+    {
+      "path": "fixtures/listed-hiring/astera-greenhouse.json",
+      "source_id": "listed-astera-greenhouse",
+      "source_url": "https://boards-api.greenhouse.io/v1/boards/asteralabs/departments",
+      "fetched_at": "2026-11-21T07:06:37Z",
+      "http_status": 200,
+      "raw_bytes": 253915,
+      "trim": "none — committed whole"
+    },
+    {
+      "path": "fixtures/listed-hiring/cerebras-ashby.json",
+      "source_id": "listed-cerebras-ashby",
+      "source_url": "https://api.ashbyhq.com/posting-api/job-board/cerebras",
+      "fetched_at": "2026-11-21T07:06:38Z",
+      "http_status": 200,
+      "raw_bytes": 1996045,
+      "trim": "descriptionHtml and descriptionPlain (the posting bodies) removed from each job; every other field verbatim"
+    },
+    {
+      "path": "fixtures/listed-hiring/credo-hibob.json",
+      "source_id": "listed-credo-hibob",
+      "source_url": "https://credo.careers.hibob.com/api/job-ad",
+      "fetched_at": "2026-11-21T07:06:38Z",
+      "http_status": 200,
+      "raw_bytes": 124246,
+      "trim": "every string field over 400 characters (the posting body: description, requirements, responsibilities, benefits) removed from each jobAdDetails entry; every other field verbatim"
     }
   ]
 }
