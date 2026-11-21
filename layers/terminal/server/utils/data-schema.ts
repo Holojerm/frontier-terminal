@@ -340,6 +340,13 @@ export const SCHEMA_RELEASES: readonly SchemaRelease[] = [
       ercot_large_load_facts: { note: 'New table.' },
     },
   },
+  {
+    version: '1.22.0',
+    date: '2026-11-21',
+    summary:
+      'A new hardware_prints table: the monthly revenue of TSMC, Hon Hai, Quanta, Wistron, Wiwynn, Gigabyte, Accton and Delta, each figure as a source first gave it, with first_seen_at, published_at (the release time where the source states one), due_on and a vintage per revision. TSMC’s history from its 6-Ks starts in 2015 and Accton’s from its own page in July 2023. /api/prints serves it with each company’s sourced ties, and get_hardware_prints returns the same.',
+    tables: { hardware_prints: { note: 'New table.' } },
+  },
 ]
 
 export const SCHEMA_VERSION = SCHEMA_RELEASES.at(-1)!.version

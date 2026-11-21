@@ -248,6 +248,36 @@ export function createLoader(deps: LoadDeps) {
             .sort((a, b) => (a.date < b.date ? -1 : 1)),
         }
       }
+      case 'prints': {
+        // Each month as its first release stated it: vintage 1 of a print row,
+        // from whichever source carried a year-on-year figure.
+        const rows = await deps.db
+          .select({
+            period: tables.hardwarePrints.period,
+            yoy: tables.hardwarePrints.yoy_pct,
+            vintage: tables.hardwarePrints.vintage,
+          })
+          .from(tables.hardwarePrints)
+          .where(
+            and(
+              eq(tables.hardwarePrints.series, source.series),
+              eq(tables.hardwarePrints.entity, source.entity),
+              eq(tables.hardwarePrints.window, 'month'),
+              eq(tables.hardwarePrints.observed_as, 'print'),
+              eq(tables.hardwarePrints.vintage, 1),
+            ),
+          )
+        const byMonth = new Map<string, number>()
+        for (const r of rows) {
+          if (r.yoy !== null && !byMonth.has(r.period)) byMonth.set(r.period, r.yoy)
+        }
+        return {
+          kind: 'points',
+          points: [...byMonth.entries()]
+            .map(([period, value]) => ({ date: `${period}-01`, value }))
+            .sort((a, b) => (a.date < b.date ? -1 : 1)),
+        }
+      }
       case 'revenue_vs_reported':
         return {
           kind: 'events',

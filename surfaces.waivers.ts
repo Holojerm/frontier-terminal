@@ -56,7 +56,8 @@ export const SURFACE_WAIVERS = {
       'derived: scores press reports against filings (revenue axis) and capex guidance against filed capex (exposure axis, guidance-floor)',
     '/api/identifiers': 'internal: reference data, read by hand',
     '/api/limits': 'not yet: recipe observations raise no alert',
-    '/api/listed': 'derived: joins /api/dependencies, /api/suppliers and /api/power-sites',
+    '/api/listed':
+      'derived: joins /api/dependencies, /api/suppliers, /api/power-sites and the /api/prints ties',
     '/api/overview': 'derived: the signal band, built from the alert feed',
     '/api/page-data': 'internal: a page’s hydration payload, not a dataset',
     '/api/parents': 'not yet: recipe observations raise no alert',
@@ -64,6 +65,8 @@ export const SURFACE_WAIVERS = {
     '/api/power-sites':
       'not yet: a new tie raises no alert, like a new supplier passage (docs/alerts-expansion.md › 6)',
     '/api/probes': 'not yet: latency strain raises no alert',
+    '/api/prints':
+      'not yet: a new month or a revision raises no alert; the signal registry grades the series instead',
     '/api/prospectus':
       'covered: prospectus rows are sec and revenue change rows (ENTITY_AXIS), read in full on /revenue',
     '/api/releases': 'covered: a new SKU is a pricing change row (ENTITY_AXIS), read on /prices',
@@ -115,6 +118,8 @@ export const SURFACE_WAIVERS = {
       'derived: per-key row counts of entities, changes, alerts and recipe_observations, all exported',
     source_stats: 'derived: per-source counts of snapshots and source_runs, both exported',
     subscribers: 'internal: email addresses',
+    print_documents:
+      'internal: the print reader’s fetch log; each hardware_prints row names its document',
     power_site_documents:
       'internal: the power-sites reader’s fetch log; each power_site_ties row names its filing',
     supplier_documents:

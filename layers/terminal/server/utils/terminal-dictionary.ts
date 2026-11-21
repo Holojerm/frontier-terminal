@@ -43,6 +43,7 @@ import {
   readIdentifierSources,
   readGridLoadSources,
   readPowerSiteSources,
+  readPrintSources,
   readSourceRegistry,
 } from './terminal-sources'
 
@@ -88,6 +89,8 @@ const AS_OF_CUT: Readonly<Record<string, string>> = {
   reported_figures: 'Rows with judged_at at or before as_of.',
   latency_probes: 'Rows with started_at at or before as_of.',
   ercot_large_load_facts: 'Rows with fetched_at at or before as_of: when we read the report.',
+  hardware_prints:
+    'Rows with first_seen_at at or before as_of: each month as we held it then. A backfilled row was read after its release, so for it published_at, where set, is the release time.',
   filed_facts:
     'Rows whose filing date is before the UTC day of as_of. A fact counts from the day after its filing, whenever we read it, so this table answers as_of back to 2019.',
   filed_guidance:
@@ -124,6 +127,7 @@ type Feed =
   | 'identifiers'
   | 'power_sites'
   | 'grid_load'
+  | 'prints'
   | { axes: readonly SourceAxis[] }
   /** Named sources, by id. */
   | { ids: readonly string[] }
@@ -542,6 +546,20 @@ export const TABLE_META: Readonly<Record<string, TableMeta>> = {
     joins: [],
     feeds: [{ ids: ['ercot-large-loads'] }],
   },
+  hardware_prints: {
+    grain: 'One row per figure a source gave for a company’s month, each vintage its own row.',
+    cadence:
+      'Hourly. Taiwan revenue is due by the 10th of the next month; TSMC files its 6-K the same day.',
+    event: 'period',
+    knowledge: 'first_seen_at',
+    start:
+      'TSMC from January 2015 (its 6-Ks), Accton from July 2023 (its own page), the others from our first read of the exchange feed on 2026-11-21.',
+    joins: [
+      { column: 'ticker', to: 'your security master' },
+      { column: 'entity', to: 'your security master' },
+    ],
+    feeds: ['prints'],
+  },
 }
 
 export const TIME_NOTE =
@@ -597,6 +615,10 @@ function ratedSources(sourcesYaml: string): Rated[] {
     })),
     ...readPowerSiteSources(sourcesYaml).map(flat('power_sites')),
     ...readGridLoadSources(sourcesYaml).map(flat('grid_load')),
+    ...readPrintSources(sourcesYaml).map((s) => ({
+      ...flat('prints')(s),
+      license: s.license,
+    })),
   ]
 }
 

@@ -1,7 +1,8 @@
-// Every listed company the site's three company tables name, one row each
+// Every listed company the site's company tables name, one row each
 // (GET /api/listed, the /dependencies page, the get_listed_companies MCP
 // tool): the filers on the dependency graph, the chip and compute suppliers,
-// and the companies that power or host a lab's sites. Nothing here is new
+// the companies that power or host a lab's sites, and the hardware makers
+// whose monthly prints /compute reads. Nothing here is new
 // data. Each tie points back at the table that holds its figures and quotes.
 
 import { POWER_ROLE_LABEL, type PowerRole } from './power-sites'
@@ -41,7 +42,17 @@ export interface ListedPowerTie {
   sites: string[]
 }
 
-export type ListedTie = ListedGraphTie | ListedSupplierTie | ListedPowerTie
+/** A company whose monthly revenue or exports /compute#prints reads, with its quoted ties. */
+export interface ListedPrintTie {
+  source: 'prints'
+  layer: SupplierLayer
+  /** Whether its own monthly figures are read (a Taiwan filer), or it is a member of a country series. */
+  reads: 'revenue' | 'member'
+  named: { relation: 'customer' | 'partner'; names: string[] }[]
+  quotes: number
+}
+
+export type ListedTie = ListedGraphTie | ListedSupplierTie | ListedPowerTie | ListedPrintTie
 
 export interface ListedCompany {
   ticker: string
@@ -70,6 +81,7 @@ export interface ListedData {
     graph: number
     suppliers: number
     power: number
+    prints: number
     /** Companies that are a tracked lab's parent, or that a source ties to one by name or by site. */
     lab_tied: number
   }
@@ -88,7 +100,7 @@ export function listedGroup(c: ListedCompany): string {
     // The graph's filers are the clouds and the labs' listed parents.
     if (t.source === 'graph')
       return c.lab ? 'Lab parent' : t.funds.length ? 'Cloud and funder' : 'Cloud'
-    if (t.source === 'suppliers') return SUPPLIER_LAYER_LABEL[t.layer]
+    if (t.source === 'suppliers' || t.source === 'prints') return SUPPLIER_LAYER_LABEL[t.layer]
     return t.roles.map((r) => POWER_ROLE_LABEL[r]).join(', ')
   })
   return [...new Set(labels)].join(', ')
@@ -122,6 +134,12 @@ export function listedTieText(
     }
     return `${parts.join('. ')}.`
   }
+  if (tie.source === 'prints') {
+    const label = { customer: 'Builds for or supplies', partner: 'Named as a partner of' } as const
+    const parts = tie.named.map((n) => `${label[n.relation]} ${list(n.names)}`)
+    if (tie.reads === 'revenue') parts.push('Its monthly revenue is read')
+    return `${parts.join('. ')}.`
+  }
   const roles = capital(list(tie.roles.map((r) => POWER_ROLE_LABEL[r].toLowerCase())))
   const sites = tie.sites.length === 1 ? 'a site' : 'sites'
   return `${roles} at ${list(tie.sites)}, ${sites} Epoch AI credits to ${list(c.site_labs.map(labName))}.`
@@ -141,6 +159,9 @@ export function listedEvidence(tie: ListedTie): { text: string; to: string } {
       to: '/dependencies#suppliers',
     }
   }
+  if (tie.source === 'prints') {
+    return { text: count(tie.quotes, 'quoted tie', 'quoted ties'), to: '/compute#prints' }
+  }
   return { text: count(tie.sites.length, 'site', 'sites'), to: '/compute#suppliers' }
 }
 
@@ -156,6 +177,7 @@ export function listedSubset(data: ListedData, companies: ListedCompany[]): List
       graph: from('graph'),
       suppliers: from('suppliers'),
       power: from('power'),
+      prints: from('prints'),
       lab_tied: companies.length,
     },
   }

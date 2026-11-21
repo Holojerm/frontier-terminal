@@ -477,6 +477,13 @@
       "when": 1795241433714,
       "tag": "0067_steep_guardian",
       "breakpoints": true
+    },
+    {
+      "idx": 68,
+      "version": "6",
+      "when": 1795243493456,
+      "tag": "0068_slim_blindfold",
+      "breakpoints": true
     }
   ]
 }

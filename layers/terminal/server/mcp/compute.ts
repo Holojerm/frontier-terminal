@@ -3,6 +3,8 @@
 import { z } from 'zod'
 import { gridLoadStamp, queryGridLoad } from '../power/grid-query'
 import { powerSitesStamp } from '../power/stamp'
+import { printsStamp } from '../prints/store'
+import { queryPrints } from '../utils/terminal-prints'
 import { recipeRunsStamp } from '../utils/terminal-db'
 import { queryDataCenters, queryPowerSites, VIEW_RECIPES } from '../utils/terminal-recipe-views'
 import { queryUtilization, SPOT_QUORUM, UTILIZATION_RECIPES } from '../utils/terminal-utilization'
@@ -117,5 +119,32 @@ export function registerComputeTools({ server, deps }: McpKit): void {
       json(
         await deps.serve('grid-load', () => queryGridLoad(deps.db), await gridLoadStamp(deps.db)),
       ),
+  )
+
+  server.registerTool(
+    'get_hardware_prints',
+    {
+      title: 'Monthly hardware prints: Taiwan revenue, point in time',
+      description:
+        'The monthly revenue of TSMC (2330.TW, TSM), Hon Hai (2317.TW), Quanta (2382.TW), Wistron (3231.TW), Wiwynn (6669.TW), Gigabyte (2376.TW), Accton (2345.TW) and Delta (2308.TW), in TWD. ' +
+        'series has one entry per company: entity (with leads, the basket tickers the series is meant to lead, and layer), points newest month first, revisions (how many stored rows revise a month already held) and ties. ' +
+        'A point is the month’s newest figure from its finest source, first_value the first figure that source gave where it later changed, yoy_pct as the release states it, ' +
+        'first_seen_at (when our read first held it; for history read after the fact, the read, not the release) and published_at (the release time where the source states one: TSMC’s 6-K EDGAR acceptance). ' +
+        'Each tie is a quote from a filing, an annual report or a company statement naming who the company builds for or supplies (NVIDIA, AMD, OpenAI, Meta), with its URL. ' +
+        'gaps says what is not covered, including history before our first read for six of the eight. Every vintage is in the hardware_prints export. Not investment advice. ' +
+        'Optional entity keeps one company. ' +
+        PROVENANCE,
+      inputSchema: z.object({ entity: z.string().optional() }),
+      annotations: READ_ONLY,
+    },
+    async ({ entity }) => {
+      const data = await deps.serve(
+        'prints',
+        (ctx) => queryPrints(deps.db, ctx),
+        await printsStamp(deps.db),
+      )
+      if (!entity) return json(data)
+      return json({ ...data, series: data.series.filter((s) => s.entity.id === entity) })
+    },
   )
 }

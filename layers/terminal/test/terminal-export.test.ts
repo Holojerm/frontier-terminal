@@ -118,6 +118,7 @@ describe('the table registry', () => {
       'disclosure_timelines',
       'latency_probes',
       'probe_days',
+      'hardware_prints',
       'filers',
       'revenue_facts',
       'prospectus_statements',
