@@ -1,7 +1,7 @@
 import { and, eq, gt, inArray, sql } from 'drizzle-orm'
 
 import * as tables from '#server/db/schema'
-import { boardLabel } from '../../shared/utils/terminal-format'
+import { boardLabel } from '#layers/core/shared/utils/terminal-format'
 import { inCluster, type DepartmentCluster } from '../utils/terminal-clusters'
 import { NO_DEPARTMENT, openRolesAt, type OpenRole } from '../utils/terminal-history'
 import type { ChangeRow } from '#layers/core/server/pipeline/contracts'

@@ -191,7 +191,7 @@ const securityHeaders = {
 //                reliability:deploys, which reads its deploy smoke results
 //                from GitHub.
 //              — prints:read, the Taiwan monthly revenue feeds, TSMC's revenue 6-Ks and
-//                Korea Customs Service's export releases (layers/terminal/server/prints/ingest.ts).
+//                Korea Customs Service's export releases (layers/compute/server/prints/ingest.ts).
 //   7 * * * *  — probes:latency, layers/terminal/server/tasks/probes/latency.ts: one
 //                timed streaming request per lab, alone in its invocation so no
 //                other task's requests queue in front of a probe.
@@ -202,9 +202,9 @@ const securityHeaders = {
 //                (layers/terminal/server/listed-hiring/read.ts).
 //   29 5 * * TUE — power:verify re-reads each utility, regulator and company page
 //                the power-sites table cites and spools an ops event for a quote
-//                that is gone (layers/terminal/server/power/verify.ts).
+//                that is gone (layers/compute/server/power/verify.ts).
 //   53 */6     — power:grid-load streams EIA-930's six-month demand files and reads
-//                ERCOT's large-load reports (layers/terminal/server/power/grid-load.ts),
+//                ERCOT's large-load reports (layers/compute/server/power/grid-load.ts),
 //                alone in its invocation for the long downloads.
 //   23 * * * * — calls:read, the earnings-call reader: EDGAR exhibits, company
 //                transcripts and AssemblyAI replays, and the XBRL that scores them
@@ -577,11 +577,6 @@ export default defineNuxtConfig({
     // openrouter.ai/api/v1/chat/completions; empty = no probe runs. A Worker secret:
     // `op read "op://…" | bunx wrangler secret put NUXT_OPENROUTER_API_KEY`.
     openrouterApiKey: '',
-    // EIA API v2 key for grid load (layers/terminal/server/power/eia-api.ts), sent as the
-    // X-Api-Key header to api.eia.gov only, never in a URL. Empty = the EIA-930 six-month
-    // files are read instead, as they are for 2018 and whenever the API fails. A Worker
-    // secret: `op read "op://Agents/eia/credential" | bunx wrangler secret put NUXT_EIA_API_KEY`.
-    eiaApiKey: '',
     // AssemblyAI key for the earnings calls a company posts only as audio
     // (layers/terminal/server/calls/assemblyai.ts), sent as the Authorization header to
     // api.assemblyai.com only. Empty = replays are neither submitted nor collected; the

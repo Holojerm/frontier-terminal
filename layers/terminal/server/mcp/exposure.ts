@@ -2,7 +2,7 @@
 
 import { z } from 'zod'
 import { queryDependencies } from '../utils/terminal-dependencies'
-import { powerSitesStamp } from '../power/stamp'
+import { powerSitesStamp } from '#layers/compute/server/power/stamp'
 import { suppliersStamp } from '../suppliers/store'
 import { querySuppliers } from '../utils/terminal-suppliers'
 import { queryListed } from '../utils/terminal-listed'

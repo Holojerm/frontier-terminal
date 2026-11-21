@@ -31,7 +31,7 @@ import {
   signedPercent,
   trimmed,
   zoneName,
-} from '../shared/utils/terminal-format'
+} from '#layers/core/shared/utils/terminal-format'
 import { formatTick, formatValue } from '../shared/utils/thesis-format'
 import { millions, statementValue } from '../shared/utils/terminal-prospectus'
 import { DEFAULTS, labsFirst, parsePrefs } from '../shared/utils/reader-prefs'

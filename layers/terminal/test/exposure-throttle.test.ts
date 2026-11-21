@@ -5,7 +5,7 @@ import { beforeEach, describe, expect, it } from 'vitest'
 import * as schema from '~~/server/db/schema'
 import { INSTANCES_PER_RUN, filedFactsSkip, runFiledFacts } from '../server/exposure/ingest'
 import type { FetchOutcome, FetchSource } from '#layers/core/server/pipeline/fetch'
-import { SEC_MIN_INTERVAL_MS, paceSec } from '../server/pipeline/sec-pace'
+import { SEC_MIN_INTERVAL_MS, paceSec } from '#layers/core/server/pipeline/sec-pace'
 import { fixtureText } from '#layers/core/test/pipeline/fixtures'
 
 // The filed facts and SEC's fair-access limit. On 2026-11-04 at 18:01 UTC

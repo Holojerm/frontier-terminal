@@ -10,7 +10,7 @@
 // "primarily" from Anthropic (its private-company marks, its gains on
 // converted notes), the row says so: the figure includes other companies.
 
-import { decodeEntities } from '../pipeline/parsers/disclosures/html-text'
+import { decodeEntities } from '#layers/core/server/pipeline/parsers/html-text'
 
 /** The kinds of figure read, as filed_text_facts.metric. */
 export type TextMetric =

@@ -4,7 +4,7 @@ import type {
   Prov,
   ProviderId,
   Stamp,
-} from '#layers/core/shared/utils/terminal-types/common'
+} from '../../../../core/shared/utils/terminal-types/common'
 
 export interface ChangeView extends Prov {
   id: string

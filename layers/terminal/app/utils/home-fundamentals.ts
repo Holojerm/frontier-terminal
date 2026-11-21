@@ -4,13 +4,13 @@
 // page's hydration payload holds five small figures instead of five payloads.
 
 import type { ListedData } from '../../shared/utils/listed'
-import type { Bounds, UtilizationData } from '../../shared/utils/recipe-views'
-import { count, money, percent } from '../../shared/utils/terminal-format'
-import { labName } from '../../shared/utils/terminal-labs'
+import type { Bounds, UtilizationData } from '#layers/compute/shared/utils/compute-views'
+import { labName } from '#layers/core/shared/utils/lab-names'
+import { count, money, percent, dayLabel } from '#layers/core/shared/utils/terminal-format'
 import type { GpuPricesData, GroundTruthData, Prov } from '../../shared/utils/terminal-types'
-import { dayLabel, STATUS_META, thesisPath } from '../../shared/utils/thesis-format'
+import { STATUS_META, thesisPath } from '../../shared/utils/thesis-format'
 import type { ThesesData } from '../../shared/utils/thesis-types'
-import type { GapRef } from '../types/terminal-ui'
+import type { GapRef } from '#layers/core/app/types/terminal-ui'
 
 export interface FundamentalFigure {
   label: string

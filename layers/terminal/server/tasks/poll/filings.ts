@@ -9,7 +9,7 @@
 // 10-Ks, 8-Ks, 20-Fs and 6-Ks (layers/terminal/server/suppliers/ingest.ts),
 // one document at a time, for the same reason. Then the power-sites reader
 // searches EDGAR for new filings naming a quarter of Epoch's lab sites and
-// fetches the newest few (layers/terminal/server/power/ingest.ts).
+// fetches the newest few (layers/compute/server/power/ingest.ts).
 
 import { blob } from '@nuxthub/blob'
 import { db } from '@nuxthub/db'
@@ -20,9 +20,10 @@ import sourcesYaml from 'raw:~~/sources.yaml'
 
 import { createFetcher } from '#layers/core/server/pipeline/fetch'
 import { unstorageLockStore } from '#layers/core/server/pipeline/lock'
-import { blobRawStore, runPoll } from '../../pipeline/poll'
-import { paceSec } from '../../pipeline/sec-pace'
-import { KIND_READ_FAILED, runPowerSiteReads } from '../../power/ingest'
+import { runPoll } from '../../pipeline/poll'
+import { blobRawStore } from '#layers/core/server/pipeline/raw'
+import { paceSec } from '#layers/core/server/pipeline/sec-pace'
+import { KIND_READ_FAILED, runPowerSiteReads } from '#layers/compute/server/power/ingest'
 import { runSupplierReads } from '../../suppliers/ingest'
 import { warmAfterPoll } from '#layers/core/server/utils/cache-warm-task'
 import { withHeartbeat } from '#layers/core/server/utils/task-heartbeat'

@@ -5,8 +5,7 @@
 // summed listed under the number — the sum is checkable, never a black box.
 // The line chart (full page) draws the cluster per day across the boards.
 
-import { boardLabel, count, signed } from '../../../shared/utils/terminal-format'
-import { dayLabel } from '../../../shared/utils/thesis-format'
+import { boardLabel, count, signed, dayLabel } from '#layers/core/shared/utils/terminal-format'
 import type { ClusterSeries, HiringHistoryData } from '../../../shared/utils/terminal-types'
 
 const stamps = useStamps()

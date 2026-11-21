@@ -160,7 +160,7 @@ why it has none.
 ### 4. A GPU price move
 
 - **Change row.** GPU rental prices are thesis recipe observations
-  (`layers/terminal/server/theses/recipes/gpu-prices.ts`), read every six hours on the survey
+  (`layers/compute/server/recipes/gpu-prices.ts`), read every six hours on the survey
   tick: 166 prices from 9 providers today, with an equal-weight H100 median of $4.74 per GPU-hour.
   Recipes write no change rows. The rule would write a `gpu_price` change row when a provider's
   price for one configuration changes between two reads, and one when the H100 or B200 median

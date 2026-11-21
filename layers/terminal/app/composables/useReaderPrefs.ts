@@ -27,7 +27,7 @@ import {
   relativeStamp,
   type StampStyle,
   zoneName,
-} from '../../shared/utils/terminal-format'
+} from '#layers/core/shared/utils/terminal-format'
 import {
   DEFAULTS,
   PREFS_KEY,

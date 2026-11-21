@@ -7,7 +7,7 @@
 // every week, quiet weeks included: a digest that stops arriving is the
 // signal that something broke.
 
-import { companyName } from '../../shared/utils/companies'
+import { companyName } from '#layers/core/shared/utils/companies'
 import { earlyReadSummary } from '../../shared/utils/thesis-format'
 import type {
   ClaimDef,
@@ -16,7 +16,7 @@ import type {
   ThesesData,
   VerdictView,
 } from '../../shared/utils/thesis-types'
-import type { CompanyId } from '../../shared/utils/companies'
+import type { CompanyId } from '#layers/core/shared/utils/companies'
 
 import type { ClaimStatusChange, RecipeRun } from '#server/db/schema'
 import { renderEmail, type RenderedEmail } from '#server/utils/render-email'

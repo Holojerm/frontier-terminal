@@ -9,7 +9,11 @@
 // recipes and their derived series (theses/download-series.ts) and the probe
 // rollups (pipeline/probes/, probe_days).
 
-import { PRINT_ENTITIES, type PrintSeries, type PrintWindow } from '../../shared/utils/prints'
+import {
+  PRINT_ENTITIES,
+  type PrintSeries,
+  type PrintWindow,
+} from '#layers/compute/shared/utils/prints'
 import { FOREIGN_FILERS } from '../calls/actuals'
 import { curatedCalls } from '../calls/curated'
 import { LISTED_BOARDS } from '../../shared/utils/listed-hiring'

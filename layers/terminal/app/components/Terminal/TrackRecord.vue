@@ -5,15 +5,15 @@
 // the judge rated a candidate the same event, so an unrated alert says so
 // instead of guessing.
 
-import { trimmed } from '../../../shared/utils/terminal-format'
-import { LAB_DISPLAY } from '../../../shared/utils/terminal-labs'
+import { trimmed } from '#layers/core/shared/utils/terminal-format'
+import { LAB_DISPLAY } from '#layers/core/shared/utils/lab-names'
 import { alertPath } from '../../../shared/utils/terminal-tiers'
 import type {
   TrackRecordData,
   TrackRecordRow,
   TrackRecordTally,
 } from '../../../shared/utils/terminal-types'
-import type { TableColumn } from '../../types/terminal-ui'
+import type { TableColumn } from '#layers/core/app/types/terminal-ui'
 
 defineProps<{ record: TrackRecordData }>()
 

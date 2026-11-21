@@ -5,7 +5,8 @@ import { beforeAll, describe, expect, it } from 'vitest'
 import * as schema from '~~/server/db/schema'
 import handlerSource from '~~/layers/core/server/utils/terminal-handler.ts?raw'
 import type { SourceFetcher } from '#layers/core/server/pipeline/fetch'
-import { runRefresh, type RawStore } from '../server/pipeline/refresh'
+import { runRefresh } from '../server/pipeline/refresh'
+import type { RawStore } from '#layers/core/server/pipeline/raw'
 import { includeSources } from '#layers/core/server/pipeline/sources'
 import { ALERT_SEARCH_DEPTH } from '#layers/core/server/mcp/kit'
 import { createTerminalMcpHandler, type McpDeps } from '#layers/core/server/utils/mcp'
@@ -18,9 +19,10 @@ import { SCHEMA_VERSION } from '#layers/core/server/utils/data-schema'
 import { terminalStamps } from '#layers/core/server/utils/terminal-cache'
 import { queryContext, recipeRunsStamp } from '#layers/core/server/utils/terminal-db'
 import { VIEW_RECIPES } from '../server/utils/terminal-recipe-views'
-import { powerSitesStamp } from '../server/power/stamp'
+import { DATACENTER_RECIPES } from '#layers/compute/server/utils/terminal-datacenters'
+import { powerSitesStamp } from '#layers/compute/server/power/stamp'
 import { reportedStamp } from '../server/utils/terminal-reported'
-import { UTILIZATION_RECIPES } from '../server/utils/terminal-utilization'
+import { UTILIZATION_RECIPES } from '#layers/terminal/server/utils/terminal-utilization-query'
 import { THESES } from '../server/theses/registry'
 import { served } from '#layers/core/server/utils/terminal-envelope'
 import { fixtureText, manifest } from '#layers/core/test/pipeline/fixtures'
@@ -715,7 +717,7 @@ describe('tools/call', () => {
     })
     const views = {
       utilization: recipeRunsStamp(db, UTILIZATION_RECIPES),
-      datacenters: recipeRunsStamp(db, VIEW_RECIPES.datacenters),
+      datacenters: recipeRunsStamp(db, DATACENTER_RECIPES.datacenters),
       'power-sites': powerSitesStamp(db),
       adoption: recipeRunsStamp(db, VIEW_RECIPES.adoption),
       limits: recipeRunsStamp(db, VIEW_RECIPES.limits),

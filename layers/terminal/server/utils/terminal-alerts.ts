@@ -5,7 +5,7 @@ import { and, asc, count, desc, eq, gt, gte, inArray, lt, ne, or, sql } from 'dr
 
 import { ENTITY_AXIS, entityTypesOf, type AlertAxis } from '../../shared/utils/terminal-labs'
 
-import { count as countLabel, money } from '../../shared/utils/terminal-format'
+import { count as countLabel, money } from '#layers/core/shared/utils/terminal-format'
 import {
   severitiesOf,
   type AlertSeverity,

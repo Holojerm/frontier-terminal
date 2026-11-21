@@ -15,7 +15,7 @@ import {
 } from '../../../shared/utils/terminal-lab-summary'
 import { alertPath } from '../../../shared/utils/terminal-tiers'
 import type { LabId } from '../../../shared/utils/terminal-types'
-import type { TableColumn } from '../../types/terminal-ui'
+import type { TableColumn } from '#layers/core/app/types/terminal-ui'
 
 const props = defineProps<{ labs: readonly LabId[]; data: LabInputs }>()
 

@@ -4,9 +4,9 @@
 // attached to it. An analyst reads it to decide whether a number can be
 // trusted, not every visit — which is why it sits last.
 
-import { companyName } from '../../../shared/utils/companies'
-import { absoluteStamp } from '../../../shared/utils/terminal-format'
-import { LAB_DISPLAY } from '../../../shared/utils/terminal-labs'
+import { companyName } from '#layers/core/shared/utils/companies'
+import { absoluteStamp } from '#layers/core/shared/utils/terminal-format'
+import { LAB_DISPLAY } from '#layers/core/shared/utils/lab-names'
 import type {
   CoverageData,
   RecipeCoverage,
@@ -14,7 +14,7 @@ import type {
   SourceHealth,
   SourceRights,
 } from '../../../shared/utils/terminal-types'
-import type { TableColumn } from '../../types/terminal-ui'
+import type { TableColumn } from '#layers/core/app/types/terminal-ui'
 
 defineProps<{ coverage: CoverageData }>()
 

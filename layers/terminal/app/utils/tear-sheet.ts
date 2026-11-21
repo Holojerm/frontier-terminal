@@ -27,7 +27,7 @@ import {
   signed,
   signedPercent,
   type StampStyle,
-} from '../../shared/utils/terminal-format'
+} from '#layers/core/shared/utils/terminal-format'
 import { listedGroup, listedTieText, type ListedData } from '../../shared/utils/listed'
 import { summarizeLab, type LabInputs } from '../../shared/utils/terminal-lab-summary'
 import type { AlertSeverity } from '../../shared/utils/terminal-tiers'

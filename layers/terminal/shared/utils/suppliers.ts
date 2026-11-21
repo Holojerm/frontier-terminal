@@ -6,22 +6,10 @@
 
 import { z } from 'zod'
 
-import { count } from './terminal-format'
-import { LAB_SITE } from './terminal-labs'
+import { count } from '../../../core/shared/utils/terminal-format'
+import { SUPPLIER_LAYERS, type SupplierLayer } from '../../../core/shared/utils/supplier-layers'
+import { LAB_SITE } from '../../../core/shared/utils/lab-names'
 import type { LabId } from './terminal-types'
-
-export const SUPPLIER_LAYERS = [
-  'chips',
-  'memory',
-  'foundry',
-  'networking',
-  'optics',
-  'servers',
-  'cooling',
-  'neocloud',
-  'hosting',
-] as const
-export type SupplierLayer = (typeof SUPPLIER_LAYERS)[number]
 
 /** The layers /hardware lists. Compute rental and hosting read on /dependencies only. */
 export const HARDWARE_LAYERS: readonly SupplierLayer[] = [

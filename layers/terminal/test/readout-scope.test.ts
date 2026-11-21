@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import type { DataCentersData } from '../shared/utils/recipe-views'
+import type { DataCentersData } from '#layers/compute/shared/utils/compute-views'
 import type { RevenueProviderView } from '../shared/utils/terminal-types'
 import { READOUT_AXES, READOUT_GROUPS, powerCell, revenueScope } from '../app/utils/readout'
 

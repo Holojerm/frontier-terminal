@@ -26,7 +26,7 @@ export function withSchemaVersion<T>(payload: T): T {
 export const served = <T>(payload: T): T => withSchemaVersion(withLicense(payload))
 
 // How an Internet Archive row shows in a payload: a history point's basis, or
-// an as_of catalog row's source_id (terminal-history.ts › archiveSourceId).
+// an as_of catalog row's source_id (archive-floor.ts › archiveSourceId).
 const ARCHIVED_MARKERS = ['"basis":"archived"', '"source_id":"wayback:']
 
 /** Whether any row in `payload` was read from the Internet Archive. */

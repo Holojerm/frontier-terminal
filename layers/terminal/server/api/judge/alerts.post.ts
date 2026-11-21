@@ -16,7 +16,7 @@ import { db } from '@nuxthub/db'
 
 import sourcesYaml from 'raw:~~/sources.yaml'
 
-import { blobRawReader } from '../../pipeline/judge/class-map'
+import { blobRawReader } from '#layers/core/server/pipeline/raw'
 import { submitJudgeRun } from '../../pipeline/judge/submit'
 import { requireJudgeToken } from '#layers/core/server/utils/judge-auth'
 

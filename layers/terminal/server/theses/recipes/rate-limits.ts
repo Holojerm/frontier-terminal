@@ -6,8 +6,8 @@
 // run that first saw it. Google and Mistral publish no per-model limits (cut
 // in sources.yaml). Audited in docs/source-audit.md, 2026-11-04.
 
-import type { CompanyId } from '../../../shared/utils/companies'
-import type { Observation, Recipe } from './contract'
+import type { CompanyId } from '#layers/core/shared/utils/companies'
+import type { Observation, Recipe } from '#layers/core/server/recipes/contract'
 
 export interface MdTable {
   /** The nearest `##` heading above the table. */

@@ -3,11 +3,11 @@ import type {
   Prov,
   ProviderId,
   Stamp,
-} from '#layers/core/shared/utils/terminal-types/common'
+} from '../../../../core/shared/utils/terminal-types/common'
 import type {
   SnapshotStamp,
   SourceRunStamp,
-} from '#layers/core/shared/utils/terminal-types/coverage'
+} from '../../../../core/shared/utils/terminal-types/coverage'
 
 export interface ProviderShare {
   provider: ProviderId

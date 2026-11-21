@@ -6,8 +6,8 @@
 // level. npm's terms allow replicating registry data "using the Public APIs"
 // (docs/source-audit.md, 2026-11-04).
 
-import type { CompanyId } from '../../../shared/utils/companies'
-import type { Recipe } from './contract'
+import type { CompanyId } from '#layers/core/shared/utils/companies'
+import type { Recipe } from '#layers/core/server/recipes/contract'
 
 const DAY_MS = 86_400_000
 /** How far back a range starts; npm clips a longer one at its start without an error. */

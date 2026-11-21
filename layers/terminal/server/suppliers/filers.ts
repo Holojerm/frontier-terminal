@@ -3,7 +3,7 @@
 // (../curated/suppliers.json), each with the CIK its own documents are filed
 // under; the filings lane reads their new documents (ingest.ts).
 
-import type { SupplierLayer } from '../../shared/utils/suppliers'
+import type { SupplierLayer } from '#layers/core/shared/utils/supplier-layers'
 import type { LabId } from '../../shared/utils/terminal-types'
 
 export interface SupplierFiler {

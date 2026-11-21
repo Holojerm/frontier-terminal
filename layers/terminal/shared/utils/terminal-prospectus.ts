@@ -3,7 +3,7 @@
 // panel and the filing page share. Every figure is the filing's own, with the
 // filing it came from and the URL and fetch time of the document it was read off.
 
-import { grouped, trimmed } from './terminal-format'
+import { grouped, trimmed } from '../../../core/shared/utils/terminal-format'
 import type { LabId, Prov, SourceRef } from './terminal-types'
 
 /** The filing a figure was printed in, and the document it was read from. */

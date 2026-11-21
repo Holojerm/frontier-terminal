@@ -21,7 +21,7 @@ import type {
   ExposureSeries,
   ExposureTicker,
 } from '../../shared/utils/terminal-exposure'
-import { labName } from '../../shared/utils/terminal-labs'
+import { labName } from '#layers/core/shared/utils/lab-names'
 import type { ProspectusData } from '../../shared/utils/terminal-prospectus'
 
 import type { PipelineDb } from '#layers/core/server/pipeline/store'

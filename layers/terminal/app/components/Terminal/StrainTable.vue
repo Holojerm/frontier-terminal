@@ -7,7 +7,7 @@
 // a row that says so (sources.yaml `cut.meta-status`).
 
 import type { IncidentProviderView, IncidentsData } from '../../../shared/utils/terminal-types'
-import type { TableColumn } from '../../types/terminal-ui'
+import type { TableColumn } from '#layers/core/app/types/terminal-ui'
 
 const watchlist = useWatchlist()
 

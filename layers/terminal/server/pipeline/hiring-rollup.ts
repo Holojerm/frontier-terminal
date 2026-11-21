@@ -1,8 +1,8 @@
 import { and, asc, eq, gte, inArray, lt } from 'drizzle-orm'
 
 import * as tables from '#server/db/schema'
-import { boardLabel } from '../../shared/utils/terminal-format'
-import { labName } from '../../shared/utils/terminal-labs'
+import { boardLabel } from '#layers/core/shared/utils/terminal-format'
+import { labName } from '#layers/core/shared/utils/lab-names'
 import { emitEvent } from '#layers/core/server/utils/events'
 import type { DepartmentCluster } from '../utils/terminal-clusters'
 import { AlertRow, ChangeRow, contentHash } from '#layers/core/server/pipeline/contracts'

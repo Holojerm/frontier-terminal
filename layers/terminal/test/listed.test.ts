@@ -4,7 +4,7 @@ import { listedForLab } from '../server/utils/terminal-lab-cuts'
 import { buildListed } from '../server/utils/terminal-listed'
 import { buildSuppliers } from '../server/utils/terminal-suppliers'
 import { listedBoth, listedEvidence, listedGroup, listedTieText } from '../shared/utils/listed'
-import type { PowerTicker } from '../shared/utils/power-sites'
+import type { PowerTicker } from '#layers/compute/shared/utils/power-sites'
 import curated from '../server/curated/suppliers.json'
 import { curatedSuppliers, type SupplierRow } from '../shared/utils/suppliers'
 import type {

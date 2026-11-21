@@ -8,8 +8,7 @@ import { blob } from '@nuxthub/blob'
 import { db } from '@nuxthub/db'
 
 import { recordOpsEvent } from '#server/utils/ops'
-import { blobRawReader } from '../pipeline/judge/class-map'
-import { blobRawStore } from '../pipeline/poll'
+import { blobRawReader, blobRawStore } from '#layers/core/server/pipeline/raw'
 import {
   PROBE_PLACEMENT_FAILED_KIND,
   PROBE_PLACEMENTS,

@@ -73,10 +73,12 @@ restart. The rest are in [`.claude/docs/gotchas.md`](.claude/docs/gotchas.md).
 ├── layers/core/            # Fork-owned layer every domain builds on: the ingest store and its contracts,
 │                           # query plumbing (terminal-db, -asof, -cache, -handler), the export and MCP
 │                           # frameworks, API keys, events producer, heartbeats. Names no domain.
+├── layers/compute/         # Domain layer: GPU prices, data centers, utilization reads, power sites and
+│                           # grid load, hardware prints, /compute and /power. Uses core only.
 ├── layers/terminal/        # Fork-owned layer: every domain not yet split out (parsers, lanes, theses,
 │                           # queries, pages, components, tables, tests). Same folder shapes as the app
 │                           # (app/, server/, shared/, test/); auto-registered, not in layers.lock.json.
-│                           # The app's template files reach both via `#layers/<name>/…`.
+│                           # The app's template files reach them via `#layers/<name>/…`.
 ├── domains.config.ts       # Which fork-owned layer may import which — see bun run domains:check
 ├── app/                    # Frontend (Vue/Nuxt pages, components, composables)
 │   ├── app.config.ts       # GENERATED from DESIGN.md — NuxtUI colors + component defaults
@@ -123,6 +125,15 @@ restart. The rest are in [`.claude/docs/gotchas.md`](.claude/docs/gotchas.md).
 └── AGENTS.md               # ← You are here
 ```
 
+**A domain layer** (`layers/compute/` is the first) owns its pages, components, API routes,
+queries, recipes, tables (`server/db/schema.ts`, re-exported from the app's), curated JSON, tasks,
+MCP tools, export tables and tests, and imports only `core`. It registers through the app: one line
+each in `server/registries/` and `server/db/schema.ts`, and a row in `domains.config.ts` whose
+`public` list names what the layers above it may import. Inside a layer, imports are relative; across
+layers they are `#layers/<name>/…`, except in `shared/` and schema files, which use relative paths
+because bun scripts and drizzle-kit load them outside Nuxt. What needs another domain stays in
+`terminal` until that domain has its layer (the utilization query, `/hardware`).
+
 ---
 
 ## Coding Standards
@@ -164,8 +175,8 @@ Never hand-edit generated files in `public/`. Details and the redesign workflow:
 ### Component Usage
 
 - **Use NuxtUI components first.** Before building a custom component, check if `<UButton>`, `<UModal>`, `<UTable>`, etc. covers your need.
-- **Product code goes in a fork-owned layer** (`layers/core/` for what every domain shares, `layers/terminal/`
-  for the rest), mirroring the app's folders; the app keeps template code and the registries.
+- **Product code goes in a fork-owned layer** (`layers/core/` for what every domain shares, `layers/<domain>/` per
+  split domain, `layers/terminal/` for the rest), mirroring the app's folders; the app keeps template code and the registries.
 - **Custom components go in `app/components/[Feature]/`** — never dump everything in `app/components/`.
 - **Component names are PascalCase** in templates and files: `PricingTable.vue`, `FilingList.vue`.
 
@@ -305,7 +316,7 @@ When I ask you to build features in this project:
 2. **Use NuxtUI components** — don't build custom components for things NuxtUI already has.
 3. **Nuxt auto-imports** mean you never need to import Vue primitives or Nuxt composables.
 4. **`db` and `schema` are auto-imported** in server routes by `@nuxthub/core` — never instantiate Drizzle manually.
-5. **Server routes go in `layers/terminal/server/api/`**, frontend pages in `layers/terminal/app/pages/` (product code lives in the layers; `server/api/` and `app/pages/` hold template files). A route a domain adds to a list of every domain (a lane, an MCP tool file, an export table file, a recipe) also gets its line in `server/registries/`.
+5. **Server routes go in the owning layer's `server/api/`** (`layers/<domain>/`, else `layers/terminal/`), frontend pages in its `app/pages/` (product code lives in the layers; `server/api/` and `app/pages/` hold template files). A route a domain adds to a list of every domain (a lane, an MCP tool file, an export table file, a recipe) also gets its line in `server/registries/`.
 6. **Validate all inputs with Zod** — `getValidatedQuery` / `readValidatedBody` on the server.
 7. **Ask before adding new dependencies** — prefer solving problems with what's already installed.
 

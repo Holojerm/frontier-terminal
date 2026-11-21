@@ -16,12 +16,12 @@
 
 import { inArray } from 'drizzle-orm'
 
-import type { CompanyId } from '../../shared/utils/companies'
+import type { CompanyId } from '#layers/core/shared/utils/companies'
 import type { SignalSpec } from '../../shared/utils/thesis-types'
 
 import * as tables from '#server/db/schema'
 import type { PipelineDb } from '#layers/core/server/pipeline/store'
-import type { Recipe } from './recipes/contract'
+import type { Recipe } from '#layers/core/server/recipes/contract'
 import { NPM_CONTROL_RECIPES, NPM_LAB_RECIPES, NPM_WRANGLER } from './recipes/npm-downloads'
 import { PYPI_LAB_RECIPES } from './recipes/pypi-downloads'
 import type { SignalReading } from './signals'

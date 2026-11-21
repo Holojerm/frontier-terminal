@@ -2,8 +2,8 @@
 // the evaluator and GET /api/theses read the same rules. The judge supplies
 // only the verdict; every count and window here is the Worker's.
 
-import { companyName } from '../../shared/utils/companies'
-import type { CompanyId } from '../../shared/utils/companies'
+import { companyName } from '#layers/core/shared/utils/companies'
+import type { CompanyId } from '#layers/core/shared/utils/companies'
 import type { ClaimDef, Confirmation, JudgedSpec } from '../../shared/utils/thesis-types'
 
 import type { ClaimEvaluation } from './status'

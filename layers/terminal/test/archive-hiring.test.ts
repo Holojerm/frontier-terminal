@@ -7,7 +7,7 @@ import {
   hiringEraById,
   liveDepartment,
 } from '../server/pipeline/archive/hiring-eras'
-import { ARCHIVE_FROM } from '../server/pipeline/archive/eras'
+import { ARCHIVE_FROM } from '#layers/core/server/utils/archive-floor'
 import { archiveRawKey, hiringRows } from '../server/pipeline/archive/rows'
 import {
   parseAshbyBoardHtml,

@@ -12,6 +12,7 @@
 
 import type { PriceRow, Provenance } from '#layers/core/server/pipeline/contracts'
 import { VendorMdPricingOutput } from '#layers/core/server/pipeline/contracts'
+import { ARCHIVE_FROM } from '#layers/core/server/utils/archive-floor'
 import { parseAnthropicPricingMd } from '../parsers/pricing/anthropic-pricing'
 import {
   parseAnthropicModelsOverviewHtml,
@@ -43,9 +44,6 @@ import {
 
 /** The day the live pipeline began watching the labs' pages (docs/source-audit.md). */
 export const ARCHIVE_UNTIL = '2026-08-25T00:00:00.000Z'
-
-/** The earliest instant the backfill looks at. */
-export const ARCHIVE_FROM = '2023-01-01T00:00:00.000Z'
 
 export type ArchiveProvider =
   | 'openai'

@@ -5,8 +5,9 @@
 // there. The pair is a route parameter in LABS order; the reverse spelling
 // redirects to it, and anything else is a 404.
 
-import { percent } from '../../../shared/utils/terminal-format'
-import { alertLabs, LAB_DISPLAY } from '../../../shared/utils/terminal-labs'
+import { percent } from '#layers/core/shared/utils/terminal-format'
+import { alertLabs } from '../../../shared/utils/terminal-labs'
+import { LAB_DISPLAY } from '#layers/core/shared/utils/lab-names'
 import { comparePath, pairTitle, parsePair } from '../../../shared/utils/terminal-compare'
 import { labPath } from '../../../shared/utils/terminal-lab-summary'
 import { listedBoth, type ListedData } from '../../../shared/utils/listed'
@@ -21,7 +22,7 @@ import type {
   RankingsData,
   RevenueData,
 } from '../../../shared/utils/terminal-types'
-import type { TableColumn } from '../../types/terminal-ui'
+import type { TableColumn } from '#layers/core/app/types/terminal-ui'
 
 // Inert for a dynamic route: sitemap.xml and llms.txt append the compare
 // pages from layers/terminal/shared/utils/terminal-compare.ts. Declared anyway — the seo

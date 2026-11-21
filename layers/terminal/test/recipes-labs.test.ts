@@ -10,8 +10,8 @@ import {
   createFetcher,
   needsGithubToken,
 } from '#layers/core/server/pipeline/fetch'
-import { parseCsv } from '../server/theses/recipes/csv'
-import { extractSites, extractTimelines } from '../server/theses/recipes/epoch-data-centers'
+import { parseCsv } from '#layers/core/server/recipes/csv'
+import { extractSites, extractTimelines } from '#layers/compute/server/recipes/epoch-data-centers'
 import {
   BACKFILL_DAYS_PER_RUN,
   GITHUB_AGENT_RECIPES,

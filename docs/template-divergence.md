@@ -132,7 +132,7 @@ An entry ending in `/` is a directory prefix: it also declares template files th
 
 ## Layers
 
-Vendored: `social` (pinned in `layers.lock.json`). Fork-owned, never in the lock: `core` and `terminal` (`domains.config.ts` says which may import which; `bun run domains:check` holds it).
+Vendored: `social` (pinned in `layers.lock.json`). Fork-owned, never in the lock: `core`, the domain layers (`compute` so far) and `terminal` (`domains.config.ts` says which may import which; `bun run domains:check` holds it).
 
 Left out on purpose, so the absence is a decision and not a gap:
 

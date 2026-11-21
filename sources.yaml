@@ -2577,7 +2577,7 @@ archive_sources:
       page printed for an H100 or B200 configuration, never the page text.
       Taken once per backfill run: one capture per page per week, 2023-01 to
       2026-11-01, the first day of the live recipes
-      (layers/terminal/server/pipeline/archive/gpu-eras.ts). Read 2026-11-20.
+      (layers/compute/server/pipeline/archive/gpu-eras.ts). Read 2026-11-20.
     rights: not-cleared
     caveats: >-
       A capture is the page as the Archive's crawler saw it, so a price
@@ -2878,13 +2878,13 @@ filed_fact_sources:
 #
 # The pages behind /api/power-sites and the "Who powers the lab sites" panel on
 # /compute. The first rows were read by hand
-# (layers/terminal/server/curated/power-sites.json) and seed power_site_ties in
+# (layers/compute/server/curated/power-sites.json) and seed power_site_ties in
 # D1. From there, SEC filings are read as they are filed: the filings lane asks
 # EDGAR full-text search (efts.sec.gov, under the fair-access terms recorded
 # under sec-msft-openai) for new filings naming each of Epoch's lab sites, once
 # a site a day, fetches at most four documents a run, and the judge reads the
 # ties; the Worker checks each quote against the stored document
-# (layers/terminal/server/power/). A utility's, regulator's or company's own
+# (layers/compute/server/power/). A utility's, regulator's or company's own
 # page is still found and read by hand; power:verify re-reads each cited page
 # weekly and flags a quote that is gone. Each row is one sentence, shown as the
 # row's basis the way the class map shows a vendor's sentence.
@@ -3066,10 +3066,10 @@ power_site_sources:
       one sentence. Read 2026-11-20.
     rights: restricted
 # The files behind /api/grid-load and the "Grid load where the lab sites are"
-# and "Large loads on ERCOT" panels on /power (layers/terminal/server/power/
+# and "Large loads on ERCOT" panels on /power (layers/compute/server/power/
 # grid-load.ts, ercot-large-loads.ts). Each lab site is placed in a balancing
 # authority by a grid row of power_site_ties, or by its utility's row in
-# EIA-861 (layers/terminal/server/curated/grid-areas.json). With
+# EIA-861 (layers/compute/server/curated/grid-areas.json). With
 # NUXT_EIA_API_KEY set, EIA's API v2 gives the days from 2019 on (eia930-api)
 # and the six-month files 2018 and any run the API fails.
 # Terms and robots.txt were read on 2026-11-21 (docs/source-audit.md).

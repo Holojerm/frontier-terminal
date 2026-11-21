@@ -6,7 +6,7 @@
 // print and a count the filing leaves blank are stated as gaps, never filled.
 
 import { periodName } from '../../../shared/utils/terminal-filings'
-import { grouped } from '../../../shared/utils/terminal-format'
+import { grouped } from '#layers/core/shared/utils/terminal-format'
 import {
   billions,
   millions,
@@ -17,7 +17,7 @@ import {
   type ProspectusIssuerView,
   type StatementLineView,
 } from '../../../shared/utils/terminal-prospectus'
-import type { Fact, TableColumn } from '../../types/terminal-ui'
+import type { Fact, TableColumn } from '#layers/core/app/types/terminal-ui'
 
 const stamps = useStamps()
 

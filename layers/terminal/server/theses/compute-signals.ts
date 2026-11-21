@@ -17,7 +17,7 @@ import { queryHiringHistory } from '../utils/terminal-hiring'
 import { queryPrices } from '../utils/terminal-prices'
 import { rankingObservations } from '../utils/terminal-rankings'
 import { PROVIDER_ORDER } from '#layers/core/server/utils/terminal-sources'
-import { gpuMedian, gpuState, median } from './recipes/gpu-series'
+import { gpuMedian, gpuState, median } from '#layers/compute/server/recipes/gpu-series'
 import type { SignalDeps, SignalReading } from './signals'
 
 type Spec<S extends string> = Extract<SignalSpec, { signal: S }>

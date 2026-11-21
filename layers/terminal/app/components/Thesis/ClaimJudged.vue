@@ -7,10 +7,10 @@
 // rest are one line each behind a toggle: as cards of the same size, one
 // material event was lost among ten that changed nothing.
 
-import { companyName } from '../../../shared/utils/companies'
+import { companyName } from '#layers/core/shared/utils/companies'
 import { factRows } from '../../../shared/utils/thesis-format'
 import type { ClaimView, VerdictView } from '../../../shared/utils/thesis-types'
-import type { TableColumn } from '../../types/terminal-ui'
+import type { TableColumn } from '#layers/core/app/types/terminal-ui'
 
 const stamps = useStamps()
 

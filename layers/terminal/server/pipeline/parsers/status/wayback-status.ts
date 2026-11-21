@@ -7,7 +7,7 @@
 // data, never instructions.
 
 import type { IncidentRow, Provenance } from '#layers/core/server/pipeline/contracts'
-import { decodeEntities, textOf } from '../disclosures/html-text'
+import { decodeEntities, textOf } from '#layers/core/server/pipeline/parsers/html-text'
 import { parseGoogleCloudStatus } from './google-cloud-status'
 import { parseStatuspageAtom, type StampZones } from './statuspage-atom'
 import { parseXaiStatus, rfc822ToIso } from './xai-status'

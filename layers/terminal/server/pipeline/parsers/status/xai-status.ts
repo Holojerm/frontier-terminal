@@ -4,7 +4,7 @@ import {
   type IncidentRow,
   type Provenance,
 } from '#layers/core/server/pipeline/contracts'
-import { decodeEntities } from '../disclosures/html-text'
+import { decodeEntities } from '#layers/core/server/pipeline/parsers/html-text'
 import { fixtureProvenance } from '#layers/core/server/pipeline/parsers/fixture-provenance'
 
 // xai-status — status.x.ai/feed.xml, the RSS history the status page

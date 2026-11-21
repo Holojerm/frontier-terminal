@@ -35,7 +35,7 @@
 // every row. `bands` adds a header row above the column labels, each band a
 // `colgroup` heading over the columns it names.
 
-import type { TableBand, TableColumn } from '../../types/terminal-ui'
+import type { TableBand, TableColumn } from '#layers/core/app/types/terminal-ui'
 
 const props = withDefaults(
   defineProps<{

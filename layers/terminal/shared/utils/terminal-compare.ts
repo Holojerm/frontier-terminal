@@ -3,7 +3,7 @@
 // comparison has a single canonical address and the reverse spelling
 // redirects to it instead of competing with it.
 
-import { LAB_DISPLAY } from './terminal-labs'
+import { LAB_DISPLAY } from '../../../core/shared/utils/lab-names'
 import { LABS } from './terminal-lab-summary'
 import type { LabId } from './terminal-types'
 

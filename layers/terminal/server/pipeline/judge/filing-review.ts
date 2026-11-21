@@ -10,7 +10,7 @@ import { MONTHS, docLines, docText } from '../parsers/sec/prospectus-doc'
 import { PROSPECTUS_FLOOR_RULE, freshRegistrationKey, usd } from '../prospectus-floor'
 import { amountsIn } from '../reported/figures'
 import { insertRows, type PipelineDb } from '#layers/core/server/pipeline/store'
-import type { RawReader } from './class-map'
+import type { RawReader } from '#layers/core/server/pipeline/raw'
 
 // The judge's fallback for a registration filing the parser could not fully
 // read. When the revenue or the cover terms of a fresh S-1 fail to parse

@@ -6,10 +6,10 @@
 // comparable. The table carries every week and `other`, so the charts never
 // gate a number.
 
-import { LAB_DISPLAY } from '../../../shared/utils/terminal-labs'
-import { percent, sharePct } from '../../../shared/utils/terminal-format'
+import { LAB_DISPLAY } from '#layers/core/shared/utils/lab-names'
+import { percent, sharePct } from '#layers/core/shared/utils/terminal-format'
 import type { ProviderId, RankingsData } from '../../../shared/utils/terminal-types'
-import type { TableColumn } from '../../types/terminal-ui'
+import type { TableColumn } from '#layers/core/app/types/terminal-ui'
 
 const props = defineProps<{ rankings: RankingsData }>()
 
