@@ -6,12 +6,36 @@
 // Public repositories only. The search API needs a token from a Worker (its
 // anonymous limit is per IP), so a deploy without NUXT_GITHUB_TOKEN records
 // these as not configured (docs/source-audit.md, 2026-11-04).
+//
+// A search answers for any past day, so each run also walks back a few days
+// before the oldest one stored, down to the agent's public launch
+// (docs/source-audit.md, 2026-11-20). Those counts are taken today, from the
+// PRs that still exist, and the runner labels them retrospective.
 
 import type { CompanyId } from '../../../shared/utils/companies'
 import type { Observation, Recipe } from './contract'
 
 const DAY_MS = 86_400_000
-const dayBefore = (date: string) => new Date(Date.parse(`${date}T00:00:00Z`) - DAY_MS)
+const dayMs = (date: string) => Date.parse(`${date}T00:00:00Z`)
+const isoDay = (ms: number) => new Date(ms).toISOString().slice(0, 10)
+const dayBefore = (date: string) => isoDay(dayMs(date) - DAY_MS)
+const dayAfter = (date: string) => isoDay(dayMs(date) + DAY_MS)
+
+/**
+ * Past days fetched per agent per survey tick. Three agents at 1 + 6 searches
+ * is 21 a tick, inside the authenticated search limit of 30 a minute; at four
+ * ticks a day, Claude Code's 20 months take under four weeks.
+ */
+export const BACKFILL_DAYS_PER_RUN = 6
+
+/** The `n` days before `oldest`, newest first, none before `floor`. */
+export function walkBackDays(oldest: string | null, floor: string, n: number): string[] {
+  if (!oldest) return []
+  const days: string[] = []
+  for (let day = dayBefore(oldest); days.length < n && day >= floor; day = dayBefore(day))
+    days.push(day)
+  return days
+}
 
 export function extractSearchCount(body: string, key: string, date: string): Observation[] {
   const doc = JSON.parse(body) as { total_count?: unknown; incomplete_results?: unknown }
@@ -21,35 +45,52 @@ export function extractSearchCount(body: string, key: string, date: string): Obs
   return [{ key, date, value: doc.total_count, payload: {} }]
 }
 
+const searchUrl = (query: string, day: string) =>
+  `https://api.github.com/search/issues?q=${encodeURIComponent(`is:pr ${query} created:${day}`)}&per_page=1`
+
+/** `launched`: the agent's public launch, the first day worth counting. */
 export function githubPrRecipe(
   id: string,
   company: CompanyId,
   agent: string,
   query: string,
+  launched: string,
 ): Recipe {
   return {
     id,
     company,
     description: `Public GitHub pull requests per day from ${agent} (search: ${query})`,
-    url: ({ now }) => {
-      const day = dayBefore(now.toISOString().slice(0, 10)).toISOString().slice(0, 10)
-      const q = encodeURIComponent(`is:pr ${query} created:${day}`)
-      return `https://api.github.com/search/issues?q=${q}&per_page=1`
-    },
+    url: ({ now }) => searchUrl(query, dayBefore(now.toISOString().slice(0, 10))),
     ext: 'json',
     // The run's date is the day after the one counted.
-    extract: (body, ctx) =>
-      extractSearchCount(body, agent, dayBefore(ctx.date).toISOString().slice(0, 10)),
+    extract: (body, ctx) => extractSearchCount(body, agent, dayBefore(ctx.date)),
+    backfill: ({ oldest }) =>
+      walkBackDays(oldest, launched, BACKFILL_DAYS_PER_RUN).map((day) => ({
+        url: searchUrl(query, day),
+        date: dayAfter(day),
+      })),
   }
 }
 
+// Launch dates, read 2026-11-20: Claude Code's research preview with Claude
+// 3.7 Sonnet (anthropic.com/news/claude-3-7-sonnet), Codex in ChatGPT
+// (openai.com/index/introducing-codex), Jules's public beta
+// (blog.google/technology/google-labs/jules). Before Codex's launch a
+// `codex/` branch is someone else's, so its floor matters most.
 export const GITHUB_AGENT_RECIPES: readonly Recipe[] = [
   githubPrRecipe(
     'github-prs-claude-code',
     'anthropic',
     'Claude Code',
     '"Generated with Claude Code"',
+    '2025-02-24',
   ),
-  githubPrRecipe('github-prs-codex', 'openai', 'Codex', 'head:codex/'),
-  githubPrRecipe('github-prs-jules', 'google', 'Jules', 'author:app/google-labs-jules'),
+  githubPrRecipe('github-prs-codex', 'openai', 'Codex', 'head:codex/', '2025-05-16'),
+  githubPrRecipe(
+    'github-prs-jules',
+    'google',
+    'Jules',
+    'author:app/google-labs-jules',
+    '2025-05-20',
+  ),
 ]

@@ -28,7 +28,7 @@ Frontier Terminal is the engine, and its first thesis is Anthropic, read off the
 - **Measured signal.** A number a recipe produces, such as a list price or an open-role count.
 - **Judged signal.** An LLM's rating of fuzzy evidence against a rubric written with the claim, such as "is this lab's launch cadence accelerating?" Every verdict cites the change rows it read and passes a grounding gate before it lands.
 - **Recipe.** A source URL plus an extractor that AI writes and a plain script re-runs.
-- **Dataset.** The time series a recipe produces. Every snapshot is kept; it cannot be backfilled.
+- **Dataset.** The time series a recipe produces. Every snapshot is kept; it cannot be backfilled. The exception is a source that answers for a past date (a search by day): those rows are counted later and marked `retrospective` (`docs/source-audit.md`, 2026-11-20).
 - **Claim status.** Holding, weakening, broken or unresolved, set by the kill condition, not by mood. A judged signal moves it only through its rubric.
 
 ## MVP scope
