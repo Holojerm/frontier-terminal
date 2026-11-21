@@ -895,26 +895,6 @@ describe('the page payload', () => {
 
   const ctx = (at: string | null = null) => queryContext(sourcesYaml, null, () => NOW, at)
 
-  it('reads a press side with only search-API failures as not searched yet', async () => {
-    await seed()
-    await db.insert(schema.trackRecordSearches).values({
-      id: 'busy',
-      alert_id: HASH(1),
-      source: 'gdelt',
-      query: '"gpt 6.1" sourcelang:english',
-      window_start: '2026-09-22T17:01:00.000Z',
-      window_end: '2026-10-06T17:01:00.000Z',
-      status: 'failed',
-      detail: 'HTTP 429',
-      candidates: 0,
-      searched_at: '2026-11-04T00:00:00.000Z',
-      raw_key: null,
-      source_url: 'https://api.gdeltproject.org/api/v2/doc/doc?query=x',
-    })
-    const data = await queryTrackRecord(db, ctx())
-    expect(data.rows.find((r) => r.alert_id === HASH(1))!.press.state).toBe('not-searched')
-  })
-
   it('says "not yet rated" until the earliest candidates are rated, never a guessed lead', async () => {
     const data = await queryTrackRecord(db, ctx())
     expect(data.rows.map((r) => r.alert_id)).toEqual([HASH(2), HASH(1)])

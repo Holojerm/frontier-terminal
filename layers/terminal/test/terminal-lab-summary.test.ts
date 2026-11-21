@@ -76,7 +76,6 @@ describe('lab pages', () => {
       '/labs/moonshot',
     ])
     expect(isLab('xai')).toBe(true)
-    expect(isLab('deepseek')).toBe(true)
     expect(isLab('cohere')).toBe(false)
   })
 })

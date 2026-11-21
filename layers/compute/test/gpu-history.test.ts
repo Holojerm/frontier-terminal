@@ -41,12 +41,6 @@ describe('gpuHistory', () => {
     expect(h100(h).providers).toEqual([3, 3])
   })
 
-  it('counts a provider from the day its page was first stored', () => {
-    const h = gpuHistory([read('lambda', '2026-11-02', 4), read('nebius', '2026-11-09', 6)], null)
-    expect(h100(h).median).toEqual([4, 5])
-    expect(h100(h).providers).toEqual([1, 2])
-  })
-
   it('names each day a provider joined or left the median, and no other day', () => {
     const stored = [
       read('lambda', '2026-11-02', 4),

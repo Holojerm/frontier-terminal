@@ -15,7 +15,7 @@ import { parseProspectusRevenue } from '../../server/pipeline/parsers/sec/prospe
 import { filingReview } from '../../server/pipeline/judge/filing-review'
 import { submitJudgeRun } from '../../../core/server/pipeline/judge/submit'
 import { runRefresh } from '../../../core/server/pipeline/refresh'
-import { fixtureText, manifest, provenanceOf } from '#layers/core/test/pipeline/fixtures'
+import { fixtureText, manifest, provenanceOf, raw } from '#layers/core/test/pipeline/fixtures'
 
 // Revenue from a lab's own S-1 when the filing tags no financial XBRL: the
 // filing index locates the prospectus, and the prospectus's audited
@@ -118,11 +118,6 @@ describe('parseProspectusRevenue', () => {
 
 // ── end to end ──────────────────────────────────────────────────────────────
 
-const raw: RawStore = {
-  put: async (key, body, contentType) => {
-    await env.BLOB.put(key, body, { httpMetadata: { contentType } })
-  },
-}
 let tick = Date.parse('2026-11-02T04:00:00Z')
 const now = () => new Date((tick += 1000))
 const run = (ids: readonly string[], fetcher: SourceFetcher) =>

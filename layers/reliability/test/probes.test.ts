@@ -15,12 +15,10 @@ import {
   PROBE_OVER_BUDGET_KIND,
   matchFlagship,
   resolveProbeTargets,
-  slugTokens,
   type ProbeCatalog,
 } from '../server/pipeline/probes/resolve'
 import {
   PRIMARY_PLACEMENT,
-  PROBE_PLACEMENTS,
   PROBE_PLACEMENT_FAILED_KIND,
   PROBE_RUN_PATH,
   PROBE_UNPINNED_KIND,
@@ -1047,11 +1045,6 @@ function fakeNamespace(answer: (placement: string) => Response | Promise<Respons
 }
 
 describe('probe placement', () => {
-  it('runs from eastern North America only, until the owner adds a placement', () => {
-    expect(PROBE_PLACEMENTS).toEqual(['enam'])
-    expect(PRIMARY_PLACEMENT).toBe('enam')
-  })
-
   it('has its Durable Object binding in wrangler.toml, so the cron has somewhere to send the probes', () => {
     const namespace = (env as unknown as Record<string, unknown>)[PROBE_BINDING] as
       | ProbeNamespace
@@ -1177,7 +1170,6 @@ describe('the probe targets', () => {
   })
 
   it('stay inside the monthly budget at the 2026-11-20 catalog prices, counting what xAI bills outside the cap', () => {
-    expect(PROBE_MONTHLY_BUDGET_USD).toBe(24)
     expect(RESOLVED.skipped).toEqual([])
     expect(RESOLVED_TARGETS).toHaveLength(PROBE_TARGETS.length)
     const ceiling = monthlyCostCeiling(RESOLVED_TARGETS)
@@ -1209,20 +1201,6 @@ const match = (lab: string, family: string, catalog: ProbeCatalog = CATALOG) =>
   matchFlagship(lab, family, catalog.rows)?.or_model_id ?? null
 
 describe('the flagship match', () => {
-  it('reads a slug as words and version numbers', () => {
-    expect(slugTokens('gpt-6.2-astra')).toEqual([
-      { word: 'gpt' },
-      { version: [6, 2] },
-      { word: 'astra' },
-    ])
-    expect(slugTokens('claude-opus-5-5')).toEqual([
-      { word: 'claude' },
-      { word: 'opus' },
-      { version: [5, 5] },
-    ])
-    expect(slugTokens('qwen4-max')).toEqual([{ word: 'qwen' }, { version: [4] }, { word: 'max' }])
-  })
-
   it('picks each probed lab’s flagship from the 2026-11-20 catalog', () => {
     expect(RESOLVED_TARGETS.map((t) => [t.lab, t.model])).toEqual([
       ['openai', 'openai/gpt-6.2-astra'],

@@ -34,3 +34,37 @@ export function fixtureText(repoRelativePath: string): string {
 export function provenanceOf(sourceId: string): { source_url: string; fetched_at: string } {
   return fixtureProvenance(sourceId)
 }
+
+/** The RawStore a refresh test hands runRefresh: payloads land in this file's R2 binding. */
+export const raw: RawStore = {
+  put: async (key, body, contentType) => {
+    await env.BLOB.put(key, body, { httpMetadata: { contentType } })
+  },
+}
+
+/** Serves the committed fixtures by URL. An override replaces a source's bytes, or its
+ * whole outcome, by source id. A URL with no fixture throws, unless `missing` is given. */
+export function fixtureFetcher(
+  overrides: Record<string, string | FetchOutcome> = {},
+  missing?: FetchOutcome,
+): SourceFetcher {
+  const byUrl = new Map(manifest.fixtures.map((f) => [f.source_url, fixtureText(f.path)]))
+  return async (source) => {
+    const override = overrides[source.source_id]
+    if (override !== undefined && typeof override !== 'string') return override
+    const text = override ?? byUrl.get(source.url)
+    if (text === undefined) {
+      if (missing) return missing
+      throw new Error(`no fixture for ${source.url}`)
+    }
+    return { ok: true, status: 200, text, bytes: text.length }
+  }
+}
+
+/** The committed xAI job board with one job taken down. */
+export function xaiJobsWithout(id: number): string {
+  const board = JSON.parse(fixtureText('fixtures/hiring/xai-greenhouse.json')) as {
+    jobs: { id: number }[]
+  }
+  return JSON.stringify({ ...board, jobs: board.jobs.filter((j) => j.id !== id) })
+}

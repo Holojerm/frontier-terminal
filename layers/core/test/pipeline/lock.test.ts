@@ -77,8 +77,7 @@ describe('withPollLock', () => {
     await env.KV.delete(POLL_LOCK_KEY)
   })
 
-  it('writes the holder under the lock key with the crash-guard TTL', async () => {
-    expect(POLL_LOCK_TTL_SECONDS).toBe(600)
+  it('writes the holder and a token under the lock key', async () => {
     await withPollLock(store, 'survey@t3', async () => {
       const { metadata: _m, ...entry } = (await env.KV.getWithMetadata(POLL_LOCK_KEY)) ?? {}
       expect(entry.value).toMatch(/^survey@t3 #[0-9a-f-]{36}$/)

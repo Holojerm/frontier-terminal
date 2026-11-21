@@ -224,7 +224,6 @@ describe('normalize-diff lane', () => {
 
     expect(run1).toHaveLength(3)
     expect(JSON.stringify(run2)).toBe(JSON.stringify(run1)) // byte-identical
-    expect(run2.map((c) => c.id)).toEqual(run1.map((c) => c.id))
 
     for (const c of run1) expect(c.id).toMatch(/^[0-9a-f]{64}$/)
     expect(new Set(run1.map((c) => c.id)).size).toBe(3)

@@ -2,7 +2,7 @@ import { env } from 'cloudflare:test'
 import { beforeAll, describe, expect, it, vi } from 'vitest'
 
 import { fillFromFixtures, type FixtureFillReport } from '../server/dev/fixture-fill'
-import { fixtureText } from '#layers/core/test/pipeline/fixtures'
+import { fixtureText, raw } from '#layers/core/test/pipeline/fixtures'
 
 // The offline fill, as dev:fixtures and the browser suites run it. The suites
 // sweep whatever the fill stores, so a page whose rows the fill stops reaching
@@ -14,11 +14,6 @@ import { fixtureText } from '#layers/core/test/pipeline/fixtures'
 const FILL = 120_000
 
 const sourcesYaml = fixtureText('sources.yaml')
-const raw: RawStore = {
-  put: async (key, body, contentType) => {
-    await env.BLOB.put(key, body, { httpMetadata: { contentType } })
-  },
-}
 
 const memoryLock = (): LockStore => {
   let value: string | null = null
