@@ -8,6 +8,8 @@ import { LAB_DISPLAY } from '../../../shared/utils/terminal-labs'
 import type { AdoptionData } from '../../../shared/utils/recipe-views'
 import type { TableColumn } from '../../types/terminal-ui'
 
+const stamps = useStamps()
+
 const props = defineProps<{ agents: AdoptionData['agent_prs']; caveat: string }>()
 
 const columns: TableColumn[] = [
@@ -26,7 +28,7 @@ const rows = computed(() =>
     return {
       ...a,
       lab: LAB_DISPLAY[a.lab],
-      newest: last ? `${count(last.value)} (${last.date})` : '',
+      newest: last ? `${count(last.value)} (${stamps.date(last.date)})` : '',
       week: week === null ? '—' : count(week),
       days: count(a.days.length),
     }

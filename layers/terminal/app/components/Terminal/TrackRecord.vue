@@ -57,7 +57,7 @@ const status = (r: TrackRecordData) => {
   const waiting = r.press.not_yet_rated
   const open = r.window_open
   return [
-    `${alerts(r.rows.length)} rated notable or critical since ${r.from}.`,
+    `${alerts(r.rows.length)} rated notable or critical since ${stamps.date(r.from)}.`,
     waiting ? `${waiting} ${waiting === 1 ? 'waits' : 'wait'} for a press rating.` : '',
     open
       ? `${open} ${open === 1 ? 'is' : 'are'} less than ${r.window_days} days old, so we haven’t searched ${open === 1 ? 'it' : 'them'} yet.`
@@ -97,7 +97,7 @@ const columns: TableColumn[] = [
     <TerminalGap
       v-if="record.rows.length === 0"
       title="No material alerts yet."
-      :reason="`No notable or critical alert has been raised since ${record.from}.`"
+      :reason="`No notable or critical alert has been raised since ${stamps.date(record.from)}.`"
       :action="{ label: 'All alerts', to: '/alerts' }"
     />
 

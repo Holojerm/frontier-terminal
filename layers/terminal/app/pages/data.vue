@@ -148,6 +148,7 @@ const tabs = [
   { value: 'sources', label: 'Sources' },
   { value: 'licensing', label: 'Licensing' },
 ]
+const stamps = useStamps()
 </script>
 
 <template>
@@ -237,7 +238,10 @@ const tabs = [
           </LazyTerminalTable>
           <template v-if="coverage" #foot>
             Data as of the last check<template v-if="coverage.as_of"
-              >, <time :datetime="coverage.as_of">{{ coverage.as_of }}</time></template
+              >,
+              <time :datetime="coverage.as_of">{{
+                stamps.absolute(coverage.as_of)
+              }}</time></template
             ><span v-else> (none has run yet)</span>. Exports are live. The counts above are from
             that check, and count every row, not just the last {{ LICENSE_WINDOW_DAYS }} days. Each
             sample is 50 rows of the default download: the newest rows of a table that grows over

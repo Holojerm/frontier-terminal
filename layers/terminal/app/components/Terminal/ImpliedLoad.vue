@@ -75,7 +75,7 @@ const fleet = computed(() => props.implied.fleet)
         }}{{ compactTokens(implied.tokens.per_minute) }}
       </span>
       tokens per minute through its own model APIs. Epoch AI’s estimate of Google’s running fleet at
-      {{ fleet.date }}:
+      {{ stamps.date(fleet.date) }}:
       <span class="font-mono text-highlighted">
         {{ h100e(fleet.h100e.p5) }}–{{ h100e(fleet.h100e.p95) }}
       </span>
@@ -114,8 +114,9 @@ const fleet = computed(() => props.implied.fleet)
     <p v-if="shape" class="text-xs text-muted">
       Demand shape: OpenRouter’s average day was
       <span class="font-mono text-highlighted">{{ (shape.ratio * 100).toFixed(1) }}%</span>
-      of its busiest day ({{ shape.peak_date }}, {{ compactTokens(shape.peak_tokens) }} tokens) over
-      {{ shape.window.from }} → {{ shape.window.to }}.
+      of its busiest day ({{ stamps.date(shape.peak_date) }},
+      {{ compactTokens(shape.peak_tokens) }} tokens) over {{ stamps.date(shape.window.from) }} →
+      {{ stamps.date(shape.window.to) }}.
       <TerminalCaveatMark name="How to read the demand shape" :text="shape.caveat" />
     </p>
 

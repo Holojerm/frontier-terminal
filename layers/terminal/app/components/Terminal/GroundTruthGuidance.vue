@@ -65,6 +65,7 @@ const filerColumns: TableColumn[] = [
 
 const rowKey = (g: GroundTruthGuidance) => `${g.accession_no}|${g.fiscal_year}`
 const filerKey = (f: GroundTruthGuidanceFiler) => f.ticker
+const stamps = useStamps()
 </script>
 
 <template>
@@ -94,7 +95,7 @@ const filerKey = (f: GroundTruthGuidanceFiler) => f.ticker
             rel="noopener noreferrer"
             class="underline underline-offset-2 hover:text-primary"
           >
-            <time :datetime="row.filed">{{ row.filed }}</time>
+            <time :datetime="row.filed">{{ stamps.date(row.filed) }}</time>
           </a>
           <span class="block text-xs text-muted">8-K, exhibit 99.1</span>
         </template>
@@ -130,7 +131,7 @@ const filerKey = (f: GroundTruthGuidanceFiler) => f.ticker
       <TerminalGap
         v-else
         title="No guidance read yet."
-        :reason="`We read each earnings release filed since ${guidance.since}. None is stored yet.`"
+        :reason="`We read each earnings release filed since ${stamps.date(guidance.since)}. None is stored yet.`"
       />
 
       <TerminalTable

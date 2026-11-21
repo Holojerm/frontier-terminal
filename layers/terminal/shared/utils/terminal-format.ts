@@ -312,6 +312,18 @@ export function dayStamp(
 }
 
 /**
+ * 'Sep 30 2026' / '2026-09-30': a UTC date that always names its year, for a
+ * filing period, a filing date or a planned date. `dayStamp` drops the
+ * current year, and the server has no clock to tell which year that is, so
+ * the HTML a crawler reads would say "nine months to Sep 30" of no year.
+ */
+export function fullDayStamp(date: string, style: StampStyle = UTC_STYLE): string {
+  const d = new Date(/^\d{4}-\d\d-\d\d$/.test(date) ? `${date}T00:00:00Z` : date)
+  if (Number.isNaN(d.getTime())) return date
+  return dateOf(wallClock(d, 'UTC'), Number.NaN, style)
+}
+
+/**
  * 'Nov 4 2026 18:00Z' / '2026-11-04 18:00Z': an instant that always names its
  * year, for a page that is printed and read later. Otherwise the reader's
  * zone, clock and date form, like every other stamp.

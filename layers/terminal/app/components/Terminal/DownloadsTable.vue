@@ -9,6 +9,8 @@ import { LAB_DISPLAY } from '../../../shared/utils/terminal-labs'
 import type { AdoptionData } from '../../../shared/utils/recipe-views'
 import type { TableColumn } from '../../types/terminal-ui'
 
+const stamps = useStamps()
+
 const figures = useFigures()
 
 const props = defineProps<{
@@ -37,7 +39,7 @@ const rows = computed(() =>
         lab: LAB_DISPLAY[d.lab],
         last: d.last_28d === null ? '' : figures.tokens(d.last_28d),
         change: change === null ? '—' : pctLabel(change),
-        through: d.through ?? '',
+        through: d.through ? stamps.date(d.through) : '',
       }
     })
     .sort((a, b) => (b.last_28d ?? -1) - (a.last_28d ?? -1)),
