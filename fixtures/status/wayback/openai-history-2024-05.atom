@@ -1,0 +1,211 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<feed xml:lang="en-US" xmlns="http://www.w3.org/2005/Atom">
+  <id>tag:status.openai.com,2005:/history</id>
+  <link rel="alternate" type="text/html" href="https://status.openai.com"/>
+  <link rel="self" type="application/atom+xml" href="https://status.openai.com/history.atom"/>
+  <title>OpenAI Status - Incident History</title>
+  <updated>2024-05-02T19:28:27-07:00</updated>
+  <author>
+    <name>OpenAI</name>
+  </author>
+  <entry>
+    <id>tag:status.openai.com,2005:Incident/20695005</id>
+    <published>2024-05-02T18:06:08-07:00</published>
+    <updated>2024-05-02T18:12:42-07:00</updated>
+    <link rel="alternate" type="text/html" href="https://status.openai.com/incidents/276x19pnppyp"/>
+    <title>Elevated error rates on fine-tuning API models and reserved capacity</title>
+    <content type="html">&lt;p&gt;&lt;small&gt;May &lt;var data-var='date'&gt; 2&lt;/var&gt;, &lt;var data-var='time'&gt;18:06&lt;/var&gt; PDT&lt;/small&gt;&lt;br&gt;&lt;strong&gt;Resolved&lt;/strong&gt; - This incident has been resolved.&lt;/p&gt;&lt;p&gt;&lt;small&gt;May &lt;var data-var='date'&gt; 2&lt;/var&gt;, &lt;var data-var='time'&gt;15:50&lt;/var&gt; PDT&lt;/small&gt;&lt;br&gt;&lt;strong&gt;Monitoring&lt;/strong&gt; - The issue has been identified and a fix is being implemented. Fine-tuning API models have also recovered.&lt;/p&gt;&lt;p&gt;&lt;small&gt;May &lt;var data-var='date'&gt; 2&lt;/var&gt;, &lt;var data-var='time'&gt;15:06&lt;/var&gt; PDT&lt;/small&gt;&lt;br&gt;&lt;strong&gt;Investigating&lt;/strong&gt; - We are currently investigating this issue.&lt;/p&gt;</content>
+  </entry>
+  <entry>
+    <id>tag:status.openai.com,2005:Incident/20685048</id>
+    <published>2024-05-01T19:04:46-07:00</published>
+    <updated>2024-05-01T19:04:46-07:00</updated>
+    <link rel="alternate" type="text/html" href="https://status.openai.com/incidents/8n6cpxchrx14"/>
+    <title>Elevated error rates on ASR (Whisper)</title>
+    <content type="html">&lt;p&gt;&lt;small&gt;May &lt;var data-var='date'&gt; 1&lt;/var&gt;, &lt;var data-var='time'&gt;19:04&lt;/var&gt; PDT&lt;/small&gt;&lt;br&gt;&lt;strong&gt;Resolved&lt;/strong&gt; - The incident has been resolved. It affected users using Whisper models on the API and text-to-speech on ChatGPT from 8:45 AM to 12:50 PM PT.&lt;/p&gt;&lt;p&gt;&lt;small&gt;May &lt;var data-var='date'&gt; 1&lt;/var&gt;, &lt;var data-var='time'&gt;13:41&lt;/var&gt; PDT&lt;/small&gt;&lt;br&gt;&lt;strong&gt;Monitoring&lt;/strong&gt; - We have identified the issue and implemented a fix. Users may have noticed elevated error rates and 499 errors on ChatGPT and the Whisper API.&lt;/p&gt;</content>
+  </entry>
+  <entry>
+    <id>tag:status.openai.com,2005:Incident/20685149</id>
+    <published>2024-05-01T14:41:25-07:00</published>
+    <updated>2024-05-01T14:41:25-07:00</updated>
+    <link rel="alternate" type="text/html" href="https://status.openai.com/incidents/dnd5t229ll1l"/>
+    <title>The website openai.com is currently down.</title>
+    <content type="html">&lt;p&gt;&lt;small&gt;May &lt;var data-var='date'&gt; 1&lt;/var&gt;, &lt;var data-var='time'&gt;14:41&lt;/var&gt; PDT&lt;/small&gt;&lt;br&gt;&lt;strong&gt;Resolved&lt;/strong&gt; - This incident has been resolved.&lt;/p&gt;&lt;p&gt;&lt;small&gt;May &lt;var data-var='date'&gt; 1&lt;/var&gt;, &lt;var data-var='time'&gt;14:00&lt;/var&gt; PDT&lt;/small&gt;&lt;br&gt;&lt;strong&gt;Investigating&lt;/strong&gt; - We are currently investigating the issue. chatgpt.com, chat.openai.com and platform.openai.com remain accessible.&lt;/p&gt;</content>
+  </entry>
+  <entry>
+    <id>tag:status.openai.com,2005:Incident/20683597</id>
+    <published>2024-05-01T11:50:49-07:00</published>
+    <updated>2024-05-01T11:50:49-07:00</updated>
+    <link rel="alternate" type="text/html" href="https://status.openai.com/incidents/j1glqxyh61gk"/>
+    <title>Users are facing elevated error rates on ChatGPT</title>
+    <content type="html">&lt;p&gt;&lt;small&gt;May &lt;var data-var='date'&gt; 1&lt;/var&gt;, &lt;var data-var='time'&gt;11:50&lt;/var&gt; PDT&lt;/small&gt;&lt;br&gt;&lt;strong&gt;Resolved&lt;/strong&gt; - This incident has been resolved. The affected time was from 17:00 PM yesterday to 11:10 today PT.&lt;/p&gt;&lt;p&gt;&lt;small&gt;May &lt;var data-var='date'&gt; 1&lt;/var&gt;, &lt;var data-var='time'&gt;10:12&lt;/var&gt; PDT&lt;/small&gt;&lt;br&gt;&lt;strong&gt;Identified&lt;/strong&gt; - We have identified an issue that affected customers, causing some users on ChatGPT to see a blank screen. The incident began at 6 PM PT yesterday, and we are currently working on a fix.&lt;/p&gt;</content>
+  </entry>
+  <entry>
+    <id>tag:status.openai.com,2005:Incident/20639988</id>
+    <published>2024-04-26T01:35:10-07:00</published>
+    <updated>2024-04-26T01:39:24-07:00</updated>
+    <link rel="alternate" type="text/html" href="https://status.openai.com/incidents/pqzv8nwct4j4"/>
+    <title>Elevated error rate affecting /chat/completions streaming</title>
+    <content type="html">&lt;p&gt;&lt;small&gt;Apr &lt;var data-var='date'&gt;26&lt;/var&gt;, &lt;var data-var='time'&gt;01:35&lt;/var&gt; PDT&lt;/small&gt;&lt;br&gt;&lt;strong&gt;Resolved&lt;/strong&gt; - /chat/completions streaming experienced elevated error rates from 2024-04-25 21:10 PDT to 2024-04-26 01:20 PDT.&lt;/p&gt;</content>
+  </entry>
+  <entry>
+    <id>tag:status.openai.com,2005:Incident/20638086</id>
+    <published>2024-04-25T21:31:04-07:00</published>
+    <updated>2024-04-25T21:31:04-07:00</updated>
+    <link rel="alternate" type="text/html" href="https://status.openai.com/incidents/nwjf6sj8cl5l"/>
+    <title>Elevated errors on ChatGPT</title>
+    <content type="html">&lt;p&gt;&lt;small&gt;Apr &lt;var data-var='date'&gt;25&lt;/var&gt;, &lt;var data-var='time'&gt;21:31&lt;/var&gt; PDT&lt;/small&gt;&lt;br&gt;&lt;strong&gt;Resolved&lt;/strong&gt; - We observed elevated error rates in ChatGPT between 7:17pm - 9:02pm PDT. The issue has now been resolved&lt;/p&gt;&lt;p&gt;&lt;small&gt;Apr &lt;var data-var='date'&gt;25&lt;/var&gt;, &lt;var data-var='time'&gt;20:53&lt;/var&gt; PDT&lt;/small&gt;&lt;br&gt;&lt;strong&gt;Monitoring&lt;/strong&gt; - We have implemented a series of mitigations and we are actively monitoring error rates improving in ChatGPT.&lt;/p&gt;&lt;p&gt;&lt;small&gt;Apr &lt;var data-var='date'&gt;25&lt;/var&gt;, &lt;var data-var='time'&gt;20:40&lt;/var&gt; PDT&lt;/small&gt;&lt;br&gt;&lt;strong&gt;Identified&lt;/strong&gt; - The issue has been identified and a fix is being implemented.&lt;/p&gt;&lt;p&gt;&lt;small&gt;Apr &lt;var data-var='date'&gt;25&lt;/var&gt;, &lt;var data-var='time'&gt;20:18&lt;/var&gt; PDT&lt;/small&gt;&lt;br&gt;&lt;strong&gt;Investigating&lt;/strong&gt; - We are currently investigating this issue.&lt;/p&gt;</content>
+  </entry>
+  <entry>
+    <id>tag:status.openai.com,2005:Incident/20635490</id>
+    <published>2024-04-25T14:36:57-07:00</published>
+    <updated>2024-04-25T14:36:57-07:00</updated>
+    <link rel="alternate" type="text/html" href="https://status.openai.com/incidents/cczgsv2kzdnh"/>
+    <title>Elevated errors on ChatGPT</title>
+    <content type="html">&lt;p&gt;&lt;small&gt;Apr &lt;var data-var='date'&gt;25&lt;/var&gt;, &lt;var data-var='time'&gt;14:36&lt;/var&gt; PDT&lt;/small&gt;&lt;br&gt;&lt;strong&gt;Resolved&lt;/strong&gt; - We observed elevated error rates in ChatGPT between 12:09pm - 13:02pm PDT. The issue has now been resolved.&lt;/p&gt;&lt;p&gt;&lt;small&gt;Apr &lt;var data-var='date'&gt;25&lt;/var&gt;, &lt;var data-var='time'&gt;12:32&lt;/var&gt; PDT&lt;/small&gt;&lt;br&gt;&lt;strong&gt;Investigating&lt;/strong&gt; - We are currently investigating this issue.&lt;/p&gt;</content>
+  </entry>
+  <entry>
+    <id>tag:status.openai.com,2005:Incident/20625333</id>
+    <published>2024-04-24T11:30:25-07:00</published>
+    <updated>2024-04-24T11:30:25-07:00</updated>
+    <link rel="alternate" type="text/html" href="https://status.openai.com/incidents/5lnkhd8p9d0d"/>
+    <title>Elevated errors on ChatGPT</title>
+    <content type="html">&lt;p&gt;&lt;small&gt;Apr &lt;var data-var='date'&gt;24&lt;/var&gt;, &lt;var data-var='time'&gt;11:30&lt;/var&gt; PDT&lt;/small&gt;&lt;br&gt;&lt;strong&gt;Resolved&lt;/strong&gt; - We observed elevated error rates from 10:19am PT to 11:00am PT. The issue has now been resolved.&lt;/p&gt;&lt;p&gt;&lt;small&gt;Apr &lt;var data-var='date'&gt;24&lt;/var&gt;, &lt;var data-var='time'&gt;11:17&lt;/var&gt; PDT&lt;/small&gt;&lt;br&gt;&lt;strong&gt;Monitoring&lt;/strong&gt; - A series of mitigations has been applied and we are actively monitoring traffic returning to normal in ChatGPT.&lt;/p&gt;&lt;p&gt;&lt;small&gt;Apr &lt;var data-var='date'&gt;24&lt;/var&gt;, &lt;var data-var='time'&gt;11:08&lt;/var&gt; PDT&lt;/small&gt;&lt;br&gt;&lt;strong&gt;Identified&lt;/strong&gt; - Our team has identified the source of the elevated errors and is working through a fix at this time.&lt;/p&gt;&lt;p&gt;&lt;small&gt;Apr &lt;var data-var='date'&gt;24&lt;/var&gt;, &lt;var data-var='time'&gt;10:34&lt;/var&gt; PDT&lt;/small&gt;&lt;br&gt;&lt;strong&gt;Update&lt;/strong&gt; - We are continuing to investigate this issue.&lt;/p&gt;&lt;p&gt;&lt;small&gt;Apr &lt;var data-var='date'&gt;24&lt;/var&gt;, &lt;var data-var='time'&gt;10:33&lt;/var&gt; PDT&lt;/small&gt;&lt;br&gt;&lt;strong&gt;Investigating&lt;/strong&gt; - We are currently investigating this issue.&lt;/p&gt;</content>
+  </entry>
+  <entry>
+    <id>tag:status.openai.com,2005:Incident/20560442</id>
+    <published>2024-04-17T15:26:02-07:00</published>
+    <updated>2024-04-17T15:26:02-07:00</updated>
+    <link rel="alternate" type="text/html" href="https://status.openai.com/incidents/zx65grg8q28j"/>
+    <title>Elevated errors on ChatGPT</title>
+    <content type="html">&lt;p&gt;&lt;small&gt;Apr &lt;var data-var='date'&gt;17&lt;/var&gt;, &lt;var data-var='time'&gt;15:26&lt;/var&gt; PDT&lt;/small&gt;&lt;br&gt;&lt;strong&gt;Resolved&lt;/strong&gt; - We observed elevated error rates from 12:37 pm PDT to 12:50 pm PDT. The issue has now been resolved.&lt;/p&gt;&lt;p&gt;&lt;small&gt;Apr &lt;var data-var='date'&gt;17&lt;/var&gt;, &lt;var data-var='time'&gt;13:03&lt;/var&gt; PDT&lt;/small&gt;&lt;br&gt;&lt;strong&gt;Monitoring&lt;/strong&gt; - We saw elevated error rates from 12:37 pm PDT to 12:50 pm PDT. Error rates have subsided and the team is actively monitoring to ensure errors have been resolved.&lt;/p&gt;&lt;p&gt;&lt;small&gt;Apr &lt;var data-var='date'&gt;17&lt;/var&gt;, &lt;var data-var='time'&gt;12:46&lt;/var&gt; PDT&lt;/small&gt;&lt;br&gt;&lt;strong&gt;Investigating&lt;/strong&gt; - We are currently investigating this issue.&lt;/p&gt;</content>
+  </entry>
+  <entry>
+    <id>tag:status.openai.com,2005:Incident/20557150</id>
+    <published>2024-04-17T04:30:00-07:00</published>
+    <updated>2024-04-17T06:36:05-07:00</updated>
+    <link rel="alternate" type="text/html" href="https://status.openai.com/incidents/0bwgp7n2t976"/>
+    <title>Elevated error rates for Vision Models</title>
+    <content type="html">&lt;p&gt;&lt;small&gt;Apr &lt;var data-var='date'&gt;17&lt;/var&gt;, &lt;var data-var='time'&gt;04:30&lt;/var&gt; PDT&lt;/small&gt;&lt;br&gt;&lt;strong&gt;Resolved&lt;/strong&gt; - We saw elevated error rates for GPT-Vision from 4:40am PDT to 6:10am PDT&lt;/p&gt;</content>
+  </entry>
+  <entry>
+    <id>tag:status.openai.com,2005:Incident/20548494</id>
+    <published>2024-04-16T07:40:00-07:00</published>
+    <updated>2024-04-17T16:44:32-07:00</updated>
+    <link rel="alternate" type="text/html" href="https://status.openai.com/incidents/nc525h790rp2"/>
+    <title>Elevated errors on ChatGPT</title>
+    <content type="html">&lt;p&gt;&lt;small&gt;Apr &lt;var data-var='date'&gt;16&lt;/var&gt;, &lt;var data-var='time'&gt;07:40&lt;/var&gt; PDT&lt;/small&gt;&lt;br&gt;&lt;strong&gt;Resolved&lt;/strong&gt; - We encountered an issue where customers may have encountered the error "Something went wrong. If this issue persists please contact us through our help center at help.openai.com." when attempting to interact with ChatGPT. The issue has been resolved, and we apologize for the inconvenience.&lt;br /&gt;&lt;br /&gt;This was identified on April 15th at 9:30pm pacific and resolved on April 16th at 7:40am pacific.&lt;/p&gt;</content>
+  </entry>
+  <entry>
+    <id>tag:status.openai.com,2005:Incident/20541049</id>
+    <published>2024-04-15T14:41:10-07:00</published>
+    <updated>2024-04-15T14:41:10-07:00</updated>
+    <link rel="alternate" type="text/html" href="https://status.openai.com/incidents/xhr9d3qykd2p"/>
+    <title>Elevated errors in ChatGPT</title>
+    <content type="html">&lt;p&gt;&lt;small&gt;Apr &lt;var data-var='date'&gt;15&lt;/var&gt;, &lt;var data-var='time'&gt;14:41&lt;/var&gt; PDT&lt;/small&gt;&lt;br&gt;&lt;strong&gt;Resolved&lt;/strong&gt; - The elevated errors in ChatGPT have resolved.&lt;/p&gt;&lt;p&gt;&lt;small&gt;Apr &lt;var data-var='date'&gt;15&lt;/var&gt;, &lt;var data-var='time'&gt;14:19&lt;/var&gt; PDT&lt;/small&gt;&lt;br&gt;&lt;strong&gt;Investigating&lt;/strong&gt; - We are currently investigating elevated errors in ChatGPT across all plans.&lt;/p&gt;</content>
+  </entry>
+  <entry>
+    <id>tag:status.openai.com,2005:Incident/20508528</id>
+    <published>2024-04-11T16:58:49-07:00</published>
+    <updated>2024-04-11T16:58:49-07:00</updated>
+    <link rel="alternate" type="text/html" href="https://status.openai.com/incidents/6z0kjhhj0wbm"/>
+    <title>Increased Queue Wait Times for GPT-3.5-Turbo Fine-Tuning Jobs</title>
+    <content type="html">&lt;p&gt;&lt;small&gt;Apr &lt;var data-var='date'&gt;11&lt;/var&gt;, &lt;var data-var='time'&gt;16:58&lt;/var&gt; PDT&lt;/small&gt;&lt;br&gt;&lt;strong&gt;Resolved&lt;/strong&gt; - This incident has been resolved.&lt;/p&gt;&lt;p&gt;&lt;small&gt;Apr &lt;var data-var='date'&gt;11&lt;/var&gt;, &lt;var data-var='time'&gt;15:46&lt;/var&gt; PDT&lt;/small&gt;&lt;br&gt;&lt;strong&gt;Update&lt;/strong&gt; - A fix has been deployed and the fine-tuning job queue is emptying. We expect the service to return to normal operation within the hour.&lt;/p&gt;&lt;p&gt;&lt;small&gt;Apr &lt;var data-var='date'&gt;11&lt;/var&gt;, &lt;var data-var='time'&gt;15:19&lt;/var&gt; PDT&lt;/small&gt;&lt;br&gt;&lt;strong&gt;Update&lt;/strong&gt; - We are continuing to work towards deploying a fix. At this time the queues for 3.5-turbo fine-tunes (all versions) are still backed up, wait times for jobs to be processed is &gt; 1 hour.&lt;/p&gt;&lt;p&gt;&lt;small&gt;Apr &lt;var data-var='date'&gt;11&lt;/var&gt;, &lt;var data-var='time'&gt;12:02&lt;/var&gt; PDT&lt;/small&gt;&lt;br&gt;&lt;strong&gt;Update&lt;/strong&gt; - We are continuing to work on a fix for this issue.&lt;/p&gt;&lt;p&gt;&lt;small&gt;Apr &lt;var data-var='date'&gt;11&lt;/var&gt;, &lt;var data-var='time'&gt;11:57&lt;/var&gt; PDT&lt;/small&gt;&lt;br&gt;&lt;strong&gt;Identified&lt;/strong&gt; - We are experiencing increased wait time for gpt-3.5-turbo (all variants) fine-tuning jobs. Currently, wait times are approximately an hour.&lt;/p&gt;</content>
+  </entry>
+  <entry>
+    <id>tag:status.openai.com,2005:Incident/20506300</id>
+    <published>2024-04-11T09:30:27-07:00</published>
+    <updated>2024-04-11T09:30:27-07:00</updated>
+    <link rel="alternate" type="text/html" href="https://status.openai.com/incidents/6w4b9337p6xt"/>
+    <title>Increased latency and error rate affecting gpt-3.5-turbo</title>
+    <content type="html">&lt;p&gt;&lt;small&gt;Apr &lt;var data-var='date'&gt;11&lt;/var&gt;, &lt;var data-var='time'&gt;09:30&lt;/var&gt; PDT&lt;/small&gt;&lt;br&gt;&lt;strong&gt;Resolved&lt;/strong&gt; - This incident has been resolved.&lt;/p&gt;&lt;p&gt;&lt;small&gt;Apr &lt;var data-var='date'&gt;11&lt;/var&gt;, &lt;var data-var='time'&gt;07:42&lt;/var&gt; PDT&lt;/small&gt;&lt;br&gt;&lt;strong&gt;Monitoring&lt;/strong&gt; - A fix has been implemented and we are monitoring the results.&lt;/p&gt;&lt;p&gt;&lt;small&gt;Apr &lt;var data-var='date'&gt;11&lt;/var&gt;, &lt;var data-var='time'&gt;07:05&lt;/var&gt; PDT&lt;/small&gt;&lt;br&gt;&lt;strong&gt;Investigating&lt;/strong&gt; - We are currently investigating this issue.&lt;/p&gt;</content>
+  </entry>
+  <entry>
+    <id>tag:status.openai.com,2005:Incident/20498160</id>
+    <published>2024-04-10T13:56:38-07:00</published>
+    <updated>2024-04-17T17:01:06-07:00</updated>
+    <link rel="alternate" type="text/html" href="https://status.openai.com/incidents/w20mcckg1748"/>
+    <title>Elevated errors in ChatGPT</title>
+    <content type="html">&lt;p&gt;&lt;small&gt;Apr &lt;var data-var='date'&gt;10&lt;/var&gt;, &lt;var data-var='time'&gt;13:56&lt;/var&gt; PDT&lt;/small&gt;&lt;br&gt;&lt;strong&gt;Resolved&lt;/strong&gt; - At this time our deployed fix has mitigated the elevated errors in ChatGPT. We are continuing to investigate the factors which led to this incident.&lt;br /&gt;&lt;br /&gt;This outage started at ~11:00am and ended at 1:43pm PST.&lt;/p&gt;&lt;p&gt;&lt;small&gt;Apr &lt;var data-var='date'&gt;10&lt;/var&gt;, &lt;var data-var='time'&gt;13:49&lt;/var&gt; PDT&lt;/small&gt;&lt;br&gt;&lt;strong&gt;Monitoring&lt;/strong&gt; - Errors are continuing to resolve as a result of the fix we recently deployed. We are actively monitoring traffic returning to normal in ChatGPT.&lt;/p&gt;&lt;p&gt;&lt;small&gt;Apr &lt;var data-var='date'&gt;10&lt;/var&gt;, &lt;var data-var='time'&gt;13:39&lt;/var&gt; PDT&lt;/small&gt;&lt;br&gt;&lt;strong&gt;Identified&lt;/strong&gt; - We have identified the source of the elevated errors in ChatGPT and are working through a fix at this time.&lt;/p&gt;&lt;p&gt;&lt;small&gt;Apr &lt;var data-var='date'&gt;10&lt;/var&gt;, &lt;var data-var='time'&gt;13:10&lt;/var&gt; PDT&lt;/small&gt;&lt;br&gt;&lt;strong&gt;Update&lt;/strong&gt; - Some users may also be seeing unexpected error messages. We continue to actively investigate the elevated errors in ChatGPT.&lt;/p&gt;&lt;p&gt;&lt;small&gt;Apr &lt;var data-var='date'&gt;10&lt;/var&gt;, &lt;var data-var='time'&gt;12:45&lt;/var&gt; PDT&lt;/small&gt;&lt;br&gt;&lt;strong&gt;Update&lt;/strong&gt; - We are continuing to investigate this issue of elevated errors in ChatGPT.&lt;/p&gt;&lt;p&gt;&lt;small&gt;Apr &lt;var data-var='date'&gt;10&lt;/var&gt;, &lt;var data-var='time'&gt;12:03&lt;/var&gt; PDT&lt;/small&gt;&lt;br&gt;&lt;strong&gt;Update&lt;/strong&gt; - We are still investigating the elevated errors in ChatGPT.&lt;/p&gt;&lt;p&gt;&lt;small&gt;Apr &lt;var data-var='date'&gt;10&lt;/var&gt;, &lt;var data-var='time'&gt;11:39&lt;/var&gt; PDT&lt;/small&gt;&lt;br&gt;&lt;strong&gt;Update&lt;/strong&gt; - We continue to investigate elevated errors ChatGPT.&lt;/p&gt;&lt;p&gt;&lt;small&gt;Apr &lt;var data-var='date'&gt;10&lt;/var&gt;, &lt;var data-var='time'&gt;10:56&lt;/var&gt; PDT&lt;/small&gt;&lt;br&gt;&lt;strong&gt;Investigating&lt;/strong&gt; - We are currently investigating elevated errors ChatGPT.&lt;/p&gt;</content>
+  </entry>
+  <entry>
+    <id>tag:status.openai.com,2005:Incident/20497929</id>
+    <published>2024-04-10T10:51:20-07:00</published>
+    <updated>2024-04-10T10:51:20-07:00</updated>
+    <link rel="alternate" type="text/html" href="https://status.openai.com/incidents/tslskm62x0v6"/>
+    <title>Elevated errors in requests using vision in ChatGPT and the API</title>
+    <content type="html">&lt;p&gt;&lt;small&gt;Apr &lt;var data-var='date'&gt;10&lt;/var&gt;, &lt;var data-var='time'&gt;10:51&lt;/var&gt; PDT&lt;/small&gt;&lt;br&gt;&lt;strong&gt;Resolved&lt;/strong&gt; - As of 1030a pacific the issue impacting vision models on ChatGPT and in our API have resolved due to the fix we deployed.&lt;/p&gt;&lt;p&gt;&lt;small&gt;Apr &lt;var data-var='date'&gt;10&lt;/var&gt;, &lt;var data-var='time'&gt;10:29&lt;/var&gt; PDT&lt;/small&gt;&lt;br&gt;&lt;strong&gt;Monitoring&lt;/strong&gt; - A fix has been implemented and we are now monitoring the incident as the elevated errors are starting to resolve.&lt;/p&gt;&lt;p&gt;&lt;small&gt;Apr &lt;var data-var='date'&gt;10&lt;/var&gt;, &lt;var data-var='time'&gt;10:24&lt;/var&gt; PDT&lt;/small&gt;&lt;br&gt;&lt;strong&gt;Investigating&lt;/strong&gt; - We're investigating elevated errors in requests that use vision in both ChatGPT and the API.&lt;/p&gt;</content>
+  </entry>
+  <entry>
+    <id>tag:status.openai.com,2005:Incident/20452955</id>
+    <published>2024-04-04T21:21:17-07:00</published>
+    <updated>2024-04-04T21:21:17-07:00</updated>
+    <link rel="alternate" type="text/html" href="https://status.openai.com/incidents/tfqpd7zp7183"/>
+    <title>Increased error rate on ChatGPT</title>
+    <content type="html">&lt;p&gt;&lt;small&gt;Apr &lt;var data-var='date'&gt; 4&lt;/var&gt;, &lt;var data-var='time'&gt;21:21&lt;/var&gt; PDT&lt;/small&gt;&lt;br&gt;&lt;strong&gt;Resolved&lt;/strong&gt; - This incident has been resolved.&lt;/p&gt;&lt;p&gt;&lt;small&gt;Apr &lt;var data-var='date'&gt; 4&lt;/var&gt;, &lt;var data-var='time'&gt;17:34&lt;/var&gt; PDT&lt;/small&gt;&lt;br&gt;&lt;strong&gt;Monitoring&lt;/strong&gt; - A fix has been implemented and we are monitoring the results.&lt;/p&gt;&lt;p&gt;&lt;small&gt;Apr &lt;var data-var='date'&gt; 4&lt;/var&gt;, &lt;var data-var='time'&gt;16:44&lt;/var&gt; PDT&lt;/small&gt;&lt;br&gt;&lt;strong&gt;Investigating&lt;/strong&gt; - We are currently investigating this issue.&lt;/p&gt;</content>
+  </entry>
+  <entry>
+    <id>tag:status.openai.com,2005:Incident/20449745</id>
+    <published>2024-04-04T09:58:40-07:00</published>
+    <updated>2024-04-04T09:58:40-07:00</updated>
+    <link rel="alternate" type="text/html" href="https://status.openai.com/incidents/7b6zrdqn4x1v"/>
+    <title>Assistants API messages are truncated or split</title>
+    <content type="html">&lt;p&gt;&lt;small&gt;Apr &lt;var data-var='date'&gt; 4&lt;/var&gt;, &lt;var data-var='time'&gt;09:58&lt;/var&gt; PDT&lt;/small&gt;&lt;br&gt;&lt;strong&gt;Resolved&lt;/strong&gt; - Between 11:00 AM PT on April 2nd and 9:08 AM PT on April 4th, users experienced malformed responses from the Assistants API due to a configuration issue. This problem has now been resolved, and the Assistants API is functioning as expected.&lt;/p&gt;&lt;p&gt;&lt;small&gt;Apr &lt;var data-var='date'&gt; 4&lt;/var&gt;, &lt;var data-var='time'&gt;09:34&lt;/var&gt; PDT&lt;/small&gt;&lt;br&gt;&lt;strong&gt;Identified&lt;/strong&gt; - The issue has been identified and a fix is being implemented.&lt;/p&gt;&lt;p&gt;&lt;small&gt;Apr &lt;var data-var='date'&gt; 4&lt;/var&gt;, &lt;var data-var='time'&gt;08:59&lt;/var&gt; PDT&lt;/small&gt;&lt;br&gt;&lt;strong&gt;Investigating&lt;/strong&gt; - We are currently investigating reports from users experiencing issues with Assistants API messages being truncated or split.&lt;/p&gt;</content>
+  </entry>
+  <entry>
+    <id>tag:status.openai.com,2005:Incident/20443787</id>
+    <published>2024-04-03T17:56:31-07:00</published>
+    <updated>2024-04-03T17:56:31-07:00</updated>
+    <link rel="alternate" type="text/html" href="https://status.openai.com/incidents/g7k3xb8xx9s2"/>
+    <title>Increased errors on Assistants API while streaming</title>
+    <content type="html">&lt;p&gt;&lt;small&gt;Apr &lt;var data-var='date'&gt; 3&lt;/var&gt;, &lt;var data-var='time'&gt;17:56&lt;/var&gt; PDT&lt;/small&gt;&lt;br&gt;&lt;strong&gt;Resolved&lt;/strong&gt; - This incident has been resolved.&lt;/p&gt;&lt;p&gt;&lt;small&gt;Apr &lt;var data-var='date'&gt; 3&lt;/var&gt;, &lt;var data-var='time'&gt;17:41&lt;/var&gt; PDT&lt;/small&gt;&lt;br&gt;&lt;strong&gt;Monitoring&lt;/strong&gt; - We have identified the issue and a fix has been implemented; we are now monitoring the results.&lt;/p&gt;&lt;p&gt;&lt;small&gt;Apr &lt;var data-var='date'&gt; 3&lt;/var&gt;, &lt;var data-var='time'&gt;17:14&lt;/var&gt; PDT&lt;/small&gt;&lt;br&gt;&lt;strong&gt;Investigating&lt;/strong&gt; - We are currently investigating this issue.&lt;/p&gt;</content>
+  </entry>
+  <entry>
+    <id>tag:status.openai.com,2005:Incident/20433434</id>
+    <published>2024-04-02T15:57:11-07:00</published>
+    <updated>2024-04-02T15:57:11-07:00</updated>
+    <link rel="alternate" type="text/html" href="https://status.openai.com/incidents/sg976xjfqcmc"/>
+    <title>Increased errors on ChatGPT</title>
+    <content type="html">&lt;p&gt;&lt;small&gt;Apr &lt;var data-var='date'&gt; 2&lt;/var&gt;, &lt;var data-var='time'&gt;15:57&lt;/var&gt; PDT&lt;/small&gt;&lt;br&gt;&lt;strong&gt;Resolved&lt;/strong&gt; - This incident has been resolved.&lt;/p&gt;&lt;p&gt;&lt;small&gt;Apr &lt;var data-var='date'&gt; 2&lt;/var&gt;, &lt;var data-var='time'&gt;15:40&lt;/var&gt; PDT&lt;/small&gt;&lt;br&gt;&lt;strong&gt;Monitoring&lt;/strong&gt; - A fix has been implemented and we are monitoring the results.&lt;/p&gt;&lt;p&gt;&lt;small&gt;Apr &lt;var data-var='date'&gt; 2&lt;/var&gt;, &lt;var data-var='time'&gt;15:37&lt;/var&gt; PDT&lt;/small&gt;&lt;br&gt;&lt;strong&gt;Investigating&lt;/strong&gt; - We are currently investigating this issue.&lt;/p&gt;</content>
+  </entry>
+  <entry>
+    <id>tag:status.openai.com,2005:Incident/20423391</id>
+    <published>2024-04-01T19:01:32-07:00</published>
+    <updated>2024-04-01T20:09:04-07:00</updated>
+    <link rel="alternate" type="text/html" href="https://status.openai.com/incidents/yk2pndv2tdfw"/>
+    <title>Elevated error rate impacting ChatGPT and API</title>
+    <content type="html">&lt;p&gt;&lt;small&gt;Apr &lt;var data-var='date'&gt; 1&lt;/var&gt;, &lt;var data-var='time'&gt;19:01&lt;/var&gt; PDT&lt;/small&gt;&lt;br&gt;&lt;strong&gt;Resolved&lt;/strong&gt; - This incident has been resolved.&lt;br /&gt;&lt;br /&gt;Between 5:15 PM and 5:43 PM PDT, we experienced increased error rates on the API. From 5:27 PM to 5:39 PM PDT, error rates for ChatGPT were also increased. Access to ChatGPT was temporarily disabled for users who were not logged in, but was restored around 7:40 PM PDT.&lt;/p&gt;&lt;p&gt;&lt;small&gt;Apr &lt;var data-var='date'&gt; 1&lt;/var&gt;, &lt;var data-var='time'&gt;17:45&lt;/var&gt; PDT&lt;/small&gt;&lt;br&gt;&lt;strong&gt;Monitoring&lt;/strong&gt; - A fix has been implemented and we are monitoring the results.&lt;/p&gt;&lt;p&gt;&lt;small&gt;Apr &lt;var data-var='date'&gt; 1&lt;/var&gt;, &lt;var data-var='time'&gt;17:42&lt;/var&gt; PDT&lt;/small&gt;&lt;br&gt;&lt;strong&gt;Update&lt;/strong&gt; - We are continuing to investigate this issue.&lt;/p&gt;&lt;p&gt;&lt;small&gt;Apr &lt;var data-var='date'&gt; 1&lt;/var&gt;, &lt;var data-var='time'&gt;17:28&lt;/var&gt; PDT&lt;/small&gt;&lt;br&gt;&lt;strong&gt;Investigating&lt;/strong&gt; - We are currently investigating this issue.&lt;/p&gt;</content>
+  </entry>
+  <entry>
+    <id>tag:status.openai.com,2005:Incident/20394370</id>
+    <published>2024-03-29T02:09:04-07:00</published>
+    <updated>2024-03-29T02:09:04-07:00</updated>
+    <link rel="alternate" type="text/html" href="https://status.openai.com/incidents/r5vx858m9pxt"/>
+    <title>Increased errors on ChatGPT</title>
+    <content type="html">&lt;p&gt;&lt;small&gt;Mar &lt;var data-var='date'&gt;29&lt;/var&gt;, &lt;var data-var='time'&gt;02:09&lt;/var&gt; PDT&lt;/small&gt;&lt;br&gt;&lt;strong&gt;Resolved&lt;/strong&gt; - From 00:14 PST – 00:54 PST we saw increased error rates on ChatGPT. We have fixed the underlying cause of the issue, and performance has now returned to normal.&lt;/p&gt;&lt;p&gt;&lt;small&gt;Mar &lt;var data-var='date'&gt;29&lt;/var&gt;, &lt;var data-var='time'&gt;01:18&lt;/var&gt; PDT&lt;/small&gt;&lt;br&gt;&lt;strong&gt;Monitoring&lt;/strong&gt; - We have implemented a fix and error rates on ChatGPT are returning to normal. We're continuing to monitor.&lt;/p&gt;&lt;p&gt;&lt;small&gt;Mar &lt;var data-var='date'&gt;29&lt;/var&gt;, &lt;var data-var='time'&gt;00:59&lt;/var&gt; PDT&lt;/small&gt;&lt;br&gt;&lt;strong&gt;Identified&lt;/strong&gt; - The issue has been identified and a fix is being implemented.&lt;/p&gt;&lt;p&gt;&lt;small&gt;Mar &lt;var data-var='date'&gt;29&lt;/var&gt;, &lt;var data-var='time'&gt;00:31&lt;/var&gt; PDT&lt;/small&gt;&lt;br&gt;&lt;strong&gt;Investigating&lt;/strong&gt; - We are investigating increased errors on ChatGPT.&lt;/p&gt;</content>
+  </entry>
+  <entry>
+    <id>tag:status.openai.com,2005:Incident/20391032</id>
+    <published>2024-03-28T14:30:57-07:00</published>
+    <updated>2024-03-28T14:30:57-07:00</updated>
+    <link rel="alternate" type="text/html" href="https://status.openai.com/incidents/39qgkf8x02vk"/>
+    <title>Repeated responses from gpt-4</title>
+    <content type="html">&lt;p&gt;&lt;small&gt;Mar &lt;var data-var='date'&gt;28&lt;/var&gt;, &lt;var data-var='time'&gt;14:30&lt;/var&gt; PDT&lt;/small&gt;&lt;br&gt;&lt;strong&gt;Resolved&lt;/strong&gt; - This incident has been resolved. We observed the first incident of repeated responses occur on March 27th around 2pm PST, and we rolled out a fix on March 28th around 12:55pm PST.&lt;/p&gt;&lt;p&gt;&lt;small&gt;Mar &lt;var data-var='date'&gt;28&lt;/var&gt;, &lt;var data-var='time'&gt;13:03&lt;/var&gt; PDT&lt;/small&gt;&lt;br&gt;&lt;strong&gt;Monitoring&lt;/strong&gt; - We've identified the issue and have rolled out a fix. We are now monitoring the issue.&lt;/p&gt;</content>
+  </entry>
+  <entry>
+    <id>tag:status.openai.com,2005:Incident/20387770</id>
+    <published>2024-03-28T06:25:46-07:00</published>
+    <updated>2024-03-28T06:25:46-07:00</updated>
+    <link rel="alternate" type="text/html" href="https://status.openai.com/incidents/7021042tlg91"/>
+    <title>Advanced Data Analysis failing on ChatGPT</title>
+    <content type="html">&lt;p&gt;&lt;small&gt;Mar &lt;var data-var='date'&gt;28&lt;/var&gt;, &lt;var data-var='time'&gt;06:25&lt;/var&gt; PDT&lt;/small&gt;&lt;br&gt;&lt;strong&gt;Resolved&lt;/strong&gt; - We have identified the cause of the issue and have rolled out a fix. Data analysis and file uploads are now performing normally.&lt;/p&gt;&lt;p&gt;&lt;small&gt;Mar &lt;var data-var='date'&gt;28&lt;/var&gt;, &lt;var data-var='time'&gt;06:00&lt;/var&gt; PDT&lt;/small&gt;&lt;br&gt;&lt;strong&gt;Identified&lt;/strong&gt; - The issue has been identified and we're working on a fix.&lt;/p&gt;&lt;p&gt;&lt;small&gt;Mar &lt;var data-var='date'&gt;28&lt;/var&gt;, &lt;var data-var='time'&gt;05:41&lt;/var&gt; PDT&lt;/small&gt;&lt;br&gt;&lt;strong&gt;Investigating&lt;/strong&gt; - We are currently investigating reports that file uploads are failing and that ChatGPT is failing to analyze files.&lt;/p&gt;</content>
+  </entry>
+  <entry>
+    <id>tag:status.openai.com,2005:Incident/20378119</id>
+    <published>2024-03-27T07:45:22-07:00</published>
+    <updated>2024-03-27T07:45:22-07:00</updated>
+    <link rel="alternate" type="text/html" href="https://status.openai.com/incidents/fqrkjmwvkm9c"/>
+    <title>Increased errors on ChatGPT</title>
+    <content type="html">&lt;p&gt;&lt;small&gt;Mar &lt;var data-var='date'&gt;27&lt;/var&gt;, &lt;var data-var='time'&gt;07:45&lt;/var&gt; PDT&lt;/small&gt;&lt;br&gt;&lt;strong&gt;Resolved&lt;/strong&gt; - Between 5:48 – 6:26pm PST on March 26th, some users saw unexpected errors on ChatGPT. We have fixed the root cause and error rates are now back to normal. We're updating our status page now to reflect the downtime that some users experienced.&lt;/p&gt;</content>
+  </entry>
+</feed>

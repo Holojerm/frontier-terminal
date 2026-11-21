@@ -6,6 +6,7 @@ import { queryLimits, VIEW_RECIPES } from '../utils/terminal-recipe-views'
 import {
   INCIDENT_HISTORY_DAYS,
   INCIDENT_WINDOW_DAYS,
+  incidentArchiveStamp,
   queryIncidents,
 } from '../utils/terminal-incidents'
 import { queryDisclosures } from '../utils/terminal-disclosures'
@@ -27,18 +28,33 @@ export function registerOperationsTools({ server, deps }: McpKit): void {
         'vocabulary (never mapped across vendors; null for Anthropic and DeepSeek, whose feeds publish none) and a link. Each lab’s window anchors on its own window_to, the last successful read of its status feed, not the ' +
         'clock, so a feed that stopped answering shows an earlier window_to rather than a quiet stretch. Not an SLA and not comparable across vendors: OpenAI’s feed mixes ChatGPT with API incidents and has no component ' +
         'field; xAI’s RSS history covers Cursor’s products alongside Grok and the API (read components). DeepSeek’s titles are Chinese with the English in parentheses. Meta, ' +
-        'Alibaba and Moonshot AI have NO incident history we can read and are reported as no_public_feed with the reason, never as zero incidents. Optional provider filter narrows providers and incidents. ' +
+        'Alibaba and Moonshot AI have NO incident history we can read and are reported as no_public_feed with the reason, never as zero incidents. ' +
+        'archived (null before the backfill) is the history from before each live feed: incidents per lab per month from the Internet Archive’s copies of the same feeds ' +
+        '(basis archived, source_id wayback:<era>), with covered, the share of each month some copy reaches (a month under 1 can hold incidents no copy listed; ' +
+        'null counts mean no copy reaches it), holes, gaps with the reason, and not_covered (Mistral). No uptime is computed from copies. ' +
+        '/export/archived_incidents.csv has every archived incident with the copy as source_url. Optional provider filter narrows providers, incidents and archived labs. ' +
         PROVENANCE,
       inputSchema: z.object({ provider: ProviderSchema.optional() }),
       annotations: READ_ONLY,
     },
     async ({ provider }) => {
-      const incidents = await deps.serve('incidents', (ctx) => queryIncidents(deps.db, ctx))
+      const incidents = await deps.serve(
+        'incidents',
+        (ctx) => queryIncidents(deps.db, ctx),
+        await incidentArchiveStamp(deps.db),
+      )
       if (!provider) return json(incidents)
+      const { archived } = incidents
       return json({
         ...incidents,
         providers: incidents.providers.filter((p) => p.provider === provider),
         incidents: incidents.incidents.filter((i) => i.provider === provider),
+        archived: archived && {
+          ...archived,
+          labs: archived.labs.filter((l) => l.provider === provider),
+          gaps: archived.gaps.filter((g) => g.provider === provider),
+          not_covered: archived.not_covered.filter((n) => n.provider === provider),
+        },
       })
     },
   )

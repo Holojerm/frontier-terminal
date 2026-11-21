@@ -103,3 +103,16 @@ EDGAR's company facts list each company-wide figure with the filing that reporte
 own XBRL file, so we read that file once per filing. Each period shows the newest filing's
 value. When a later filing restates a value, the old one stays in the table as restated. A new
 10-Q or 10-K that moves a series raises an alert that states the number.
+
+## Incidents before the live feeds: archived copies
+
+Before our first read of each lab's status feed, the monthly counts on `/incidents` come from
+the Internet Archive's copies of the same feed. A feed lists only its newest incidents, so a
+copy speaks for incidents that started from the oldest start it lists (`covers_from`) to the
+moment the Archive took it. An incident listed in many copies is one row, in the newest copy's
+state. A month is drawn only where the copies reach all of it; a month they reach in part is a
+break in the line, and `/api/incidents` gives its count and the share reached. Counts are
+filtered as the live feed is. We don't compute uptime or durations from copies, since they
+can't promise every incident. Archived incidents never reach the live windows, alerts or the
+judge. Sources, shapes and gaps: `docs/source-audit.md`, the 2026-11-21 Internet Archive
+addendum.

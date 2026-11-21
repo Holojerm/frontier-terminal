@@ -1,6 +1,7 @@
-// Status-page incidents over the trailing windows.
+// Status-page incidents over the trailing windows, and the archived history
+// from before the live lanes (terminal-incident-archive.ts).
 
-import { eq } from 'drizzle-orm'
+import { count, eq, max } from 'drizzle-orm'
 import type {
   LabId,
   IncidentProviderView,
@@ -14,6 +15,7 @@ import type { PipelineDb } from '../pipeline/store'
 import { byString, parseJson, str, type Json } from './terminal-json'
 import { INCIDENT_SOURCES, PROVIDER_DISPLAY, PROVIDER_ORDER, labelOf } from './terminal-sources'
 import { cutReason, sourceReads, stampOf, type QueryContext } from './terminal-db'
+import { queryIncidentArchive } from './terminal-incident-archive'
 
 // ---- incidents (capacity strain) -------------------------------------------
 
@@ -90,9 +92,10 @@ const newestFirst = (a: IncidentView, b: IncidentView) =>
  * rather than printing a low number.
  */
 export async function queryIncidents(db: PipelineDb, ctx: QueryContext): Promise<IncidentsData> {
-  const [entities, stamps] = await Promise.all([
+  const [entities, stamps, archived] = await Promise.all([
     db.select().from(tables.entities).where(eq(tables.entities.entity_type, 'incident')),
     sourceReads(db).then((r) => r.cited),
+    queryIncidentArchive(db, (components) => !isThirdPartyOnly(components)),
   ])
 
   const anchors = Object.values(INCIDENT_SOURCES)
@@ -166,5 +169,15 @@ export async function queryIncidents(db: PipelineDb, ctx: QueryContext): Promise
     history_days: INCIDENT_HISTORY_DAYS,
     providers,
     incidents: all.filter((i) => Date.parse(i.started_at) > historyFrom),
+    archived,
   }
+}
+
+/** The cache variant: a backfill write changes the payload without moving the poll stamp. */
+export async function incidentArchiveStamp(db: PipelineDb): Promise<string> {
+  const [row] = await db
+    .select({ at: max(tables.archiveCaptures.fetched_at), n: count() })
+    .from(tables.archiveCaptures)
+    .where(eq(tables.archiveCaptures.axis, 'status'))
+  return row?.n ? `archive:${row.n}:${row.at}` : ''
 }

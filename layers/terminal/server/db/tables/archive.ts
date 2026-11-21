@@ -24,13 +24,19 @@ export const archiveCaptures = sqliteTable(
     original_url: text('original_url').notNull(),
     captured_at: text('captured_at').notNull(),
     status: text('status').notNull(), // parsed | skipped
-    // pricing (archived_prices) | hiring (archived_hiring) | gpu (archived_gpu_prices): which table the rows went to.
+    // pricing (archived_prices) | hiring (archived_hiring) | gpu (archived_gpu_prices)
+    // | status (archived_incidents): which table the rows went to.
     axis: text('axis').notNull().default('pricing'),
     detail: text('detail'),
     content_hash: text('content_hash'),
     raw_key: text('raw_key'),
     bytes: integer('bytes'),
     rows: integer('rows').notNull(),
+    // Status copies only: the oldest incident start the copy lists. A feed
+    // holds only its newest entries, so a copy speaks for the stretch from
+    // here to captured_at and no earlier; the read side counts a month only
+    // as far as copies cover it.
+    covers_from: text('covers_from'),
     ...provenance, // source_url: the Wayback capture URL (it embeds original_url)
   },
   (t) => [index('archive_captures_provider_idx').on(t.provider, t.status, t.captured_at)],
@@ -119,3 +125,38 @@ export const archivedGpuPrices = sqliteTable(
     index('archived_gpu_prices_captured_id_idx').on(t.captured_at, t.id),
   ],
 )
+
+// One row per incident an archived status feed listed, however many copies
+// listed it: the id is <provider>:<incident id>, the feed's own id. Each field
+// is the newest copy's (capture_id, captured_at, source_url say which copy);
+// first_captured_at is the oldest copy that listed it. The fields are the
+// live IncidentRow's, so impact is null where the feed publishes none. Never a
+// live row: basis is always 'archived', and nothing here reaches entities,
+// changes, the incident windows, the alerts or the judge.
+export const archivedIncidents = sqliteTable(
+  'archived_incidents',
+  {
+    id: text('id').primaryKey(),
+    provider: text('provider').notNull(),
+    incident_id: text('incident_id').notNull(),
+    title: text('title').notNull(),
+    impact: text('impact'),
+    status: text('status').notNull(),
+    started_at: text('started_at').notNull(),
+    resolved_at: text('resolved_at'),
+    components: text('components').notNull(), // JSON array, sorted
+    incident_url: text('incident_url').notNull(),
+    capture_id: text('capture_id').notNull(),
+    captured_at: text('captured_at').notNull(),
+    first_captured_at: text('first_captured_at').notNull(),
+    original_url: text('original_url').notNull(),
+    basis: text('basis').notNull(), // 'archived'
+    ...provenance,
+  },
+  (t) => [
+    index('archived_incidents_provider_idx').on(t.provider, t.started_at),
+    index('archived_incidents_captured_id_idx').on(t.captured_at, t.id),
+  ],
+)
+
+export type ArchivedIncidentRow = typeof archivedIncidents.$inferSelect

@@ -100,6 +100,8 @@ const AS_OF_CUT: Readonly<Record<string, string>> = {
     'Rows with captured_at at or before as_of: when the Internet Archive saw the board, not when we read the copy (fetched_at, always later). So a backtest gets the board as it stood then, which this site did not hold at the time.',
   archived_gpu_prices:
     'Rows with captured_at at or before as_of: when the Internet Archive saw the provider’s price page, not when we read the copy (fetched_at, always later). So a backtest gets the page as it stood then, which this site did not hold at the time.',
+  archived_incidents:
+    'Rows with captured_at at or before as_of: when the Internet Archive took the newest copy listing the incident, not when we read it (fetched_at, always later). A row holds the newest copy’s state only, so a backtest at an earlier as_of misses incidents whose newest copy is later, and gets no older state of the rest.',
   archive_captures:
     'Rows with captured_at at or before as_of: when the Internet Archive saw the page, not when we read the copy.',
   source_runs: 'Rows with started_at at or before as_of.',
@@ -413,13 +415,24 @@ export const TABLE_META: Readonly<Record<string, TableMeta>> = {
     joins: [byProvider],
     feeds: [{ ids: ['wayback-gpu'] }],
   },
+  archived_incidents: {
+    grain:
+      'One row per incident any Internet Archive copy of a lab’s status feed listed, in the newest such copy’s state.',
+    cadence: 'Once per backfill run, not on a schedule.',
+    event: 'started_at',
+    knowledge: 'fetched_at',
+    start:
+      'Archived only. From the oldest copy of each feed (OpenAI and Anthropic from January 2023, DeepSeek from June 2024, xAI from January 2025, Google Cloud’s copies each reaching a year back) to the day each live status lane began. Mistral has no copies.',
+    joins: [byProvider],
+    feeds: [{ ids: ['wayback-status'] }],
+  },
   archive_captures: {
     grain: 'One row per Internet Archive copy the backfill considered.',
     cadence: 'Once per backfill run, not on a schedule.',
     event: 'captured_at',
     knowledge: 'fetched_at',
     start:
-      'Archived only. One copy a week per lab pricing page, job board or GPU provider price page, from January 2023 to the day we began reading it.',
+      'Archived only. One copy a week per lab pricing page, job board or GPU provider price page, and every copy of each lab’s status feed (one a month for Google Cloud), from January 2023 to the day we began reading it.',
     joins: [byProvider],
     feeds: ['archive'],
   },

@@ -23,6 +23,18 @@ is smaller than its changes need. `bun run schema:lock` rewrites the lock only
 when the newest release in `layers/terminal/server/utils/data-schema.ts` says
 exactly which columns changed.
 
+## 1.17.0 (2026-11-21)
+
+Status-page incident history from before our status feed checks began
+(2026-09-09 for OpenAI, Anthropic and Google, 2026-11-05 for DeepSeek and
+xAI), read from the Internet Archive's copies of each lab's own feed. A new
+`archived_incidents` table has one row per incident, keyed by the feed's own
+id, in the state the newest copy gives it, with that copy as `source_url`.
+`archive_captures.axis` can now be `status`, and its new `covers_from` column
+says how far back a status copy reaches. The rows are CC BY-NC 4.0, like the
+other archived tables, and a licence key doesn't relabel them.
+`/api/incidents` gains `archived` (null until the backfill has run):
+incidents per lab per month, and how much of each month the copies reach.
 ## 1.16.0 (2026-11-21)
 
 `/api/utilization` gains `benchmark_rounds`: every stored MLPerf Inference
