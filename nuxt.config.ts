@@ -564,8 +564,8 @@ export default defineNuxtConfig({
     // with a 'failed' run, never fetched anonymously (layers/core/server/pipeline/fetch.ts).
     // A Worker secret: `wrangler secret put NUXT_SEC_CONTACT_EMAIL`.
     secContactEmail: '',
-    // Bearer the GDELT job (scripts/gdelt-search.ts) presents to
-    // /api/gdelt/* (layers/terminal/server/utils/gdelt-auth.ts). The same value is the
+    // Bearer the mini's GDELT and relay jobs (scripts/gdelt-search.ts, scripts/relay-fetch.ts)
+    // present to /api/gdelt/* and /api/relay/* (layers/terminal/server/utils/gdelt-auth.ts). The same value is the
     // repository secret GDELT_TOKEN and the mini's ~/agent-jobs/.gdelt-token. Unset = those routes 404 and no GDELT file
     // is read. `wrangler secret put NUXT_GDELT_TOKEN`; 32+ chars.
     gdeltToken: '',

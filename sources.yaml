@@ -1046,7 +1046,10 @@ sources:
       status.mistral.ai/robots.txt answers a Cloudflare challenge (403), so
       there is no file to read. Taken: incident id, title, impact, status,
       start and resolution, every 6 hours. Not covered by our license until
-      robots.txt can be read. Read 2026-11-04.
+      robots.txt can be read. Read 2026-11-04. From 2026-11-20 the host
+      answered every Worker poll 429 while answering the Mac mini 200 with
+      the same User-Agent, so the feed is fetched by the mini's relay job
+      (layers/core/server/pipeline/relay.ts), at the same cadence.
     rights: not-cleared
     fixture: fixtures/status/mistral-status.json
     caveats: >-
@@ -3149,7 +3152,10 @@ grid_load_sources:
       energize and observed monthly peak in each overview, and the
       sentences stating the large-load queue and observed energized total
       in the ERCOT Monthly. Each PDF is fetched once and kept unmodified;
-      three listing pages are read six-hourly. Read 2026-11-21.
+      three listing pages are read six-hourly. Read 2026-11-21. Imperva
+      answers Cloudflare Workers' egress 403 on every page, so the pages and
+      PDFs are fetched by the Mac mini's relay job with the same User-Agent
+      (layers/core/server/pipeline/relay.ts).
     rights: ours
     caveats: >-
       ERCOT's observed figure is the sum of each approved load's own peak in
