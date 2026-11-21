@@ -92,6 +92,10 @@ restart. The rest are in [`.claude/docs/gotchas.md`](.claude/docs/gotchas.md).
 ├── layers/models/          # Domain layer: the release timeline, the launch tripwire, model-floor alerts
 │                           # and launch watch, misalignment-disclosure parsers and lanes, /releases,
 │                           # /disclosures and their APIs. Uses core, and pricing's class map.
+├── layers/alerts/          # Supporting layer: the alert feed and overview band (/alerts, /api/alerts*,
+│                           # /api/overview, alerts.xml, the alert axes), the events consumer and sweep,
+│                           # webhooks, social posts, and digest subscribers (/subscribe, /api/subscribe/*).
+│                           # Uses core, pricing and press.
 ├── layers/terminal/        # Fork-owned layer: every domain not yet split out (parsers, lanes, theses,
 │                           # queries, pages, components, tables, tests). Same folder shapes as the app
 │                           # (app/, server/, shared/, test/); auto-registered, not in layers.lock.json.

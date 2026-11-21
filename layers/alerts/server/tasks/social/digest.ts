@@ -1,5 +1,5 @@
 // Cron task: queue the weekly thread, Monday 13:00 UTC beside theses:digest
-// (layers/terminal/server/pipeline/social.ts), then schedule a social drain on
+// (layers/alerts/server/pipeline/social.ts), then schedule a social drain on
 // the EVENTS queue (layers/core/server/utils/events.ts) to send it. With no
 // Buffer key it returns before touching the database.
 

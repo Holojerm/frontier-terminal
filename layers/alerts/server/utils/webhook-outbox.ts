@@ -1,5 +1,5 @@
 // The webhook outbox: one delivery per (alert, webhook), queued and sent by
-// the EVENTS queue's fan-out and drain messages (layers/terminal/server/utils/event-work.ts),
+// the EVENTS queue's fan-out and drain messages (layers/alerts/server/utils/event-work.ts),
 // with the hourly events:sweep as backstop. "A run" below is any of those.
 //
 // Two promises shape it:
@@ -9,7 +9,7 @@
 //     the alert was written (alerts.recorded_at). Anything rendered under that
 //     stamp was rendered after the alert was stored, so it lists it.
 //   - A judged alert waits out the same one-hour hold as its social post
-//     (layers/terminal/server/pipeline/social.ts › heldUntil), from the same instant: when
+//     (layers/alerts/server/pipeline/social.ts › heldUntil), from the same instant: when
 //     the alert was written. Suppressing
 //     the post inside the hold suppresses the webhook too; so does deleting
 //     the alert row. Deterministic alerts don't wait.
@@ -17,7 +17,7 @@
 // Delivery is at least once: a send whose outcome is lost (a timeout, a
 // killed invocation) is retried with the same X-Frontier-Delivery id, and the
 // receiver dedupes on it. Takes the Drizzle client explicitly so
-// layers/terminal/test/webhooks.test.ts drives it against workerd's D1.
+// layers/alerts/test/webhooks.test.ts drives it against workerd's D1.
 
 import { and, asc, eq, inArray, lt, lte, ne, sql } from 'drizzle-orm'
 

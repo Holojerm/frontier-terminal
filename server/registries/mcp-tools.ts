@@ -4,7 +4,7 @@
 // tools live in its own server/mcp/<domain>.ts and get one line here.
 
 import { MCP_SERVER_NAME, PROVENANCE, type McpKit } from '#layers/core/server/mcp/kit'
-import { registerAlertTools } from '#layers/terminal/server/mcp/alerts'
+import { registerAlertTools } from '#layers/alerts/server/mcp/alerts'
 import { registerComputeTools, registerGpuPriceTools } from '#layers/compute/server/mcp/compute'
 import { registerAdoptionTools, registerDemandTools } from '#layers/adoption/server/mcp/demand'
 import {

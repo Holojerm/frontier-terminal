@@ -22,7 +22,7 @@ import {
 } from '../../../core/server/pipeline/refresh'
 import type { RawStore } from '#layers/core/server/pipeline/raw'
 import { includeSources } from '#layers/core/server/pipeline/sources'
-import { queryMovement } from '../../server/utils/terminal-alerts'
+import { queryMovement } from '../../../alerts/server/utils/terminal-alerts'
 import { fixtureText, manifest, provenanceOf } from '#layers/core/test/pipeline/fixtures'
 
 // The demand-share source end to end: the parser against the first keyed

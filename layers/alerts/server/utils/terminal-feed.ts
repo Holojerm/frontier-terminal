@@ -1,6 +1,6 @@
 // The Atom feed of alerts (RFC 4287), as a pure function of plain data so
-// layers/terminal/test/terminal-feed.test.ts can assert on the document without booting a
-// Worker. layers/terminal/server/routes/alerts.xml.get.ts is the thin wrapper.
+// layers/alerts/test/terminal-feed.test.ts can assert on the document without booting a
+// Worker. layers/alerts/server/routes/alerts.xml.get.ts is the thin wrapper.
 //
 // Why Atom and not RSS: Atom requires a timestamp with a timezone on every
 // entry and an id that is a URI — both are things this project already
@@ -13,7 +13,7 @@ import {
   CRITICAL_FEED_QUERY,
   INFO_FEED_QUERY,
 } from '../../../core/shared/utils/terminal-tiers'
-import type { AlertView } from '../../shared/utils/terminal-types'
+import type { AlertView } from '../../shared/utils/terminal-types/alerts'
 
 /** `alert` is the default feed; `all` adds the minor changes; `critical` keeps only critical alerts. */
 export type FeedTier = 'alert' | 'critical' | 'all'

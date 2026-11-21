@@ -17,10 +17,9 @@ import type {
   AlertsData,
   ChangeDetailView,
   ChangeView,
-  MovementSummary,
-  OverviewData,
-  ProviderId,
-} from '../../shared/utils/terminal-types'
+} from '../../shared/utils/terminal-types/alerts'
+import type { MovementSummary, OverviewData } from '../../shared/utils/terminal-types/overview'
+import type { ProviderId } from '../../../core/shared/utils/terminal-types/common'
 
 import * as tables from '#server/db/schema'
 import type { PipelineDb } from '#layers/core/server/pipeline/store'

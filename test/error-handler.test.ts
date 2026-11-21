@@ -5,7 +5,7 @@ import { quietClientError } from '../server/error'
 
 describe('quietClientError', () => {
   it('un-flags a fatal 404 so Nitro does not console.error it', () => {
-    // What layers/terminal/app/pages/alerts/[id].vue throws for a missing id.
+    // What layers/alerts/app/pages/alerts/[id].vue throws for a missing id.
     const error = createError({ statusCode: 404, statusMessage: 'No such alert', fatal: true })
     quietClientError(error)
     expect(error.fatal).toBe(false)
