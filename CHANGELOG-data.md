@@ -23,6 +23,18 @@ is smaller than its changes need. `bun run schema:lock` rewrites the lock only
 when the newest release in `layers/terminal/server/utils/data-schema.ts` says
 exactly which columns changed.
 
+## 1.26.0 (2026-11-21)
+
+`hardware_prints` gains Korea's monthly exports of HS 8542 (electronic
+integrated circuits) to the world from UN Comtrade, January 2013 on: `series`
+`kr_hs8542_exports`, `entity` `kr-semiconductors`, `window` `month`, in USD. It
+is narrower than Korea Customs Service's semiconductor figure
+(`kr_chip_exports`) and kept as its own series. `published_at` is the
+`lastReleased` of Comtrade's dataset for the month; a re-release at a different
+figure is the next `vintage`. `yoy_pct` is null, since Comtrade states none.
+Each `/api/prints` series entry gains `series`, the series id, since an entity
+can now carry two. Attribute "Source: UN Comtrade."
+
 ## 1.25.0 (2026-11-21)
 
 Hiring at the listed companies around the labs. Two new tables:

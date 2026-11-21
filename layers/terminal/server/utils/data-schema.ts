@@ -398,6 +398,17 @@ export const SCHEMA_RELEASES: readonly SchemaRelease[] = [
       listed_hiring_reads: { note: 'New table.' },
     },
   },
+  {
+    version: '1.26.0',
+    date: '2026-11-21',
+    summary:
+      'hardware_prints gains Korea’s monthly exports of HS 8542 (electronic integrated circuits) to the world from UN Comtrade, January 2013 on: series kr_hs8542_exports, entity kr-semiconductors, window month, in USD. It is narrower than Korea Customs Service’s semiconductor figure (kr_chip_exports) and kept as its own series. published_at is the lastReleased of Comtrade’s dataset for the month, and a re-release at a different figure is the next vintage. yoy_pct is null: Comtrade states none. /api/prints entries gain series, the series id, since an entity can now carry two. Attribute "Source: UN Comtrade."',
+    tables: {
+      hardware_prints: {
+        note: 'series can be kr_hs8542_exports, with a null yoy_pct; its published_at is the Comtrade dataset’s lastReleased.',
+      },
+    },
+  },
 ]
 
 export const SCHEMA_VERSION = SCHEMA_RELEASES.at(-1)!.version

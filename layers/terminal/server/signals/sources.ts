@@ -10,6 +10,7 @@ import { gridMonths, gridWeeks } from '../../shared/utils/grid-load'
 import { PRIMARY_PLACEMENT } from '../pipeline/probes/placement'
 import type { PipelineDb } from '../pipeline/store'
 import { KCS } from '../prints/ingest'
+import { shiftPeriod } from '../prints/parse'
 import type { QueryContext } from '../utils/terminal-db'
 import { queryGpuPrices } from '../utils/terminal-gpu'
 import { queryGroundTruth } from '../utils/terminal-ground-truth'
@@ -277,6 +278,8 @@ export function createLoader(deps: LoadDeps) {
         }
       }
       case 'prints': {
+        if (source.yoy === 'derived')
+          return { kind: 'points', points: await derivedYoy(deps.db, source) }
         // Each month (or 10- or 20-day count) as the first release to state a
         // year-on-year change put it: the earliest print row with one, from
         // whichever source (a provisional Korean month can state the value
@@ -366,4 +369,56 @@ function inputPrice(json: string | null): number | null {
   } catch {
     return null
   }
+}
+
+/**
+ * The year-on-year change of a print series that states none, point in time.
+ * Each month is its first vintage, public at its release time (published_at,
+ * else first_seen_at); its base is the vintage of the month a year earlier
+ * that was public by then, else that month's first, and the change is public
+ * at the later of the two. The harness never sees a base revised after the
+ * month was public.
+ */
+async function derivedYoy(
+  db: PipelineDb,
+  source: Extract<SignalSource, { kind: 'prints' }>,
+): Promise<Point[]> {
+  const t = tables.hardwarePrints
+  const rows = await db
+    .select({
+      period: t.period,
+      value: t.value,
+      vintage: t.vintage,
+      published_at: t.published_at,
+      first_seen_at: t.first_seen_at,
+    })
+    .from(t)
+    .where(
+      and(
+        eq(t.series, source.series),
+        eq(t.entity, source.entity),
+        eq(t.window, source.window ?? 'month'),
+        eq(t.observed_as, 'print'),
+      ),
+    )
+  const byMonth = new Map<string, { value: number; at: string }[]>()
+  for (const r of rows) {
+    const at = r.published_at ?? r.first_seen_at
+    byMonth.set(r.period, [...(byMonth.get(r.period) ?? []), { value: r.value, at }])
+  }
+  for (const v of byMonth.values()) v.sort((a, b) => a.at.localeCompare(b.at))
+  const points: Point[] = []
+  for (const [period, vintages] of byMonth) {
+    const base = byMonth.get(shiftPeriod(period, -12))
+    if (!base) continue
+    const first = vintages[0]!
+    const b = base.findLast((v) => v.at <= first.at) ?? base[0]!
+    if (!(b.value > 0)) continue
+    points.push({
+      date: `${period}-01`,
+      value: (first.value / b.value - 1) * 100,
+      available: (b.at > first.at ? b.at : first.at).slice(0, 10),
+    })
+  }
+  return points.sort((a, b) => (a.date < b.date ? -1 : 1))
 }

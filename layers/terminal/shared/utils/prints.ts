@@ -1,7 +1,7 @@
 // The hardware layer's monthly prints (GET /api/prints, the /hardware page, the
 // get_hardware_prints MCP tool): Taiwan's monthly revenue for the foundry, the
 // server builders and the power and networking makers, and Korea's chip
-// exports. Each figure is stored as we first saw it, and a later different
+// exports (Korea Customs Service's headline, and UN Comtrade's HS 8542). Each figure is stored as we first saw it, and a later different
 // figure for the same month is a new row, never an overwrite
 // (layers/terminal/server/prints/).
 
@@ -11,7 +11,7 @@ import type { SupplierLayer } from './suppliers'
 import { LAB_SITE } from './terminal-labs'
 import type { LabId } from './terminal-types'
 
-export const PRINT_SERIES = ['tw_revenue', 'kr_chip_exports'] as const
+export const PRINT_SERIES = ['tw_revenue', 'kr_chip_exports', 'kr_hs8542_exports'] as const
 export type PrintSeries = (typeof PRINT_SERIES)[number]
 
 /** month: a calendar month. d10, d20: the first 10 or 20 days of it, a preliminary count. */
@@ -94,6 +94,15 @@ function tw(
   return { id, name, series: 'tw_revenue', ticker: `${code}.TW`, us_ticker, code, layer, leads }
 }
 
+/**
+ * A second series an entity carries from another source, kept apart from its
+ * own: UN Comtrade's HS 8542 (integrated circuits) is narrower than KCS's
+ * semiconductor headline, so the two never splice into one line.
+ */
+export const PRINT_EXTRA_SERIES: readonly { entity: string; series: PrintSeries }[] = [
+  { entity: 'kr-semiconductors', series: 'kr_hs8542_exports' },
+]
+
 export const PRINT_ENTITY = new Map(PRINT_ENTITIES.map((e) => [e.id, e]))
 export const PRINT_ENTITY_BY_CODE = new Map(
   PRINT_ENTITIES.filter((e) => e.code).map((e) => [e.code!, e]),
@@ -154,6 +163,8 @@ export interface PrintTie {
 
 export interface PrintSeriesData {
   entity: PrintEntity
+  /** entity.series, or one of its PRINT_EXTRA_SERIES. */
+  series: PrintSeries
   /** Newest month first. */
   points: PrintPoint[]
   /** How many stored rows are revisions of a month already held. */
