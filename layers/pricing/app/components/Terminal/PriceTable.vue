@@ -3,6 +3,9 @@
 // previous revision, a sparkline once observed more than once, a link to its own page, and its
 // provenance. Batch, long-context and promo rows sit here, not in the matrix.
 //
+// The page's catalog prints 25 rows at a time, with every row one click away (all of them at
+// once, for find-in-page). A lab page prints the rows it is given whole.
+//
 // A column every filtered row would print as a dash is left out for that filter. A context
 // window read from another page on the row's own host links that page by name, so the host
 // prints once.
@@ -35,14 +38,35 @@ const providers = computed(() => [
     })),
 ])
 
-const rows = computed(() =>
-  props.prices.rows.filter((r) => {
-    if (provider.value !== 'all' && r.provider !== provider.value) return false
-    if (pricedOnly.value && r.input_per_mtok === null && r.output_per_mtok === null) return false
-    return true
-  }),
+const filtered = computed(() =>
+  catalogRows(props.prices.rows, { provider: provider.value, pricedOnly: pricedOnly.value }),
 )
-const hidden = computed(() => props.prices.rows.length - rows.value.length)
+const hidden = computed(() => props.prices.rows.length - filtered.value.length)
+
+// The page is in `?page=`, and the pager's controls are links: SKU pages are in no sitemap, so
+// this table is the only server-rendered link to most of them, and a crawler walks the pager
+// to reach the rest. A reader's click stays on the client, with no second fetch.
+const route = useRoute()
+const showAll = ref(false)
+const paged = computed(() =>
+  props.bare || showAll.value ? null : catalogPage(filtered.value, Number(route.query.page)),
+)
+const rows = computed(() => paged.value?.rows ?? filtered.value)
+
+/** The hash starts a new page at the catalog's first row, not where the last one was left. */
+const pageLink = (page: number) => ({
+  query: { ...route.query, page: page > 1 ? String(page) : undefined },
+  hash: '#catalog',
+})
+
+// A new filter starts at its first page. It keeps the hash: dropping one scrolls to the top.
+watch([provider, pricedOnly], () => {
+  if (!props.bare && route.query.page !== undefined)
+    void navigateTo(
+      { query: { ...route.query, page: undefined }, hash: route.hash },
+      { replace: true },
+    )
+})
 
 const COLUMNS: TableColumn[] = [
   { key: 'provider', label: 'Lab', class: 'whitespace-nowrap text-muted', stack: 'inline' },
@@ -65,8 +89,9 @@ const SPARSE: Record<string, (r: PriceRowView) => boolean> = {
   window: (r) => Boolean(r.effective_from || r.effective_until),
 }
 
+// Read off every filtered row, so the columns hold still from one page to the next.
 const columns = computed(() =>
-  COLUMNS.filter((c) => !SPARSE[c.key] || rows.value.some(SPARSE[c.key]!)),
+  COLUMNS.filter((c) => !SPARSE[c.key] || filtered.value.some(SPARSE[c.key]!)),
 )
 
 /** True when the window's own page sits on the row's host: the second tag would repeat it. */
@@ -150,13 +175,17 @@ function deltaText(row: PriceRowView): string | null {
         </span>
       </template>
       <template #cell-context_window="{ row: r }">
-        {{ r.context_window ?? '—' }}
-        <span v-if="r.context_window_source" class="block">
+        <!-- The tag's link carries the table's tap padding (36px tall), so the figure centres
+             on it with that padding cancelled, and stays on the line of the row's other cells. -->
+        <span class="flex items-center gap-x-2 whitespace-nowrap">
+          {{ r.context_window ?? '—' }}
           <TerminalProvenanceTag
+            v-if="r.context_window_source"
+            class="-my-1.5"
             :source-url="r.context_window_source.source_url"
             :fetched-at="r.context_window_source.fetched_at"
             :checked-at="r.context_window_source.checked_at"
-            :compact="sameHost(r) ? false : undefined"
+            :named="sameHost(r)"
             label="model page"
           />
         </span>
@@ -199,6 +228,37 @@ function deltaText(row: PriceRowView): string | null {
         />
       </template>
     </TerminalTable>
+
+    <div
+      v-if="!bare && filtered.length > CATALOG_PAGE_SIZE"
+      class="flex flex-wrap items-center justify-between gap-x-4 gap-y-2"
+    >
+      <UPagination
+        v-if="paged"
+        :page="paged.page"
+        :to="pageLink"
+        :total="filtered.length"
+        :items-per-page="CATALOG_PAGE_SIZE"
+        :sibling-count="1"
+        show-edges
+        size="sm"
+        aria-label="Catalog pages"
+        :ui="{ first: 'hidden', last: 'hidden' }"
+      />
+      <span class="flex items-center gap-3 text-xs text-muted">
+        <span v-if="paged" aria-live="polite">
+          {{ paged.first }}–{{ paged.last }} of {{ filtered.length }}
+        </span>
+        <UButton
+          variant="link"
+          color="neutral"
+          size="sm"
+          class="px-0 text-muted"
+          :label="showAll ? `Show ${CATALOG_PAGE_SIZE} a page` : `Show all ${filtered.length}`"
+          @click="showAll = !showAll"
+        />
+      </span>
+    </div>
 
     <p v-if="!prices.changes_available" class="text-xs text-muted">
       No price changes yet. We need two versions of a row to show one.
