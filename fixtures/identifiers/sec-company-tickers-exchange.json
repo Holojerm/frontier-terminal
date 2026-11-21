@@ -7,15 +7,15 @@
  ],
  "data": [
   [
-   1045810,
-   "NVIDIA CORP",
-   "NVDA",
-   "Nasdaq"
-  ],
-  [
    789019,
    "MICROSOFT CORP",
    "MSFT",
+   "Nasdaq"
+  ],
+  [
+   1045810,
+   "NVIDIA CORP",
+   "NVDA",
    "Nasdaq"
   ],
   [
@@ -94,7 +94,7 @@
    2130357,
    "Anthropic, PBC",
    "ANT",
-   null
+   "Nasdaq"
   ],
   [
    1652044,
