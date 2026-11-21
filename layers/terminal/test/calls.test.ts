@@ -37,6 +37,7 @@ import {
   assemblySpend,
   discoverExhibits,
   KIND_ASSEMBLYAI_CREDITS,
+  LISTED_ROWS_PER_STATEMENT,
   listFilings,
   readConcepts,
   readFilingIndexes,
@@ -46,6 +47,7 @@ import {
   settleDocument,
   syncCurated,
   type CallDeps,
+  upsertListed,
 } from '../server/calls/ingest'
 import { fiscalPeriod, nextQuarter, periodLabel, reportedQuarter } from '../server/calls/periods'
 import { applyGuidanceReadings, checkStatement, guidanceReview } from '../server/calls/review'
@@ -57,6 +59,7 @@ import {
   spokenSentences,
 } from '../server/calls/text'
 import type { FetchOutcome, SourceFetcher } from '#layers/core/server/pipeline/fetch'
+import { D1_MAX_BOUND_PARAMS } from '#layers/core/server/pipeline/store'
 import { decoded, pdfPages } from '#layers/core/server/pipeline/pdf-text'
 import { queryCallGuidance } from '../server/utils/terminal-call-guidance'
 import { queryContext } from '#layers/core/server/utils/terminal-db'
@@ -298,6 +301,15 @@ describe('extractStatements', () => {
     expect(q.replace(/…/g, '').split(/\s+/).length).toBeLessThanOrEqual(QUOTE_MAX_WORDS)
     expect(q).toContain('revenue of $5 billion')
     expect(firstAmount('of $73 - 76 billion')).toMatchObject({ low: 73e9, high: 76e9 })
+  })
+
+  it('reads a range whose dash is a non-breaking hyphen or a minus sign', () => {
+    for (const dash of ['\u2010', '\u2011', '\u2012', '\u2212']) {
+      expect(firstAmount(`range to $195${dash}205 billion`)).toMatchObject({
+        low: 195e9,
+        high: 205e9,
+      })
+    }
   })
 })
 
@@ -748,6 +760,23 @@ describe('the reader', () => {
       .from(schema.callDocuments)
       .where(eq(schema.callDocuments.url, 'https://example.com/new.mp3'))
     expect(pending!.status).toBe('pending')
+  })
+
+  it('lists a full chunk of filings within D1’s bound-parameter cap', () => {
+    const row = (i: number) => ({
+      id: `f-${i}`,
+      ticker: 'QCOM',
+      kind: 'call-filing',
+      accession_no: `a-${i}`,
+      status: 'listed',
+      detail: '{}',
+      content_hash: null,
+      facts: 0,
+      started_at: '2026-11-21T16:23:00Z',
+      source_url: 'x',
+    })
+    const rows = Array.from({ length: LISTED_ROWS_PER_STATEMENT }, (_, i) => row(i))
+    expect(upsertListed(db, rows).toSQL().params.length).toBeLessThanOrEqual(D1_MAX_BOUND_PARAMS)
   })
 
   it('lists the backfill from the paged files once, then reads index pages newest first', async () => {
