@@ -48,6 +48,12 @@ const OUTCOME: Record<string, string> = {
 function gapOf(lab: ProbeLabView): { title: string; reason: string } {
   if (lab.status === 'not_probed') return { title: 'Not probed', reason: lab.gap ?? '' }
   if (lab.status === 'waiting') return { title: 'No probe yet', reason: lab.gap ?? '' }
+  if (lab.other_series.length > 0) {
+    return {
+      title: 'First full day pending',
+      reason: `Probes now leave from one place, in ${props.probes.placement.label}. A reading needs one complete UTC day from there; earlier probes are kept apart.`,
+    }
+  }
   return {
     title: 'First full day pending',
     reason: 'A reading needs one complete UTC day of probes. The first probes are in.',

@@ -300,6 +300,19 @@ export const SCHEMA_RELEASES: readonly SchemaRelease[] = [
     version: '1.18.0',
     date: '2026-11-21',
     summary:
+      'The latency probes now leave from one place, a Cloudflare data center in eastern North America, instead of whichever data center ran the hourly job (15 in the first day), so a lab’s times no longer include a varying distance to the router. latency_probes gains placement (enam, or unpinned for every probe before the change), served_by_pinned and rate_limit_headers. probe_days gains placement as part of its key: a day is never read across placements, and the changeover day has a row for each. /api/probes serves the pinned series as each lab’s days and window, and the unpinned history apart, in other_series.',
+    tables: {
+      latency_probes: { added: ['placement', 'served_by_pinned', 'rate_limit_headers'] },
+      probe_days: {
+        added: ['placement'],
+        note: 'The key is now lab, day and placement. Rows from before the change have placement unpinned.',
+      },
+    },
+  },
+  {
+    version: '1.19.0',
+    date: '2026-11-21',
+    summary:
       'Package downloads made comparable. Five non-AI npm packages (react, typescript, express, lodash, axios) are read from 2025-05-13 as controls (recipe ids npm-control-*). A new download_series table has, per day, the controls’ median index (npm-control-index), each npm package’s downloads divided by it (<recipe_id>-normalized), and each lab’s main SDK as a share of the tracked labs’ main SDKs on npm and PyPI (<recipe_id>-share). /api/adoption gains, on each downloads entry, normalized and share per ISO week, normalized_last_28d, normalized_prior_28d, share_28d and the series ids, and a controls block with the basket, its base weeks, its weekly index and npm’s outage days. A day npm reported as zero after a package’s first download is an outage: its recipe_observations row keeps the zero and gains outage: true in payload, and it is left out of weekly totals and 28-day sums. get_adoption returns the new fields too. Anthropic claim 7 and Cloudflare claim 2 read the normalized series.',
     tables: {
       download_series: { note: 'New table.' },

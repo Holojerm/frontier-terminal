@@ -23,7 +23,7 @@ is smaller than its changes need. `bun run schema:lock` rewrites the lock only
 when the newest release in `layers/terminal/server/utils/data-schema.ts` says
 exactly which columns changed.
 
-## 1.18.0 (2026-11-21)
+## 1.19.0 (2026-11-21)
 
 Package downloads made comparable. Raw counts of every growing package rise
 together, so each lab package gets two derived reads.
@@ -44,6 +44,21 @@ together, so each lab package gets two derived reads.
   `payload`. It is left out of weekly totals and 28-day sums, so a week with
   one is partial.
 - Anthropic claim 7 and Cloudflare claim 2 read the normalized series.
+
+## 1.18.0 (2026-11-21)
+
+The latency probes now leave from one place, a Cloudflare data center in
+eastern North America, instead of whichever data center ran the hourly job (15
+in the first day). A lab's times no longer include a varying distance to the
+router.
+
+- `latency_probes` gains `placement` (`enam`, or `unpinned` for every probe
+  before the change), `served_by_pinned` and `rate_limit_headers`.
+- `probe_days` gains `placement`, now part of its key. A day is never read
+  across placements, so the changeover day has a row for each. Rows from
+  before the change have placement `unpinned`.
+- `/api/probes` serves the pinned series as each lab's `days` and `window`,
+  and the unpinned history apart, in `other_series`.
 
 ## 1.17.0 (2026-11-21)
 

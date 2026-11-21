@@ -223,6 +223,17 @@ export interface ProbeEnd {
 }
 
 /**
+ * A rate limit, however it was reported: HTTP 429, a 429 in the error body or
+ * stream, the provider's own 429 passed through in `provider_code`, or an
+ * error under another code whose words say it was rate limited (OpenRouter
+ * has wrapped an upstream limit in a 502 with that message).
+ */
+export function isRateLimit(error: StreamError | null, httpStatus: number | null): boolean {
+  if (httpStatus === 429 || error?.code === 429 || error?.provider_code === '429') return true
+  return error !== null && /rate.?limit|too many requests/i.test(error.message)
+}
+
+/**
  * Whose problem it was. Any 429 is the lab's: OpenRouter sets no request cap
  * of its own on a paid model, so on a pinned route the limit is the
  * provider's (provider_code is kept where the body gives one). So is a
@@ -241,7 +252,7 @@ export function classify(end: ProbeEnd): { outcome: ProbeOutcome; detail: string
     const code = error?.code ?? end.http_status
     const said = error?.message || `HTTP ${end.http_status}`
     const detail = `${code}${error?.provider_code ? ` (provider ${error.provider_code})` : ''}: ${said}`
-    if (code === 429) return { outcome: 'rate_limited', detail }
+    if (isRateLimit(error, end.http_status)) return { outcome: 'rate_limited', detail }
     if (code === 408) return { outcome: 'timeout', detail }
     if (code === 502 || code === 503 || end.http_status === 200)
       return { outcome: 'failed', detail }
@@ -274,6 +285,10 @@ export interface ProbeResult extends ProbeMeasurement {
   detail: string | null
   http_status: number | null
   served_by: string | null
+  /** Whether served_by is the provider the request was pinned to; null when the stream named nobody. */
+  served_by_pinned: boolean | null
+  /** The response's rate-limit headers as a JSON object; null when it sent none. */
+  rate_limit_headers: string | null
   generation_id: string | null
   finish_reason: string | null
   provider_code: string | null
@@ -282,6 +297,37 @@ export interface ProbeResult extends ProbeMeasurement {
   started_at: string
   /** Every read with its arrival time: the bytes each number above was derived from. */
   trace: TraceRead[]
+  /** Every response header but cookies, for the stored trace. */
+  response_headers: Record<string, string>
+}
+
+/** A rate-limit header, whatever its vendor prefix: x-ratelimit-*, ratelimit-*, retry-after. */
+const RATE_LIMIT_HEADER = /(^|-)ratelimit(-|$)|^retry-after$/i
+
+/** The headers worth keeping with a probe's bytes: all but cookies. */
+export function responseHeaders(headers: Headers): Record<string, string> {
+  const out: Record<string, string> = {}
+  headers.forEach((value, name) => {
+    if (name !== 'set-cookie') out[name] = value
+  })
+  return out
+}
+
+/** The rate-limit headers among `headers`, as a JSON object; null with none. */
+export function rateLimitHeaders(headers: Record<string, string>): string | null {
+  const kept = Object.entries(headers).filter(([name]) => RATE_LIMIT_HEADER.test(name))
+  return kept.length > 0 ? JSON.stringify(Object.fromEntries(kept.sort())) : null
+}
+
+const slug = (name: string) => name.toLowerCase().replace(/[^a-z0-9]/g, '')
+
+/**
+ * Whether the router's name for who served a probe is the provider slug it
+ * was pinned to: OpenRouter writes `Google AI Studio` for `google-ai-studio`
+ * and `Moonshot AI` for `moonshotai`. Null when no name came back.
+ */
+export function servedByPinned(servedBy: string | null, provider: string): boolean | null {
+  return servedBy === null ? null : slug(servedBy) === slug(provider)
 }
 
 /** The part of `fetch` a probe uses, so a test can stand in for it. */
@@ -315,6 +361,7 @@ export async function runProbe(target: ProbeTarget, deps: ProbeDeps): Promise<Pr
   let body_error: StreamError | null = null
   let thrown: string | null = null
   let headerId: string | null = null
+  let headers: Record<string, string> = {}
   try {
     const response = await deps.fetch(PROBE_ENDPOINT, {
       method: 'POST',
@@ -328,6 +375,7 @@ export async function runProbe(target: ProbeTarget, deps: ProbeDeps): Promise<Pr
     })
     http_status = response.status
     headerId = response.headers.get('x-generation-id')
+    headers = responseHeaders(response.headers)
     if (response.status !== 200) {
       const body = (await response.text()).slice(0, 4000)
       trace.push([deps.clock() - startedAt, body])
@@ -377,11 +425,14 @@ export async function runProbe(target: ProbeTarget, deps: ProbeDeps): Promise<Pr
     detail,
     http_status,
     served_by: state.served_by,
+    served_by_pinned: servedByPinned(state.served_by, target.provider),
+    rate_limit_headers: rateLimitHeaders(headers),
     generation_id: state.generation_id ?? headerId,
     finish_reason: state.finish_reason,
     provider_code: (http_status === 200 ? state.error : body_error)?.provider_code ?? null,
     cost_usd: state.cost_usd,
     started_at,
     trace,
+    response_headers: headers,
   }
 }

@@ -1,7 +1,8 @@
 // The daily strain reading: one lab's probes for one UTC day, reduced to how
 // often a probe was rate limited or failed and how throughput in the lab's
 // working hours compares with its night. Rolled into probe_days after every
-// run for the days that run touched.
+// run for the days that run touched, one row per placement: probes that left
+// from different places are never one reading (pipeline/probes/placement.ts).
 
 import { and, gte, lt, sql } from 'drizzle-orm'
 
@@ -120,6 +121,7 @@ export async function rollProbeDays(
     const probes = await db
       .select({
         lab: p.lab,
+        placement: p.placement,
         started_at: p.started_at,
         model: p.model,
         route: p.route,
@@ -131,11 +133,14 @@ export async function rollProbeDays(
       .from(p)
       .where(and(gte(p.started_at, day), lt(p.started_at, nextDay(day))))
     for (const target of targets) {
-      const reading = dayReading(
-        probes.filter((row) => row.lab === target.lab),
-        PROBE_WINDOWS[target.market],
-      )
-      if (reading) rows.push({ lab: target.lab, day, ...reading, rolled_at })
+      const own = probes.filter((row) => row.lab === target.lab)
+      for (const placement of new Set(own.map((row) => row.placement))) {
+        const reading = dayReading(
+          own.filter((row) => row.placement === placement),
+          PROBE_WINDOWS[target.market],
+        )
+        if (reading) rows.push({ lab: target.lab, day, placement, ...reading, rolled_at })
+      }
     }
   }
   if (rows.length === 0) return 0
@@ -146,7 +151,7 @@ export async function rollProbeDays(
         .insert(d)
         .values(group)
         .onConflictDoUpdate({
-          target: [d.lab, d.day],
+          target: [d.lab, d.day, d.placement],
           set: {
             model: sql`excluded.model`,
             route: sql`excluded.route`,

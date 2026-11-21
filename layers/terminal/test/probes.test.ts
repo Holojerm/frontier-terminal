@@ -21,12 +21,25 @@ import {
   slugTokens,
   type ProbeCatalog,
 } from '../server/pipeline/probes/resolve'
+import {
+  PRIMARY_PLACEMENT,
+  PROBE_PLACEMENTS,
+  PROBE_PLACEMENT_FAILED_KIND,
+  PROBE_RUN_PATH,
+  PROBE_UNPINNED_KIND,
+  insideDurableObject,
+  probeObjectName,
+  type ProbeNamespace,
+} from '../server/pipeline/probes/placement'
 import { probeOrigin, probeRawKey, runProbes } from '../server/pipeline/probes/run'
 import {
   classify,
   createStreamReader,
   measure,
+  rateLimitHeaders,
+  responseHeaders,
   runProbe,
+  servedByPinned,
   type ProbeEnd,
   type ProbeFetch,
   type StreamState,
@@ -45,6 +58,7 @@ import {
 } from '../server/pipeline/probes/targets'
 import { MODEL_CLASS_MAP } from '../server/utils/terminal-classes'
 import { queryContext } from '../server/utils/terminal-db'
+import { PROBE_BINDING, dispatchPinnedProbes } from '../server/utils/probe-runner'
 import { probesStamp, queryProbes } from '../server/utils/terminal-probes'
 import { PROVIDER_ORDER } from '../server/utils/terminal-sources'
 import { fixtureText } from './pipeline/fixtures'
@@ -303,6 +317,20 @@ describe('classify', () => {
     ['400, a refused request', body(400), 'setup'],
     ['429 with the provider’s code', body(429, '429'), 'rate_limited'],
     ['429 with no provider code', body(429), 'rate_limited'],
+    ['502 passing through the provider’s 429', body(502, '429'), 'rate_limited'],
+    [
+      'a 502 that says it was rate limited upstream',
+      end({
+        http_status: 502,
+        state: empty,
+        body_error: {
+          code: 502,
+          message: 'Provider is rate-limited upstream',
+          provider_code: null,
+        },
+      }),
+      'rate_limited',
+    ],
     ['502, the model is down', body(502), 'failed'],
     ['503, the pinned provider is unavailable', body(503), 'failed'],
     ['500 with no provider code', body(500), 'router'],
@@ -370,7 +398,16 @@ function streamResponse(reads: readonly Read[], clock: ReturnType<typeof fakeClo
       },
       { highWaterMark: 0 },
     ),
-    { status: 200, headers: { 'content-type': 'text/event-stream', 'x-generation-id': 'gen-h' } },
+    {
+      status: 200,
+      headers: {
+        'content-type': 'text/event-stream',
+        'x-generation-id': 'gen-h',
+        'x-ratelimit-remaining-requests': '4999',
+        'retry-after': '0',
+        'set-cookie': '__cf_bm=secret',
+      },
+    },
   )
 }
 
@@ -414,7 +451,11 @@ describe('runProbe', () => {
       generation_id: 'gen-1',
       finish_reason: 'length',
       cost_usd: 0.0066,
+      served_by_pinned: true,
+      rate_limit_headers: '{"retry-after":"0","x-ratelimit-remaining-requests":"4999"}',
     })
+    expect(result.response_headers).toMatchObject({ 'x-generation-id': 'gen-h' })
+    expect(result.response_headers).not.toHaveProperty('set-cookie')
     // Every read is kept with its arrival time, and none of it is the key.
     expect(result.trace.map(([at]) => at)).toEqual(GOOD.map(([at]) => at))
     expect(JSON.stringify(result.trace)).not.toContain('or-test')
@@ -605,6 +646,7 @@ describe('runProbes', () => {
       raw: raw.store,
       readRaw: noRaw,
       ranFrom: 'local',
+      placement: 'unpinned',
     })
     expect(report).toEqual({
       skipped: OPENROUTER_KEY_UNSET,
@@ -651,8 +693,10 @@ describe('runProbes', () => {
       raw: raw.store,
       readRaw: await seedCatalog(),
       ranFrom: 'cloudflare:EWR',
+      placement: 'enam',
     })
     expect(widest).toBe(1)
+    expect(report).toMatchObject({ placement: 'enam', ran_from: 'cloudflare:EWR' })
     expect(report.unprobed).toEqual([])
     expect(report.probes.map((p) => [p.lab, p.outcome])).toEqual(
       PROBE_TARGETS.map((t) => [
@@ -676,11 +720,17 @@ describe('runProbes', () => {
       output_tokens: 160,
       tokens_per_second: 159,
       ran_from: 'cloudflare:EWR',
+      placement: 'enam',
+      served_by_pinned: true,
+      rate_limit_headers: '{"retry-after":"0","x-ratelimit-remaining-requests":"4999"}',
       source_url: PROBE_ENDPOINT,
       fetched_at: NOW.toISOString(),
       raw_key: probeRawKey('openai', NOW.toISOString()),
     })
     const stored = JSON.parse(raw.puts.get(openai.raw_key!)!)
+    expect(stored).toMatchObject({ ran_from: 'cloudflare:EWR', placement: 'enam' })
+    expect(stored.response_headers).toMatchObject({ 'x-ratelimit-remaining-requests': '4999' })
+    expect(stored.response_headers).not.toHaveProperty('set-cookie')
     expect(stored.request.provider).toEqual({ only: ['openai'], allow_fallbacks: false })
     expect(stored.chosen_from).toEqual({
       family: 'gpt-6-astra',
@@ -692,7 +742,13 @@ describe('runProbes', () => {
 
     const days = await db.select().from(schema.probeDays)
     const day = (lab: string) => days.find((d) => d.lab === lab)!
-    expect(day('openai')).toMatchObject({ day: '2026-11-20', probes: 1, ok: 1, peak_n: 1 })
+    expect(day('openai')).toMatchObject({
+      day: '2026-11-20',
+      placement: 'enam',
+      probes: 1,
+      ok: 1,
+      peak_n: 1,
+    })
     expect(day('anthropic')).toMatchObject({ probes: 0, excluded: 1 })
     expect(day('xai')).toMatchObject({ probes: 1, ok: 0, rate_limited: 1 })
   })
@@ -711,6 +767,7 @@ describe('runProbes', () => {
       },
       readRaw: noRaw,
       ranFrom: 'local',
+      placement: 'unpinned',
       targets: [TARGET],
     })
     const [row] = await db.select().from(schema.latencyProbes)
@@ -740,6 +797,7 @@ describe('runProbes', () => {
       raw: fakeRaw().store,
       readRaw: await seedCatalog(),
       ranFrom: 'local',
+      placement: 'unpinned',
     })
     expect(report.probes.find((p) => p.lab === 'openai')!.model).toBe('openai/gpt-6.2-sol')
     const rows = await db.select().from(schema.latencyProbes)
@@ -772,6 +830,7 @@ describe('runProbes', () => {
       raw: fakeRaw().store,
       readRaw: await seedCatalog(),
       ranFrom: 'local',
+      placement: 'unpinned',
     })
     // Never the old id, and nothing else in the family.
     expect(models.filter((m) => m.startsWith('anthropic/'))).toEqual([])
@@ -797,6 +856,7 @@ describe('runProbes', () => {
       raw: fakeRaw().store,
       readRaw: noRaw,
       ranFrom: 'local',
+      placement: 'unpinned',
     })
     expect(report.probes).toEqual([])
     const events = await db.select().from(schema.opsEvents)
@@ -824,13 +884,14 @@ async function seedDay(
   lab: string,
   model: string,
   tps: { peak: number; off: number },
+  placement: string = PRIMARY_PLACEMENT,
 ) {
   const market = PROBE_TARGETS.find((t) => t.lab === lab)!.market
   const window = PROBE_WINDOWS[market]
   const row = (hour: number, speed: number | null, outcome = 'ok') => {
     const started_at = `${day}T${String(hour).padStart(2, '0')}:07:00.000Z`
     return {
-      id: `${lab}-${started_at}`,
+      id: `${lab}-${placement}-${started_at}`,
       lab,
       model,
       route: 'openrouter',
@@ -842,7 +903,8 @@ async function seedDay(
       total_ms: 2000,
       output_tokens: speed === null ? null : 160,
       tokens_per_second: speed,
-      ran_from: 'cloudflare:EWR',
+      ran_from: placement === 'unpinned' ? 'cloudflare:LHR' : 'cloudflare:EWR',
+      placement,
       source_url: PROBE_ENDPOINT,
       fetched_at: started_at,
     }
@@ -862,6 +924,7 @@ describe('queryProbes', () => {
     const data = await queryProbes(db, ctx(NOW))
     expect(data.labs.map((l) => l.lab)).toEqual([...PROVIDER_ORDER])
     expect(data.since).toBeNull()
+    expect(data.placement).toEqual({ hint: 'enam', label: 'eastern North America', since: null })
     for (const lab of data.labs) {
       expect(lab.latest).toBeNull()
       expect(lab.days).toEqual([])
@@ -925,8 +988,177 @@ describe('queryProbes', () => {
       outcome: 'ok',
       tokens_per_second: 90,
       ran_from: 'cloudflare:EWR',
+      placement: 'enam',
     })
+    expect(openai.other_series).toEqual([])
     expect(await probesStamp(db)).toBe('2026-11-22T20:07:00.000Z')
+  })
+
+  it('keeps the unpinned probes from before placement out of the pinned series, and serves them apart', async () => {
+    // The changeover day has both: unpinned hours, then pinned ones.
+    await seedDay('2026-11-20', 'openai', TARGET.model, { peak: 40, off: 100 }, 'unpinned')
+    await seedDay('2026-11-21', 'openai', TARGET.model, { peak: 50, off: 100 }, 'unpinned')
+    await seedDay('2026-11-21', 'openai', TARGET.model, { peak: 80, off: 100 })
+    await seedDay('2026-11-22', 'openai', TARGET.model, { peak: 90, off: 100 })
+    const now = new Date('2026-11-23T01:00:00.000Z')
+    expect(await rollProbeDays(db, ['2026-11-20', '2026-11-21', '2026-11-22'], now)).toBe(4)
+    const rolled = await db.select().from(schema.probeDays)
+    expect(rolled.map((d) => [d.day, d.placement, d.probes]).sort()).toEqual([
+      ['2026-11-20', 'unpinned', 12],
+      ['2026-11-21', 'enam', 12],
+      ['2026-11-21', 'unpinned', 12],
+      ['2026-11-22', 'enam', 12],
+    ])
+
+    const data = await queryProbes(db, ctx(now))
+    expect(data.since).toBe('2026-11-20')
+    expect(data.placement.since).toBe('2026-11-21')
+    const openai = data.labs.find((l) => l.lab === 'openai')!
+    expect(openai.days.map((d) => [d.day, d.placement, d.peak_to_offpeak])).toEqual([
+      ['2026-11-22', 'enam', 0.9],
+      ['2026-11-21', 'enam', 0.8],
+    ])
+    expect(openai.window).toMatchObject({ days: 2, peak_tps: 85, peak_to_offpeak: 0.85 })
+    expect(openai.other_series).toHaveLength(1)
+    expect(openai.other_series[0]).toMatchObject({
+      placement: 'unpinned',
+      pinned: false,
+      window: { days: 2, peak_tps: 45 },
+    })
+    expect(openai.other_series[0]!.days.map((d) => [d.day, d.peak_to_offpeak])).toEqual([
+      ['2026-11-21', 0.5],
+      ['2026-11-20', 0.4],
+    ])
+  })
+})
+
+// ---- placement ---------------------------------------------------------------
+
+/** A Durable Object namespace that records how each object was asked for. */
+function fakeNamespace(answer: (placement: string) => Response | Promise<Response>) {
+  const calls: { name: string; locationHint: string; url: string; method: string }[] = []
+  const namespace: ProbeNamespace = {
+    idFromName: (name) => ({ name }),
+    get: (id, options) => ({
+      fetch: async (request) => {
+        const name = (id as unknown as { name: string }).name
+        calls.push({
+          name,
+          locationHint: options.locationHint,
+          url: request.url,
+          method: request.method,
+        })
+        return answer(new URL(request.url).searchParams.get('placement')!)
+      },
+    }),
+  }
+  return { namespace, calls }
+}
+
+describe('probe placement', () => {
+  it('runs from eastern North America only, until the owner adds a placement', () => {
+    expect(PROBE_PLACEMENTS).toEqual(['enam'])
+    expect(PRIMARY_PLACEMENT).toBe('enam')
+  })
+
+  it('has its Durable Object binding in wrangler.toml, so the cron has somewhere to send the probes', () => {
+    const namespace = (env as unknown as Record<string, unknown>)[PROBE_BINDING] as
+      | ProbeNamespace
+      | undefined
+    expect(typeof namespace?.idFromName).toBe('function')
+    expect(typeof namespace?.get).toBe('function')
+  })
+
+  it('asks each placement’s own object to probe, created with that placement’s location hint', async () => {
+    const { namespace, calls } = fakeNamespace((placement) =>
+      Response.json({ placement, probes: [], unprobed: [], days_rolled: 0 }),
+    )
+    const result = await dispatchPinnedProbes(db, { PROBES: namespace }, ['enam', 'weur'])
+    expect(calls).toEqual([
+      {
+        name: probeObjectName('enam'),
+        locationHint: 'enam',
+        url: `https://probes.internal${PROBE_RUN_PATH}?placement=enam`,
+        method: 'POST',
+      },
+      {
+        name: probeObjectName('weur'),
+        locationHint: 'weur',
+        url: `https://probes.internal${PROBE_RUN_PATH}?placement=weur`,
+        method: 'POST',
+      },
+    ])
+    expect(result.runs.map((r) => [r.placement, r.report?.placement, r.error])).toEqual([
+      ['enam', 'enam', null],
+      ['weur', 'weur', null],
+    ])
+    expect(await db.select().from(schema.opsEvents)).toEqual([])
+  })
+
+  it('probes nothing without the Durable Object binding, rather than run unpinned, and spools why', async () => {
+    for (const env of [undefined, {}, { PROBES: 'not a namespace' }]) {
+      const result = await dispatchPinnedProbes(db, env)
+      expect(result.runs).toEqual([])
+      expect(result.skipped).toContain('PROBES')
+    }
+    const events = await db.select().from(schema.opsEvents)
+    expect(events.map((e) => e.kind)).toEqual([
+      PROBE_UNPINNED_KIND,
+      PROBE_UNPINNED_KIND,
+      PROBE_UNPINNED_KIND,
+    ])
+    expect(await db.select().from(schema.latencyProbes)).toEqual([])
+  })
+
+  it('spools a placement whose object fails, and keeps the others', async () => {
+    const { namespace } = fakeNamespace((placement) =>
+      placement === 'weur'
+        ? new Response('boom', { status: 500 })
+        : Response.json({ placement, probes: [], unprobed: [], days_rolled: 0 }),
+    )
+    const result = await dispatchPinnedProbes(db, { PROBES: namespace }, ['enam', 'weur'])
+    expect(result.runs.map((r) => [r.placement, r.error])).toEqual([
+      ['enam', null],
+      ['weur', 'HTTP 500: boom'],
+    ])
+    const [event] = await db.select().from(schema.opsEvents)
+    expect(event).toMatchObject({
+      kind: PROBE_PLACEMENT_FAILED_KIND,
+      detail: 'weur: HTTP 500: boom',
+    })
+  })
+
+  it('runs the probe route only inside a Durable Object', () => {
+    expect(insideDurableObject({})).toBe(false)
+    expect(insideDurableObject({ cloudflare: { env: {}, request: {} } })).toBe(false)
+    expect(insideDurableObject({ cloudflare: { env: {}, durable: {} } })).toBe(true)
+  })
+
+  it('reads the router’s name for the provider against the pinned slug', () => {
+    expect(servedByPinned('Google AI Studio', 'google-ai-studio')).toBe(true)
+    expect(servedByPinned('Moonshot AI', 'moonshotai')).toBe(true)
+    expect(servedByPinned('xAI', 'xai')).toBe(true)
+    expect(servedByPinned('Together', 'meta')).toBe(false)
+    expect(servedByPinned(null, 'openai')).toBeNull()
+  })
+
+  it('keeps only rate-limit headers, and never a cookie', () => {
+    const headers = responseHeaders(
+      new Headers({
+        'X-RateLimit-Limit-Requests': '5000',
+        'ratelimit-reset': '12',
+        'Retry-After': '3',
+        'set-cookie': 'a=b',
+        'content-type': 'text/event-stream',
+      }),
+    )
+    expect(headers).not.toHaveProperty('set-cookie')
+    expect(JSON.parse(rateLimitHeaders(headers)!)).toEqual({
+      'ratelimit-reset': '12',
+      'retry-after': '3',
+      'x-ratelimit-limit-requests': '5000',
+    })
+    expect(rateLimitHeaders({ 'content-type': 'text/event-stream' })).toBeNull()
   })
 })
 

@@ -69,6 +69,17 @@ export const TERMINAL_OPS_SEVERITY: Record<string, OpsKindPolicy> = {
     action:
       'OpenRouter refused a latency probe. The detail has its code: 402 means the account is out of credit, 401 or 403 the key, 404 that the model or its first-party endpoint is gone (a flagship target picks its model from the next OpenRouter catalog; a pinned one needs PROBE_TARGETS updated), 400 that the request needs changing, and “unreadable reply” that the stream reader (pipeline/probes/stream.ts) no longer matches what OpenRouter sends (the R2 trace under probes/ has the bytes). No reading is stored for those labs until it is fixed.',
   },
+  // utils/probe-runner.ts: the probes run inside a Durable Object with a location hint.
+  probe_unpinned: {
+    severity: 'warning',
+    action:
+      'The probes:latency cron found no PROBES Durable Object binding, so it probed nothing rather than probe from whichever colo ran it. Check wrangler.toml › Probe placement and that nuxt.config.ts still builds with the cloudflare-durable preset, then redeploy. The hours missed cannot be backfilled.',
+  },
+  probe_placement_failed: {
+    severity: 'warning',
+    action:
+      'The probes Durable Object for the placement in the detail did not return a report, so that placement may have stored no probes this hour. The detail has its status or error; look in the Worker logs for the /_probes/run request inside the object. The hours missed cannot be backfilled.',
+  },
   // pipeline/probes/resolve.ts: a flagship target's model is chosen on every run.
   probe_model_unresolved: {
     severity: 'warning',
