@@ -1,5 +1,5 @@
 // What the front page keeps of /api/overview before Nuxt serializes it: five alert rows,
-// the newest minor change and each lab's newest alert. The API returns every alert with its
+// each lab's newest alert and the newest minor change. The API returns every alert with its
 // cited rows (about 110 kB of the page's 210 kB payload).
 
 /** Rows on the signal band (SignalBand.vue SHOWN). */
@@ -43,20 +43,15 @@ export function slimAlerts(alerts: AlertView[]): AlertView[] {
   }))
 }
 
-export function overviewStrip(data: OverviewData, labs: readonly string[]): OverviewData {
-  // Newest first across both tiers, the order the readout reads them in.
-  const merged = [...data.alerts, ...data.info].sort((a, b) =>
-    b.created_at.localeCompare(a.created_at),
-  )
-  const keep = new Set<string>(data.alerts.slice(0, OVERVIEW_BAND_ROWS).map((a) => a.id))
-  if (data.info[0]) keep.add(data.info[0].id)
-  for (const lab of labs) {
-    const newest = merged.find((a) => alertLabs(a).includes(lab as never))
-    if (newest) keep.add(newest.id)
-  }
+export function overviewStrip(data: OverviewData): OverviewData {
+  const band = data.alerts.slice(0, OVERVIEW_BAND_ROWS)
+  const perLab = data.lab_alerts
+  // Slimmed in one pass, so a row on the band and in the readout shares its cited rows.
+  const slim = slimAlerts([...band, ...perLab, ...data.info.slice(0, 1)])
   return {
     ...data,
-    alerts: slimAlerts(data.alerts.filter((a) => keep.has(a.id))),
-    info: slimAlerts(data.info.filter((a) => keep.has(a.id))),
+    alerts: slim.slice(0, band.length),
+    lab_alerts: slim.slice(band.length, band.length + perLab.length),
+    info: slim.slice(band.length + perLab.length),
   }
 }

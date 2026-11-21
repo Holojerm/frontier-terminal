@@ -19,23 +19,19 @@ const alert = (id: string, at: string, provider: string) =>
   }) as never
 
 describe('overviewStrip', () => {
-  it('keeps the band rows, the newest info, and each lab’s newest alert, and drops the rest', () => {
-    const alerts = [
-      ...[6, 5, 4, 3, 2].map((n) => alert(`a${n}`, `2026-11-0${n}`, 'openai')),
-      alert('old-anthropic', '2026-10-01', 'anthropic'),
-      alert('old-openai', '2026-10-02', 'openai'),
-    ]
+  it('keeps the band rows, each lab’s newest alert and the newest info, and drops the rest', () => {
+    const alerts = [6, 5, 4, 3, 2, 1].map((n) => alert(`a${n}`, `2026-11-0${n}`, 'openai'))
+    const lab_alerts = [alerts[0]!, alert('old-anthropic', '2026-10-01', 'anthropic')]
     const info = [alert('i2', '2026-11-07', 'xai'), alert('i1', '2026-10-30', 'xai')]
-    const out = overviewStrip({ alerts, info, alert_count: 7, info_count: 2 } as never, [
-      'openai',
-      'anthropic',
-      'xai',
-    ])
-    expect(out.alerts.map((a) => a.id)).toEqual(['a6', 'a5', 'a4', 'a3', 'a2', 'old-anthropic'])
+    const out = overviewStrip({ alerts, lab_alerts, info, alert_count: 7, info_count: 2 } as never)
+    expect(out.alerts.map((a) => a.id)).toEqual(['a6', 'a5', 'a4', 'a3', 'a2'])
+    expect(out.lab_alerts.map((a) => a.id)).toEqual(['a6', 'old-anthropic'])
     expect(out.info.map((a) => a.id)).toEqual(['i2'])
     expect(out.alert_count).toBe(7)
     expect(out.alerts[0]!.explanation).toBe('')
     expect(out.alerts[0]!.changes[0]).toMatchObject({ provider: 'openai', summary: '', diff: [] })
+    // One pass over all three lists, so the payload writes an equal cited row once.
+    expect(out.lab_alerts[0]!.changes[0]).toBe(out.alerts[0]!.changes[0])
   })
 })
 

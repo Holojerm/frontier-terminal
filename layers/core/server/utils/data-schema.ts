@@ -423,6 +423,12 @@ export const SCHEMA_RELEASES: readonly SchemaRelease[] = [
       filed_text_facts: { note: 'New table.' },
     },
   },
+  {
+    version: '1.28.1',
+    date: '2026-11-21',
+    summary:
+      '/api/overview and get_overview gain lab_alerts: each lab’s newest notable or critical alert, however far back, where alerts holds only the newest ten overall. No columns changed.',
+  },
 ]
 
 export const SCHEMA_VERSION = SCHEMA_RELEASES.at(-1)!.version

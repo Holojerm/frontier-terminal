@@ -78,26 +78,12 @@ const quietReason = computed(() => {
 
     <div class="space-y-2 p-3" :class="shown.length ? 'border-t border-default' : undefined">
       <!-- 2. The minor changes, as one line: how much low-stakes movement, and the newest of it. -->
-      <p v-if="newestInfo" class="flex flex-wrap items-baseline gap-x-2 text-sm text-muted">
-        <NuxtLink
-          to="/alerts#minor-changes"
-          class="whitespace-nowrap underline underline-offset-2 hover:text-default"
-        >
-          {{ INFO_TIER_LABEL }} · {{ overview.info_count }}
-        </NuxtLink>
-        <span class="min-w-0 truncate">
-          <time :datetime="newestInfo.created_at" class="font-mono text-xs">
-            {{ stamps.relative(newestInfo.created_at) }}
-          </time>
-          <NuxtLink
-            :to="alertPath(newestInfo.id)"
-            :title="newestInfo.headline"
-            class="ml-2 hover:text-default"
-          >
-            {{ readableEdgarNames(newestInfo.headline) }}
-          </NuxtLink>
-        </span>
-      </p>
+      <TerminalMinorLine
+        v-if="newestInfo"
+        :count="overview.info_count"
+        to="/alerts#minor-changes"
+        :newest="newestInfo"
+      />
 
       <!-- 3. Raw movement, whether or not the judge spoke. -->
       <p class="flex flex-wrap items-baseline gap-x-4 gap-y-1 text-sm text-muted">
