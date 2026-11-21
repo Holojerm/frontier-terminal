@@ -164,6 +164,8 @@ enabled = true
 #
 #   "*/30 * * * *"  ops:watch  — freshness + launch-coverage checks, then prunes ops_events
 #                   poll:edgar — the two SEC feeds (layers/terminal/server/pipeline/scopes.ts)
+#                   gdelt:dispatch — starts the GDELT Actions job (.github/workflows/gdelt-search.yml),
+#                   whose GitHub schedule drops most triggers
 #   "0 */6 * * *"   poll:survey — every include source: pricing, hiring, EDGAR,
 #                   status pages, OpenRouter rankings — except the careers and filings lanes
 #   "17 */6 * * *"  poll:careers — the ~20 MB Google careers feed, alone, so its

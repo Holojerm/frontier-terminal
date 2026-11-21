@@ -1,5 +1,10 @@
 # The GDELT side of the track record (scripts/gdelt-search.ts), twice an hour.
 #
+# Started by the Worker: gdelt:dispatch (layers/terminal/server/tasks/gdelt/dispatch.ts)
+# calls workflow_dispatch on Cloudflare's */30 cron, because GitHub's scheduler
+# drops most of this workflow's triggers (below). The schedule stays as the
+# fallback for when the Worker's NUXT_GITHUB_DISPATCH_TOKEN is unset or refused.
+#
 # Each run asks the site for the GDELT GKG files it has not read (one per
 # quarter hour, ~5 MB zipped), reads them oldest first, and posts back the
 # rows naming a tracked lab, filer or model family, which the Worker keeps and
@@ -22,13 +27,16 @@ name: GDELT search
 
 on:
   schedule:
-    # Minutes 23 and 53: off the top of the hour, when GitHub's scheduler is
-    # busiest. Twice an hour because the scheduler drops triggers: hourly, it
-    # fired 2 of 12 on 2026-11-06 and none from 08:03Z to 18:52Z on 2026-11-09
-    # (issues #301, #323). A run is about a minute once caught up, and a
-    # backlog run stops at 40 minutes, so the next trigger at most waits in
-    # the concurrency queue below and none is cancelled.
+    # The fallback. Minutes 23 and 53: off the top of the hour, when GitHub's
+    # scheduler is busiest, and between the Worker's dispatches at :00 and :30.
+    # The scheduler drops triggers: hourly, it fired 2 of 12 on 2026-11-06 and
+    # none from 08:03Z to 18:52Z on 2026-11-09 (issues #301, #323); twice an
+    # hour, it fired 4 times from 2026-11-19 to 2026-11-21 03:30Z.
     - cron: '23,53 * * * *'
+  # The Worker's trigger. A dispatch or schedule that lands while a run is
+  # going waits in the concurrency queue below; GitHub keeps one pending run
+  # per group, so a newer trigger replaces a waiting one and a running one is
+  # never cancelled.
   workflow_dispatch:
 
 # One run at a time: two would double our rate at GDELT.

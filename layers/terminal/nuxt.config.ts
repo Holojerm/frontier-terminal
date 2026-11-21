@@ -31,6 +31,11 @@ export default defineNuxtConfig({
     // GitHub otherwise limits per shared Workers IP. Any token that can read
     // public repositories; a Worker secret: NUXT_GITHUB_TOKEN.
     githubToken: '',
+    // Optional. Lets gdelt:dispatch start the GDELT Actions job every half hour
+    // (layers/terminal/server/pipeline/track-record/dispatch.ts). A fine-grained
+    // token on this repository only, with Actions: read and write. Unset, the
+    // workflow's own schedule is the only trigger. NUXT_GITHUB_DISPATCH_TOKEN.
+    githubDispatchToken: '',
     // Which queue layers/terminal/server/plugins/events-queue.ts consumes. MUST
     // equal the `queue` in [[queues.consumers]] in wrangler.toml; a var, not a
     // constant, for the template's reason: a consumer that skips a batch acks it

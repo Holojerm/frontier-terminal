@@ -163,6 +163,8 @@ const securityHeaders = {
 //                launch-coverage checks (they spool ops events) and the 7-day prune of the spool.
 //              — EDGAR tick, layers/terminal/server/tasks/poll/edgar.ts: the SEC feeds and the
 //                model catalogs, the two axes where latency is worth polling for.
+//              — gdelt:dispatch, layers/terminal/server/tasks/gdelt/dispatch.ts: starts the
+//                GDELT Actions job, whose GitHub schedule drops most triggers.
 //   0 */6      — full survey, layers/terminal/server/tasks/poll/survey.ts: every include
 //                source but the careers and filings lanes'. Scope policy:
 //                layers/terminal/server/pipeline/scopes.ts.
@@ -199,7 +201,7 @@ const securityHeaders = {
 //                the power-sites table cites and spools an ops event for a quote
 //                that is gone (layers/terminal/server/power/verify.ts).
 const SCHEDULED_TASKS: Record<string, string[]> = {
-  '*/30 * * * *': ['ops:watch', 'poll:edgar'],
+  '*/30 * * * *': ['ops:watch', 'poll:edgar', 'gdelt:dispatch'],
   '0 */6 * * *': ['poll:survey'],
   '17 */6 * * *': ['poll:careers'],
   '47 */6 * * *': ['poll:filings'],
