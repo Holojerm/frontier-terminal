@@ -2902,8 +2902,8 @@ power_site_sources:
       copy, reproduce, publish, transmit, distribute, perform, display, post,
       modify, create derivative works from, sell, license or otherwise exploit
       the Websites or any of the Content without our prior written
-      permission." Taken: two sentences from two pages, the second at
-      crusoe.ai/newsroom. Both addresses now redirect under
+      permission." Taken: three sentences from two pages, the second at
+      crusoe.ai/newsroom (the third, added 2026-11-21, names the site's grid). Both addresses now redirect under
       crusoe.ai/resources. Read 2026-11-20.
     rights: restricted
   power-vantage:
@@ -3000,6 +3000,78 @@ power_site_sources:
       everything. The site has a privacy notice and no terms of use. Taken:
       one sentence. Read 2026-11-20.
     rights: restricted
+# The files behind /api/grid-load and the "Grid load where the lab sites are"
+# and "Large loads on ERCOT" panels on /compute (layers/terminal/server/power/
+# grid-load.ts, ercot-large-loads.ts). Each lab site is placed in a balancing
+# authority by a grid row of power_site_ties, or by its utility's row in
+# EIA-861 (layers/terminal/server/curated/grid-areas.json). EIA's API v2 needs
+# a key and isn't used: the six-month files carry the same hourly series.
+# Terms and robots.txt were read on 2026-11-21 (docs/source-audit.md).
+grid_load_sources:
+  eia930-balance:
+    publisher: U.S. Energy Information Administration
+    url: https://www.eia.gov/electricity/gridmonitor/sixMonthFiles/
+    format: CSV, one six-month file per half-year (EIA930_BALANCE_<year>_<Jan_Jun|Jul_Dec>.csv, 30 to 47 MB), one line per authority and hour
+    verdict: include
+    terms: >-
+      EIA's Copyrights and Reuse page (eia.gov/about/copyrights_reuse.php):
+      "U.S. government publications are in the public domain and are not
+      subject to copyright protection. You may use and/or distribute any of
+      our data, files, databases, reports, graphs, charts, and other
+      information products that are on our website". It asks for an
+      acknowledgment such as "Source: U.S. Energy Information
+      Administration (Oct 2008)." www.eia.gov/robots.txt disallows neither
+      /electricity/ path. Taken: "Demand (MW) (Adjusted)" for ERCO, PJM,
+      MISO, NYIS, AZPS, SOCO, TVA and EPE, summed per local day, with the
+      tracked authorities' lines kept verbatim in R2. The current file is
+      re-read six-hourly when its ETag moves; the back files from 2018 once
+      each. Read 2026-11-21.
+    rights: upstream
+    license: Public domain (U.S. government work). Source - U.S. Energy Information Administration.
+    caveats: >-
+      A load reading, never a measure of data-center use: an authority's
+      demand moves with weather, the economy and every other customer. EIA
+      revises past hours, so a day is rewritten when a later read differs.
+  eia861-utility-ba:
+    publisher: U.S. Energy Information Administration
+    url: https://www.eia.gov/electricity/data/eia861/zip/f8612025.zip
+    format: ZIP of XLSX files; Sales_Ult_Cust_2025.xlsx gives each utility's balancing authority (BA Code) per state, read by hand
+    verdict: include
+    terms: >-
+      The same EIA terms and robots.txt as eia930-balance. Taken: five rows
+      (Indiana Michigan Power, DTE Electric, Wisconsin Electric Power (We
+      Energies), Arizona Public Service, Entergy Louisiana), each the
+      utility's state and BA Code, to place a lab site whose utility a page
+      names. Read 2026-11-21.
+    rights: upstream
+    license: Public domain (U.S. government work). Source - U.S. Energy Information Administration.
+  ercot-large-loads:
+    publisher: Electric Reliability Council of Texas (ERCOT)
+    url: https://www.ercot.com/committees/board
+    format: PDF, the Monthly Operational Overview linked from each year's Board of Directors page, and the ERCOT Monthly linked from ercot.com/news/presentations
+    verdict: include
+    terms: >-
+      ERCOT's Terms of Use (ercot.com/help/terms), section 5: "The publicly
+      available contents of this website may be used, reproduced, and
+      redistributed, provided that the contents are not modified and that
+      you maintain all copyright and other notices contained in the
+      contents" and "raw data provided in public portions of this website
+      may be used, reproduced, and redistributed in compilations, charts,
+      and analyses without maintaining such notices." Section 6 bars use
+      that "negatively affects the performance of this website".
+      www.ercot.com/robots.txt disallows neither /committees/, /news/ nor
+      /files/docs/. Taken: the sentence stating large load approved to
+      energize and observed monthly peak in each overview, and the
+      sentences stating the large-load queue and observed energized total
+      in the ERCOT Monthly. Each PDF is fetched once and kept unmodified;
+      three listing pages are read six-hourly. Read 2026-11-21.
+    rights: ours
+    caveats: >-
+      ERCOT's observed figure is the sum of each approved load's own peak in
+      the month, not their combined draw. A report sometimes states a month
+      other than its own, and a later report can restate a month, so each
+      report is a vintage. The queue's breakdown is a chart in the PDFs and
+      isn't read.
 department_clusters:
   physical-infrastructure:
     label: Physical infrastructure

@@ -6,6 +6,7 @@
 import { and, eq, inArray } from 'drizzle-orm'
 
 import * as tables from '#server/db/schema'
+import { gridMonths, gridWeeks } from '../../shared/utils/grid-load'
 import { PRIMARY_PLACEMENT } from '../pipeline/probes/placement'
 import type { PipelineDb } from '../pipeline/store'
 import type { QueryContext } from '../utils/terminal-db'
@@ -204,6 +205,48 @@ export function createLoader(deps: LoadDeps) {
           }
         }
         return { kind: 'events', events }
+      }
+      case 'grid_load': {
+        const days = await deps.db
+          .select({
+            date: tables.gridLoadDays.date,
+            mwh: tables.gridLoadDays.mwh,
+            hours: tables.gridLoadDays.hours,
+          })
+          .from(tables.gridLoadDays)
+          .where(eq(tables.gridLoadDays.ba, source.ba))
+          .orderBy(tables.gridLoadDays.date)
+        const points =
+          source.period === 'month'
+            ? gridMonths(days).map((m) => ({ date: `${m.month}-01`, value: m.yoy }))
+            : gridWeeks(days).map((w) => ({ date: w.week, value: w.yoy }))
+        return {
+          kind: 'points',
+          points: points.filter((p): p is Point => p.value !== null),
+        }
+      }
+      case 'ercot_large_loads': {
+        // The first report to state a month: what was public then. A later
+        // report's restatement would be a value nobody had at the time.
+        const rows = await deps.db
+          .select({
+            period: tables.ercotLargeLoadFacts.period,
+            value: tables.ercotLargeLoadFacts.value,
+            posted: tables.ercotLargeLoadFacts.posted,
+          })
+          .from(tables.ercotLargeLoadFacts)
+          .where(eq(tables.ercotLargeLoadFacts.metric, source.metric))
+        const first = new Map<string, { value: number; posted: string }>()
+        for (const r of rows) {
+          const f = first.get(r.period)
+          if (!f || r.posted < f.posted) first.set(r.period, r)
+        }
+        return {
+          kind: 'points',
+          points: [...first.entries()]
+            .map(([period, f]) => ({ date: `${period}-01`, value: f.value }))
+            .sort((a, b) => (a.date < b.date ? -1 : 1)),
+        }
       }
       case 'revenue_vs_reported':
         return {

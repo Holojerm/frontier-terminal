@@ -1,6 +1,7 @@
 // Compute around the labs: how full the data centers are, how much power each lab's sites draw, and who powers them.
 
 import { z } from 'zod'
+import { gridLoadStamp, queryGridLoad } from '../power/grid-query'
 import { powerSitesStamp } from '../power/stamp'
 import { recipeRunsStamp } from '../utils/terminal-db'
 import { queryDataCenters, queryPowerSites, VIEW_RECIPES } from '../utils/terminal-recipe-views'
@@ -95,5 +96,26 @@ export function registerComputeTools({ server, deps }: McpKit): void {
         ),
       })
     },
+  )
+
+  server.registerTool(
+    'get_grid_load',
+    {
+      title: 'Grid load where the lab sites are (EIA-930, ERCOT)',
+      description:
+        'Demand on each balancing authority that holds a data-center site Epoch AI credits to a lab, from the U.S. Energy Information Administration’s EIA-930 hourly data (adjusted demand, public domain). ' +
+        'areas: per authority (ba is EIA’s code: ERCO, PJM, MISO, NYIS, AZPS), sites placed in it with basis (grid: a page names the site’s grid operator, quote and source_url are that page’s; utility: a page ties the site to a utility and EIA-861 puts the utility in this authority, quote is EIA-861’s row), ' +
+        'tickers (the listed companies tied to those sites in get_power_sites, with their roles), monthly (average MW over each whole month and yoy, the change on the same month a year before), weekly (the newest two years of whole Monday-to-Sunday weeks, yoy against 52 weeks before) and latest. ' +
+        'This is a load reading, never a utilization rate: an authority’s demand moves with weather, the economy and every other customer, and nothing here separates the sites’ share, so never call it data-center utilization. ' +
+        'ercot: ERCOT’s own large-load figures from its monthly PDFs, one vintage per report. months has, per month, approved_mw (approved to energize) and observed_peak_mw (the sum of each approved load’s own monthly peak, not their combined draw) from the newest report stating it, and vintages (how many reports state it). ' +
+        'queue is the large-load interconnection queue where a report states its size, with qualifier (more than, roughly) and horizon; energized the all-time observed energized total. Quote each figure with its sentence. ' +
+        'unplaced lists lab sites no page places in an authority; gaps says what is not read. Not investment advice. ' +
+        PROVENANCE,
+      annotations: READ_ONLY,
+    },
+    async () =>
+      json(
+        await deps.serve('grid-load', () => queryGridLoad(deps.db), await gridLoadStamp(deps.db)),
+      ),
   )
 }

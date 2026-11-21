@@ -41,6 +41,7 @@ import {
   readArchiveSources,
   readFiledFactSources,
   readIdentifierSources,
+  readGridLoadSources,
   readPowerSiteSources,
   readSourceRegistry,
 } from './terminal-sources'
@@ -86,6 +87,7 @@ const AS_OF_CUT: Readonly<Record<string, string>> = {
   reported_articles: 'Rows with found_at at or before as_of.',
   reported_figures: 'Rows with judged_at at or before as_of.',
   latency_probes: 'Rows with started_at at or before as_of.',
+  ercot_large_load_facts: 'Rows with fetched_at at or before as_of: when we read the report.',
   filed_facts:
     'Rows whose filing date is before the UTC day of as_of. A fact counts from the day after its filing, whenever we read it, so this table answers as_of back to 2019.',
   filed_guidance:
@@ -121,6 +123,7 @@ type Feed =
   | 'filed_facts'
   | 'identifiers'
   | 'power_sites'
+  | 'grid_load'
   | { axes: readonly SourceAxis[] }
   /** Named sources, by id. */
   | { ids: readonly string[] }
@@ -518,6 +521,27 @@ export const TABLE_META: Readonly<Record<string, TableMeta>> = {
     joins: [{ column: 'ticker', to: 'your security master' }],
     feeds: ['power_sites'],
   },
+  grid_load_days: {
+    grain: 'One row per balancing authority and local day.',
+    cadence:
+      'Six-hourly. We read EIA-930’s current six-month file when it changes, and the one before it for six weeks after it closes. A day EIA revises is rewritten in place.',
+    event: 'date',
+    knowledge: 'fetched_at',
+    start: '2018-01-01, from EIA’s six-month files, read back on 2026-11-21.',
+    joins: [],
+    feeds: [{ ids: ['eia930-balance'] }],
+  },
+  ercot_large_load_facts: {
+    grain: 'One row per figure an ERCOT report states, per report.',
+    cadence:
+      'Six-hourly checks of ERCOT’s Board and presentations pages. A report is read once, when it is first linked.',
+    event: 'posted',
+    knowledge: 'fetched_at',
+    start:
+      'ERCOT’s Monthly Operational Overview from January 2025 and its ERCOT Monthly from November 2025.',
+    joins: [],
+    feeds: [{ ids: ['ercot-large-loads'] }],
+  },
 }
 
 export const TIME_NOTE =
@@ -572,6 +596,7 @@ function ratedSources(sourcesYaml: string): Rated[] {
       license: s.license,
     })),
     ...readPowerSiteSources(sourcesYaml).map(flat('power_sites')),
+    ...readGridLoadSources(sourcesYaml).map(flat('grid_load')),
   ]
 }
 

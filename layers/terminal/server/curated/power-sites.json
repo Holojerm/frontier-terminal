@@ -135,7 +135,12 @@
     },
     {
       "site": "OpenAI Stargate Abilene",
-      "grid": null,
+      "grid": {
+        "name": "ERCOT",
+        "source_url": "https://crusoe.ai/blog/an-inside-look-at-the-abilene-ai-data-center/",
+        "quote": "The Abilene data center connects directly to the ERCOT grid, allowing us to primarily draw from the region's robust and growing supply of renewable energy.",
+        "fetched_at": "2026-11-21T05:58:00.000Z"
+      },
       "links": [
         {
           "role": "equipment",

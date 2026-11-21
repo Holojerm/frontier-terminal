@@ -17,7 +17,8 @@ export const MIN_SAMPLE = {
 /** The newest share of each series held out of sample. */
 export const HOLDOUT_FRACTION = 1 / 3
 
-export type SignalEntityKind = 'lab' | 'listed' | 'site'
+/** grid: a balancing authority by its EIA-930 code (ERCO, PJM, MISO). */
+export type SignalEntityKind = 'lab' | 'listed' | 'site' | 'grid'
 export type SignalTransform = 'level' | 'change' | 'share' | 'normalized'
 export type SignalFrequency = 'daily' | 'weekly' | 'monthly' | 'event'
 export type SignalTest = 'lead_lag' | 'event'

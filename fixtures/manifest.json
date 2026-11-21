@@ -2063,6 +2063,60 @@
       "http_status": 200,
       "raw_bytes": 35695,
       "note": "Internet Archive capture of https://status.x.ai/feed.xml taken 20250527165647 (era xai-feed-2025, layers/terminal/server/pipeline/archive/status-eras.ts). source_url is the capture; fetched_at is when we read it back."
+    },
+    {
+      "path": "fixtures/grid-load/eia930-balance-2026-jul-dec.csv",
+      "source_id": "eia930-balance",
+      "source_url": "https://www.eia.gov/electricity/gridmonitor/sixMonthFiles/EIA930_BALANCE_2026_Jul_Dec.csv",
+      "fetched_at": "2026-11-21T05:37:00Z",
+      "http_status": 200,
+      "raw_bytes": 37344967,
+      "trim": "the header, the first two AECI lines (an authority the reader drops) and the ERCO lines for 2026-07-01 and 07-02 and the PJM lines for 2026-07-01, verbatim; 37344967 -> 19631 bytes"
+    },
+    {
+      "path": "fixtures/grid-load/ercot-monthly-operational-overview-july-2025.pdf.base64",
+      "source_id": "ercot-large-loads",
+      "source_url": "https://www.ercot.com/files/docs/2025/08/15/ERCOT-Monthly-Operational-Overview-July-2025.pdf",
+      "fetched_at": "2026-11-21T05:43:00Z",
+      "http_status": 200,
+      "raw_bytes": 728019,
+      "trim": "none — the whole PDF, base64-encoded because the test binding reads fixtures as UTF-8 text"
+    },
+    {
+      "path": "fixtures/grid-load/ercot-monthly-april-2026.pdf.base64",
+      "source_id": "ercot-large-loads",
+      "source_url": "https://www.ercot.com/files/docs/2026/05/13/ERCOT-Monthly-April-2026-FINAL.pdf",
+      "fetched_at": "2026-11-21T05:38:00Z",
+      "http_status": 200,
+      "raw_bytes": 963802,
+      "trim": "none — the whole PDF, base64-encoded because the test binding reads fixtures as UTF-8 text"
+    },
+    {
+      "path": "fixtures/grid-load/ercot-board.html",
+      "source_id": "ercot-large-loads",
+      "source_url": "https://www.ercot.com/committees/board",
+      "fetched_at": "2026-11-21T05:46:00Z",
+      "http_status": 200,
+      "raw_bytes": 75066,
+      "trim": "only the lines linking a /files/docs/ PDF, verbatim"
+    },
+    {
+      "path": "fixtures/grid-load/ercot-board-2025.html",
+      "source_id": "ercot-large-loads",
+      "source_url": "https://www.ercot.com/committees/board/2025",
+      "fetched_at": "2026-11-21T05:46:00Z",
+      "http_status": 200,
+      "raw_bytes": 71152,
+      "trim": "only the lines linking a /files/docs/ PDF, verbatim"
+    },
+    {
+      "path": "fixtures/grid-load/ercot-presentations.html",
+      "source_id": "ercot-large-loads",
+      "source_url": "https://www.ercot.com/news/presentations",
+      "fetched_at": "2026-11-21T05:38:00Z",
+      "http_status": 200,
+      "raw_bytes": 95083,
+      "trim": "only the lines linking a /files/docs/ PDF, verbatim"
     }
   ]
 }

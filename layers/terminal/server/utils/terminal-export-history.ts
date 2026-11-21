@@ -213,6 +213,18 @@ export const EXPORT_HISTORY: Readonly<Record<string, HistoryRule>> = {
     'rows are restamped to newer filings and ended in place, so the table holds the ties as read now.',
     null,
   ),
+  grid_load_days: windowed(
+    ['date'],
+    'date, the authority’s local day',
+    'first_seen_at',
+    tables.gridLoadDays.date,
+  ),
+  ercot_large_load_facts: windowed(
+    ['posted'],
+    'posted, the day ERCOT posted the report',
+    'fetched_at',
+    tables.ercotLargeLoadFacts.posted,
+  ),
 }
 
 /** The license window's rule for a registered table. */

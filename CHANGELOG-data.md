@@ -23,6 +23,19 @@ is smaller than its changes need. `bun run schema:lock` rewrites the lock only
 when the newest release in `layers/terminal/server/utils/data-schema.ts` says
 exactly which columns changed.
 
+## 1.21.0 (2026-11-21)
+
+Grid load where the lab sites are. Two new tables:
+
+- `grid_load_days` has EIA-930's adjusted hourly demand summed per balancing
+  authority and local day, from 2018, for the authorities that hold a lab site.
+- `ercot_large_load_facts` has ERCOT's own large-load figures (approved to
+  energize, the sum of observed monthly peaks, the large-load queue), one row
+  per figure per report, with its sentence.
+
+`/api/grid-load` and `get_grid_load` derive monthly and weekly averages with the
+change on a year before. The dictionary's sources gain `grid_load_sources`.
+
 ## 1.20.0 (2026-11-21)
 
 A signal scorecard at /signals.
