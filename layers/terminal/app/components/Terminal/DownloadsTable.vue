@@ -2,9 +2,11 @@
 // Package downloads per lab, the newest 28 days against the 28 before, from
 // npm and PyPI. A table rather than a chart: the registries count different
 // things (npm counts every tarball, pypistats drops mirrors) and the levels
-// are not comparable across packages, only each package's own change.
+// are not comparable across packages, only each package's own change. That
+// raw change rides on growth across all of npm, so the adjusted change (npm
+// only, divided by the control basket) and each core SDK's share sit beside it.
 
-import { pctChange, pctLabel } from '../../../shared/utils/terminal-format'
+import { pctChange, pctLabel, sharePct } from '../../../shared/utils/terminal-format'
 import { LAB_DISPLAY } from '../../../shared/utils/terminal-labs'
 import type { AdoptionData } from '../../../shared/utils/recipe-views'
 import type { TableColumn } from '../../types/terminal-ui'
@@ -26,6 +28,8 @@ const columns: TableColumn[] = [
   { key: 'registry', label: 'Registry' },
   { key: 'last', label: 'Last 28 days', numeric: true },
   { key: 'change', label: 'vs prior 28', numeric: true },
+  { key: 'adjusted', label: 'Adjusted', hint: 'vs prior 28, against npm', numeric: true },
+  { key: 'share', label: 'Share', hint: 'of tracked SDKs', numeric: true },
   { key: 'through', label: 'Through', keep: true },
 ]
 
@@ -34,11 +38,14 @@ const rows = computed(() =>
     .filter((d) => !props.kind || d.kind === props.kind)
     .map((d) => {
       const change = pctChange(d.prior_28d, d.last_28d)
+      const adjusted = pctChange(d.normalized_prior_28d, d.normalized_last_28d)
       return {
         ...d,
         lab: LAB_DISPLAY[d.lab],
         last: d.last_28d === null ? '' : figures.tokens(d.last_28d),
         change: change === null ? '—' : pctLabel(change),
+        adjusted: adjusted === null ? '—' : pctLabel(adjusted),
+        share: sharePct(d.share_28d),
         through: d.through ? stamps.date(d.through) : '',
       }
     })
@@ -75,7 +82,7 @@ const sources = computed(() =>
         >
       </template>
       <template #gap>
-        <TerminalGap inline title="Not 28 days on record yet" />
+        <TerminalGap inline title="No full 28 days on record" />
       </template>
     </TerminalTable>
     <TerminalSources

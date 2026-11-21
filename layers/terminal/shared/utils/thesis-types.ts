@@ -173,6 +173,16 @@ export type SignalSpec =
     }
   | {
       kind: 'measured'
+      /** An npm package's downloads over the trailing `days`, divided by the
+       * non-AI control basket's index (layers/terminal/server/theses/download-series.ts). */
+      signal: 'npm-normalized-trailing-sum'
+      recipe: string
+      days: number
+      format: ValueFormat
+      rule: MeasuredRule
+    }
+  | {
+      kind: 'measured'
       /** The sum of several keys' values on each date (e.g. departments). */
       signal: 'recipe-sum-of-keys'
       recipe: string

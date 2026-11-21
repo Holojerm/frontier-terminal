@@ -296,6 +296,18 @@ export const SCHEMA_RELEASES: readonly SchemaRelease[] = [
       },
     },
   },
+  {
+    version: '1.18.0',
+    date: '2026-11-21',
+    summary:
+      'Package downloads made comparable. Five non-AI npm packages (react, typescript, express, lodash, axios) are read from 2025-05-13 as controls (recipe ids npm-control-*). A new download_series table has, per day, the controls’ median index (npm-control-index), each npm package’s downloads divided by it (<recipe_id>-normalized), and each lab’s main SDK as a share of the tracked labs’ main SDKs on npm and PyPI (<recipe_id>-share). /api/adoption gains, on each downloads entry, normalized and share per ISO week, normalized_last_28d, normalized_prior_28d, share_28d and the series ids, and a controls block with the basket, its base weeks, its weekly index and npm’s outage days. A day npm reported as zero after a package’s first download is an outage: its recipe_observations row keeps the zero and gains outage: true in payload, and it is left out of weekly totals and 28-day sums. get_adoption returns the new fields too. Anthropic claim 7 and Cloudflare claim 2 read the normalized series.',
+    tables: {
+      download_series: { note: 'New table.' },
+      recipe_observations: {
+        note: 'payload is {"outage":true} on an npm outage day. npm-control-* rows are new.',
+      },
+    },
+  },
 ]
 
 export const SCHEMA_VERSION = SCHEMA_RELEASES.at(-1)!.version

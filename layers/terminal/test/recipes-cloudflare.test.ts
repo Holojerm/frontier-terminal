@@ -62,13 +62,13 @@ describe('npm downloads', () => {
     expect(obs.every((o) => typeof o.value === 'number')).toBe(true)
   })
 
-  it('reads 540 days on the first run, then the last week up to yesterday', () => {
+  it('reads 540 days up to yesterday on every run, so late fills reach the store', () => {
     const now = new Date('2026-10-09T06:00:00Z')
     expect(NPM_WRANGLER.url({ now, newest: null })).toBe(
       'https://api.npmjs.org/downloads/range/2025-04-17:2026-10-08/wrangler',
     )
     expect(NPM_WRANGLER.url({ now, newest: '2026-10-07' })).toBe(
-      'https://api.npmjs.org/downloads/range/2026-09-30:2026-10-08/wrangler',
+      'https://api.npmjs.org/downloads/range/2025-04-17:2026-10-08/wrangler',
     )
   })
 })

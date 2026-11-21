@@ -232,6 +232,7 @@ describe('an empty store renders an honest empty state, never a throw', () => {
       'reported_articles',
       'reported_figures',
       'recipe_observations',
+      'download_series',
       'filed_facts',
       'filed_guidance',
       'exposure_quarters',
