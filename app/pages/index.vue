@@ -55,7 +55,7 @@ const [
 ] = await Promise.all([
   // The band and readout read a handful of alerts; see overviewStrip.
   useFetch<OverviewData>('/api/overview', {
-    transform: (d: OverviewData): OverviewData => overviewStrip(d, LABS),
+    transform: overviewStrip,
   }),
   useFetch<PricesData>('/api/prices', { pick: ['as_of', 'computed_at', 'matrix', 'counts'] }),
   useFetch<RevenueData>('/api/revenue'),
@@ -136,9 +136,8 @@ const readout = computed(() => ({
   spend: spend.data.value,
   hiring: hiringHistory.data.value,
   incidents: incidents.data.value,
-  alerts: [...(overview.data.value?.alerts ?? []), ...(overview.data.value?.info ?? [])].sort(
-    (a, b) => b.created_at.localeCompare(a.created_at),
-  ),
+  // Each lab's newest alert, however far back: the band's rows are the newest overall.
+  alerts: overview.data.value?.lab_alerts ?? [],
 }))
 
 const recent = computed(() => releases.data.value?.rows ?? [])

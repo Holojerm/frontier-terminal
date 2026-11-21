@@ -23,6 +23,12 @@ is smaller than its changes need. `bun run schema:lock` rewrites the lock only
 when the newest release in `layers/core/server/utils/data-schema.ts` says
 exactly which columns changed.
 
+## 1.28.1 (2026-11-21)
+
+`/api/overview` and `get_overview` gain `lab_alerts`: each lab's newest notable
+or critical alert, however far back, where `alerts` holds only the newest ten
+overall. No columns changed.
+
 ## 1.28.0 (2026-11-21)
 
 History before the live record. Two new tables:

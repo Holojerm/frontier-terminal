@@ -11,6 +11,14 @@ export function revenueScope(view: RevenueProviderView | null): string {
   return f?.ticker ? ` · all of ${f.ticker}, parent` : ' · parent'
 }
 
+/**
+ * The readout's "Newest alert": the first alert-tier row of a newest-first list,
+ * whatever tiers the page fetched. A minor change is never an answer here.
+ */
+export function newestAlert<A extends { severity: AlertSeverity }>(alerts: readonly A[]): A | null {
+  return alerts.find((a) => alertTier(a.severity) === 'alert') ?? null
+}
+
 export const READOUT_AXES = ['prices', 'revenue', 'demand', 'hiring', 'incidents'] as const
 export type ReadoutAxis = (typeof READOUT_AXES)[number]
 
