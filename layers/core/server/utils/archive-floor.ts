@@ -2,7 +2,7 @@
 // Archive backfill reaches further back: what decides if a point-in-time
 // request (terminal-handler.ts › terminalPayloadAt) can be answered at all.
 // The archived rows themselves are read in layers/pricing/server/utils/terminal-price-archive.ts
-// (price lists) and layers/terminal/server/utils/terminal-archive.ts (job boards).
+// (price lists) and layers/talent/server/utils/terminal-hiring-archive.ts (job boards).
 
 import { and, eq, min } from 'drizzle-orm'
 

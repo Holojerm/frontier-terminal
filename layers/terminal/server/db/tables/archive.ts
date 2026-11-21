@@ -42,39 +42,6 @@ export const archiveCaptures = sqliteTable(
   (t) => [index('archive_captures_provider_idx').on(t.provider, t.status, t.captured_at)],
 )
 
-// One row per (capture, count): what an archived job board listed. Each
-// parsed capture writes one `board` row (open roles on the whole board) and,
-// when the capture lists every role with its department, one `department`
-// row per department, summing to the board row. `label` is the department as
-// the board printed it then; `department` is the live department it files
-// under (layers/terminal/server/pipeline/archive/hiring-eras.ts › liveDepartment), the label itself unless
-// the board's own id ties it to a live one. Counts only: no role, title or
-// person is stored. Never a live row: basis is always 'archived', and
-// nothing here reaches the hiring floor, the roll-up, the judge or a thesis.
-export const archivedHiring = sqliteTable(
-  'archived_hiring',
-  {
-    id: text('id').primaryKey(),
-    capture_id: text('capture_id').notNull(),
-    provider: text('provider').notNull(),
-    scope: text('scope').notNull(), // board | department
-    label: text('label'),
-    department_id: text('department_id'),
-    department: text('department'),
-    open_roles: integer('open_roles').notNull(),
-    captured_at: text('captured_at').notNull(),
-    original_url: text('original_url').notNull(),
-    basis: text('basis').notNull(), // 'archived'
-    ...provenance,
-  },
-  (t) => [
-    index('archived_hiring_provider_idx').on(t.provider, t.scope, t.captured_at),
-    index('archived_hiring_captured_id_idx').on(t.captured_at, t.id),
-  ],
-)
-
-export type ArchivedHiringRow = typeof archivedHiring.$inferSelect
-
 // One row per (capture, priced row): what an archived GPU rental price page
 // listed, in the shape the live gpu-* recipes store (recipe_observations).
 // key and payload are the live recipe's (gpu-prices.ts › gpuObservations),

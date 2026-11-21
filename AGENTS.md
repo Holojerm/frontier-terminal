@@ -78,6 +78,9 @@ restart. The rest are in [`.claude/docs/gotchas.md`](.claude/docs/gotchas.md).
 │                           # grid load, hardware prints, /compute and /power. Uses core only.
 ├── layers/pricing/         # Domain layer: price-list parsers and lanes, the class map and its drift
 │                           # check, archived prices and rate limits, /api/limits, /prices. Uses core only.
+├── layers/talent/          # Domain layer: careers parsers and lanes, the hiring floor and roll-up,
+│                           # archived boards, posted pay, listed-company hiring, /api/hiring, /api/pay.
+│                           # Uses core only.
 ├── layers/terminal/        # Fork-owned layer: every domain not yet split out (parsers, lanes, theses,
 │                           # queries, pages, components, tables, tests). Same folder shapes as the app
 │                           # (app/, server/, shared/, test/); auto-registered, not in layers.lock.json.

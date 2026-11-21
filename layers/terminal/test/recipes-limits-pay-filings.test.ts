@@ -13,7 +13,7 @@ import {
   extractInvesteeFacts,
   newestInstanceUrl,
 } from '../server/theses/recipes/investee-facts'
-import { PAY_RECIPES, anthropicBands, bandCells } from '../server/theses/recipes/pay-bands'
+import { PAY_RECIPES, anthropicBands, bandCells } from '../../talent/server/recipes/pay-bands'
 import {
   RATE_LIMIT_RECIPES,
   extractAnthropicLimits,

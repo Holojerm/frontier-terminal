@@ -1,8 +1,9 @@
 // The payloads behind the panels that show the thesis recipes audited on
 // 2026-11-04 (layers/terminal/server/utils/terminal-recipe-views.ts): enterprise
-// adoption, package downloads, coding-agent PRs, posted pay, and parents'
-// filing facts (rate limits are the pricing layer's shared/utils/limits.ts). Every figure carries the URL it was read from and
-// when, like the lab panels.
+// adoption, package downloads, coding-agent PRs, and parents' filing facts
+// (rate limits are the pricing layer's shared/utils/limits.ts, posted pay the
+// talent layer's shared/utils/pay.ts). Every figure carries the URL it was
+// read from and when, like the lab panels.
 
 import type { LabId, RecipeCitation } from './terminal-types'
 
@@ -92,31 +93,6 @@ export interface AdoptionData {
     share: string
     agent_prs: string
   }
-}
-
-export interface PayCell {
-  key: string
-  label: string
-  median: number
-  p25: number
-  p75: number
-  n: number
-  departments: readonly string[] | null
-  /** The cell's median at the previous stored reading, when there is one. */
-  previous: { date: string; median: number } | null
-}
-
-export interface PayData {
-  as_of: string | null
-  boards: {
-    recipe_id: string
-    lab: LabId
-    date: string
-    roles_on_board: number
-    cells: PayCell[]
-    source: RecipeCitation
-  }[]
-  caveat: string
 }
 
 export interface ParentFact {

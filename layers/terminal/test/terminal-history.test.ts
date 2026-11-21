@@ -14,7 +14,7 @@ import {
   queryContext,
   queryDataFreshness,
 } from '#layers/core/server/utils/terminal-db'
-import { queryHiringHistory } from '../server/utils/terminal-hiring'
+import { queryHiringHistory } from '../../talent/server/utils/terminal-hiring'
 import { queryReleases } from '../server/utils/terminal-releases'
 import { queryPriceHistory, queryPrices } from '../../pricing/server/utils/terminal-prices'
 import { priceHistory, sparkOf } from '../../pricing/server/utils/terminal-price-history'
@@ -22,10 +22,9 @@ import {
   compareWindow,
   dailyInstants,
   departmentSeries,
-  isBaseline,
   openRolesAt,
-  releaseEvents,
-} from '../server/utils/terminal-history'
+} from '../../talent/server/utils/terminal-hiring-history'
+import { isBaseline, releaseEvents } from '../server/utils/terminal-history'
 import { fixtureText, manifest } from '#layers/core/test/pipeline/fixtures'
 
 // The three history derivations, first as pure functions over a handful of

@@ -45,5 +45,21 @@ export const DOMAIN_LAYERS = {
       'app/utils/price-display.ts',
     ],
   },
-  terminal: { uses: ['core', 'compute', 'pricing'] },
+  talent: {
+    uses: ['core'],
+    public: [
+      // Its queries (open roles now and over time, the archived boards, posted pay, the
+      // department clusters), which the lab page, the tear sheet, the theses and the signals read.
+      'server/utils/',
+      // The hiring floor the shell's judge runner clamps and reports against.
+      'server/pipeline/hiring-floor.ts',
+      // The archive eras the shell's backfill rows read.
+      'server/pipeline/archive/hiring-eras.ts',
+      // Its parser manifest, which the shell's manifest imports.
+      'server/pipeline/parsers.manifest.ts',
+      // The archive trims the shell's lab, compare and tear-sheet pages apply.
+      'app/utils/hiring-archive.ts',
+    ],
+  },
+  terminal: { uses: ['core', 'compute', 'pricing', 'talent'] },
 } satisfies LayerTable

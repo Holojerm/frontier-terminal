@@ -1,5 +1,4 @@
 import {
-  AshbyJobRow,
   disclosureKey,
   disclosureTimelineKey,
   documentKey,
@@ -12,7 +11,6 @@ import {
   riskFactorsKey,
   sharesKey,
   statementKey,
-  jobKey,
   stableStringify,
   rankingKey,
   revenueKey,
@@ -35,18 +33,10 @@ import { collapse, toEntity } from '../../../core/server/pipeline/normalize'
 // "normalize" = DETERMINISTIC). Pure functions of their inputs: no clock,
 // no randomness, no iteration-order dependence.
 
-// Ashby and Greenhouse rows share one shape (jobRowCore in
-// contracts/parsers.ts); the inferred type of either schema covers both.
-export type JobRow = ReturnType<typeof AshbyJobRow.parse>
-
 // Canonical serialization: the same stableStringify that backs contentHash
 // (one algorithm), so contentHash(JSON.parse(payload)) === content_hash and
 // a change event is reproducible from the stored payloads alone.
 export { stableStringify }
-
-export function normalizeJob(row: JobRow, snapshotId: string): EntityRow {
-  return toEntity(jobKey(row.provider, row.job_id), 'job', row.provider, snapshotId, row)
-}
 
 // FilingRow carries no provider field: EDGAR filers (SPCX, MSFT, ...) are
 // whitelisted public companies, not the private big-4 labs, so the default
@@ -68,10 +58,6 @@ export function normalizeIncident(row: IncidentRow, snapshotId: string): EntityR
     snapshotId,
     row,
   )
-}
-
-export function normalizeJobs(rows: readonly JobRow[], snapshotId: string): EntityRow[] {
-  return collapse(rows.map((row) => normalizeJob(row, snapshotId)))
 }
 
 // A ranking row is one (UTC day, model) observation. Its provider is the

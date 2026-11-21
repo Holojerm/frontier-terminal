@@ -9,18 +9,12 @@ import {
   normalizeFilings,
   normalizeIncidents,
   normalizeOfferings,
-  normalizeJobs,
   normalizeProspectusDetails,
   normalizeRankings,
   normalizeRevenues,
 } from './normalize'
 import { parseOpenAiMisalignmentReport } from './parsers/disclosures/openai-misalignment-report'
 import { parseOpenAiMisalignmentReports } from './parsers/disclosures/openai-misalignment-reports'
-import { parseAnthropicGreenhouse } from './parsers/hiring/anthropic-greenhouse'
-import { parseGoogleCareers } from './parsers/hiring/google-careers'
-import { parseMistralAshby } from './parsers/hiring/mistral-ashby'
-import { parseOpenaiAshby } from './parsers/hiring/openai-ashby'
-import { parseXaiGreenhouse } from './parsers/hiring/xai-greenhouse'
 import { parseOpenRouterRankings } from './parsers/openrouter-rankings'
 import { COMPANYFACTS_SOURCES, parseEdgarCompanyfacts } from './parsers/sec/edgar-companyfacts'
 import { FTS_SOURCES, parseEdgarFts } from './parsers/sec/edgar-fts'
@@ -44,11 +38,11 @@ import { parseOpenaiStatus } from './parsers/status/openai-status'
 import { parseXaiStatus } from './parsers/status/xai-status'
 import { asOfFromDetail } from './as-of'
 
-// Every lane of the domains still in the shell: hiring, SEC filings and
-// revenue, status pages, disclosures and the OpenRouter rankings. The lane
-// contract is core's (layers/core/server/pipeline/lanes.ts); pricing's lanes
-// are in layers/pricing/server/pipeline/lanes.ts, and server/registries/lanes.ts
-// assembles both. The OpenRouter rankings feed has a lane: it is the source of
+// Every lane of the domains still in the shell: SEC filings and revenue,
+// status pages, disclosures and the OpenRouter rankings. The lane contract is
+// core's (layers/core/server/pipeline/lanes.ts); pricing's and talent's lanes
+// are in their layers' server/pipeline/lanes.ts, and server/registries/lanes.ts
+// assembles them. The OpenRouter rankings feed has a lane: it is the source of
 // record for the demand-share axis, held out as one aggregator's traffic
 // rather than the market's.
 
@@ -247,41 +241,6 @@ export const DERIVED_LANES: readonly { prefix: string; lane: Lane }[] = [
 ]
 
 export const LANES: Readonly<Record<string, Lane>> = {
-  'openai-ashby': set((text, { prov, snapshotId }) => ({
-    entities: normalizeJobs(parseOpenaiAshby(text, prov).rows, snapshotId),
-  })),
-  'mistral-ashby': set((text, { prov, snapshotId }) => ({
-    entities: normalizeJobs(parseMistralAshby(text, prov).rows, snapshotId),
-  })),
-  // The feed is Alphabet-wide; only DeepMind's roles become rows, and the
-  // rest are counted in the run note.
-  'google-careers': set((text, { prov, snapshotId }) => {
-    const { rows, skipped } = parseGoogleCareers(text, prov)
-    return {
-      entities: normalizeJobs(rows, snapshotId),
-      note: skipped ? `not DeepMind, skipped: ${skipped}` : undefined,
-    }
-  }),
-  'anthropic-greenhouse': {
-    sides: ['anthropic-greenhouse-departments'],
-    removals: 'set',
-    parse: (text, { prov, snapshotId, side }) => ({
-      entities: normalizeJobs(
-        parseAnthropicGreenhouse(text, side('anthropic-greenhouse-departments'), prov).rows,
-        snapshotId,
-      ),
-    }),
-  },
-  'xai-greenhouse': {
-    sides: ['xai-greenhouse-departments'],
-    removals: 'set',
-    parse: (text, { prov, snapshotId, side }) => ({
-      entities: normalizeJobs(
-        parseXaiGreenhouse(text, side('xai-greenhouse-departments'), prov).rows,
-        snapshotId,
-      ),
-    }),
-  },
   ...ftsLanes(),
   ...submissionsLanes(),
   ...companyfactsLanes(),
