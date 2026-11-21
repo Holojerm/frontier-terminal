@@ -149,6 +149,7 @@ describe('the table registry', () => {
       'entity_identifiers',
       'supplier_passages',
       'power_site_ties',
+      'signal_results',
     ])
     expect(exportTable('entities')).toBeNull()
     expect(exportTable('rankings_daily')).toBeNull()

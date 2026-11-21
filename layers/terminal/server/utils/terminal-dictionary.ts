@@ -469,6 +469,15 @@ export const TABLE_META: Readonly<Record<string, TableMeta>> = {
     feeds: [{ ids: ['sec-identifiers', 'openfigi-mapping'] }],
     licenseNote: 'figi and mic come from OpenFIGI. Everything else comes from SEC filings.',
   },
+  signal_results: {
+    grain: 'One row per series, ticker, horizon and sample.',
+    cadence: 'Recomputed whole once a day, after the US close.',
+    event: 'to_date',
+    knowledge: 'fetched_at',
+    start: 'Each series from its own first observation; prices from 2018-05-01 or the listing.',
+    joins: [{ column: 'ticker', to: 'entity_identifiers.ticker' }],
+    feeds: ['own'],
+  },
   entity_identifiers: {
     grain: 'One row per company we name.',
     cadence: 'By hand, when a company’s identifiers change.',

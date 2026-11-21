@@ -56,6 +56,11 @@ const GROUPS: NavGroup[] = [
         description: 'Press reports scored against later filings.',
       },
       {
+        label: 'Signals',
+        to: '/signals',
+        description: 'Each series tested against the stocks it should lead.',
+      },
+      {
         label: 'Exposure',
         to: '/exposure',
         description: 'Hyperscaler capex, backlog and lab stakes.',

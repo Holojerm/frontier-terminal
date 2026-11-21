@@ -242,6 +242,7 @@ describe('an empty store renders an honest empty state, never a throw', () => {
       'entity_identifiers',
       'supplier_passages',
       'power_site_ties',
+      'signal_results',
     ])
   })
 
