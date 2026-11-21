@@ -1,0 +1,929 @@
+<?xml version="1.0" encoding="utf-8"?>
+<rss version="2.0" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:content="http://purl.org/rss/1.0/modules/content/">
+    <channel>
+        <title>OpenAI status</title>
+        <link>https://status.openai.com/</link>
+        <description>OpenAI status page updates</description>
+        <lastBuildDate>Sat, 01 Mar 2025 10:04:13 GMT</lastBuildDate>
+        <docs>https://validator.w3.org/feed/docs/rss2.html</docs>
+        <generator>incident.io</generator>
+        <item>
+            <title><![CDATA[Errors affecting ChatGPT users]]></title>
+            <link>https://status.openai.com//incidents/01JN7J44A3ZKN67VETGV4321YF</link>
+            <guid>https://status.openai.com//incidents/01JN7J44A3ZKN67VETGV4321YF</guid>
+            <pubDate>Sat, 01 Mar 2025 05:31:20 GMT</pubDate>
+            <description><![CDATA[<b>Status: Resolved</b><br/><br/>All impacted services have now fully recovered. The detailed Root Cause Analysis (RCA) will be published in the next 5 business days.<br/><br/><b>Affected components</b>
+          <ul>
+          <li>Voice mode (Operational)</li>
+          </ul>]]></description>
+            <content:encoded><![CDATA[<b>Status: Resolved</b><br/><br/>All impacted services have now fully recovered. The detailed Root Cause Analysis (RCA) will be published in the next 5 business days.<br/><br/><b>Affected components</b>
+          <ul>
+          <li>Voice mode (Operational)</li>
+          </ul>]]></content:encoded>
+        </item>
+        <item>
+            <title><![CDATA[Some enterprise users unable to sign in]]></title>
+            <link>https://status.openai.com//incidents/01JN6VAJAZZ5K3SM3J2V3BVD92</link>
+            <guid>https://status.openai.com//incidents/01JN6VAJAZZ5K3SM3J2V3BVD92</guid>
+            <pubDate>Fri, 28 Feb 2025 20:19:22 GMT</pubDate>
+            <description><![CDATA[<b>Status: Resolved</b><br/><br/>This incident has been resolved.<br/><br/><b>Affected components</b>
+          <ul>
+          <li>Login (Operational)</li>
+          </ul>]]></description>
+            <content:encoded><![CDATA[<b>Status: Resolved</b><br/><br/>This incident has been resolved.<br/><br/><b>Affected components</b>
+          <ul>
+          <li>Login (Operational)</li>
+          </ul>]]></content:encoded>
+        </item>
+        <item>
+            <title><![CDATA[Advanced voice degradation for free users]]></title>
+            <link>https://status.openai.com//incidents/01JN57QEECS8ZR74FGNCYN77GR</link>
+            <guid>https://status.openai.com//incidents/01JN57QEECS8ZR74FGNCYN77GR</guid>
+            <pubDate>Fri, 28 Feb 2025 03:48:09 GMT</pubDate>
+            <description><![CDATA[<b>Status: Resolved</b><br/><br/>All impacted services have now fully recovered.<br/><br/><b>Affected components</b>
+          <ul>
+          <li>Voice mode (Operational)</li>
+          </ul>]]></description>
+            <content:encoded><![CDATA[<b>Status: Resolved</b><br/><br/>All impacted services have now fully recovered.<br/><br/><b>Affected components</b>
+          <ul>
+          <li>Voice mode (Operational)</li>
+          </ul>]]></content:encoded>
+        </item>
+        <item>
+            <title><![CDATA[Increased API error rates]]></title>
+            <link>https://status.openai.com//incidents/01JN2BQN4N618RG49BPMBDQGWZ</link>
+            <guid>https://status.openai.com//incidents/01JN2BQN4N618RG49BPMBDQGWZ</guid>
+            <pubDate>Thu, 27 Feb 2025 01:59:18 GMT</pubDate>
+            <description><![CDATA[<b>Status: Resolved</b><br/><br/>This incident has been resolved.]]></description>
+            <content:encoded><![CDATA[<b>Status: Resolved</b><br/><br/>This incident has been resolved.]]></content:encoded>
+        </item>
+        <item>
+            <title><![CDATA[Degraded performance for ChatGPT voice.]]></title>
+            <link>https://status.openai.com//incidents/01JN198VGPTNVWR5T31TXPZNC7</link>
+            <guid>https://status.openai.com//incidents/01JN198VGPTNVWR5T31TXPZNC7</guid>
+            <pubDate>Wed, 26 Feb 2025 17:20:35 GMT</pubDate>
+            <description><![CDATA[<b>Status: Resolved</b><br/><br/>This incident has been resolved.]]></description>
+            <content:encoded><![CDATA[<b>Status: Resolved</b><br/><br/>This incident has been resolved.]]></content:encoded>
+        </item>
+        <item>
+            <title><![CDATA[API performance degradation]]></title>
+            <link>https://status.openai.com//incidents/01JN198VRCDQBZ6CJ8ZHDAWHWM</link>
+            <guid>https://status.openai.com//incidents/01JN198VRCDQBZ6CJ8ZHDAWHWM</guid>
+            <pubDate>Wed, 26 Feb 2025 17:11:01 GMT</pubDate>
+            <description><![CDATA[<b>Status: Resolved</b><br/><br/>The incident has been resolved.]]></description>
+            <content:encoded><![CDATA[<b>Status: Resolved</b><br/><br/>The incident has been resolved.]]></content:encoded>
+        </item>
+        <item>
+            <title><![CDATA[Degraded performance for ChatGPT voice search.]]></title>
+            <link>https://status.openai.com//incidents/01JN0VEH8944W1XZHPFZSJQN5Q</link>
+            <guid>https://status.openai.com//incidents/01JN0VEH8944W1XZHPFZSJQN5Q</guid>
+            <pubDate>Wed, 26 Feb 2025 11:40:55 GMT</pubDate>
+            <description><![CDATA[<b>Status: Resolved</b><br/><br/>This incident has been resolved.]]></description>
+            <content:encoded><![CDATA[<b>Status: Resolved</b><br/><br/>This incident has been resolved.]]></content:encoded>
+        </item>
+        <item>
+            <title><![CDATA[Elevated errors in the API]]></title>
+            <link>https://status.openai.com//incidents/01JMYB3RQMX02YWQB44807QSS5</link>
+            <guid>https://status.openai.com//incidents/01JMYB3RQMX02YWQB44807QSS5</guid>
+            <pubDate>Sat, 22 Feb 2025 03:54:36 GMT</pubDate>
+            <description><![CDATA[<b>Status: Resolved</b><br/><br/>This incident has been resolved.]]></description>
+            <content:encoded><![CDATA[<b>Status: Resolved</b><br/><br/>This incident has been resolved.]]></content:encoded>
+        </item>
+        <item>
+            <title><![CDATA[Increased ChatGPT errors]]></title>
+            <link>https://status.openai.com//incidents/01JMYB3S719YPS58XGXCZ4HNVX</link>
+            <guid>https://status.openai.com//incidents/01JMYB3S719YPS58XGXCZ4HNVX</guid>
+            <pubDate>Sat, 22 Feb 2025 00:30:53 GMT</pubDate>
+            <description><![CDATA[<b>Status: Resolved</b><br/><br/>This incident has been resolved.]]></description>
+            <content:encoded><![CDATA[<b>Status: Resolved</b><br/><br/>This incident has been resolved.]]></content:encoded>
+        </item>
+        <item>
+            <title><![CDATA[Increased errors with Advanced Voice]]></title>
+            <link>https://status.openai.com//incidents/01JMYB3SEXS8WDR26H03CPZWBJ</link>
+            <guid>https://status.openai.com//incidents/01JMYB3SEXS8WDR26H03CPZWBJ</guid>
+            <pubDate>Fri, 21 Feb 2025 21:55:08 GMT</pubDate>
+            <description><![CDATA[<b>Status: Resolved</b><br/><br/>This incident has been resolved.]]></description>
+            <content:encoded><![CDATA[<b>Status: Resolved</b><br/><br/>This incident has been resolved.]]></content:encoded>
+        </item>
+        <item>
+            <title><![CDATA[Increased errors with Assistants API]]></title>
+            <link>https://status.openai.com//incidents/01JMYB3ST7Y2K3XBAHXWETW2MG</link>
+            <guid>https://status.openai.com//incidents/01JMYB3ST7Y2K3XBAHXWETW2MG</guid>
+            <pubDate>Fri, 21 Feb 2025 04:30:00 GMT</pubDate>
+            <description><![CDATA[<b>Status: Resolved</b><br/><br/>Assistants API Runs with image inputs and structured outputs were failing between 8:40pm PT Feb 20, 2025 and 11:10am PT Feb 21, 2025. This has now fully recovered.]]></description>
+            <content:encoded><![CDATA[<b>Status: Resolved</b><br/><br/>Assistants API Runs with image inputs and structured outputs were failing between 8:40pm PT Feb 20, 2025 and 11:10am PT Feb 21, 2025. This has now fully recovered.]]></content:encoded>
+        </item>
+        <item>
+            <title><![CDATA[Elevated errors for ChatGPT]]></title>
+            <link>https://status.openai.com//incidents/01JMYB3SYB2VWB9C5C2SJ559AV</link>
+            <guid>https://status.openai.com//incidents/01JMYB3SYB2VWB9C5C2SJ559AV</guid>
+            <pubDate>Wed, 19 Feb 2025 19:08:35 GMT</pubDate>
+            <description><![CDATA[<b>Status: Resolved</b><br/><br/>The issue has been fixed. ChatGPT is working as expected for all users.]]></description>
+            <content:encoded><![CDATA[<b>Status: Resolved</b><br/><br/>The issue has been fixed. ChatGPT is working as expected for all users.]]></content:encoded>
+        </item>
+        <item>
+            <title><![CDATA[Increased login issues]]></title>
+            <link>https://status.openai.com//incidents/01JMYB3TA5WK0AW2NZBTPBZZZ3</link>
+            <guid>https://status.openai.com//incidents/01JMYB3TA5WK0AW2NZBTPBZZZ3</guid>
+            <pubDate>Wed, 19 Feb 2025 00:26:00 GMT</pubDate>
+            <description><![CDATA[<b>Status: Resolved</b><br/><br/>This incident has been resolved.]]></description>
+            <content:encoded><![CDATA[<b>Status: Resolved</b><br/><br/>This incident has been resolved.]]></content:encoded>
+        </item>
+        <item>
+            <title><![CDATA[Elevated Errors on Assistants API Vision]]></title>
+            <link>https://status.openai.com//incidents/01JMYB3TMY8PGD0RK2V3TMRVXY</link>
+            <guid>https://status.openai.com//incidents/01JMYB3TMY8PGD0RK2V3TMRVXY</guid>
+            <pubDate>Fri, 14 Feb 2025 18:29:41 GMT</pubDate>
+            <description><![CDATA[<b>Status: Resolved</b><br/><br/>On February 14 at 09:45 am PT, this incident has been resolved.<br/><br/><b>Affected components</b>
+          <ul>
+          <li>Playground (Operational)</li>
+          </ul>]]></description>
+            <content:encoded><![CDATA[<b>Status: Resolved</b><br/><br/>On February 14 at 09:45 am PT, this incident has been resolved.<br/><br/><b>Affected components</b>
+          <ul>
+          <li>Playground (Operational)</li>
+          </ul>]]></content:encoded>
+        </item>
+        <item>
+            <title><![CDATA[Errors with a subset of API]]></title>
+            <link>https://status.openai.com//incidents/01JMYB3TWM0PDDBA1JZ7PHA6E1</link>
+            <guid>https://status.openai.com//incidents/01JMYB3TWM0PDDBA1JZ7PHA6E1</guid>
+            <pubDate>Wed, 12 Feb 2025 21:39:39 GMT</pubDate>
+            <description><![CDATA[<b>Status: Resolved</b><br/><br/>On February 12, between 11:50am - 12:25pm PST, some API users may have experienced a degraded performance for a subset of APIs. This issue has been resolved]]></description>
+            <content:encoded><![CDATA[<b>Status: Resolved</b><br/><br/>On February 12, between 11:50am - 12:25pm PST, some API users may have experienced a degraded performance for a subset of APIs. This issue has been resolved]]></content:encoded>
+        </item>
+        <item>
+            <title><![CDATA[Elevated Subscription Loading Errors]]></title>
+            <link>https://status.openai.com//incidents/01JMYB3V0BP4ZFPJE491KXJY64</link>
+            <guid>https://status.openai.com//incidents/01JMYB3V0BP4ZFPJE491KXJY64</guid>
+            <pubDate>Wed, 12 Feb 2025 13:12:25 GMT</pubDate>
+            <description><![CDATA[<b>Status: Resolved</b><br/><br/>This incident has been resolved.]]></description>
+            <content:encoded><![CDATA[<b>Status: Resolved</b><br/><br/>This incident has been resolved.]]></content:encoded>
+        </item>
+        <item>
+            <title><![CDATA[Increased errors with gpt-4o-2024-11-20]]></title>
+            <link>https://status.openai.com//incidents/01JMYB3V867YV56Y69QPJZA8AR</link>
+            <guid>https://status.openai.com//incidents/01JMYB3V867YV56Y69QPJZA8AR</guid>
+            <pubDate>Wed, 12 Feb 2025 03:53:45 GMT</pubDate>
+            <description><![CDATA[<b>Status: Resolved</b><br/><br/>The model has recovered and the incident is resolved.]]></description>
+            <content:encoded><![CDATA[<b>Status: Resolved</b><br/><br/>The model has recovered and the incident is resolved.]]></content:encoded>
+        </item>
+        <item>
+            <title><![CDATA[Elevated errors when using Audio Transcription, Image Generation, and Realtime API]]></title>
+            <link>https://status.openai.com//incidents/01JMYB3VK6RJJ7ADNFQXV7MQH4</link>
+            <guid>https://status.openai.com//incidents/01JMYB3VK6RJJ7ADNFQXV7MQH4</guid>
+            <pubDate>Tue, 11 Feb 2025 00:15:50 GMT</pubDate>
+            <description><![CDATA[<b>Status: Resolved</b><br/><br/>On February 10 around 15:58 PT, This incident has been resolved.]]></description>
+            <content:encoded><![CDATA[<b>Status: Resolved</b><br/><br/>On February 10 around 15:58 PT, This incident has been resolved.]]></content:encoded>
+        </item>
+        <item>
+            <title><![CDATA[Elevated errors on ChatGPT vision]]></title>
+            <link>https://status.openai.com//incidents/01JMYB3VX7H69XZES36PSC5RQN</link>
+            <guid>https://status.openai.com//incidents/01JMYB3VX7H69XZES36PSC5RQN</guid>
+            <pubDate>Mon, 10 Feb 2025 17:52:32 GMT</pubDate>
+            <description><![CDATA[<b>Status: Resolved</b><br/><br/>On February 10 at 08:06 am PT, This incident has been resolved]]></description>
+            <content:encoded><![CDATA[<b>Status: Resolved</b><br/><br/>On February 10 at 08:06 am PT, This incident has been resolved]]></content:encoded>
+        </item>
+        <item>
+            <title><![CDATA[Elevated errors on ChatGPT and API vision traffic]]></title>
+            <link>https://status.openai.com//incidents/01JMYB3W3RRK1JT9PTPNSJJ0S0</link>
+            <guid>https://status.openai.com//incidents/01JMYB3W3RRK1JT9PTPNSJJ0S0</guid>
+            <pubDate>Fri, 07 Feb 2025 18:10:16 GMT</pubDate>
+            <description><![CDATA[<b>Status: Resolved</b><br/><br/>This incident has been resolved.]]></description>
+            <content:encoded><![CDATA[<b>Status: Resolved</b><br/><br/>This incident has been resolved.]]></content:encoded>
+        </item>
+        <item>
+            <title><![CDATA[Increased errors for ChatGPT, Sora, and API]]></title>
+            <link>https://status.openai.com//incidents/01JMYB3WAT6KR2KE7SRHVXVQP6</link>
+            <guid>https://status.openai.com//incidents/01JMYB3WAT6KR2KE7SRHVXVQP6</guid>
+            <pubDate>Thu, 06 Feb 2025 04:37:53 GMT</pubDate>
+            <description><![CDATA[<b>Status: Resolved</b><br/><br/>This incident has been resolved.]]></description>
+            <content:encoded><![CDATA[<b>Status: Resolved</b><br/><br/>This incident has been resolved.]]></content:encoded>
+        </item>
+        <item>
+            <title><![CDATA[Elevated Batch API batch creation errors starting from 4:40pm yesterday]]></title>
+            <link>https://status.openai.com//incidents/01JMYB3WP9YZWMX5RFD3CA67FC</link>
+            <guid>https://status.openai.com//incidents/01JMYB3WP9YZWMX5RFD3CA67FC</guid>
+            <pubDate>Wed, 05 Feb 2025 21:14:34 GMT</pubDate>
+            <description><![CDATA[<b>Status: Resolved</b><br/><br/>This incident has been resolved.]]></description>
+            <content:encoded><![CDATA[<b>Status: Resolved</b><br/><br/>This incident has been resolved.]]></content:encoded>
+        </item>
+        <item>
+            <title><![CDATA[Elevated error rate in the API]]></title>
+            <link>https://status.openai.com//incidents/01JMYB3WZTVJYZ6NPG3ZF2TJFW</link>
+            <guid>https://status.openai.com//incidents/01JMYB3WZTVJYZ6NPG3ZF2TJFW</guid>
+            <pubDate>Tue, 04 Feb 2025 23:54:28 GMT</pubDate>
+            <description><![CDATA[<b>Status: Resolved</b><br/><br/>This incident has been resolved.]]></description>
+            <content:encoded><![CDATA[<b>Status: Resolved</b><br/><br/>This incident has been resolved.]]></content:encoded>
+        </item>
+        <item>
+            <title><![CDATA[ChatGPT response times slower than normal.]]></title>
+            <link>https://status.openai.com//incidents/01JMYB3X7Y9EC90E6NT7K00RV6</link>
+            <guid>https://status.openai.com//incidents/01JMYB3X7Y9EC90E6NT7K00RV6</guid>
+            <pubDate>Tue, 04 Feb 2025 19:57:28 GMT</pubDate>
+            <description><![CDATA[<b>Status: Resolved</b><br/><br/>This incident has been resolved.]]></description>
+            <content:encoded><![CDATA[<b>Status: Resolved</b><br/><br/>This incident has been resolved.]]></content:encoded>
+        </item>
+        <item>
+            <title><![CDATA[ChatGPT issues connecting Voice on Web]]></title>
+            <link>https://status.openai.com//incidents/01JMYB3XJQVE21NEKFW88VBTHH</link>
+            <guid>https://status.openai.com//incidents/01JMYB3XJQVE21NEKFW88VBTHH</guid>
+            <pubDate>Tue, 04 Feb 2025 19:53:36 GMT</pubDate>
+            <description><![CDATA[<b>Status: Resolved</b><br/><br/>This incident has been resolved.]]></description>
+            <content:encoded><![CDATA[<b>Status: Resolved</b><br/><br/>This incident has been resolved.]]></content:encoded>
+        </item>
+        <item>
+            <title><![CDATA[Elevated Errors in ChatGPT]]></title>
+            <link>https://status.openai.com//incidents/01JMYB3XS58K2TY6RDP13M7DWN</link>
+            <guid>https://status.openai.com//incidents/01JMYB3XS58K2TY6RDP13M7DWN</guid>
+            <pubDate>Tue, 04 Feb 2025 00:09:34 GMT</pubDate>
+            <description><![CDATA[<b>Status: Resolved</b><br/><br/>This incident has been resolved.]]></description>
+            <content:encoded><![CDATA[<b>Status: Resolved</b><br/><br/>This incident has been resolved.]]></content:encoded>
+        </item>
+        <item>
+            <title><![CDATA[Degraded performance on conversations with Operator]]></title>
+            <link>https://status.openai.com//incidents/01JMYB3Y1TMY2A3MH8YDP0KNDR</link>
+            <guid>https://status.openai.com//incidents/01JMYB3Y1TMY2A3MH8YDP0KNDR</guid>
+            <pubDate>Sat, 01 Feb 2025 01:38:58 GMT</pubDate>
+            <description><![CDATA[<b>Status: Resolved</b><br/><br/>This incident has been resolved.]]></description>
+            <content:encoded><![CDATA[<b>Status: Resolved</b><br/><br/>This incident has been resolved.]]></content:encoded>
+        </item>
+        <item>
+            <title><![CDATA[Some users may see the error "Content failed to load" when selecting a project]]></title>
+            <link>https://status.openai.com//incidents/01JMYB3YCSC6CHQ4WW9H5CCJW4</link>
+            <guid>https://status.openai.com//incidents/01JMYB3YCSC6CHQ4WW9H5CCJW4</guid>
+            <pubDate>Fri, 31 Jan 2025 22:13:01 GMT</pubDate>
+            <description><![CDATA[<b>Status: Resolved</b><br/><br/>This incident has been resolved.]]></description>
+            <content:encoded><![CDATA[<b>Status: Resolved</b><br/><br/>This incident has been resolved.]]></content:encoded>
+        </item>
+        <item>
+            <title><![CDATA[Some users may experience "Invalid Conversation Body" when using Custom GPTs]]></title>
+            <link>https://status.openai.com//incidents/01JMYB3YQH6ZRZ82DBWBZZHCP8</link>
+            <guid>https://status.openai.com//incidents/01JMYB3YQH6ZRZ82DBWBZZHCP8</guid>
+            <pubDate>Fri, 31 Jan 2025 22:12:50 GMT</pubDate>
+            <description><![CDATA[<b>Status: Resolved</b><br/><br/>This incident has been resolved.]]></description>
+            <content:encoded><![CDATA[<b>Status: Resolved</b><br/><br/>This incident has been resolved.]]></content:encoded>
+        </item>
+        <item>
+            <title><![CDATA[Elevated errors for ChatGPT]]></title>
+            <link>https://status.openai.com//incidents/01JMYB3Z2AEFYXSG2N9YPAQB3J</link>
+            <guid>https://status.openai.com//incidents/01JMYB3Z2AEFYXSG2N9YPAQB3J</guid>
+            <pubDate>Fri, 31 Jan 2025 03:07:36 GMT</pubDate>
+            <description><![CDATA[<b>Status: Resolved</b><br/><br/>This incident has been resolved.]]></description>
+            <content:encoded><![CDATA[<b>Status: Resolved</b><br/><br/>This incident has been resolved.]]></content:encoded>
+        </item>
+        <item>
+            <title><![CDATA[Increased errors for ChatGPT]]></title>
+            <link>https://status.openai.com//incidents/01JMYB40J9DVR9D13RJN1W5SWV</link>
+            <guid>https://status.openai.com//incidents/01JMYB40J9DVR9D13RJN1W5SWV</guid>
+            <pubDate>Thu, 30 Jan 2025 15:57:44 GMT</pubDate>
+            <description><![CDATA[<b>Status: Resolved</b><br/><br/>Impact
+
+Between 3:30am PT and 7:08am PT chatgpt.com: http://chatgpt.com and a small number of APIs experienced elevated error rates.
+
+‌
+
+Root Cause & Remediation
+
+The root cause of the initial issue was a failure with Cosmos DB in ChatGPT. Our service provider recovered the affected DBs at 4:25am PT.
+
+‌
+
+The second issue was caused by web service pods crash-looping due to their health checks failing, marking pods as unhealthy and subsequently not having enough resources available to service all the requests to the web layer. At this time we believed this was due to users retrying requests. These issues recovered after we implemented a fix to the web server’s health checking logic.
+
+‌
+
+Prevention
+
+• We will make a series of changes to the web systems to more gracefully degrade when they fail including concurrency control and better load shedding.
+
+• A larger investment in making our DB layer more resilient to service provider outages is already underway.
+
+‌
+
+We know that extended outages can impact your products, businesses, and lives. We will prioritize the preventative measures outlined above to continue improving our reliability.]]></description>
+            <content:encoded><![CDATA[<b>Status: Resolved</b><br/><br/>Impact
+
+Between 3:30am PT and 7:08am PT chatgpt.com: http://chatgpt.com and a small number of APIs experienced elevated error rates.
+
+‌
+
+Root Cause & Remediation
+
+The root cause of the initial issue was a failure with Cosmos DB in ChatGPT. Our service provider recovered the affected DBs at 4:25am PT.
+
+‌
+
+The second issue was caused by web service pods crash-looping due to their health checks failing, marking pods as unhealthy and subsequently not having enough resources available to service all the requests to the web layer. At this time we believed this was due to users retrying requests. These issues recovered after we implemented a fix to the web server’s health checking logic.
+
+‌
+
+Prevention
+
+• We will make a series of changes to the web systems to more gracefully degrade when they fail including concurrency control and better load shedding.
+
+• A larger investment in making our DB layer more resilient to service provider outages is already underway.
+
+‌
+
+We know that extended outages can impact your products, businesses, and lives. We will prioritize the preventative measures outlined above to continue improving our reliability.]]></content:encoded>
+        </item>
+        <item>
+            <title><![CDATA[Errors when logging in to ChatGPT Web with SSO]]></title>
+            <link>https://status.openai.com//incidents/01JMYB3ZC5W0BXQ7PMXMKZ2RA6</link>
+            <guid>https://status.openai.com//incidents/01JMYB3ZC5W0BXQ7PMXMKZ2RA6</guid>
+            <pubDate>Wed, 29 Jan 2025 22:16:52 GMT</pubDate>
+            <description><![CDATA[<b>Status: Resolved</b><br/><br/>The issue has been resolved.]]></description>
+            <content:encoded><![CDATA[<b>Status: Resolved</b><br/><br/>The issue has been resolved.]]></content:encoded>
+        </item>
+        <item>
+            <title><![CDATA[Elevated errors for ChatGPT]]></title>
+            <link>https://status.openai.com//incidents/01JMYB3ZPAWQZRH7DHSJEHHR4X</link>
+            <guid>https://status.openai.com//incidents/01JMYB3ZPAWQZRH7DHSJEHHR4X</guid>
+            <pubDate>Wed, 29 Jan 2025 20:47:35 GMT</pubDate>
+            <description><![CDATA[<b>Status: Resolved</b><br/><br/>The issue has been resolved.
+
+From 12:01 PM - 12:29 PM PT, users may have experienced an error when using ChatGPT in web and mobile versions.]]></description>
+            <content:encoded><![CDATA[<b>Status: Resolved</b><br/><br/>The issue has been resolved.
+
+From 12:01 PM - 12:29 PM PT, users may have experienced an error when using ChatGPT in web and mobile versions.]]></content:encoded>
+        </item>
+        <item>
+            <title><![CDATA[Sora video generation experiencing errors]]></title>
+            <link>https://status.openai.com//incidents/01JMYB40262Y022A0WVXSZ5WY1</link>
+            <guid>https://status.openai.com//incidents/01JMYB40262Y022A0WVXSZ5WY1</guid>
+            <pubDate>Tue, 28 Jan 2025 20:01:50 GMT</pubDate>
+            <description><![CDATA[<b>Status: Resolved</b><br/><br/>The issue has been resolved.]]></description>
+            <content:encoded><![CDATA[<b>Status: Resolved</b><br/><br/>The issue has been resolved.]]></content:encoded>
+        </item>
+        <item>
+            <title><![CDATA[Elevated Error Rate for ChatGPT and API]]></title>
+            <link>https://status.openai.com//incidents/01JMYB413Z6ZGYTBD3J1M4JNQR</link>
+            <guid>https://status.openai.com//incidents/01JMYB413Z6ZGYTBD3J1M4JNQR</guid>
+            <pubDate>Thu, 23 Jan 2025 12:43:57 GMT</pubDate>
+            <description><![CDATA[<b>Status: Resolved</b><br/><br/>This issue has now been resolved. Between 3:33 AM and 4:23 AM PST, customers experienced elevated error rates on ChatGPT and the API.]]></description>
+            <content:encoded><![CDATA[<b>Status: Resolved</b><br/><br/>This issue has now been resolved. Between 3:33 AM and 4:23 AM PST, customers experienced elevated error rates on ChatGPT and the API.]]></content:encoded>
+        </item>
+        <item>
+            <title><![CDATA[Some users may experience login issues on platform.openai.com]]></title>
+            <link>https://status.openai.com//incidents/01JMYB41KXQN00YCQFJJN9QGVX</link>
+            <guid>https://status.openai.com//incidents/01JMYB41KXQN00YCQFJJN9QGVX</guid>
+            <pubDate>Thu, 23 Jan 2025 01:15:52 GMT</pubDate>
+            <description><![CDATA[<b>Status: Resolved</b><br/><br/>This incident as been resolved.]]></description>
+            <content:encoded><![CDATA[<b>Status: Resolved</b><br/><br/>This incident as been resolved.]]></content:encoded>
+        </item>
+        <item>
+            <title><![CDATA[File upload failing for API and ChatGPT users]]></title>
+            <link>https://status.openai.com//incidents/01JMYB41XHH1K3XTWEARNK56JW</link>
+            <guid>https://status.openai.com//incidents/01JMYB41XHH1K3XTWEARNK56JW</guid>
+            <pubDate>Wed, 22 Jan 2025 19:08:24 GMT</pubDate>
+            <description><![CDATA[<b>Status: Resolved</b><br/><br/>This incident has been resolved.]]></description>
+            <content:encoded><![CDATA[<b>Status: Resolved</b><br/><br/>This incident has been resolved.]]></content:encoded>
+        </item>
+        <item>
+            <title><![CDATA[High error rates for Embeddings API]]></title>
+            <link>https://status.openai.com//incidents/01JMYB426YNQJCT80QX8PVN1VJ</link>
+            <guid>https://status.openai.com//incidents/01JMYB426YNQJCT80QX8PVN1VJ</guid>
+            <pubDate>Tue, 21 Jan 2025 23:58:14 GMT</pubDate>
+            <description><![CDATA[<b>Status: Resolved</b><br/><br/>This incident has been resolved.]]></description>
+            <content:encoded><![CDATA[<b>Status: Resolved</b><br/><br/>This incident has been resolved.]]></content:encoded>
+        </item>
+        <item>
+            <title><![CDATA[High error rate for 4o and 4o-mini models]]></title>
+            <link>https://status.openai.com//incidents/01JMYB42NDBT26JRZADT5TK37R</link>
+            <guid>https://status.openai.com//incidents/01JMYB42NDBT26JRZADT5TK37R</guid>
+            <pubDate>Mon, 20 Jan 2025 04:15:04 GMT</pubDate>
+            <description><![CDATA[<b>Status: Resolved</b><br/><br/>Between 6:55 PM and 8:05 PM PST users were experiencing elevated error rates with the API on 4o and 4o-mini models. We rolled out a fix and it is now resolved.]]></description>
+            <content:encoded><![CDATA[<b>Status: Resolved</b><br/><br/>Between 6:55 PM and 8:05 PM PST users were experiencing elevated error rates with the API on 4o and 4o-mini models. We rolled out a fix and it is now resolved.]]></content:encoded>
+        </item>
+        <item>
+            <title><![CDATA[High error rate for Dall-e]]></title>
+            <link>https://status.openai.com//incidents/01JMYB42XDVANC4F8BW66BG631</link>
+            <guid>https://status.openai.com//incidents/01JMYB42XDVANC4F8BW66BG631</guid>
+            <pubDate>Sun, 19 Jan 2025 23:34:40 GMT</pubDate>
+            <description><![CDATA[<b>Status: Resolved</b><br/><br/>This incident has been resolved.]]></description>
+            <content:encoded><![CDATA[<b>Status: Resolved</b><br/><br/>This incident has been resolved.]]></content:encoded>
+        </item>
+        <item>
+            <title><![CDATA[Issues impacting answers, file uploads, and file retrieval for ChatGPT.]]></title>
+            <link>https://status.openai.com//incidents/01JMYB4344ET1YRN2FDNBYTTB3</link>
+            <guid>https://status.openai.com//incidents/01JMYB4344ET1YRN2FDNBYTTB3</guid>
+            <pubDate>Wed, 15 Jan 2025 18:40:41 GMT</pubDate>
+            <description><![CDATA[<b>Status: Resolved</b><br/><br/>This issue has been resolved.]]></description>
+            <content:encoded><![CDATA[<b>Status: Resolved</b><br/><br/>This issue has been resolved.]]></content:encoded>
+        </item>
+        <item>
+            <title><![CDATA[ChatGPT is unable to browse the web for up-to-date information.]]></title>
+            <link>https://status.openai.com//incidents/01JMYB43G7J2EQTHQTSBSEG1A5</link>
+            <guid>https://status.openai.com//incidents/01JMYB43G7J2EQTHQTSBSEG1A5</guid>
+            <pubDate>Tue, 14 Jan 2025 11:20:42 GMT</pubDate>
+            <description><![CDATA[<b>Status: Resolved</b><br/><br/>This incident has been resolved.]]></description>
+            <content:encoded><![CDATA[<b>Status: Resolved</b><br/><br/>This incident has been resolved.]]></content:encoded>
+        </item>
+        <item>
+            <title><![CDATA[Access issues logging in with SSO for ChatGPT]]></title>
+            <link>https://status.openai.com//incidents/01JMYB43S6707FC40XJ093PQN3</link>
+            <guid>https://status.openai.com//incidents/01JMYB43S6707FC40XJ093PQN3</guid>
+            <pubDate>Mon, 13 Jan 2025 20:06:58 GMT</pubDate>
+            <description><![CDATA[<b>Status: Resolved</b><br/><br/>The issue has been resolved.]]></description>
+            <content:encoded><![CDATA[<b>Status: Resolved</b><br/><br/>The issue has been resolved.]]></content:encoded>
+        </item>
+        <item>
+            <title><![CDATA[High error rates for Vision API on gpt-4o-2024-05-13 model]]></title>
+            <link>https://status.openai.com//incidents/01JMYB4476BGQR1CYE977F6NYE</link>
+            <guid>https://status.openai.com//incidents/01JMYB4476BGQR1CYE977F6NYE</guid>
+            <pubDate>Wed, 08 Jan 2025 21:05:16 GMT</pubDate>
+            <description><![CDATA[<b>Status: Resolved</b><br/><br/>Between 11:33 AM and 11:56 AM PST users were experiencing elevated error rates with Vision API for the gpt-4o-2025-05-13 model. We rolled out a fix and this issue is now resolved.]]></description>
+            <content:encoded><![CDATA[<b>Status: Resolved</b><br/><br/>Between 11:33 AM and 11:56 AM PST users were experiencing elevated error rates with Vision API for the gpt-4o-2025-05-13 model. We rolled out a fix and this issue is now resolved.]]></content:encoded>
+        </item>
+        <item>
+            <title><![CDATA[High error rates for ChatGPT, APIs, and Sora]]></title>
+            <link>https://status.openai.com//incidents/01JMYB44RFAHDFT1HWDPD0M2N5</link>
+            <guid>https://status.openai.com//incidents/01JMYB44RFAHDFT1HWDPD0M2N5</guid>
+            <pubDate>Thu, 02 Jan 2025 23:28:55 GMT</pubDate>
+            <description><![CDATA[<b>Status: Resolved</b><br/><br/>Impact
+
+Starting at 10:40am on December 26th, 2024, multiple OpenAI products saw degraded availability. ChatGPT, Sora video creation, and many APIs \(agents, realtime speech, batch, DALL-E\) saw > 90% error rates during the incident. The text completions API was unaffected. All systems fully recovered by 3:11 PM except ChatGPT, which fully recovered by 6:20 PM.
+
+Root Cause & Remediation
+
+The root cause was a power failure in a cloud provider data center which impacted critical services such as databases in that region for an extended period.
+
+OpenAI’s databases are globally replicated but region-wide failover currently requires manual intervention from the hosting cloud provider. We were able to work with the cloud provider to fail over some databases to other regions but our scale elongated the mitigation time. We kicked off several workstreams to explore workarounds; final recovery only came when the cloud provider fully recovered the region.
+
+Prevention
+
+In the coming weeks, we will embark on a major infrastructure initiative to ensure our systems are resilient to an extended outage in any region of any of our cloud providers by adding a layer of indirection under our control in between our applications and our cloud databases. This will allow significantly faster failover.
+
+We know that extended outages can impact your products, businesses, and lives. We will prioritize the preventative measures outlined above to continue improving our reliability.]]></description>
+            <content:encoded><![CDATA[<b>Status: Resolved</b><br/><br/>Impact
+
+Starting at 10:40am on December 26th, 2024, multiple OpenAI products saw degraded availability. ChatGPT, Sora video creation, and many APIs \(agents, realtime speech, batch, DALL-E\) saw > 90% error rates during the incident. The text completions API was unaffected. All systems fully recovered by 3:11 PM except ChatGPT, which fully recovered by 6:20 PM.
+
+Root Cause & Remediation
+
+The root cause was a power failure in a cloud provider data center which impacted critical services such as databases in that region for an extended period.
+
+OpenAI’s databases are globally replicated but region-wide failover currently requires manual intervention from the hosting cloud provider. We were able to work with the cloud provider to fail over some databases to other regions but our scale elongated the mitigation time. We kicked off several workstreams to explore workarounds; final recovery only came when the cloud provider fully recovered the region.
+
+Prevention
+
+In the coming weeks, we will embark on a major infrastructure initiative to ensure our systems are resilient to an extended outage in any region of any of our cloud providers by adding a layer of indirection under our control in between our applications and our cloud databases. This will allow significantly faster failover.
+
+We know that extended outages can impact your products, businesses, and lives. We will prioritize the preventative measures outlined above to continue improving our reliability.]]></content:encoded>
+        </item>
+        <item>
+            <title><![CDATA[Sora video creation is seeing high error rates]]></title>
+            <link>https://status.openai.com//incidents/01JMYB44FM53NYW8PQP1TPKXP2</link>
+            <guid>https://status.openai.com//incidents/01JMYB44FM53NYW8PQP1TPKXP2</guid>
+            <pubDate>Fri, 27 Dec 2024 06:36:51 GMT</pubDate>
+            <description><![CDATA[<b>Status: Resolved</b><br/><br/>Between 7:45PM and 10:05PM PST users were experiencing periodic errors in queueing new video generations on Sora. We rolled out a fix and this issue is now resolved.]]></description>
+            <content:encoded><![CDATA[<b>Status: Resolved</b><br/><br/>Between 7:45PM and 10:05PM PST users were experiencing periodic errors in queueing new video generations on Sora. We rolled out a fix and this issue is now resolved.]]></content:encoded>
+        </item>
+        <item>
+            <title><![CDATA[High error rate for Dall-e & Moderation API]]></title>
+            <link>https://status.openai.com//incidents/01JMYB45M3FZJT8AFM94T32PCH</link>
+            <guid>https://status.openai.com//incidents/01JMYB45M3FZJT8AFM94T32PCH</guid>
+            <pubDate>Fri, 20 Dec 2024 19:30:22 GMT</pubDate>
+            <description><![CDATA[<b>Status: Resolved</b><br/><br/>Between 11:06 AM and 11:26 AM PST users were experiencing elevated error rates with Dall-e and Moderation API. We rolled out a fix and this issue is now resolved.]]></description>
+            <content:encoded><![CDATA[<b>Status: Resolved</b><br/><br/>Between 11:06 AM and 11:26 AM PST users were experiencing elevated error rates with Dall-e and Moderation API. We rolled out a fix and this issue is now resolved.]]></content:encoded>
+        </item>
+        <item>
+            <title><![CDATA[Invalid Structured Output Responses]]></title>
+            <link>https://status.openai.com//incidents/01JMYB45VTRG3SCWP7HSAK2ECS</link>
+            <guid>https://status.openai.com//incidents/01JMYB45VTRG3SCWP7HSAK2ECS</guid>
+            <pubDate>Thu, 19 Dec 2024 21:56:46 GMT</pubDate>
+            <description><![CDATA[<b>Status: Resolved</b><br/><br/>Between 12:26 PM and 01:52 PM PST users were experiencing invalid responses with structured outputs. We rolled out a fix and this issue is now resolved.]]></description>
+            <content:encoded><![CDATA[<b>Status: Resolved</b><br/><br/>Between 12:26 PM and 01:52 PM PST users were experiencing invalid responses with structured outputs. We rolled out a fix and this issue is now resolved.]]></content:encoded>
+        </item>
+        <item>
+            <title><![CDATA[Some users may not receive verification emails for login or signup with username and password.]]></title>
+            <link>https://status.openai.com//incidents/01JMYB462EG871FT18781ZYM7J</link>
+            <guid>https://status.openai.com//incidents/01JMYB462EG871FT18781ZYM7J</guid>
+            <pubDate>Thu, 19 Dec 2024 20:30:17 GMT</pubDate>
+            <description><![CDATA[<b>Status: Resolved</b><br/><br/>Between 7:06 AM and 12:12pm PST, users were unable to signup using their username and password. This was an outage caused by a third-party system and the issue is now fully resolved.]]></description>
+            <content:encoded><![CDATA[<b>Status: Resolved</b><br/><br/>Between 7:06 AM and 12:12pm PST, users were unable to signup using their username and password. This was an outage caused by a third-party system and the issue is now fully resolved.]]></content:encoded>
+        </item>
+        <item>
+            <title><![CDATA[Degraded Performance in ChatGPT Advanced Voice Mode]]></title>
+            <link>https://status.openai.com//incidents/01JMYB46K18PWX78JABZB9GCQ8</link>
+            <guid>https://status.openai.com//incidents/01JMYB46K18PWX78JABZB9GCQ8</guid>
+            <pubDate>Tue, 17 Dec 2024 23:23:09 GMT</pubDate>
+            <description><![CDATA[<b>Status: Resolved</b><br/><br/>Between 12:37 PM and 03:17 PM PST some users experienced degraded performance on Advanced Voice Mode. The impact was that these conversations were not appearing in the conversation history. We have now mitigated the issue and recovered.]]></description>
+            <content:encoded><![CDATA[<b>Status: Resolved</b><br/><br/>Between 12:37 PM and 03:17 PM PST some users experienced degraded performance on Advanced Voice Mode. The impact was that these conversations were not appearing in the conversation history. We have now mitigated the issue and recovered.]]></content:encoded>
+        </item>
+        <item>
+            <title><![CDATA[High error rate for fine-tuning API]]></title>
+            <link>https://status.openai.com//incidents/01JMYB46ZDGCEFR6YM2D4GXK5W</link>
+            <guid>https://status.openai.com//incidents/01JMYB46ZDGCEFR6YM2D4GXK5W</guid>
+            <pubDate>Mon, 16 Dec 2024 22:58:35 GMT</pubDate>
+            <description><![CDATA[<b>Status: Resolved</b><br/><br/>This incident has been resolved.]]></description>
+            <content:encoded><![CDATA[<b>Status: Resolved</b><br/><br/>This incident has been resolved.]]></content:encoded>
+        </item>
+        <item>
+            <title><![CDATA[Degraded Performance in Vision API]]></title>
+            <link>https://status.openai.com//incidents/01JMYB479RANFHDV042GX4YNQZ</link>
+            <guid>https://status.openai.com//incidents/01JMYB479RANFHDV042GX4YNQZ</guid>
+            <pubDate>Sat, 14 Dec 2024 00:03:35 GMT</pubDate>
+            <description><![CDATA[<b>Status: Resolved</b><br/><br/>The issue has been resolved.
+
+Starting at 6:35 AM PT, some customers experienced elevated error rates in the Vision API. A fix was implemented, and the issue was fully resolved at 3:58 PM PT.]]></description>
+            <content:encoded><![CDATA[<b>Status: Resolved</b><br/><br/>The issue has been resolved.
+
+Starting at 6:35 AM PT, some customers experienced elevated error rates in the Vision API. A fix was implemented, and the issue was fully resolved at 3:58 PM PT.]]></content:encoded>
+        </item>
+        <item>
+            <title><![CDATA[API & ChatGPT Performance Degradation]]></title>
+            <link>https://status.openai.com//incidents/01JMYB4A62XNXSAHAY8ZGQAAKD</link>
+            <guid>https://status.openai.com//incidents/01JMYB4A62XNXSAHAY8ZGQAAKD</guid>
+            <pubDate>Fri, 13 Dec 2024 23:42:48 GMT</pubDate>
+            <description><![CDATA[<b>Status: Resolved</b><br/><br/>On December 4th, 2024 from 15:48 PT to 15:52 PT, 100% of API requests experienced HTTP 530 errors due to a misconfiguration in the global load balancer. This was promptly corrected and connectivity restored by 15:52 PT.
+
+Later that day, from 16:07 PT to 17:37 PT, a different issue was surfaced by an upgrade of the DNS cache system. Consequently the OpenAI identity system lost connectivity to the DNS cache. As a result, user requests appeared to stall for 30 seconds. After the 30 second DNS lookup timeout the Identity system fell back to a cached IP and completed requests successfully. These elevated latencies led to 45% of API requests experiencing 499 errors, which appeared as client-side cancellations. In the ChatGPT interfaces this latency manifested itself as a 30 second "wait time" after which requests were completed.
+
+The first wave of this incident, caused by a global load balancer misconfiguration, was mitigated by applying the correct configuration.
+
+The second wave was mitigated by temporarily switching to an alternative system.
+
+• To safeguard against global load balancer \(Cloudflare\) misconfigurations, we collaborated with Cloudflare to investigate the issue and implemented a solution to prevent a single pool from impacting all API traffic. The default and fallback pools are now distinct, and this change has already been rolled out to ensure seamless traffic handling.
+
+• The way that our identity systems integrated with and relied on our DNS cache here was found to be unnecessary and was removed.
+
+• We are continuing to improve our chaos test system, which will aim to surface DNS cache dependency issues in a controlled way.
+
+We know that outages affect our customers' products and businesses. While we came up short here, we are committed to preventing such incidents in the future and improving our service reliability.]]></description>
+            <content:encoded><![CDATA[<b>Status: Resolved</b><br/><br/>On December 4th, 2024 from 15:48 PT to 15:52 PT, 100% of API requests experienced HTTP 530 errors due to a misconfiguration in the global load balancer. This was promptly corrected and connectivity restored by 15:52 PT.
+
+Later that day, from 16:07 PT to 17:37 PT, a different issue was surfaced by an upgrade of the DNS cache system. Consequently the OpenAI identity system lost connectivity to the DNS cache. As a result, user requests appeared to stall for 30 seconds. After the 30 second DNS lookup timeout the Identity system fell back to a cached IP and completed requests successfully. These elevated latencies led to 45% of API requests experiencing 499 errors, which appeared as client-side cancellations. In the ChatGPT interfaces this latency manifested itself as a 30 second "wait time" after which requests were completed.
+
+The first wave of this incident, caused by a global load balancer misconfiguration, was mitigated by applying the correct configuration.
+
+The second wave was mitigated by temporarily switching to an alternative system.
+
+• To safeguard against global load balancer \(Cloudflare\) misconfigurations, we collaborated with Cloudflare to investigate the issue and implemented a solution to prevent a single pool from impacting all API traffic. The default and fallback pools are now distinct, and this change has already been rolled out to ensure seamless traffic handling.
+
+• The way that our identity systems integrated with and relied on our DNS cache here was found to be unnecessary and was removed.
+
+• We are continuing to improve our chaos test system, which will aim to surface DNS cache dependency issues in a controlled way.
+
+We know that outages affect our customers' products and businesses. While we came up short here, we are committed to preventing such incidents in the future and improving our service reliability.]]></content:encoded>
+        </item>
+        <item>
+            <title><![CDATA[Invalid Structured Outputs with gpt-4o and gpt-4o-2024-08-06 models]]></title>
+            <link>https://status.openai.com//incidents/01JMYB47M2T5BYX9DAH5WH665K</link>
+            <guid>https://status.openai.com//incidents/01JMYB47M2T5BYX9DAH5WH665K</guid>
+            <pubDate>Fri, 13 Dec 2024 07:56:02 GMT</pubDate>
+            <description><![CDATA[<b>Status: Resolved</b><br/><br/>Between 10:00pm PT on December 10 and 11:45pm PT on December 12, some API customers experienced invalid JSON schema outputs when using models gpt-4o and gpt-4o-2024-08-06 with Structured Outputs. A fix was implemented and the issue was fully resolved at 11:45pm.]]></description>
+            <content:encoded><![CDATA[<b>Status: Resolved</b><br/><br/>Between 10:00pm PT on December 10 and 11:45pm PT on December 12, some API customers experienced invalid JSON schema outputs when using models gpt-4o and gpt-4o-2024-08-06 with Structured Outputs. A fix was implemented and the issue was fully resolved at 11:45pm.]]></content:encoded>
+        </item>
+        <item>
+            <title><![CDATA[API, ChatGPT & Sora Facing Issues]]></title>
+            <link>https://status.openai.com//incidents/01JMYB483C404VMPCW726E8MET</link>
+            <guid>https://status.openai.com//incidents/01JMYB483C404VMPCW726E8MET</guid>
+            <pubDate>Fri, 13 Dec 2024 01:17:41 GMT</pubDate>
+            <description><![CDATA[<b>Status: Resolved</b><br/><br/>Introduction
+
+This post-mortem details an incident that occurred on December 11, 2024, where all OpenAI services experienced significant downtime. The issue stemmed from a new telemetry service deployment that unintentionally overwhelmed the Kubernetes control plane, causing cascading failures across critical systems. In this post, we break down the root cause, outline the steps taken for remediation, and share the measures we are implementing to prevent similar incidents in the future. 
+
+Impact
+
+Between 3:16 PM PST and 7:38 PM PST on December 11, 2024, all OpenAI services experienced significant degradation or complete unavailability. This event was the result of an internal change to roll out new telemetry across our fleet and was not caused by a security incident or a recent launch. All products started to degrade at 3:16 PM.
+
+• ChatGPT: Substantial recovery occurred at 5:45 PM, with full recovery at 7:01 PM PST.
+
+• API: Substantial recovery occurred at 5:36 PM, with full recovery across all models at 7:38 PM PST.
+
+• Sora: Fully recovered at 7:01 PM PST.
+
+Root Cause
+
+OpenAI operates hundreds of Kubernetes clusters globally. Kubernetes has a control plane responsible for cluster administration and a data plane from where we actually serve workloads like model inference.
+
+As part of a push to improve reliability across the organization, we’ve been working to improve our cluster-wide observability tooling to strengthen visibility into the state of our systems. At 3:12 PM PST, we deployed a new telemetry service to collect detailed Kubernetes control plane metrics. 
+
+Telemetry services have a very wide footprint, so this new service’s configuration unintentionally caused every node in each cluster to execute resource-intensive Kubernetes API operations whose cost scaled with the size of the cluster. With thousands of nodes performing these operations simultaneously, the Kubernetes API servers became overwhelmed, taking down the Kubernetes control plane in most of our large clusters. This issue was most pronounced in our largest clusters, so our testing didn’t catch it – and DNS caching made the issue far less visible until the rollouts had begun fleet-wide.
+
+The Kubernetes data plane can operate largely independently of the control plane, but DNS relies on the control plane – services don’t know how to contact one another without the Kubernetes control plane. 
+
+In short, the root cause was a new telemetry service configuration that unexpectedly generated massive Kubernetes API load across large clusters, overwhelming the control plane and breaking DNS-based service discovery.
+
+Testing & deployment
+
+The change was tested in a staging cluster, where no issues were observed. The impact was specific to clusters exceeding a certain size, and our DNS cache on each node delayed visible failures long enough for the rollout to continue.
+
+Our main reliability concern prior to deployment was resource consumption of the new telemetry service. Before deployment, we evaluated resource utilization metrics in all clusters \(CPU/memory\) to ensure that the deployment wouldn’t disrupt running services. While resource requests were tuned on a per cluster basis, no precautions were taken to assess Kubernetes API server load. This rollout process monitored service health but lacked sufficient cluster health monitoring protocols.
+
+The Kubernetes data plane \(responsible for handling user requests\) is designed to operate independently of the control plane. However, the Kubernetes API server is required for DNS resolution, which is a critical dependency for many of our services.
+
+DNS caching mitigated the impact temporarily by providing stale but functional DNS records. However, as cached records expired over the following 20 minutes, services began failing due to their reliance on real-time DNS resolution. This timing was critical because it delayed the visibility of the issue, allowing the rollout to continue before the full scope of the problem was understood. Once the DNS caches were empty, the load on the DNS servers was multiplied, adding further load to the control plane and further complicating immediate mitigation.
+
+Remediation
+
+Monitoring a deployment and reverting an offending change is generally straightforward, and we have tools to detect and roll back bad deployments. In this case, our detection tools worked and we detected the issue a few minutes before customers started seeing impact. But the fix for this issue required us to remove the offending service. In order to make that fix, we needed to access the Kubernetes control plane – which we could not do due to the increased load to the Kubernetes API servers.
+
+We identified the issue within minutes and immediately spun up multiple workstreams to explore different ways to bring our clusters back online quickly:
+
+• Scaling down cluster size: Reduced the aggregate Kubernetes API load.
+
+• Blocking network access to Kubernetes admin APIs: Prevented new expensive requests, giving the API servers time to recover.
+
+• Scaling up Kubernetes API servers: Increased available resources to handle pending requests, allowing us to apply the fix.
+
+By pursuing all three in parallel, we eventually restored enough control to remove the offending service.
+
+Once we regained access to some Kubernetes control planes, we began to see immediate recovery. Where possible, we shifted traffic to healthy clusters while working on remediation for the others. Some clusters remained in a degraded state as many services tried to download resources simultaneously, saturating resource limits and requiring additional manual intervention.
+
+This was a confluence of multiple systems and processes failing simultaneously and interacting in unexpected ways. Namely –
+
+• Our tests didn’t catch the impact the change was having on the Kubernetes control plane.
+
+• DNS caching added a delay between making the change and when services started failing.
+
+• Remediation was very slow because of the locked out effect.
+
+Timeline
+
+• December 10th, 2024: The new telemetry service was deployed to a staging cluster and verified to be working as expected
+
+• December 11th, 2024 at 2:23pm: The change to introduce the new service was merged and the deployment pipeline triggered
+
+• 2:51pm to 3:20pm: The change was applied to all clusters
+
+• 3:13pm: Alerts fired, notifying engineers
+
+• 3:16pm: Minor customer impact began
+
+• 3:16pm: Root cause identified
+
+• 3:27pm: Engineers began moving traffic away from impacted clusters
+
+• 3:40pm: Maximum customer impact
+
+• 4:36pm: First cluster recovered
+
+• 7:38pm: All clusters recovered
+
+Prevention
+
+To prevent similar incidents, we are implementing the following measures:
+
+1. Robust phased rollouts
+
+We're continuing our work on improved phased rollouts with better monitoring for all infrastructure changes to ensure that any failure has limited impact and is detected early. All infrastructure-related configuration changes moving forward will follow a robust phased rollout process, with improved continuous monitoring that ensures that both the service workloads and the clusters \(including the Kubernetes control plane\) are healthy. 
+
+2. Fault injection testing
+
+The Kubernetes data plane should be able to survive without the control plane for longer, and we’ll run tests that explicitly exercise this scenario. We’ll also run tests to intentionally roll out bad changes to ensure that our systems detect and roll back appropriately.
+
+3. Emergency Kubernetes control plane access
+
+We do not yet have a mechanism to ensure access to the API server when the data plane is putting too much pressure on the control plane. We’ll implement break-glass mechanisms to ensure that engineers can access Kubernetes API servers in any circumstances.
+
+4. Decouple the Kubernetes data plane and control plane
+
+Our dependency on Kubernetes DNS for service discovery creates a link between our Kubernetes data plane and control plane. We are investing in systems to decouple the Kubernetes data plane from the control plane so that the control plane is not load bearing for processing mission critical services and product workloads.
+
+5. Faster recovery
+
+We’ll implement improved caching and dynamic rate limiters for the resources that are necessary for cluster startup and run regular exercises where we rapidly replace an entire cluster with an explicit goal of fast and correct startup. 
+
+Conclusion
+
+We apologize for the impact that this incident caused to all of our customers – from ChatGPT users to developers to businesses who rely on OpenAI products. We’ve fallen short of our own expectations. We recognize that it is critical to provide a highly reliable service to all of you, and  will be prioritizing the preventative measures outlined above to continue improving reliability. Thank you for your patience during this disruption.]]></description>
+            <content:encoded><![CDATA[<b>Status: Resolved</b><br/><br/>Introduction
+
+This post-mortem details an incident that occurred on December 11, 2024, where all OpenAI services experienced significant downtime. The issue stemmed from a new telemetry service deployment that unintentionally overwhelmed the Kubernetes control plane, causing cascading failures across critical systems. In this post, we break down the root cause, outline the steps taken for remediation, and share the measures we are implementing to prevent similar incidents in the future. 
+
+Impact
+
+Between 3:16 PM PST and 7:38 PM PST on December 11, 2024, all OpenAI services experienced significant degradation or complete unavailability. This event was the result of an internal change to roll out new telemetry across our fleet and was not caused by a security incident or a recent launch. All products started to degrade at 3:16 PM.
+
+• ChatGPT: Substantial recovery occurred at 5:45 PM, with full recovery at 7:01 PM PST.
+
+• API: Substantial recovery occurred at 5:36 PM, with full recovery across all models at 7:38 PM PST.
+
+• Sora: Fully recovered at 7:01 PM PST.
+
+Root Cause
+
+OpenAI operates hundreds of Kubernetes clusters globally. Kubernetes has a control plane responsible for cluster administration and a data plane from where we actually serve workloads like model inference.
+
+As part of a push to improve reliability across the organization, we’ve been working to improve our cluster-wide observability tooling to strengthen visibility into the state of our systems. At 3:12 PM PST, we deployed a new telemetry service to collect detailed Kubernetes control plane metrics. 
+
+Telemetry services have a very wide footprint, so this new service’s configuration unintentionally caused every node in each cluster to execute resource-intensive Kubernetes API operations whose cost scaled with the size of the cluster. With thousands of nodes performing these operations simultaneously, the Kubernetes API servers became overwhelmed, taking down the Kubernetes control plane in most of our large clusters. This issue was most pronounced in our largest clusters, so our testing didn’t catch it – and DNS caching made the issue far less visible until the rollouts had begun fleet-wide.
+
+The Kubernetes data plane can operate largely independently of the control plane, but DNS relies on the control plane – services don’t know how to contact one another without the Kubernetes control plane. 
+
+In short, the root cause was a new telemetry service configuration that unexpectedly generated massive Kubernetes API load across large clusters, overwhelming the control plane and breaking DNS-based service discovery.
+
+Testing & deployment
+
+The change was tested in a staging cluster, where no issues were observed. The impact was specific to clusters exceeding a certain size, and our DNS cache on each node delayed visible failures long enough for the rollout to continue.
+
+Our main reliability concern prior to deployment was resource consumption of the new telemetry service. Before deployment, we evaluated resource utilization metrics in all clusters \(CPU/memory\) to ensure that the deployment wouldn’t disrupt running services. While resource requests were tuned on a per cluster basis, no precautions were taken to assess Kubernetes API server load. This rollout process monitored service health but lacked sufficient cluster health monitoring protocols.
+
+The Kubernetes data plane \(responsible for handling user requests\) is designed to operate independently of the control plane. However, the Kubernetes API server is required for DNS resolution, which is a critical dependency for many of our services.
+
+DNS caching mitigated the impact temporarily by providing stale but functional DNS records. However, as cached records expired over the following 20 minutes, services began failing due to their reliance on real-time DNS resolution. This timing was critical because it delayed the visibility of the issue, allowing the rollout to continue before the full scope of the problem was understood. Once the DNS caches were empty, the load on the DNS servers was multiplied, adding further load to the control plane and further complicating immediate mitigation.
+
+Remediation
+
+Monitoring a deployment and reverting an offending change is generally straightforward, and we have tools to detect and roll back bad deployments. In this case, our detection tools worked and we detected the issue a few minutes before customers started seeing impact. But the fix for this issue required us to remove the offending service. In order to make that fix, we needed to access the Kubernetes control plane – which we could not do due to the increased load to the Kubernetes API servers.
+
+We identified the issue within minutes and immediately spun up multiple workstreams to explore different ways to bring our clusters back online quickly:
+
+• Scaling down cluster size: Reduced the aggregate Kubernetes API load.
+
+• Blocking network access to Kubernetes admin APIs: Prevented new expensive requests, giving the API servers time to recover.
+
+• Scaling up Kubernetes API servers: Increased available resources to handle pending requests, allowing us to apply the fix.
+
+By pursuing all three in parallel, we eventually restored enough control to remove the offending service.
+
+Once we regained access to some Kubernetes control planes, we began to see immediate recovery. Where possible, we shifted traffic to healthy clusters while working on remediation for the others. Some clusters remained in a degraded state as many services tried to download resources simultaneously, saturating resource limits and requiring additional manual intervention.
+
+This was a confluence of multiple systems and processes failing simultaneously and interacting in unexpected ways. Namely –
+
+• Our tests didn’t catch the impact the change was having on the Kubernetes control plane.
+
+• DNS caching added a delay between making the change and when services started failing.
+
+• Remediation was very slow because of the locked out effect.
+
+Timeline
+
+• December 10th, 2024: The new telemetry service was deployed to a staging cluster and verified to be working as expected
+
+• December 11th, 2024 at 2:23pm: The change to introduce the new service was merged and the deployment pipeline triggered
+
+• 2:51pm to 3:20pm: The change was applied to all clusters
+
+• 3:13pm: Alerts fired, notifying engineers
+
+• 3:16pm: Minor customer impact began
+
+• 3:16pm: Root cause identified
+
+• 3:27pm: Engineers began moving traffic away from impacted clusters
+
+• 3:40pm: Maximum customer impact
+
+• 4:36pm: First cluster recovered
+
+• 7:38pm: All clusters recovered
+
+Prevention
+
+To prevent similar incidents, we are implementing the following measures:
+
+1. Robust phased rollouts
+
+We're continuing our work on improved phased rollouts with better monitoring for all infrastructure changes to ensure that any failure has limited impact and is detected early. All infrastructure-related configuration changes moving forward will follow a robust phased rollout process, with improved continuous monitoring that ensures that both the service workloads and the clusters \(including the Kubernetes control plane\) are healthy. 
+
+2. Fault injection testing
+
+The Kubernetes data plane should be able to survive without the control plane for longer, and we’ll run tests that explicitly exercise this scenario. We’ll also run tests to intentionally roll out bad changes to ensure that our systems detect and roll back appropriately.
+
+3. Emergency Kubernetes control plane access
+
+We do not yet have a mechanism to ensure access to the API server when the data plane is putting too much pressure on the control plane. We’ll implement break-glass mechanisms to ensure that engineers can access Kubernetes API servers in any circumstances.
+
+4. Decouple the Kubernetes data plane and control plane
+
+Our dependency on Kubernetes DNS for service discovery creates a link between our Kubernetes data plane and control plane. We are investing in systems to decouple the Kubernetes data plane from the control plane so that the control plane is not load bearing for processing mission critical services and product workloads.
+
+5. Faster recovery
+
+We’ll implement improved caching and dynamic rate limiters for the resources that are necessary for cluster startup and run regular exercises where we rapidly replace an entire cluster with an explicit goal of fast and correct startup. 
+
+Conclusion
+
+We apologize for the impact that this incident caused to all of our customers – from ChatGPT users to developers to businesses who rely on OpenAI products. We’ve fallen short of our own expectations. We recognize that it is critical to provide a highly reliable service to all of you, and  will be prioritizing the preventative measures outlined above to continue improving reliability. Thank you for your patience during this disruption.]]></content:encoded>
+        </item>
+        <item>
+            <title><![CDATA[Login errors on ChatGPT and the API Playground]]></title>
+            <link>https://status.openai.com//incidents/01JMYB47TE3XH7V3HC4ZJ9ANZZ</link>
+            <guid>https://status.openai.com//incidents/01JMYB47TE3XH7V3HC4ZJ9ANZZ</guid>
+            <pubDate>Thu, 12 Dec 2024 11:19:05 GMT</pubDate>
+            <description><![CDATA[<b>Status: Resolved</b><br/><br/>Between 01:55AM and 02:53AM PST we experienced some disruption to our service. The primary impact was that users were not able to login to ChatGPT or the API Playground. Some other requests may have been affected.<br/><br/><b>Affected components</b>
+          <ul>
+          <li>Playground (Operational)</li>
+          </ul>]]></description>
+            <content:encoded><![CDATA[<b>Status: Resolved</b><br/><br/>Between 01:55AM and 02:53AM PST we experienced some disruption to our service. The primary impact was that users were not able to login to ChatGPT or the API Playground. Some other requests may have been affected.<br/><br/><b>Affected components</b>
+          <ul>
+          <li>Playground (Operational)</li>
+          </ul>]]></content:encoded>
+        </item>
+        <item>
+            <title><![CDATA[Disruption to some ChatGPT Enterprise features]]></title>
+            <link>https://status.openai.com//incidents/01JMYB494XKETGYAW086HFZWGJ</link>
+            <guid>https://status.openai.com//incidents/01JMYB494XKETGYAW086HFZWGJ</guid>
+            <pubDate>Mon, 09 Dec 2024 15:23:41 GMT</pubDate>
+            <description><![CDATA[<b>Status: Resolved</b><br/><br/>Between 05:19AM and 07:05AM PST, some ChatGPT Enterprise features had degraded performance. The impact comprised of slow logins and degradation in performance of the Workspace Analytics tab, the Members tab, and the Compliance API. We have now mitigated the issue and recovered.]]></description>
+            <content:encoded><![CDATA[<b>Status: Resolved</b><br/><br/>Between 05:19AM and 07:05AM PST, some ChatGPT Enterprise features had degraded performance. The impact comprised of slow logins and degradation in performance of the Workspace Analytics tab, the Members tab, and the Compliance API. We have now mitigated the issue and recovered.]]></content:encoded>
+        </item>
+        <item>
+            <title><![CDATA[ChatGPT users having issues with file uploads]]></title>
+            <link>https://status.openai.com//incidents/01JMYB49R728SPJ3TM298WD4RC</link>
+            <guid>https://status.openai.com//incidents/01JMYB49R728SPJ3TM298WD4RC</guid>
+            <pubDate>Sat, 07 Dec 2024 06:50:59 GMT</pubDate>
+            <description><![CDATA[<b>Status: Resolved</b><br/><br/>This incident has been resolved.]]></description>
+            <content:encoded><![CDATA[<b>Status: Resolved</b><br/><br/>This incident has been resolved.]]></content:encoded>
+        </item>
+        <item>
+            <title><![CDATA[Elevated Error Rate for ChatGPT and API]]></title>
+            <link>https://status.openai.com//incidents/01JMYB4BYHJWDV9A51ZPA86YBQ</link>
+            <guid>https://status.openai.com//incidents/01JMYB4BYHJWDV9A51ZPA86YBQ</guid>
+            <pubDate>Fri, 06 Dec 2024 22:28:19 GMT</pubDate>
+            <description><![CDATA[<b>Status: Resolved</b><br/><br/>Summary
+
+On November 25, 2024 starting at 10:15am PT, a large portion of both API and ChatGPT traffic failed with timeouts and 503 error codes.
+
+ChatGPT saw degraded performance for Paid and Enterprise from 10:15 to 12pm, spiking at a 13% error rate for Paid and 23% error rate for Enterprise. Degraded performance for Free continued until 1:20pm. Search in ChatGPT was also disabled between 11:15am and 12:05pm.
+
+API impact was most pronounced across the gpt-4-turbo-preview, gpt-4-o125-preview, and text-embedding-3-large models, where clients saw increased latency and error rates between 10:15am until as late as 1pm.
+
+Root cause & mitigation
+
+A global change to Kubernetes namespace labels inadvertently triggered a recomputation of metadata by our networking layer. This change rolled out to our small clusters safely but overwhelmed the control plane in three of our largest GPU clusters, leading to cascading failures, significant latency, and elevated error rates across multiple OpenAI products.
+
+We mitigated impact by manually moving workloads out of the impacted clusters, which itself was made more complex due to the unresponsive control plane in these large clusters. 
+
+Once we identified the root cause, we worked with our cloud provider to scale up the number of control plane nodes while simultaneously scaling down the number of data plane nodes. This allowed the control plane to recover and we have since moved some major workloads back into these clusters with additional protections.
+
+Prevention
+
+In the short term, we've already:
+
+• Locked namespace changes to ensure that we don't see a recurrence of this incident
+
+• Frozen certain types of infrastructure deploys 
+
+We're continuing to work on:
+
+• Allowlisting identities to prevent a recurrence of this class of incidents
+
+• Improvements to our GPU load balancing logic to ensure that traffic gets automatically re-routed more effectively when possible
+
+We're also investing in several critical improvements across our infrastructure – specifically, improving change management for fleet-wide infrastructure changes.
+
+We know that our customers rely on OpenAI to be available, and that extended outages like these are especially damaging. We're investing heavily in these areas and will continue to improve our service reliability in the coming days and months.]]></description>
+            <content:encoded><![CDATA[<b>Status: Resolved</b><br/><br/>Summary
+
+On November 25, 2024 starting at 10:15am PT, a large portion of both API and ChatGPT traffic failed with timeouts and 503 error codes.
+
+ChatGPT saw degraded performance for Paid and Enterprise from 10:15 to 12pm, spiking at a 13% error rate for Paid and 23% error rate for Enterprise. Degraded performance for Free continued until 1:20pm. Search in ChatGPT was also disabled between 11:15am and 12:05pm.
+
+API impact was most pronounced across the gpt-4-turbo-preview, gpt-4-o125-preview, and text-embedding-3-large models, where clients saw increased latency and error rates between 10:15am until as late as 1pm.
+
+Root cause & mitigation
+
+A global change to Kubernetes namespace labels inadvertently triggered a recomputation of metadata by our networking layer. This change rolled out to our small clusters safely but overwhelmed the control plane in three of our largest GPU clusters, leading to cascading failures, significant latency, and elevated error rates across multiple OpenAI products.
+
+We mitigated impact by manually moving workloads out of the impacted clusters, which itself was made more complex due to the unresponsive control plane in these large clusters. 
+
+Once we identified the root cause, we worked with our cloud provider to scale up the number of control plane nodes while simultaneously scaling down the number of data plane nodes. This allowed the control plane to recover and we have since moved some major workloads back into these clusters with additional protections.
+
+Prevention
+
+In the short term, we've already:
+
+• Locked namespace changes to ensure that we don't see a recurrence of this incident
+
+• Frozen certain types of infrastructure deploys 
+
+We're continuing to work on:
+
+• Allowlisting identities to prevent a recurrence of this class of incidents
+
+• Improvements to our GPU load balancing logic to ensure that traffic gets automatically re-routed more effectively when possible
+
+We're also investing in several critical improvements across our infrastructure – specifically, improving change management for fleet-wide infrastructure changes.
+
+We know that our customers rely on OpenAI to be available, and that extended outages like these are especially damaging. We're investing heavily in these areas and will continue to improve our service reliability in the coming days and months.]]></content:encoded>
+        </item>
+        <item>
+            <title><![CDATA[ChatGPT & API Unable to Generate Images]]></title>
+            <link>https://status.openai.com//incidents/01JMYB4AVAM334PVX4V89A3R7E</link>
+            <guid>https://status.openai.com//incidents/01JMYB4AVAM334PVX4V89A3R7E</guid>
+            <pubDate>Wed, 04 Dec 2024 01:27:28 GMT</pubDate>
+            <description><![CDATA[<b>Status: Resolved</b><br/><br/>The issue has been resolved.
+
+Starting at 4:20 PM PT, some customers experienced errors when attempting to generate images from ChatGPT and the API. A fix was implemented, and the issue was fully resolved at 5:15 PM PT.]]></description>
+            <content:encoded><![CDATA[<b>Status: Resolved</b><br/><br/>The issue has been resolved.
+
+Starting at 4:20 PM PT, some customers experienced errors when attempting to generate images from ChatGPT and the API. A fix was implemented, and the issue was fully resolved at 5:15 PM PT.]]></content:encoded>
+        </item>
+        <item>
+            <title><![CDATA[Degraded Performance in Assistants API]]></title>
+            <link>https://status.openai.com//incidents/01JMYB4B57430FZCA8ED5NPD61</link>
+            <guid>https://status.openai.com//incidents/01JMYB4B57430FZCA8ED5NPD61</guid>
+            <pubDate>Mon, 02 Dec 2024 19:25:13 GMT</pubDate>
+            <description><![CDATA[<b>Status: Resolved</b><br/><br/>The issue has now been resolved.
+
+Starting at 10:40AM PT, some customers experienced an elevated error rate in the Assistants API. A fix was introduced, and performance was stabilized at 10:52 AM PT.]]></description>
+            <content:encoded><![CDATA[<b>Status: Resolved</b><br/><br/>The issue has now been resolved.
+
+Starting at 10:40AM PT, some customers experienced an elevated error rate in the Assistants API. A fix was introduced, and performance was stabilized at 10:52 AM PT.]]></content:encoded>
+        </item>
+    </channel>
+</rss>

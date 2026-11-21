@@ -129,6 +129,7 @@ describe('the table registry', () => {
       'archived_prices',
       'archived_hiring',
       'archived_gpu_prices',
+      'archived_incidents',
       'archive_captures',
       'alerts',
       'claim_readings',

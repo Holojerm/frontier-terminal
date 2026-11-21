@@ -250,9 +250,88 @@ export const HISTORY_TABLES = {
     [tables.archivedGpuPrices.captured_at, tables.archivedGpuPrices.id],
     byColumn(tables.archivedGpuPrices.captured_at),
   ),
+  archived_incidents: plainTable(
+    'archived_incidents',
+    'Status-page incident history from before our status feed checks began: one row per incident any Internet Archive copy of a lab’s own status feed listed, in the state the newest such copy gives it, shaped like the live incident rows. source_url is that copy, captured_at when the Archive saw the feed, fetched_at when we read the copy. Never mixed into the live tables, the incident windows or the alerts.',
+    tables.archivedIncidents,
+    {
+      id: {
+        type: 'text',
+        key: true,
+        meaning: '<provider>:<incident_id>: one row per incident, however many copies listed it.',
+      },
+      provider: PROVIDER,
+      incident_id: {
+        type: 'text',
+        meaning:
+          'The feed’s own id: a Statuspage incident code, an incident.io ULID (OpenAI from February 2025), a Google Cloud incident id or an xAI incident guid. The same ids the live lanes use, where the feed is the same.',
+      },
+      title: { type: 'text', meaning: 'The incident’s title, as the feed printed it.' },
+      impact: {
+        type: 'text',
+        nullable: true,
+        meaning:
+          'In the vendor’s own vocabulary (Google low/medium/high, xAI’s severity). Null where the feed publishes none: Statuspage’s Atom history and incident.io’s RSS print no impact.',
+      },
+      status: {
+        type: 'text',
+        meaning: 'The newest status the newest copy gave, lowercased as the live rows are.',
+      },
+      started_at: {
+        type: 'timestamp',
+        meaning:
+          'The start the feed states, in UTC: the oldest update on a Statuspage feed (to the minute), the moment the id was minted on incident.io (the live API’s created_at), Google’s begin, xAI’s pubDate.',
+      },
+      resolved_at: {
+        type: 'timestamp',
+        nullable: true,
+        meaning:
+          'The end the feed states, in UTC. Null while the newest copy shows it open, which may mean no later copy was taken, not that it stayed open.',
+      },
+      components: {
+        type: 'json',
+        meaning: 'The components or products the feed named, sorted; [] where it named none.',
+      },
+      incident_url: { type: 'text', meaning: 'The incident’s page on the lab’s status site.' },
+      capture_id: {
+        type: 'text',
+        meaning:
+          'The newest copy that listed the incident: <era>:<14-digit Wayback timestamp>, as in archive_captures.',
+      },
+      captured_at: {
+        type: 'timestamp',
+        meaning: 'When the Internet Archive captured that newest copy, in UTC.',
+      },
+      first_captured_at: {
+        type: 'timestamp',
+        meaning: 'When the Internet Archive captured the oldest copy that listed the incident.',
+      },
+      original_url: {
+        type: 'text',
+        meaning: 'The lab’s own status feed the Archive captured.',
+      },
+      basis: {
+        type: 'text',
+        meaning: 'Always archived: read from a copy, not observed by this site.',
+      },
+      source_url: {
+        type: 'text',
+        provenance: true,
+        meaning:
+          'The Wayback Machine copy (https://web.archive.org/web/<timestamp>id_/<original_url>).',
+      },
+      fetched_at: {
+        type: 'timestamp',
+        provenance: true,
+        meaning: 'When we read the copy back from the Archive, in UTC.',
+      },
+    },
+    [tables.archivedIncidents.captured_at, tables.archivedIncidents.id],
+    byColumn(tables.archivedIncidents.captured_at),
+  ),
   archive_captures: plainTable(
     'archive_captures',
-    'Every Internet Archive copy the price-, hiring- and GPU-price-history backfill considered: read (with how many rows it gave) or skipped, with the reason. A skipped copy gave no rows; nothing on it was guessed.',
+    'Every Internet Archive copy the price-, hiring-, GPU-price- and incident-history backfill considered: read (with how many rows it gave) or skipped, with the reason. A skipped copy gave no rows; nothing on it was guessed.',
     tables.archiveCaptures,
     {
       id: {
@@ -263,13 +342,13 @@ export const HISTORY_TABLES = {
       era: {
         type: 'text',
         meaning:
-          'Which shape of the lab’s pricing page, job board or GPU provider’s price page the copy is read as (layers/terminal/server/pipeline/archive/eras.ts, hiring-eras.ts, gpu-eras.ts).',
+          'Which shape of the lab’s pricing page, job board or status feed, or GPU provider’s price page, the copy is read as (layers/terminal/server/pipeline/archive/eras.ts, hiring-eras.ts, gpu-eras.ts, status-eras.ts).',
       },
       provider: PROVIDER,
       original_url: {
         type: 'text',
         meaning:
-          'The lab’s own pricing page or job board, or the GPU provider’s price page, the Archive captured.',
+          'The lab’s own pricing page, job board or status feed, or the GPU provider’s price page, the Archive captured.',
       },
       captured_at: {
         type: 'timestamp',
@@ -278,13 +357,13 @@ export const HISTORY_TABLES = {
       status: {
         type: 'text',
         meaning:
-          'parsed (its rows are in archived_prices, archived_hiring or archived_gpu_prices, by axis) or skipped (no rows; detail says why).',
+          'parsed (its rows are in archived_prices, archived_hiring, archived_gpu_prices or archived_incidents, by axis) or skipped (no rows; detail says why).',
       },
       detail: {
         type: 'text',
         nullable: true,
         meaning:
-          'Why a skipped copy was skipped, in the parser’s or the fetch’s own words. On a read job board, what it held beyond the counts (a paged list: total only).',
+          'Why a skipped copy was skipped, in the parser’s or the fetch’s own words. On a read job board, what it held beyond the counts (a paged list: total only); on a read status feed, what it listed that isn’t an incident row (maintenances, other products).',
       },
       content_hash: {
         type: 'text',
@@ -306,12 +385,18 @@ export const HISTORY_TABLES = {
       rows: {
         type: 'integer',
         meaning:
-          'How many rows the copy gave, in archived_prices, archived_hiring or archived_gpu_prices (see axis).',
+          'How many rows the copy gave, in archived_prices, archived_hiring or archived_gpu_prices (see axis). On axis status, how many incidents it listed; each is one archived_incidents row however many copies listed it.',
+      },
+      covers_from: {
+        type: 'timestamp',
+        nullable: true,
+        meaning:
+          'Axis status only: the oldest incident start the copy lists, in UTC. A feed lists only its newest incidents, so the copy speaks for incidents that started from here to captured_at. Null on other axes and on a copy that listed none.',
       },
       axis: {
         type: 'text',
         meaning:
-          'pricing (a lab’s pricing page; rows in archived_prices), hiring (a lab’s job board; rows in archived_hiring) or gpu (a GPU provider’s price page; rows in archived_gpu_prices).',
+          'pricing (a lab’s pricing page; rows in archived_prices), hiring (a lab’s job board; rows in archived_hiring), gpu (a GPU provider’s price page; rows in archived_gpu_prices) or status (a lab’s status feed; incidents in archived_incidents).',
       },
       source_url: {
         type: 'text',

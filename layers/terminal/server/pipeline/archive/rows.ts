@@ -1,8 +1,8 @@
 // One archived capture -> the rows the backfill writes: an archive_captures
 // row (parsed, or skipped with the reason) and the rows it yields, one
 // archived_prices row per SKU a pricing page priced, or the archived_hiring
-// counts a job board listed, or the archived_gpu_prices rows a GPU rental
-// price page priced. Pure: the bytes, the capture and the fetch time
+// counts a job board listed, the archived_gpu_prices rows a GPU rental
+// price page priced, or the archived_incidents a status feed listed. Pure: the bytes, the capture and the fetch time
 // in, rows out. scripts/wayback-backfill.ts does the fetching and the writing.
 
 import type * as tables from '#server/db/schema'
@@ -12,24 +12,32 @@ import { gpuObservations } from '../../theses/recipes/gpu-prices'
 import type { ArchiveEra } from './eras'
 import type { GpuEra } from './gpu-eras'
 import { liveDepartment, type HiringEra } from './hiring-eras'
+import type { StatusEra } from './status-eras'
 import { captureInstant, captureUrl, type CdxCapture } from './wayback'
 
 export type ArchiveCaptureRow = typeof tables.archiveCaptures.$inferInsert
 export type ArchivedPriceRow = typeof tables.archivedPrices.$inferInsert
 export type ArchivedHiringRow = typeof tables.archivedHiring.$inferInsert
 export type ArchivedGpuPriceRow = typeof tables.archivedGpuPrices.$inferInsert
+export type ArchivedIncidentInsert = typeof tables.archivedIncidents.$inferInsert
 
 export const ARCHIVED_BASIS = 'archived'
 
 /** The lab axes, whose archived rows answer an as_of before the live record (terminal-archive.ts). */
 export type ArchiveAxis = 'pricing' | 'hiring'
 
-/** Every axis a capture's rows can go to; gpu (archived_gpu_prices) is per provider, not per lab. */
-export type CaptureAxis = ArchiveAxis | 'gpu'
+/**
+ * Every axis a capture's rows can go to; gpu (archived_gpu_prices) is per
+ * provider, not per lab, and status (archived_incidents) is one row per
+ * incident across copies, not per copy.
+ */
+export type CaptureAxis = ArchiveAxis | 'gpu' | 'status'
 
-/** What a capture row needs of its era, on any axis; a GPU era may name its format and end. */
-type EraRef = Pick<ArchiveEra | HiringEra | GpuEra, 'id' | 'provider' | 'url'> &
-  Pick<Partial<GpuEra>, 'ext' | 'end'>
+/** What a capture row needs of its era, on any axis; a GPU or status era may name its format and end. */
+type EraRef = Pick<ArchiveEra | HiringEra | GpuEra | StatusEra, 'id' | 'provider' | 'url'> & {
+  ext?: GpuEra['ext'] | StatusEra['ext']
+  end?: RegExp
+}
 
 export const captureId = (era: Pick<EraRef, 'id'>, timestamp: string) => `${era.id}:${timestamp}`
 
@@ -72,12 +80,13 @@ export function skippedCapture(
 /**
  * The Archive keeps some captures cut short (a 1 MiB body with no end). A
  * truncated price list would read as SKUs delisted, a truncated board as
- * roles closed, so an HTML capture with no closing </html> is skipped. A cut
+ * roles closed, a truncated feed as fewer incidents, so an HTML capture with
+ * no closing </html>, or one without the end its era names, is skipped. A cut
  * JSON or markdown body fails its own parse.
  */
 function assertWhole(era: EraRef, text: string) {
   const end = era.end ?? /<\/html>/i
-  if (extensionOf(era) === 'html' && !end.test(text.slice(-4096))) {
+  if ((era.end || extensionOf(era) === 'html') && !end.test(text.slice(-4096))) {
     throw new Error(`capture is truncated: no closing ${end.source.replace(/\\/g, '')}`)
   }
 }
@@ -266,5 +275,67 @@ export function gpuRows(
       rows: prices.length,
     },
     prices,
+  }
+}
+
+/**
+ * One status feed capture -> its incidents, in the live IncidentRow shape,
+ * each as an archived_incidents row naming this copy. The script upserts
+ * them: a newer copy's state replaces an older one's, and first_captured_at
+ * keeps the oldest copy that listed the incident. The capture row records how
+ * far back the copy reaches (covers_from). A throw is a skip with the reason.
+ */
+export function statusRows(
+  era: StatusEra,
+  capture: CdxCapture,
+  text: string,
+  bytes: number,
+  fetchedAt: string,
+): { capture: ArchiveCaptureRow; incidents: ArchivedIncidentInsert[] } {
+  const id = captureId(era, capture.timestamp)
+  const captured_at = captureInstant(capture.timestamp)
+  const source_url = captureUrl(capture.timestamp, capture.original)
+  const stored = storedOf(era, capture, text, bytes)
+  let read
+  try {
+    assertWhole(era, text)
+    read = era.parse(text, { source_url, fetched_at: fetchedAt })
+    const stray = read.rows.find((r) => r.provider !== era.provider)
+    if (stray) throw new Error(`a row for ${stray.provider} in a ${era.provider} feed`)
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error)
+    return {
+      capture: skippedCapture(era, capture, fetchedAt, message, stored, 'status'),
+      incidents: [],
+    }
+  }
+  const incidents: ArchivedIncidentInsert[] = read.rows.map((r) => ({
+    id: `${r.provider}:${r.incident_id}`,
+    provider: r.provider,
+    incident_id: r.incident_id,
+    title: r.title,
+    impact: r.impact,
+    status: r.status,
+    started_at: r.started_at,
+    resolved_at: r.resolved_at,
+    components: JSON.stringify(r.components),
+    incident_url: r.incident_url,
+    capture_id: id,
+    captured_at,
+    first_captured_at: captured_at,
+    original_url: capture.original,
+    basis: ARCHIVED_BASIS,
+    source_url,
+    fetched_at: fetchedAt,
+  }))
+  return {
+    capture: {
+      ...skippedCapture(era, capture, fetchedAt, '', stored, 'status'),
+      status: 'parsed',
+      detail: read.note?.slice(0, 500) ?? null,
+      rows: incidents.length,
+      covers_from: read.covers_from,
+    },
+    incidents,
   }
 }

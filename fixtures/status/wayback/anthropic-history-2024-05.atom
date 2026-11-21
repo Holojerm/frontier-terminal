@@ -1,0 +1,211 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<feed xml:lang="en-US" xmlns="http://www.w3.org/2005/Atom">
+  <id>tag:status.anthropic.com,2005:/history</id>
+  <link rel="alternate" type="text/html" href="https://status.anthropic.com"/>
+  <link rel="self" type="application/atom+xml" href="https://status.anthropic.com/history.atom"/>
+  <title>Anthropic Status - Incident History</title>
+  <updated>2024-05-03T18:11:50-07:00</updated>
+  <author>
+    <name>Anthropic</name>
+  </author>
+  <entry>
+    <id>tag:status.anthropic.com,2005:Incident/20675188</id>
+    <published>2024-04-30T17:54:57-07:00</published>
+    <updated>2024-04-30T17:54:57-07:00</updated>
+    <link rel="alternate" type="text/html" href="https://status.anthropic.com/incidents/0qyp857kns2b"/>
+    <title>Claude Instant 1.2 Partial Outage</title>
+    <content type="html">&lt;p&gt;&lt;small&gt;Apr &lt;var data-var='date'&gt;30&lt;/var&gt;, &lt;var data-var='time'&gt;17:54&lt;/var&gt; PDT&lt;/small&gt;&lt;br&gt;&lt;strong&gt;Resolved&lt;/strong&gt; - This incident has been resolved.&lt;/p&gt;&lt;p&gt;&lt;small&gt;Apr &lt;var data-var='date'&gt;30&lt;/var&gt;, &lt;var data-var='time'&gt;15:22&lt;/var&gt; PDT&lt;/small&gt;&lt;br&gt;&lt;strong&gt;Monitoring&lt;/strong&gt; - Claude instant 1.2 was partially brought down by a maintenance operation. The cluster is repairing itself and we're monitoring as the model comes back up.&lt;/p&gt;</content>
+  </entry>
+  <entry>
+    <id>tag:status.anthropic.com,2005:Incident/20673643</id>
+    <published>2024-04-30T12:11:44-07:00</published>
+    <updated>2024-04-30T12:11:44-07:00</updated>
+    <link rel="alternate" type="text/html" href="https://status.anthropic.com/incidents/nx9mszx03jvk"/>
+    <title>Opus Partially Down</title>
+    <content type="html">&lt;p&gt;&lt;small&gt;Apr &lt;var data-var='date'&gt;30&lt;/var&gt;, &lt;var data-var='time'&gt;12:11&lt;/var&gt; PDT&lt;/small&gt;&lt;br&gt;&lt;strong&gt;Resolved&lt;/strong&gt; - This incident has been resolved.&lt;/p&gt;&lt;p&gt;&lt;small&gt;Apr &lt;var data-var='date'&gt;30&lt;/var&gt;, &lt;var data-var='time'&gt;12:08&lt;/var&gt; PDT&lt;/small&gt;&lt;br&gt;&lt;strong&gt;Monitoring&lt;/strong&gt; - A fix has been implemented and we are monitoring the results.&lt;/p&gt;&lt;p&gt;&lt;small&gt;Apr &lt;var data-var='date'&gt;30&lt;/var&gt;, &lt;var data-var='time'&gt;11:48&lt;/var&gt; PDT&lt;/small&gt;&lt;br&gt;&lt;strong&gt;Investigating&lt;/strong&gt; - There is a partial out for Claude 3 Opus. A large fraction of requests are returning errors&lt;/p&gt;</content>
+  </entry>
+  <entry>
+    <id>tag:status.anthropic.com,2005:Incident/20671839</id>
+    <published>2024-04-30T08:33:49-07:00</published>
+    <updated>2024-04-30T08:33:49-07:00</updated>
+    <link rel="alternate" type="text/html" href="https://status.anthropic.com/incidents/ryf4wfgywsq5"/>
+    <title>Opus Partial Outage</title>
+    <content type="html">&lt;p&gt;&lt;small&gt;Apr &lt;var data-var='date'&gt;30&lt;/var&gt;, &lt;var data-var='time'&gt;08:33&lt;/var&gt; PDT&lt;/small&gt;&lt;br&gt;&lt;strong&gt;Resolved&lt;/strong&gt; - This incident has been resolved.&lt;/p&gt;&lt;p&gt;&lt;small&gt;Apr &lt;var data-var='date'&gt;30&lt;/var&gt;, &lt;var data-var='time'&gt;08:29&lt;/var&gt; PDT&lt;/small&gt;&lt;br&gt;&lt;strong&gt;Monitoring&lt;/strong&gt; - A fix has been implemented and we are monitoring the results.&lt;/p&gt;&lt;p&gt;&lt;small&gt;Apr &lt;var data-var='date'&gt;30&lt;/var&gt;, &lt;var data-var='time'&gt;08:13&lt;/var&gt; PDT&lt;/small&gt;&lt;br&gt;&lt;strong&gt;Investigating&lt;/strong&gt; - Claude 3 Opus is partially unavailable and returning errors to many requests&lt;/p&gt;</content>
+  </entry>
+  <entry>
+    <id>tag:status.anthropic.com,2005:Incident/20659208</id>
+    <published>2024-04-29T00:26:27-07:00</published>
+    <updated>2024-04-29T00:26:27-07:00</updated>
+    <link rel="alternate" type="text/html" href="https://status.anthropic.com/incidents/rbz4my9kg9dp"/>
+    <title>Elevated Errors on Claude-2.0</title>
+    <content type="html">&lt;p&gt;&lt;small&gt;Apr &lt;var data-var='date'&gt;29&lt;/var&gt;, &lt;var data-var='time'&gt;00:26&lt;/var&gt; PDT&lt;/small&gt;&lt;br&gt;&lt;strong&gt;Resolved&lt;/strong&gt; - This incident has been resolved.&lt;/p&gt;&lt;p&gt;&lt;small&gt;Apr &lt;var data-var='date'&gt;29&lt;/var&gt;, &lt;var data-var='time'&gt;00:00&lt;/var&gt; PDT&lt;/small&gt;&lt;br&gt;&lt;strong&gt;Monitoring&lt;/strong&gt; - A fix has been implemented and we are monitoring the results.&lt;/p&gt;&lt;p&gt;&lt;small&gt;Apr &lt;var data-var='date'&gt;28&lt;/var&gt;, &lt;var data-var='time'&gt;23:49&lt;/var&gt; PDT&lt;/small&gt;&lt;br&gt;&lt;strong&gt;Identified&lt;/strong&gt; - We're experiencing an elevated level of API errors and are currently looking into the issue.&lt;/p&gt;</content>
+  </entry>
+  <entry>
+    <id>tag:status.anthropic.com,2005:Incident/20629524</id>
+    <published>2024-04-24T22:24:05-07:00</published>
+    <updated>2024-04-24T22:24:05-07:00</updated>
+    <link rel="alternate" type="text/html" href="https://status.anthropic.com/incidents/lptmw6gj0vdz"/>
+    <title>Website maintenance</title>
+    <content type="html">&lt;p&gt;&lt;small&gt;Apr &lt;var data-var='date'&gt;24&lt;/var&gt;, &lt;var data-var='time'&gt;22:24&lt;/var&gt; PDT&lt;/small&gt;&lt;br&gt;&lt;strong&gt;Resolved&lt;/strong&gt; - The maintenance is completed&lt;/p&gt;&lt;p&gt;&lt;small&gt;Apr &lt;var data-var='date'&gt;24&lt;/var&gt;, &lt;var data-var='time'&gt;22:10&lt;/var&gt; PDT&lt;/small&gt;&lt;br&gt;&lt;strong&gt;Investigating&lt;/strong&gt; - We are performing maintenance on console.anthropic.com that will cause an "Error 1016" page to appear for some users. The maintenance should be completed within the next 30 minutes.&lt;br /&gt;&lt;br /&gt;The API is unaffected, only the console web interface is down.&lt;/p&gt;</content>
+  </entry>
+  <entry>
+    <id>tag:status.anthropic.com,2005:Incident/20603537</id>
+    <published>2024-04-22T09:35:39-07:00</published>
+    <updated>2024-04-22T09:47:37-07:00</updated>
+    <link rel="alternate" type="text/html" href="https://status.anthropic.com/incidents/4p353c7twb1k"/>
+    <title>Login and account creation partial outage</title>
+    <content type="html">&lt;p&gt;&lt;small&gt;Apr &lt;var data-var='date'&gt;22&lt;/var&gt;, &lt;var data-var='time'&gt;09:35&lt;/var&gt; PDT&lt;/small&gt;&lt;br&gt;&lt;strong&gt;Resolved&lt;/strong&gt; - Login and account creation via email address was broken on claude.ai and console.anthropic.com from 16:02-16:39 UTC.&lt;/p&gt;</content>
+  </entry>
+  <entry>
+    <id>tag:status.anthropic.com,2005:Incident/20597211</id>
+    <published>2024-04-21T21:13:27-07:00</published>
+    <updated>2024-04-21T21:13:27-07:00</updated>
+    <link rel="alternate" type="text/html" href="https://status.anthropic.com/incidents/wnf493j31fyb"/>
+    <title>Elevated error rate on Claude 3 Opus</title>
+    <content type="html">&lt;p&gt;&lt;small&gt;Apr &lt;var data-var='date'&gt;21&lt;/var&gt;, &lt;var data-var='time'&gt;21:13&lt;/var&gt; PDT&lt;/small&gt;&lt;br&gt;&lt;strong&gt;Resolved&lt;/strong&gt; - This incident has been resolved.&lt;/p&gt;&lt;p&gt;&lt;small&gt;Apr &lt;var data-var='date'&gt;21&lt;/var&gt;, &lt;var data-var='time'&gt;20:55&lt;/var&gt; PDT&lt;/small&gt;&lt;br&gt;&lt;strong&gt;Monitoring&lt;/strong&gt; - A fix has been implemented and we are monitoring the results.&lt;/p&gt;&lt;p&gt;&lt;small&gt;Apr &lt;var data-var='date'&gt;21&lt;/var&gt;, &lt;var data-var='time'&gt;20:46&lt;/var&gt; PDT&lt;/small&gt;&lt;br&gt;&lt;strong&gt;Identified&lt;/strong&gt; - The issue has been identified and a fix is being implemented.&lt;/p&gt;&lt;p&gt;&lt;small&gt;Apr &lt;var data-var='date'&gt;21&lt;/var&gt;, &lt;var data-var='time'&gt;19:52&lt;/var&gt; PDT&lt;/small&gt;&lt;br&gt;&lt;strong&gt;Investigating&lt;/strong&gt; - We are currently investigating this issue.&lt;/p&gt;</content>
+  </entry>
+  <entry>
+    <id>tag:status.anthropic.com,2005:Incident/20595033</id>
+    <published>2024-04-21T10:30:00-07:00</published>
+    <updated>2024-04-21T11:48:44-07:00</updated>
+    <link rel="alternate" type="text/html" href="https://status.anthropic.com/incidents/y4fmbrf3wztd"/>
+    <title>Claude 3 Opus partially down</title>
+    <content type="html">&lt;p&gt;&lt;small&gt;Apr &lt;var data-var='date'&gt;21&lt;/var&gt;, &lt;var data-var='time'&gt;10:30&lt;/var&gt; PDT&lt;/small&gt;&lt;br&gt;&lt;strong&gt;Resolved&lt;/strong&gt; - We are currently investigating this issue.&lt;/p&gt;</content>
+  </entry>
+  <entry>
+    <id>tag:status.anthropic.com,2005:Incident/20573421</id>
+    <published>2024-04-18T16:40:23-07:00</published>
+    <updated>2024-04-18T16:40:23-07:00</updated>
+    <link rel="alternate" type="text/html" href="https://status.anthropic.com/incidents/f8qfyzkbs439"/>
+    <title>Haiku Partial Outage</title>
+    <content type="html">&lt;p&gt;&lt;small&gt;Apr &lt;var data-var='date'&gt;18&lt;/var&gt;, &lt;var data-var='time'&gt;16:40&lt;/var&gt; PDT&lt;/small&gt;&lt;br&gt;&lt;strong&gt;Resolved&lt;/strong&gt; - This incident has been resolved.&lt;/p&gt;&lt;p&gt;&lt;small&gt;Apr &lt;var data-var='date'&gt;18&lt;/var&gt;, &lt;var data-var='time'&gt;16:20&lt;/var&gt; PDT&lt;/small&gt;&lt;br&gt;&lt;strong&gt;Update&lt;/strong&gt; - We are continuing to investigate this issue.&lt;/p&gt;&lt;p&gt;&lt;small&gt;Apr &lt;var data-var='date'&gt;18&lt;/var&gt;, &lt;var data-var='time'&gt;16:20&lt;/var&gt; PDT&lt;/small&gt;&lt;br&gt;&lt;strong&gt;Investigating&lt;/strong&gt; - Haiku is partially down&lt;/p&gt;</content>
+  </entry>
+  <entry>
+    <id>tag:status.anthropic.com,2005:Incident/20571949</id>
+    <published>2024-04-18T13:01:44-07:00</published>
+    <updated>2024-04-18T13:01:44-07:00</updated>
+    <link rel="alternate" type="text/html" href="https://status.anthropic.com/incidents/3ndhz9s72dhx"/>
+    <title>Haiku down again</title>
+    <content type="html">&lt;p&gt;&lt;small&gt;Apr &lt;var data-var='date'&gt;18&lt;/var&gt;, &lt;var data-var='time'&gt;13:01&lt;/var&gt; PDT&lt;/small&gt;&lt;br&gt;&lt;strong&gt;Resolved&lt;/strong&gt; - This incident has been resolved.&lt;/p&gt;&lt;p&gt;&lt;small&gt;Apr &lt;var data-var='date'&gt;18&lt;/var&gt;, &lt;var data-var='time'&gt;12:44&lt;/var&gt; PDT&lt;/small&gt;&lt;br&gt;&lt;strong&gt;Investigating&lt;/strong&gt; - We are currently investigating this issue.&lt;/p&gt;</content>
+  </entry>
+  <entry>
+    <id>tag:status.anthropic.com,2005:Incident/20571654</id>
+    <published>2024-04-18T12:26:53-07:00</published>
+    <updated>2024-04-18T12:26:53-07:00</updated>
+    <link rel="alternate" type="text/html" href="https://status.anthropic.com/incidents/2hr8fkgz317g"/>
+    <title>Haiku outage</title>
+    <content type="html">&lt;p&gt;&lt;small&gt;Apr &lt;var data-var='date'&gt;18&lt;/var&gt;, &lt;var data-var='time'&gt;12:26&lt;/var&gt; PDT&lt;/small&gt;&lt;br&gt;&lt;strong&gt;Resolved&lt;/strong&gt; - This incident has been resolved.&lt;/p&gt;&lt;p&gt;&lt;small&gt;Apr &lt;var data-var='date'&gt;18&lt;/var&gt;, &lt;var data-var='time'&gt;12:09&lt;/var&gt; PDT&lt;/small&gt;&lt;br&gt;&lt;strong&gt;Investigating&lt;/strong&gt; - Haiku is unavailable&lt;/p&gt;</content>
+  </entry>
+  <entry>
+    <id>tag:status.anthropic.com,2005:Incident/20571357</id>
+    <published>2024-04-18T11:46:55-07:00</published>
+    <updated>2024-04-18T11:46:55-07:00</updated>
+    <link rel="alternate" type="text/html" href="https://status.anthropic.com/incidents/s33hv3bdp2s8"/>
+    <title>Sonnet outage</title>
+    <content type="html">&lt;p&gt;&lt;small&gt;Apr &lt;var data-var='date'&gt;18&lt;/var&gt;, &lt;var data-var='time'&gt;11:46&lt;/var&gt; PDT&lt;/small&gt;&lt;br&gt;&lt;strong&gt;Resolved&lt;/strong&gt; - This incident has been resolved.&lt;/p&gt;&lt;p&gt;&lt;small&gt;Apr &lt;var data-var='date'&gt;18&lt;/var&gt;, &lt;var data-var='time'&gt;11:30&lt;/var&gt; PDT&lt;/small&gt;&lt;br&gt;&lt;strong&gt;Investigating&lt;/strong&gt; - Claude-3 Sonnet is partially unavailable&lt;/p&gt;</content>
+  </entry>
+  <entry>
+    <id>tag:status.anthropic.com,2005:Incident/20570458</id>
+    <published>2024-04-18T02:00:00-07:00</published>
+    <updated>2024-04-18T09:54:56-07:00</updated>
+    <link rel="alternate" type="text/html" href="https://status.anthropic.com/incidents/58vcrhzjsngy"/>
+    <title>Claude 2.1 partially unavailable</title>
+    <content type="html">&lt;p&gt;&lt;small&gt;Apr &lt;var data-var='date'&gt;18&lt;/var&gt;, &lt;var data-var='time'&gt;02:00&lt;/var&gt; PDT&lt;/small&gt;&lt;br&gt;&lt;strong&gt;Resolved&lt;/strong&gt; - Claude 2.1 had a partial outage where a large fraction of requests failed&lt;/p&gt;</content>
+  </entry>
+  <entry>
+    <id>tag:status.anthropic.com,2005:Incident/20570312</id>
+    <published>2024-04-17T19:00:00-07:00</published>
+    <updated>2024-04-18T09:36:53-07:00</updated>
+    <link rel="alternate" type="text/html" href="https://status.anthropic.com/incidents/0dv5d8qb9gy2"/>
+    <title>Outage affecting account creation and document upload</title>
+    <content type="html">&lt;p&gt;&lt;small&gt;Apr &lt;var data-var='date'&gt;17&lt;/var&gt;, &lt;var data-var='time'&gt;19:00&lt;/var&gt; PDT&lt;/small&gt;&lt;br&gt;&lt;strong&gt;Resolved&lt;/strong&gt; - Account creation on claude.ai and console.anthropic.com, document upload on claude.ai, and the usage dashboard on console.anthropic.com were down from 02:06-02:45 UTC (Feb 18).&lt;/p&gt;</content>
+  </entry>
+  <entry>
+    <id>tag:status.anthropic.com,2005:Incident/20558753</id>
+    <published>2024-04-17T10:12:25-07:00</published>
+    <updated>2024-04-17T10:12:25-07:00</updated>
+    <link rel="alternate" type="text/html" href="https://status.anthropic.com/incidents/t2459rjyvh85"/>
+    <title>Opus elevated error rate</title>
+    <content type="html">&lt;p&gt;&lt;small&gt;Apr &lt;var data-var='date'&gt;17&lt;/var&gt;, &lt;var data-var='time'&gt;10:12&lt;/var&gt; PDT&lt;/small&gt;&lt;br&gt;&lt;strong&gt;Resolved&lt;/strong&gt; - This incident has been resolved.&lt;/p&gt;&lt;p&gt;&lt;small&gt;Apr &lt;var data-var='date'&gt;17&lt;/var&gt;, &lt;var data-var='time'&gt;10:06&lt;/var&gt; PDT&lt;/small&gt;&lt;br&gt;&lt;strong&gt;Monitoring&lt;/strong&gt; - A fix has been implemented and we are monitoring the results.&lt;/p&gt;&lt;p&gt;&lt;small&gt;Apr &lt;var data-var='date'&gt;17&lt;/var&gt;, &lt;var data-var='time'&gt;09:55&lt;/var&gt; PDT&lt;/small&gt;&lt;br&gt;&lt;strong&gt;Identified&lt;/strong&gt; - Opus is seeing an elevated error rate&lt;/p&gt;</content>
+  </entry>
+  <entry>
+    <id>tag:status.anthropic.com,2005:Incident/20488539</id>
+    <published>2024-04-09T12:57:49-07:00</published>
+    <updated>2024-04-09T12:57:49-07:00</updated>
+    <link rel="alternate" type="text/html" href="https://status.anthropic.com/incidents/86fff0g4f2wh"/>
+    <title>Degraded Performance on Claude Instant 1.1</title>
+    <content type="html">&lt;p&gt;&lt;small&gt;Apr &lt;var data-var='date'&gt; 9&lt;/var&gt;, &lt;var data-var='time'&gt;12:57&lt;/var&gt; PDT&lt;/small&gt;&lt;br&gt;&lt;strong&gt;Resolved&lt;/strong&gt; - This incident has been resolved.&lt;/p&gt;&lt;p&gt;&lt;small&gt;Apr &lt;var data-var='date'&gt; 9&lt;/var&gt;, &lt;var data-var='time'&gt;12:57&lt;/var&gt; PDT&lt;/small&gt;&lt;br&gt;&lt;strong&gt;Update&lt;/strong&gt; - We are continuing to monitor for any further issues.&lt;/p&gt;&lt;p&gt;&lt;small&gt;Apr &lt;var data-var='date'&gt; 9&lt;/var&gt;, &lt;var data-var='time'&gt;09:23&lt;/var&gt; PDT&lt;/small&gt;&lt;br&gt;&lt;strong&gt;Monitoring&lt;/strong&gt; - We are experiencing degraded performance on Claude Instant 1.1&lt;/p&gt;</content>
+  </entry>
+  <entry>
+    <id>tag:status.anthropic.com,2005:Incident/20453430</id>
+    <published>2024-04-04T19:10:15-07:00</published>
+    <updated>2024-04-04T19:10:15-07:00</updated>
+    <link rel="alternate" type="text/html" href="https://status.anthropic.com/incidents/gl42kz9j07rr"/>
+    <title>High Opus Error Rates</title>
+    <content type="html">&lt;p&gt;&lt;small&gt;Apr &lt;var data-var='date'&gt; 4&lt;/var&gt;, &lt;var data-var='time'&gt;19:10&lt;/var&gt; PDT&lt;/small&gt;&lt;br&gt;&lt;strong&gt;Resolved&lt;/strong&gt; - This incident has been resolved.&lt;/p&gt;&lt;p&gt;&lt;small&gt;Apr &lt;var data-var='date'&gt; 4&lt;/var&gt;, &lt;var data-var='time'&gt;18:12&lt;/var&gt; PDT&lt;/small&gt;&lt;br&gt;&lt;strong&gt;Monitoring&lt;/strong&gt; - A fix has been implemented and we are monitoring the results.&lt;/p&gt;&lt;p&gt;&lt;small&gt;Apr &lt;var data-var='date'&gt; 4&lt;/var&gt;, &lt;var data-var='time'&gt;17:53&lt;/var&gt; PDT&lt;/small&gt;&lt;br&gt;&lt;strong&gt;Update&lt;/strong&gt; - We are continuing to investigate this issue.&lt;/p&gt;&lt;p&gt;&lt;small&gt;Apr &lt;var data-var='date'&gt; 4&lt;/var&gt;, &lt;var data-var='time'&gt;17:53&lt;/var&gt; PDT&lt;/small&gt;&lt;br&gt;&lt;strong&gt;Investigating&lt;/strong&gt; - We are currently investigating this issue.&lt;/p&gt;</content>
+  </entry>
+  <entry>
+    <id>tag:status.anthropic.com,2005:Incident/20441418</id>
+    <published>2024-04-03T11:42:37-07:00</published>
+    <updated>2024-04-03T11:42:37-07:00</updated>
+    <link rel="alternate" type="text/html" href="https://status.anthropic.com/incidents/99zylp2nfykq"/>
+    <title>Opus partially down</title>
+    <content type="html">&lt;p&gt;&lt;small&gt;Apr &lt;var data-var='date'&gt; 3&lt;/var&gt;, &lt;var data-var='time'&gt;11:42&lt;/var&gt; PDT&lt;/small&gt;&lt;br&gt;&lt;strong&gt;Resolved&lt;/strong&gt; - This incident has been resolved.&lt;/p&gt;&lt;p&gt;&lt;small&gt;Apr &lt;var data-var='date'&gt; 3&lt;/var&gt;, &lt;var data-var='time'&gt;11:42&lt;/var&gt; PDT&lt;/small&gt;&lt;br&gt;&lt;strong&gt;Update&lt;/strong&gt; - We are continuing to investigate this issue.&lt;/p&gt;&lt;p&gt;&lt;small&gt;Apr &lt;var data-var='date'&gt; 3&lt;/var&gt;, &lt;var data-var='time'&gt;10:52&lt;/var&gt; PDT&lt;/small&gt;&lt;br&gt;&lt;strong&gt;Investigating&lt;/strong&gt; - Currently some percentage of requests to Claude 3 Opus are returning errors&lt;/p&gt;</content>
+  </entry>
+  <entry>
+    <id>tag:status.anthropic.com,2005:Incident/20430787</id>
+    <published>2024-04-02T11:08:41-07:00</published>
+    <updated>2024-04-02T11:08:41-07:00</updated>
+    <link rel="alternate" type="text/html" href="https://status.anthropic.com/incidents/jgqkj2cjxwml"/>
+    <title>Partial outage on claude.ai and console.anthropic.com</title>
+    <content type="html">&lt;p&gt;&lt;small&gt;Apr &lt;var data-var='date'&gt; 2&lt;/var&gt;, &lt;var data-var='time'&gt;11:08&lt;/var&gt; PDT&lt;/small&gt;&lt;br&gt;&lt;strong&gt;Resolved&lt;/strong&gt; - This incident has been resolved.&lt;/p&gt;&lt;p&gt;&lt;small&gt;Apr &lt;var data-var='date'&gt; 2&lt;/var&gt;, &lt;var data-var='time'&gt;10:50&lt;/var&gt; PDT&lt;/small&gt;&lt;br&gt;&lt;strong&gt;Monitoring&lt;/strong&gt; - We've identified the cause and implemented a solution. We'll continue to update this page when the issue is resolved.&lt;/p&gt;&lt;p&gt;&lt;small&gt;Apr &lt;var data-var='date'&gt; 2&lt;/var&gt;, &lt;var data-var='time'&gt;10:02&lt;/var&gt; PDT&lt;/small&gt;&lt;br&gt;&lt;strong&gt;Investigating&lt;/strong&gt; - We are currently investigating this issue.&lt;/p&gt;</content>
+  </entry>
+  <entry>
+    <id>tag:status.anthropic.com,2005:Incident/20430630</id>
+    <published>2024-04-02T09:57:02-07:00</published>
+    <updated>2024-04-02T09:57:02-07:00</updated>
+    <link rel="alternate" type="text/html" href="https://status.anthropic.com/incidents/s1zv2h77jgw4"/>
+    <title>Partial login failure on claude.ai</title>
+    <content type="html">&lt;p&gt;&lt;small&gt;Apr &lt;var data-var='date'&gt; 2&lt;/var&gt;, &lt;var data-var='time'&gt;09:57&lt;/var&gt; PDT&lt;/small&gt;&lt;br&gt;&lt;strong&gt;Resolved&lt;/strong&gt; - The issues have been resolved and Claude.ai logins are now working properly.&lt;/p&gt;&lt;p&gt;&lt;small&gt;Apr &lt;var data-var='date'&gt; 2&lt;/var&gt;, &lt;var data-var='time'&gt;09:41&lt;/var&gt; PDT&lt;/small&gt;&lt;br&gt;&lt;strong&gt;Investigating&lt;/strong&gt; - We are currently investigating this issue.&lt;/p&gt;</content>
+  </entry>
+  <entry>
+    <id>tag:status.anthropic.com,2005:Incident/20420954</id>
+    <published>2024-04-01T09:00:00-07:00</published>
+    <updated>2024-04-01T10:33:10-07:00</updated>
+    <link rel="alternate" type="text/html" href="https://status.anthropic.com/incidents/yk00k5x6jzc3"/>
+    <title>Sonnet Partial Outage</title>
+    <content type="html">&lt;p&gt;&lt;small&gt;Apr &lt;var data-var='date'&gt; 1&lt;/var&gt;, &lt;var data-var='time'&gt;09:00&lt;/var&gt; PDT&lt;/small&gt;&lt;br&gt;&lt;strong&gt;Resolved&lt;/strong&gt; - Claude 3 Sonnet was partially unavailable and returned 529 status codes on many requests&lt;/p&gt;</content>
+  </entry>
+  <entry>
+    <id>tag:status.anthropic.com,2005:Incident/20388525</id>
+    <published>2024-03-28T11:33:53-07:00</published>
+    <updated>2024-03-28T11:33:53-07:00</updated>
+    <link rel="alternate" type="text/html" href="https://status.anthropic.com/incidents/tk1x8n0mbnsw"/>
+    <title>Elevated rate of errors on Claude 3 Opus</title>
+    <content type="html">&lt;p&gt;&lt;small&gt;Mar &lt;var data-var='date'&gt;28&lt;/var&gt;, &lt;var data-var='time'&gt;11:33&lt;/var&gt; PDT&lt;/small&gt;&lt;br&gt;&lt;strong&gt;Resolved&lt;/strong&gt; - This incident has been resolved.&lt;/p&gt;&lt;p&gt;&lt;small&gt;Mar &lt;var data-var='date'&gt;28&lt;/var&gt;, &lt;var data-var='time'&gt;11:12&lt;/var&gt; PDT&lt;/small&gt;&lt;br&gt;&lt;strong&gt;Monitoring&lt;/strong&gt; - A fix has been implemented and we are monitoring the results.&lt;/p&gt;&lt;p&gt;&lt;small&gt;Mar &lt;var data-var='date'&gt;28&lt;/var&gt;, &lt;var data-var='time'&gt;09:36&lt;/var&gt; PDT&lt;/small&gt;&lt;br&gt;&lt;strong&gt;Identified&lt;/strong&gt; - The issue has been identified and a fix is being implemented.&lt;/p&gt;&lt;p&gt;&lt;small&gt;Mar &lt;var data-var='date'&gt;28&lt;/var&gt;, &lt;var data-var='time'&gt;08:59&lt;/var&gt; PDT&lt;/small&gt;&lt;br&gt;&lt;strong&gt;Update&lt;/strong&gt; - We are continuing to investigate this issue.&lt;/p&gt;&lt;p&gt;&lt;small&gt;Mar &lt;var data-var='date'&gt;28&lt;/var&gt;, &lt;var data-var='time'&gt;07:22&lt;/var&gt; PDT&lt;/small&gt;&lt;br&gt;&lt;strong&gt;Investigating&lt;/strong&gt; - We are currently investigating this issue.&lt;/p&gt;</content>
+  </entry>
+  <entry>
+    <id>tag:status.anthropic.com,2005:Incident/20363187</id>
+    <published>2024-03-26T13:23:59-07:00</published>
+    <updated>2024-03-26T13:23:59-07:00</updated>
+    <link rel="alternate" type="text/html" href="https://status.anthropic.com/incidents/qkx8wwyfdlh7"/>
+    <title>Partial Outage of docs.anthropic.com</title>
+    <content type="html">&lt;p&gt;&lt;small&gt;Mar &lt;var data-var='date'&gt;26&lt;/var&gt;, &lt;var data-var='time'&gt;13:23&lt;/var&gt; PDT&lt;/small&gt;&lt;br&gt;&lt;strong&gt;Resolved&lt;/strong&gt; - Our documentation host has recovered from outage as of 12:48 PDT&lt;/p&gt;&lt;p&gt;&lt;small&gt;Mar &lt;var data-var='date'&gt;26&lt;/var&gt;, &lt;var data-var='time'&gt;09:49&lt;/var&gt; PDT&lt;/small&gt;&lt;br&gt;&lt;strong&gt;Investigating&lt;/strong&gt; - See https://www.readmestatus.com/ for more information.&lt;/p&gt;</content>
+  </entry>
+  <entry>
+    <id>tag:status.anthropic.com,2005:Incident/20363147</id>
+    <published>2024-03-26T11:32:18-07:00</published>
+    <updated>2024-03-26T11:32:18-07:00</updated>
+    <link rel="alternate" type="text/html" href="https://status.anthropic.com/incidents/xpbzq5smcjsf"/>
+    <title>Degraded performance for haiku</title>
+    <content type="html">&lt;p&gt;&lt;small&gt;Mar &lt;var data-var='date'&gt;26&lt;/var&gt;, &lt;var data-var='time'&gt;11:32&lt;/var&gt; PDT&lt;/small&gt;&lt;br&gt;&lt;strong&gt;Resolved&lt;/strong&gt; - This incident has been resolved.&lt;/p&gt;&lt;p&gt;&lt;small&gt;Mar &lt;var data-var='date'&gt;26&lt;/var&gt;, &lt;var data-var='time'&gt;09:59&lt;/var&gt; PDT&lt;/small&gt;&lt;br&gt;&lt;strong&gt;Update&lt;/strong&gt; - We are continuing to investigate this issue.&lt;/p&gt;&lt;p&gt;&lt;small&gt;Mar &lt;var data-var='date'&gt;26&lt;/var&gt;, &lt;var data-var='time'&gt;09:42&lt;/var&gt; PDT&lt;/small&gt;&lt;br&gt;&lt;strong&gt;Investigating&lt;/strong&gt; - We are currently investigating this issue.&lt;/p&gt;</content>
+  </entry>
+  <entry>
+    <id>tag:status.anthropic.com,2005:Incident/20367714</id>
+    <published>2024-03-26T07:30:00-07:00</published>
+    <updated>2024-03-26T16:55:44-07:00</updated>
+    <link rel="alternate" type="text/html" href="https://status.anthropic.com/incidents/xpc4kjt7t0cw"/>
+    <title>Claude Instant 1.2 Partial Outage</title>
+    <content type="html">&lt;p&gt;&lt;small&gt;Mar &lt;var data-var='date'&gt;26&lt;/var&gt;, &lt;var data-var='time'&gt;07:30&lt;/var&gt; PDT&lt;/small&gt;&lt;br&gt;&lt;strong&gt;Resolved&lt;/strong&gt; - Partial Outage on Claude Instant 1.2&lt;/p&gt;</content>
+  </entry>
+</feed>

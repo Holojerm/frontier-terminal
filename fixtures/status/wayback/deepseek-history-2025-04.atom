@@ -1,0 +1,211 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<feed xml:lang="en-US" xmlns="http://www.w3.org/2005/Atom">
+  <id>tag:status.deepseek.com,2005:/history</id>
+  <link rel="alternate" type="text/html" href="https://status.deepseek.com"/>
+  <link rel="self" type="application/atom+xml" href="https://status.deepseek.com/history.atom"/>
+  <title>DeepSeek Service Status - Incident History</title>
+  <updated>2025-04-25T07:01:17+08:00</updated>
+  <author>
+    <name>DeepSeek Service</name>
+  </author>
+  <entry>
+    <id>tag:status.deepseek.com,2005:Incident/24409209</id>
+    <published>2025-03-21T14:38:08+08:00</published>
+    <updated>2025-03-21T14:38:09+08:00</updated>
+    <link rel="alternate" type="text/html" href="https://status.deepseek.com/incidents/dsndcmrm3qd3"/>
+    <title>【已恢复】DeepSeek 网页/API不可用（ [Resolved] DeepSeek Web/API Service Not Available）</title>
+    <content type="html">&lt;p&gt;&lt;small&gt;Mar &lt;var data-var='date'&gt;21&lt;/var&gt;, &lt;var data-var='time'&gt;14:38&lt;/var&gt; CST&lt;/small&gt;&lt;br&gt;&lt;strong&gt;Resolved&lt;/strong&gt; - This incident has been resolved.&lt;/p&gt;&lt;p&gt;&lt;small&gt;Mar &lt;var data-var='date'&gt;21&lt;/var&gt;, &lt;var data-var='time'&gt;14:28&lt;/var&gt; CST&lt;/small&gt;&lt;br&gt;&lt;strong&gt;Identified&lt;/strong&gt; - 系统升级过程中导致故障，正在全力排查恢复中&lt;br /&gt;（A fault has occurred during the system upgrade process. We are currently working at full capacity to investigate and restore the system.）&lt;/p&gt;</content>
+  </entry>
+  <entry>
+    <id>tag:status.deepseek.com,2005:Incident/24399783</id>
+    <published>2025-03-20T14:11:57+08:00</published>
+    <updated>2025-03-20T14:11:57+08:00</updated>
+    <link rel="alternate" type="text/html" href="https://status.deepseek.com/incidents/7s1n8wkmyx8c"/>
+    <title>【已恢复】DeepSeek R1 网页/API不可用（[Resolved] DeepSeek R1 Web/API Service Not Available）</title>
+    <content type="html">&lt;p&gt;&lt;small&gt;Mar &lt;var data-var='date'&gt;20&lt;/var&gt;, &lt;var data-var='time'&gt;14:11&lt;/var&gt; CST&lt;/small&gt;&lt;br&gt;&lt;strong&gt;Resolved&lt;/strong&gt; - This incident has been resolved.&lt;/p&gt;&lt;p&gt;&lt;small&gt;Mar &lt;var data-var='date'&gt;20&lt;/var&gt;, &lt;var data-var='time'&gt;14:04&lt;/var&gt; CST&lt;/small&gt;&lt;br&gt;&lt;strong&gt;Investigating&lt;/strong&gt; - We are currently investigating this issue.&lt;/p&gt;</content>
+  </entry>
+  <entry>
+    <id>tag:status.deepseek.com,2005:Incident/24293020</id>
+    <published>2025-03-11T00:38:07+08:00</published>
+    <updated>2025-03-11T00:38:07+08:00</updated>
+    <link rel="alternate" type="text/html" href="https://status.deepseek.com/incidents/4682d3lb2xyx"/>
+    <title>【已恢复】DeepSeek R1 网页/API不可用（[Resolved] DeepSeek R1 Web/API Service Not Available）</title>
+    <content type="html">&lt;p&gt;&lt;small&gt;Mar &lt;var data-var='date'&gt;11&lt;/var&gt;, &lt;var data-var='time'&gt;00:38&lt;/var&gt; CST&lt;/small&gt;&lt;br&gt;&lt;strong&gt;Resolved&lt;/strong&gt; - This incident has been resolved.&lt;/p&gt;&lt;p&gt;&lt;small&gt;Mar &lt;var data-var='date'&gt;11&lt;/var&gt;, &lt;var data-var='time'&gt;00:12&lt;/var&gt; CST&lt;/small&gt;&lt;br&gt;&lt;strong&gt;Investigating&lt;/strong&gt; - We are currently investigating this issue.&lt;/p&gt;</content>
+  </entry>
+  <entry>
+    <id>tag:status.deepseek.com,2005:Incident/23886575</id>
+    <published>2025-02-26T10:02:47+08:00</published>
+    <updated>2025-02-26T10:02:47+08:00</updated>
+    <link rel="alternate" type="text/html" href="https://status.deepseek.com/incidents/56wzldbxrr2c"/>
+    <title>DeepSeek 网页/API 性能异常（DeepSeek Web/API Degraded Performance）</title>
+    <content type="html">&lt;p&gt;&lt;small&gt;Feb &lt;var data-var='date'&gt;26&lt;/var&gt;, &lt;var data-var='time'&gt;10:02&lt;/var&gt; CST&lt;/small&gt;&lt;br&gt;&lt;strong&gt;Resolved&lt;/strong&gt; - This incident has been resolved.&lt;/p&gt;&lt;p&gt;&lt;small&gt;Feb &lt;var data-var='date'&gt; 8&lt;/var&gt;, &lt;var data-var='time'&gt;14:52&lt;/var&gt; CST&lt;/small&gt;&lt;br&gt;&lt;strong&gt;Monitoring&lt;/strong&gt; - We are working hard to optimize the system...&lt;/p&gt;</content>
+  </entry>
+  <entry>
+    <id>tag:status.deepseek.com,2005:Incident/23710868</id>
+    <published>2025-02-08T14:49:00+08:00</published>
+    <updated>2025-02-08T14:49:00+08:00</updated>
+    <link rel="alternate" type="text/html" href="https://status.deepseek.com/incidents/666k4t024szr"/>
+    <title>DeepSeek 网页/API 性能异常（DeepSeek Web/API Degraded Performance）</title>
+    <content type="html">&lt;p&gt;&lt;small&gt;Feb &lt;var data-var='date'&gt; 8&lt;/var&gt;, &lt;var data-var='time'&gt;14:49&lt;/var&gt; CST&lt;/small&gt;&lt;br&gt;&lt;strong&gt;Resolved&lt;/strong&gt; - This incident has been resolved.&lt;/p&gt;&lt;p&gt;&lt;small&gt;Feb &lt;var data-var='date'&gt; 5&lt;/var&gt;, &lt;var data-var='time'&gt;11:20&lt;/var&gt; CST&lt;/small&gt;&lt;br&gt;&lt;strong&gt;Update&lt;/strong&gt; - We are continuing to monitor for any further issues.&lt;/p&gt;&lt;p&gt;&lt;small&gt;Feb &lt;var data-var='date'&gt; 1&lt;/var&gt;, &lt;var data-var='time'&gt;00:17&lt;/var&gt; CST&lt;/small&gt;&lt;br&gt;&lt;strong&gt;Monitoring&lt;/strong&gt; - A fix has been implemented and we are monitoring the results.&lt;/p&gt;&lt;p&gt;&lt;small&gt;Jan &lt;var data-var='date'&gt;31&lt;/var&gt;, &lt;var data-var='time'&gt;22:10&lt;/var&gt; CST&lt;/small&gt;&lt;br&gt;&lt;strong&gt;Identified&lt;/strong&gt; - The issue has been identified and a fix is being implemented.&lt;/p&gt;&lt;p&gt;&lt;small&gt;Jan &lt;var data-var='date'&gt;31&lt;/var&gt;, &lt;var data-var='time'&gt;01:19&lt;/var&gt; CST&lt;/small&gt;&lt;br&gt;&lt;strong&gt;Monitoring&lt;/strong&gt; - A fix has been implemented and we are monitoring the results.&lt;/p&gt;&lt;p&gt;&lt;small&gt;Jan &lt;var data-var='date'&gt;30&lt;/var&gt;, &lt;var data-var='time'&gt;23:59&lt;/var&gt; CST&lt;/small&gt;&lt;br&gt;&lt;strong&gt;Investigating&lt;/strong&gt; - We are currently investigating this issue.&lt;/p&gt;&lt;p&gt;&lt;small&gt;Jan &lt;var data-var='date'&gt;29&lt;/var&gt;, &lt;var data-var='time'&gt;20:57&lt;/var&gt; CST&lt;/small&gt;&lt;br&gt;&lt;strong&gt;Identified&lt;/strong&gt; - The issue has been identified and a fix is being implemented.&lt;/p&gt;&lt;p&gt;&lt;small&gt;Jan &lt;var data-var='date'&gt;28&lt;/var&gt;, &lt;var data-var='time'&gt;22:30&lt;/var&gt; CST&lt;/small&gt;&lt;br&gt;&lt;strong&gt;Update&lt;/strong&gt; - We are continuing to monitor for any further issues.&lt;/p&gt;&lt;p&gt;&lt;small&gt;Jan &lt;var data-var='date'&gt;28&lt;/var&gt;, &lt;var data-var='time'&gt;17:07&lt;/var&gt; CST&lt;/small&gt;&lt;br&gt;&lt;strong&gt;Update&lt;/strong&gt; - 近期DeepSeek线上服务受到大规模恶意攻击，注册可能繁忙，请稍等重试。已注册用户可以正常登录，感谢理解和支持。&lt;br /&gt;&lt;br /&gt;Due to large-scale malicious attacks on DeepSeek's services, we are temporarily limiting registrations to ensure continued service. Existing users can log in as usual. Thanks for your understanding and support.&lt;/p&gt;&lt;p&gt;&lt;small&gt;Jan &lt;var data-var='date'&gt;28&lt;/var&gt;, &lt;var data-var='time'&gt;17:06&lt;/var&gt; CST&lt;/small&gt;&lt;br&gt;&lt;strong&gt;Monitoring&lt;/strong&gt; - A fix has been implemented and we are monitoring the results.&lt;/p&gt;&lt;p&gt;&lt;small&gt;Jan &lt;var data-var='date'&gt;28&lt;/var&gt;, &lt;var data-var='time'&gt;17:03&lt;/var&gt; CST&lt;/small&gt;&lt;br&gt;&lt;strong&gt;Identified&lt;/strong&gt; - The issue has been identified and a fix is being implemented.&lt;/p&gt;&lt;p&gt;&lt;small&gt;Jan &lt;var data-var='date'&gt;28&lt;/var&gt;, &lt;var data-var='time'&gt;17:01&lt;/var&gt; CST&lt;/small&gt;&lt;br&gt;&lt;strong&gt;Update&lt;/strong&gt; - We are continuing to monitor for any further issues.&lt;/p&gt;&lt;p&gt;&lt;small&gt;Jan &lt;var data-var='date'&gt;28&lt;/var&gt;, &lt;var data-var='time'&gt;00:19&lt;/var&gt; CST&lt;/small&gt;&lt;br&gt;&lt;strong&gt;Update&lt;/strong&gt; - 近期DeepSeek线上服务受到大规模恶意攻击，注册可能繁忙，请稍等重试。已注册用户可以正常登录，感谢理解和支持。&lt;br /&gt;&lt;br /&gt;Due to large-scale malicious attacks on DeepSeek's services, we are temporarily limiting registrations to ensure continued service. Existing users can log in as usual. Thanks for your understanding and support.&lt;/p&gt;&lt;p&gt;&lt;small&gt;Jan &lt;var data-var='date'&gt;28&lt;/var&gt;, &lt;var data-var='time'&gt;00:06&lt;/var&gt; CST&lt;/small&gt;&lt;br&gt;&lt;strong&gt;Update&lt;/strong&gt; - We are continuing to investigate this issue.&lt;/p&gt;&lt;p&gt;&lt;small&gt;Jan &lt;var data-var='date'&gt;27&lt;/var&gt;, &lt;var data-var='time'&gt;23:15&lt;/var&gt; CST&lt;/small&gt;&lt;br&gt;&lt;strong&gt;Monitoring&lt;/strong&gt; - We are continuing to investigate this issue.&lt;/p&gt;&lt;p&gt;&lt;small&gt;Jan &lt;var data-var='date'&gt;27&lt;/var&gt;, &lt;var data-var='time'&gt;21:52&lt;/var&gt; CST&lt;/small&gt;&lt;br&gt;&lt;strong&gt;Update&lt;/strong&gt; - We are continuing to investigate this issue.&lt;/p&gt;&lt;p&gt;&lt;small&gt;Jan &lt;var data-var='date'&gt;27&lt;/var&gt;, &lt;var data-var='time'&gt;21:33&lt;/var&gt; CST&lt;/small&gt;&lt;br&gt;&lt;strong&gt;Investigating&lt;/strong&gt; - We are currently investigating this issue.&lt;/p&gt;</content>
+  </entry>
+  <entry>
+    <id>tag:status.deepseek.com,2005:Incident/23710237</id>
+    <published>2025-01-27T21:32:29+08:00</published>
+    <updated>2025-01-27T21:32:29+08:00</updated>
+    <link rel="alternate" type="text/html" href="https://status.deepseek.com/incidents/hcwm6sbrd74b"/>
+    <title>DeepSeek 无法登录/注册（Cannot Login/Sign up on DeepSeek）</title>
+    <content type="html">&lt;p&gt;&lt;small&gt;Jan &lt;var data-var='date'&gt;27&lt;/var&gt;, &lt;var data-var='time'&gt;21:32&lt;/var&gt; CST&lt;/small&gt;&lt;br&gt;&lt;strong&gt;Resolved&lt;/strong&gt; - This incident has been resolved.&lt;/p&gt;&lt;p&gt;&lt;small&gt;Jan &lt;var data-var='date'&gt;27&lt;/var&gt;, &lt;var data-var='time'&gt;21:11&lt;/var&gt; CST&lt;/small&gt;&lt;br&gt;&lt;strong&gt;Investigating&lt;/strong&gt; - We are investigating the account issue.&lt;/p&gt;&lt;p&gt;&lt;small&gt;Jan &lt;var data-var='date'&gt;27&lt;/var&gt;, &lt;var data-var='time'&gt;21:06&lt;/var&gt; CST&lt;/small&gt;&lt;br&gt;&lt;strong&gt;Update&lt;/strong&gt; - We are continuing to monitor for any further issues.&lt;/p&gt;&lt;p&gt;&lt;small&gt;Jan &lt;var data-var='date'&gt;27&lt;/var&gt;, &lt;var data-var='time'&gt;21:05&lt;/var&gt; CST&lt;/small&gt;&lt;br&gt;&lt;strong&gt;Update&lt;/strong&gt; - We are continuing to monitor for any further issues.&lt;/p&gt;&lt;p&gt;&lt;small&gt;Jan &lt;var data-var='date'&gt;27&lt;/var&gt;, &lt;var data-var='time'&gt;20:55&lt;/var&gt; CST&lt;/small&gt;&lt;br&gt;&lt;strong&gt;Monitoring&lt;/strong&gt; - The chat service has recovered.&lt;br /&gt;The account service still has some problem. You may not login or sign up at this time.&lt;/p&gt;&lt;p&gt;&lt;small&gt;Jan &lt;var data-var='date'&gt;27&lt;/var&gt;, &lt;var data-var='time'&gt;20:16&lt;/var&gt; CST&lt;/small&gt;&lt;br&gt;&lt;strong&gt;Investigating&lt;/strong&gt; - We are currently investigating this issue.&lt;/p&gt;</content>
+  </entry>
+  <entry>
+    <id>tag:status.deepseek.com,2005:Incident/23707519</id>
+    <published>2025-01-27T16:43:18+08:00</published>
+    <updated>2025-01-27T16:43:18+08:00</updated>
+    <link rel="alternate" type="text/html" href="https://status.deepseek.com/incidents/vx6w5ypzpgj7"/>
+    <title>【已恢复】DeepSeek 网页/API不可用（[Resolved]DeepSeek Web/API Service Not Available）</title>
+    <content type="html">&lt;p&gt;&lt;small&gt;Jan &lt;var data-var='date'&gt;27&lt;/var&gt;, &lt;var data-var='time'&gt;16:43&lt;/var&gt; CST&lt;/small&gt;&lt;br&gt;&lt;strong&gt;Resolved&lt;/strong&gt; - This incident has been resolved.&lt;/p&gt;&lt;p&gt;&lt;small&gt;Jan &lt;var data-var='date'&gt;27&lt;/var&gt;, &lt;var data-var='time'&gt;16:33&lt;/var&gt; CST&lt;/small&gt;&lt;br&gt;&lt;strong&gt;Monitoring&lt;/strong&gt; - A fix has been implemented and we are monitoring the results.&lt;/p&gt;&lt;p&gt;&lt;small&gt;Jan &lt;var data-var='date'&gt;27&lt;/var&gt;, &lt;var data-var='time'&gt;16:07&lt;/var&gt; CST&lt;/small&gt;&lt;br&gt;&lt;strong&gt;Investigating&lt;/strong&gt; - We are currently investigating this issue.&lt;/p&gt;&lt;p&gt;&lt;small&gt;Jan &lt;var data-var='date'&gt;27&lt;/var&gt;, &lt;var data-var='time'&gt;14:39&lt;/var&gt; CST&lt;/small&gt;&lt;br&gt;&lt;strong&gt;Monitoring&lt;/strong&gt; - A fix has been implemented and we are monitoring the results.&lt;/p&gt;&lt;p&gt;&lt;small&gt;Jan &lt;var data-var='date'&gt;27&lt;/var&gt;, &lt;var data-var='time'&gt;14:37&lt;/var&gt; CST&lt;/small&gt;&lt;br&gt;&lt;strong&gt;Update&lt;/strong&gt; - We are continuing to investigate this issue.&lt;/p&gt;&lt;p&gt;&lt;small&gt;Jan &lt;var data-var='date'&gt;27&lt;/var&gt;, &lt;var data-var='time'&gt;14:37&lt;/var&gt; CST&lt;/small&gt;&lt;br&gt;&lt;strong&gt;Investigating&lt;/strong&gt; - We are currently investigating this issue.&lt;/p&gt;</content>
+  </entry>
+  <entry>
+    <id>tag:status.deepseek.com,2005:Incident/23705966</id>
+    <published>2025-01-27T14:21:28+08:00</published>
+    <updated>2025-01-27T14:21:28+08:00</updated>
+    <link rel="alternate" type="text/html" href="https://status.deepseek.com/incidents/yvn1bvywfrzm"/>
+    <title>DeepSeek API不可用（DeepSeek API Service Not Available）</title>
+    <content type="html">&lt;p&gt;&lt;small&gt;Jan &lt;var data-var='date'&gt;27&lt;/var&gt;, &lt;var data-var='time'&gt;14:21&lt;/var&gt; CST&lt;/small&gt;&lt;br&gt;&lt;strong&gt;Resolved&lt;/strong&gt; - V3 api 算是回来了，新年快乐~The V3 API is finally back, Happy Chinese New Year!&lt;/p&gt;&lt;p&gt;&lt;small&gt;Jan &lt;var data-var='date'&gt;27&lt;/var&gt;, &lt;var data-var='time'&gt;13:59&lt;/var&gt; CST&lt;/small&gt;&lt;br&gt;&lt;strong&gt;Identified&lt;/strong&gt; - Striving to restore the V3 API.&lt;/p&gt;&lt;p&gt;&lt;small&gt;Jan &lt;var data-var='date'&gt;27&lt;/var&gt;, &lt;var data-var='time'&gt;13:48&lt;/var&gt; CST&lt;/small&gt;&lt;br&gt;&lt;strong&gt;Monitoring&lt;/strong&gt; - V3 api is recovering...&lt;/p&gt;&lt;p&gt;&lt;small&gt;Jan &lt;var data-var='date'&gt;27&lt;/var&gt;, &lt;var data-var='time'&gt;13:42&lt;/var&gt; CST&lt;/small&gt;&lt;br&gt;&lt;strong&gt;Identified&lt;/strong&gt; - The issue has been identified and a fix is being implemented.&lt;/p&gt;&lt;p&gt;&lt;small&gt;Jan &lt;var data-var='date'&gt;27&lt;/var&gt;, &lt;var data-var='time'&gt;12:02&lt;/var&gt; CST&lt;/small&gt;&lt;br&gt;&lt;strong&gt;Monitoring&lt;/strong&gt; - V3 api is recovering...&lt;/p&gt;&lt;p&gt;&lt;small&gt;Jan &lt;var data-var='date'&gt;27&lt;/var&gt;, &lt;var data-var='time'&gt;12:00&lt;/var&gt; CST&lt;/small&gt;&lt;br&gt;&lt;strong&gt;Update&lt;/strong&gt; - R1 api is working，V3 api is recovering...&lt;/p&gt;&lt;p&gt;&lt;small&gt;Jan &lt;var data-var='date'&gt;27&lt;/var&gt;, &lt;var data-var='time'&gt;11:58&lt;/var&gt; CST&lt;/small&gt;&lt;br&gt;&lt;strong&gt;Identified&lt;/strong&gt; - The issue has been identified and a fix is being implemented.&lt;/p&gt;&lt;p&gt;&lt;small&gt;Jan &lt;var data-var='date'&gt;27&lt;/var&gt;, &lt;var data-var='time'&gt;11:32&lt;/var&gt; CST&lt;/small&gt;&lt;br&gt;&lt;strong&gt;Update&lt;/strong&gt; - R1 api is working，V3 api is recovering...&lt;/p&gt;&lt;p&gt;&lt;small&gt;Jan &lt;var data-var='date'&gt;27&lt;/var&gt;, &lt;var data-var='time'&gt;11:20&lt;/var&gt; CST&lt;/small&gt;&lt;br&gt;&lt;strong&gt;Update&lt;/strong&gt; - We are continuing to investigate this issue.&lt;/p&gt;&lt;p&gt;&lt;small&gt;Jan &lt;var data-var='date'&gt;27&lt;/var&gt;, &lt;var data-var='time'&gt;10:55&lt;/var&gt; CST&lt;/small&gt;&lt;br&gt;&lt;strong&gt;Investigating&lt;/strong&gt; - We are currently investigating this issue.&lt;/p&gt;</content>
+  </entry>
+  <entry>
+    <id>tag:status.deepseek.com,2005:Incident/23701821</id>
+    <published>2025-01-26T23:39:16+08:00</published>
+    <updated>2025-01-26T23:39:16+08:00</updated>
+    <link rel="alternate" type="text/html" href="https://status.deepseek.com/incidents/z5z2yqy9mg73"/>
+    <title>【已恢复】DeepSeek 网页/API不可用（[Resolved]DeepSeek Web/API Service Not Available）</title>
+    <content type="html">&lt;p&gt;&lt;small&gt;Jan &lt;var data-var='date'&gt;26&lt;/var&gt;, &lt;var data-var='time'&gt;23:39&lt;/var&gt; CST&lt;/small&gt;&lt;br&gt;&lt;strong&gt;Resolved&lt;/strong&gt; - This incident has been resolved.&lt;/p&gt;&lt;p&gt;&lt;small&gt;Jan &lt;var data-var='date'&gt;26&lt;/var&gt;, &lt;var data-var='time'&gt;23:28&lt;/var&gt; CST&lt;/small&gt;&lt;br&gt;&lt;strong&gt;Monitoring&lt;/strong&gt; - A fix has been implemented and we are monitoring the results.&lt;/p&gt;&lt;p&gt;&lt;small&gt;Jan &lt;var data-var='date'&gt;26&lt;/var&gt;, &lt;var data-var='time'&gt;22:59&lt;/var&gt; CST&lt;/small&gt;&lt;br&gt;&lt;strong&gt;Investigating&lt;/strong&gt; - We are currently investigating this issue.&lt;/p&gt;</content>
+  </entry>
+  <entry>
+    <id>tag:status.deepseek.com,2005:Incident/23698652</id>
+    <published>2025-01-26T14:39:28+08:00</published>
+    <updated>2025-01-26T14:39:28+08:00</updated>
+    <link rel="alternate" type="text/html" href="https://status.deepseek.com/incidents/4m82lwn2v0lg"/>
+    <title>【已恢复】DeepSeek-R1 网页/API不可用（[Resolved]DeepSeek-R1 Web/API Service Not Available）</title>
+    <content type="html">&lt;p&gt;&lt;small&gt;Jan &lt;var data-var='date'&gt;26&lt;/var&gt;, &lt;var data-var='time'&gt;14:39&lt;/var&gt; CST&lt;/small&gt;&lt;br&gt;&lt;strong&gt;Resolved&lt;/strong&gt; - This incident has been resolved.&lt;/p&gt;&lt;p&gt;&lt;small&gt;Jan &lt;var data-var='date'&gt;26&lt;/var&gt;, &lt;var data-var='time'&gt;14:34&lt;/var&gt; CST&lt;/small&gt;&lt;br&gt;&lt;strong&gt;Investigating&lt;/strong&gt; - We are currently investigating this issue.&lt;/p&gt;</content>
+  </entry>
+  <entry>
+    <id>tag:status.deepseek.com,2005:Incident/23547356</id>
+    <published>2025-01-14T15:55:24+08:00</published>
+    <updated>2025-01-14T15:55:24+08:00</updated>
+    <link rel="alternate" type="text/html" href="https://status.deepseek.com/incidents/hl6qsv2ls96q"/>
+    <title>【已恢复】DeepSeek 网页不可用（[Resolved] DeepSeek Web Service Not Available）</title>
+    <content type="html">&lt;p&gt;&lt;small&gt;Jan &lt;var data-var='date'&gt;14&lt;/var&gt;, &lt;var data-var='time'&gt;15:55&lt;/var&gt; CST&lt;/small&gt;&lt;br&gt;&lt;strong&gt;Resolved&lt;/strong&gt; - This incident has been resolved.&lt;/p&gt;&lt;p&gt;&lt;small&gt;Jan &lt;var data-var='date'&gt;14&lt;/var&gt;, &lt;var data-var='time'&gt;15:54&lt;/var&gt; CST&lt;/small&gt;&lt;br&gt;&lt;strong&gt;Investigating&lt;/strong&gt; - We are currently investigating this issue.&lt;/p&gt;</content>
+  </entry>
+  <entry>
+    <id>tag:status.deepseek.com,2005:Incident/23477080</id>
+    <published>2025-01-08T15:26:17+08:00</published>
+    <updated>2025-01-08T15:26:17+08:00</updated>
+    <link rel="alternate" type="text/html" href="https://status.deepseek.com/incidents/ng00l8cxs1hv"/>
+    <title>【已恢复】DeepSeek 网页/API不可用（[Resolved] DeepSeek Web/API Service Not Available）</title>
+    <content type="html">&lt;p&gt;&lt;small&gt;Jan &lt;var data-var='date'&gt; 8&lt;/var&gt;, &lt;var data-var='time'&gt;15:26&lt;/var&gt; CST&lt;/small&gt;&lt;br&gt;&lt;strong&gt;Resolved&lt;/strong&gt; - This incident has been resolved.&lt;/p&gt;&lt;p&gt;&lt;small&gt;Jan &lt;var data-var='date'&gt; 8&lt;/var&gt;, &lt;var data-var='time'&gt;15:12&lt;/var&gt; CST&lt;/small&gt;&lt;br&gt;&lt;strong&gt;Investigating&lt;/strong&gt; - We are currently investigating this issue.&lt;/p&gt;</content>
+  </entry>
+  <entry>
+    <id>tag:status.deepseek.com,2005:Incident/23474870</id>
+    <published>2025-01-08T10:56:54+08:00</published>
+    <updated>2025-01-08T10:56:54+08:00</updated>
+    <link rel="alternate" type="text/html" href="https://status.deepseek.com/incidents/7vfz48p83nm1"/>
+    <title>【已恢复】DeepSeek 网页/API不可用（[Resolved]DeepSeek Web/API Service Not Available）</title>
+    <content type="html">&lt;p&gt;&lt;small&gt;Jan &lt;var data-var='date'&gt; 8&lt;/var&gt;, &lt;var data-var='time'&gt;10:56&lt;/var&gt; CST&lt;/small&gt;&lt;br&gt;&lt;strong&gt;Resolved&lt;/strong&gt; - This incident has been resolved.&lt;/p&gt;&lt;p&gt;&lt;small&gt;Jan &lt;var data-var='date'&gt; 8&lt;/var&gt;, &lt;var data-var='time'&gt;10:29&lt;/var&gt; CST&lt;/small&gt;&lt;br&gt;&lt;strong&gt;Investigating&lt;/strong&gt; - We are currently investigating this issue.&lt;/p&gt;</content>
+  </entry>
+  <entry>
+    <id>tag:status.deepseek.com,2005:Incident/23421461</id>
+    <published>2025-01-03T16:04:10+08:00</published>
+    <updated>2025-01-03T16:04:10+08:00</updated>
+    <link rel="alternate" type="text/html" href="https://status.deepseek.com/incidents/nygflmw3nytf"/>
+    <title>【已恢复】DeepSeek 网页/API不可用（[Resolved]DeepSeek Web/API Service Not Available）</title>
+    <content type="html">&lt;p&gt;&lt;small&gt;Jan &lt;var data-var='date'&gt; 3&lt;/var&gt;, &lt;var data-var='time'&gt;16:04&lt;/var&gt; CST&lt;/small&gt;&lt;br&gt;&lt;strong&gt;Resolved&lt;/strong&gt; - This incident has been resolved.&lt;/p&gt;&lt;p&gt;&lt;small&gt;Jan &lt;var data-var='date'&gt; 3&lt;/var&gt;, &lt;var data-var='time'&gt;15:49&lt;/var&gt; CST&lt;/small&gt;&lt;br&gt;&lt;strong&gt;Investigating&lt;/strong&gt; - We are currently investigating this issue.&lt;/p&gt;</content>
+  </entry>
+  <entry>
+    <id>tag:status.deepseek.com,2005:Incident/23338096</id>
+    <published>2024-12-26T23:04:44+08:00</published>
+    <updated>2024-12-26T23:04:44+08:00</updated>
+    <link rel="alternate" type="text/html" href="https://status.deepseek.com/incidents/smnlzd31hkvk"/>
+    <title>【已解决】DeepSeek 网页/API不可用（[Resolved] DeepSeek Web/API Service Not Available）</title>
+    <content type="html">&lt;p&gt;&lt;small&gt;Dec &lt;var data-var='date'&gt;26&lt;/var&gt;, &lt;var data-var='time'&gt;23:04&lt;/var&gt; CST&lt;/small&gt;&lt;br&gt;&lt;strong&gt;Resolved&lt;/strong&gt; - This incident has been resolved.&lt;/p&gt;&lt;p&gt;&lt;small&gt;Dec &lt;var data-var='date'&gt;26&lt;/var&gt;, &lt;var data-var='time'&gt;22:57&lt;/var&gt; CST&lt;/small&gt;&lt;br&gt;&lt;strong&gt;Monitoring&lt;/strong&gt; - A fix has been implemented and we are monitoring the results.&lt;/p&gt;&lt;p&gt;&lt;small&gt;Dec &lt;var data-var='date'&gt;26&lt;/var&gt;, &lt;var data-var='time'&gt;22:44&lt;/var&gt; CST&lt;/small&gt;&lt;br&gt;&lt;strong&gt;Investigating&lt;/strong&gt; - We are currently investigating this issue.&lt;/p&gt;</content>
+  </entry>
+  <entry>
+    <id>tag:status.deepseek.com,2005:Incident/23331812</id>
+    <published>2024-12-26T09:39:19+08:00</published>
+    <updated>2024-12-26T09:39:19+08:00</updated>
+    <link rel="alternate" type="text/html" href="https://status.deepseek.com/incidents/csfc3ghb43tb"/>
+    <title>【已恢复】DeepSeek 网页/API不可用（[Resolved] DeepSeek Web/API Service Not Available）</title>
+    <content type="html">&lt;p&gt;&lt;small&gt;Dec &lt;var data-var='date'&gt;26&lt;/var&gt;, &lt;var data-var='time'&gt;09:39&lt;/var&gt; CST&lt;/small&gt;&lt;br&gt;&lt;strong&gt;Resolved&lt;/strong&gt; - This incident has been resolved.&lt;/p&gt;&lt;p&gt;&lt;small&gt;Dec &lt;var data-var='date'&gt;26&lt;/var&gt;, &lt;var data-var='time'&gt;09:34&lt;/var&gt; CST&lt;/small&gt;&lt;br&gt;&lt;strong&gt;Investigating&lt;/strong&gt; - We are currently investigating this issue.&lt;/p&gt;</content>
+  </entry>
+  <entry>
+    <id>tag:status.deepseek.com,2005:Incident/22983030</id>
+    <published>2024-11-27T15:45:00+08:00</published>
+    <updated>2024-11-27T15:55:27+08:00</updated>
+    <link rel="alternate" type="text/html" href="https://status.deepseek.com/incidents/7cppyxbhctc3"/>
+    <title>DeepSeek 网页/API不可用（DeepSeek Web/API Service Not Available）</title>
+    <content type="html">&lt;p&gt;&lt;small&gt;Nov &lt;var data-var='date'&gt;27&lt;/var&gt;, &lt;var data-var='time'&gt;15:45&lt;/var&gt; CST&lt;/small&gt;&lt;br&gt;&lt;strong&gt;Resolved&lt;/strong&gt; - DeepSeek 网页/API不可用（DeepSeek Web/API Service Not Available）&lt;/p&gt;</content>
+  </entry>
+  <entry>
+    <id>tag:status.deepseek.com,2005:Incident/22849535</id>
+    <published>2024-11-13T18:22:44+08:00</published>
+    <updated>2024-11-13T18:22:44+08:00</updated>
+    <link rel="alternate" type="text/html" href="https://status.deepseek.com/incidents/6vp46x03v0d3"/>
+    <title>【已恢复】DeepSeek Coder 网页/API不可用（[Resolved] DeepSeek Coder Web/API Service Not Available）</title>
+    <content type="html">&lt;p&gt;&lt;small&gt;Nov &lt;var data-var='date'&gt;13&lt;/var&gt;, &lt;var data-var='time'&gt;18:22&lt;/var&gt; CST&lt;/small&gt;&lt;br&gt;&lt;strong&gt;Resolved&lt;/strong&gt; - This incident has been resolved.&lt;/p&gt;&lt;p&gt;&lt;small&gt;Nov &lt;var data-var='date'&gt;13&lt;/var&gt;, &lt;var data-var='time'&gt;18:12&lt;/var&gt; CST&lt;/small&gt;&lt;br&gt;&lt;strong&gt;Investigating&lt;/strong&gt; - We are currently investigating this issue.&lt;/p&gt;</content>
+  </entry>
+  <entry>
+    <id>tag:status.deepseek.com,2005:Incident/22638361</id>
+    <published>2024-10-23T10:52:59+08:00</published>
+    <updated>2024-10-23T10:52:59+08:00</updated>
+    <link rel="alternate" type="text/html" href="https://status.deepseek.com/incidents/gpbfz6bgyqcl"/>
+    <title>【已恢复】DeepSeek Coder 网页/API不可用（[Resolved] DeepSeek Coder Web/API Service Not Available）</title>
+    <content type="html">&lt;p&gt;&lt;small&gt;Oct &lt;var data-var='date'&gt;23&lt;/var&gt;, &lt;var data-var='time'&gt;10:52&lt;/var&gt; CST&lt;/small&gt;&lt;br&gt;&lt;strong&gt;Resolved&lt;/strong&gt; - This incident has been resolved.&lt;/p&gt;&lt;p&gt;&lt;small&gt;Oct &lt;var data-var='date'&gt;23&lt;/var&gt;, &lt;var data-var='time'&gt;10:41&lt;/var&gt; CST&lt;/small&gt;&lt;br&gt;&lt;strong&gt;Investigating&lt;/strong&gt; - We are currently investigating this issue.&lt;/p&gt;</content>
+  </entry>
+  <entry>
+    <id>tag:status.deepseek.com,2005:Incident/22625761</id>
+    <published>2024-10-22T10:31:29+08:00</published>
+    <updated>2024-10-22T10:31:29+08:00</updated>
+    <link rel="alternate" type="text/html" href="https://status.deepseek.com/incidents/zh66y84kjdh0"/>
+    <title>【已恢复】DeepSeek Coder 网页/API不可用（[Resolved] DeepSeek Coder Web/API Service Not Available）</title>
+    <content type="html">&lt;p&gt;&lt;small&gt;Oct &lt;var data-var='date'&gt;22&lt;/var&gt;, &lt;var data-var='time'&gt;10:31&lt;/var&gt; CST&lt;/small&gt;&lt;br&gt;&lt;strong&gt;Resolved&lt;/strong&gt; - This incident has been resolved.&lt;/p&gt;&lt;p&gt;&lt;small&gt;Oct &lt;var data-var='date'&gt;22&lt;/var&gt;, &lt;var data-var='time'&gt;10:25&lt;/var&gt; CST&lt;/small&gt;&lt;br&gt;&lt;strong&gt;Monitoring&lt;/strong&gt; - A fix has been implemented and we are monitoring the results.&lt;/p&gt;&lt;p&gt;&lt;small&gt;Oct &lt;var data-var='date'&gt;22&lt;/var&gt;, &lt;var data-var='time'&gt;10:17&lt;/var&gt; CST&lt;/small&gt;&lt;br&gt;&lt;strong&gt;Investigating&lt;/strong&gt; - We are currently investigating this issue.&lt;/p&gt;</content>
+  </entry>
+  <entry>
+    <id>tag:status.deepseek.com,2005:Incident/22255130</id>
+    <published>2024-09-23T12:28:15+08:00</published>
+    <updated>2024-09-23T12:28:15+08:00</updated>
+    <link rel="alternate" type="text/html" href="https://status.deepseek.com/incidents/sc9pc5t39jph"/>
+    <title>【已恢复】DeepSeek 网页/API不可用（[Resolved] DeepSeek Web/API Service Not Available）</title>
+    <content type="html">&lt;p&gt;&lt;small&gt;Sep &lt;var data-var='date'&gt;23&lt;/var&gt;, &lt;var data-var='time'&gt;12:28&lt;/var&gt; CST&lt;/small&gt;&lt;br&gt;&lt;strong&gt;Resolved&lt;/strong&gt; - This incident has been resolved.&lt;/p&gt;&lt;p&gt;&lt;small&gt;Sep &lt;var data-var='date'&gt;23&lt;/var&gt;, &lt;var data-var='time'&gt;12:27&lt;/var&gt; CST&lt;/small&gt;&lt;br&gt;&lt;strong&gt;Update&lt;/strong&gt; - We are continuing to investigate this issue.&lt;/p&gt;&lt;p&gt;&lt;small&gt;Sep &lt;var data-var='date'&gt;23&lt;/var&gt;, &lt;var data-var='time'&gt;12:04&lt;/var&gt; CST&lt;/small&gt;&lt;br&gt;&lt;strong&gt;Investigating&lt;/strong&gt; - We are currently investigating this issue.&lt;/p&gt;</content>
+  </entry>
+  <entry>
+    <id>tag:status.deepseek.com,2005:Incident/22162987</id>
+    <published>2024-09-14T10:04:39+08:00</published>
+    <updated>2024-09-14T10:04:39+08:00</updated>
+    <link rel="alternate" type="text/html" href="https://status.deepseek.com/incidents/rwrw9fmdm6yw"/>
+    <title>【已恢复】DeepSeek Coder 网页/API不可用（[Resolved] DeepSeek Coder Web/API Service Not Available）</title>
+    <content type="html">&lt;p&gt;&lt;small&gt;Sep &lt;var data-var='date'&gt;14&lt;/var&gt;, &lt;var data-var='time'&gt;10:04&lt;/var&gt; CST&lt;/small&gt;&lt;br&gt;&lt;strong&gt;Resolved&lt;/strong&gt; - This incident has been resolved.&lt;/p&gt;&lt;p&gt;&lt;small&gt;Sep &lt;var data-var='date'&gt;14&lt;/var&gt;, &lt;var data-var='time'&gt;10:04&lt;/var&gt; CST&lt;/small&gt;&lt;br&gt;&lt;strong&gt;Update&lt;/strong&gt; - We are continuing to investigate this issue.&lt;/p&gt;&lt;p&gt;&lt;small&gt;Sep &lt;var data-var='date'&gt;14&lt;/var&gt;, &lt;var data-var='time'&gt;09:57&lt;/var&gt; CST&lt;/small&gt;&lt;br&gt;&lt;strong&gt;Investigating&lt;/strong&gt; - We are currently investigating this issue.&lt;/p&gt;</content>
+  </entry>
+  <entry>
+    <id>tag:status.deepseek.com,2005:Incident/21727253</id>
+    <published>2024-08-13T11:27:09+08:00</published>
+    <updated>2024-08-13T11:27:26+08:00</updated>
+    <link rel="alternate" type="text/html" href="https://status.deepseek.com/incidents/95r1s606nxrq"/>
+    <title>【已恢复】DeepSeek Chat 网页/API不可用（[Resolved] DeepSeek Chat Web/API Service Not Available）</title>
+    <content type="html">&lt;p&gt;&lt;small&gt;Aug &lt;var data-var='date'&gt;13&lt;/var&gt;, &lt;var data-var='time'&gt;11:27&lt;/var&gt; CST&lt;/small&gt;&lt;br&gt;&lt;strong&gt;Resolved&lt;/strong&gt; - This incident has been resolved.&lt;/p&gt;&lt;p&gt;&lt;small&gt;Aug &lt;var data-var='date'&gt;13&lt;/var&gt;, &lt;var data-var='time'&gt;11:11&lt;/var&gt; CST&lt;/small&gt;&lt;br&gt;&lt;strong&gt;Monitoring&lt;/strong&gt; - A fix has been implemented and we are monitoring the results.&lt;/p&gt;&lt;p&gt;&lt;small&gt;Aug &lt;var data-var='date'&gt;13&lt;/var&gt;, &lt;var data-var='time'&gt;11:08&lt;/var&gt; CST&lt;/small&gt;&lt;br&gt;&lt;strong&gt;Investigating&lt;/strong&gt; - We are currently investigating this issue.&lt;/p&gt;</content>
+  </entry>
+  <entry>
+    <id>tag:status.deepseek.com,2005:Incident/21727298</id>
+    <published>2024-08-13T01:30:00+08:00</published>
+    <updated>2024-08-13T11:15:25+08:00</updated>
+    <link rel="alternate" type="text/html" href="https://status.deepseek.com/incidents/m9g7cqtrsz4c"/>
+    <title>【已恢复】DeepSeek Coder 网页/API不可用（[Resoved] DeepSeek Coder Web/API Service Not Available）</title>
+    <content type="html">&lt;p&gt;&lt;small&gt;Aug &lt;var data-var='date'&gt;13&lt;/var&gt;, &lt;var data-var='time'&gt;01:30&lt;/var&gt; CST&lt;/small&gt;&lt;br&gt;&lt;strong&gt;Resolved&lt;/strong&gt; - This incident has been resolved.&lt;/p&gt;</content>
+  </entry>
+  <entry>
+    <id>tag:status.deepseek.com,2005:Incident/21717749</id>
+    <published>2024-08-12T18:24:28+08:00</published>
+    <updated>2024-08-12T18:24:49+08:00</updated>
+    <link rel="alternate" type="text/html" href="https://status.deepseek.com/incidents/xk44gn68tcbz"/>
+    <title>【已恢复】DeepSeek Coder 网页/API 服务不稳定（[Resolved] DeepSeek Coder Web/API Service Not Stable）</title>
+    <content type="html">&lt;p&gt;&lt;small&gt;Aug &lt;var data-var='date'&gt;12&lt;/var&gt;, &lt;var data-var='time'&gt;18:24&lt;/var&gt; CST&lt;/small&gt;&lt;br&gt;&lt;strong&gt;Resolved&lt;/strong&gt; - This incident has been resolved.&lt;/p&gt;&lt;p&gt;&lt;small&gt;Aug &lt;var data-var='date'&gt;12&lt;/var&gt;, &lt;var data-var='time'&gt;16:39&lt;/var&gt; CST&lt;/small&gt;&lt;br&gt;&lt;strong&gt;Investigating&lt;/strong&gt; - We are currently investigating this issue.&lt;/p&gt;</content>
+  </entry>
+</feed>

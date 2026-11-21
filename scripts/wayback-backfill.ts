@@ -3,20 +3,23 @@
 // the Internet Archive's captures of each lab's own pages
 // (layers/terminal/server/pipeline/archive/): API price lists (eras.ts, rows
 // in archived_prices), job boards (hiring-eras.ts, counts in
-// archived_hiring) and GPU rental price pages (gpu-eras.ts, prices in
-// archived_gpu_prices). Never on a cron: the owner runs it, and re-runs are
-// idempotent.
+// archived_hiring), GPU rental price pages (gpu-eras.ts, prices in
+// archived_gpu_prices) and status feeds (status-eras.ts, one row per
+// incident in archived_incidents). Never on a cron: the owner runs it, and
+// re-runs are idempotent.
 //
 //   bun run backfill:wayback -- --plan                     list what would be fetched
 //   bun run backfill:wayback                               local dev DB (.data/db/sqlite.db)
 //   bun run backfill:wayback -- --era openai-api-pricing-2024 --limit 20
 //   bun run backfill:wayback -- --axis hiring              job boards only
 //   bun run backfill:wayback -- --axis gpu                 GPU rental price pages only
+//   bun run backfill:wayback -- --axis status              status feeds only
 //   bun run backfill:wayback -- --remote                   production D1 + R2, through wrangler
 //
-// Flags: --axis pricing|hiring|gpu (default all three), --provider <id>, --era <id>,
-// --cadence-days <n> (default 7: one
-// capture per week of each era), --limit <n> captures this run, --redo
+// Flags: --axis pricing|hiring|gpu|status (default all four), --provider <id>, --era <id>,
+// --cadence-days <n> (default 7: one capture per week of each era; a status
+// era sets its own, every copy for a feed that lists only its newest 25),
+// --limit <n> captures this run, --redo
 // (re-parse captures already recorded, from the saved bytes where we have
 // them), --retry-skipped (re-fetch and re-parse only skipped ones).
 //
@@ -36,6 +39,7 @@ import { dirname, join } from 'node:path'
 import { ARCHIVE_ERAS } from '../layers/terminal/server/pipeline/archive/eras'
 import { GPU_ARCHIVE_ERAS } from '../layers/terminal/server/pipeline/archive/gpu-eras'
 import { HIRING_ARCHIVE_ERAS } from '../layers/terminal/server/pipeline/archive/hiring-eras'
+import { STATUS_ARCHIVE_ERAS } from '../layers/terminal/server/pipeline/archive/status-eras'
 import {
   archiveRawKey,
   archiveRows,
@@ -43,6 +47,7 @@ import {
   gpuRows,
   hiringRows,
   skippedCapture,
+  statusRows,
   type CaptureAxis,
   type ArchiveCaptureRow,
 } from '../layers/terminal/server/pipeline/archive/rows'
@@ -167,11 +172,13 @@ function insert(table: string, row: Row, verb = 'INSERT OR REPLACE'): string {
   return `${verb} INTO ${table} (${cols.join(', ')}) VALUES (${cols.map((c) => lit(row[c])).join(', ')})`
 }
 
-/** One era of either axis: its window, and how a capture becomes rows in which table. */
+/** One era of any axis: its window, and how a capture becomes rows in which table. */
 interface Job {
   axis: CaptureAxis
   era: { id: string; provider: string; url: string; from: string; until: string }
-  table: 'archived_prices' | 'archived_hiring' | 'archived_gpu_prices'
+  table: 'archived_prices' | 'archived_hiring' | 'archived_gpu_prices' | 'archived_incidents'
+  /** One copy per this many days unless --cadence-days says otherwise. */
+  cadenceDays?: number
   rows(capture: CdxCapture, text: string, bytes: number, fetchedAt: string): Built
 }
 
@@ -208,9 +215,40 @@ const JOBS: readonly Job[] = [
       return { capture: out.capture, rows: out.prices }
     },
   })),
+  ...STATUS_ARCHIVE_ERAS.map((era): Job => ({
+    axis: 'status',
+    era,
+    table: 'archived_incidents',
+    cadenceDays: era.cadenceDays,
+    rows: (c, text, bytes, at) => {
+      const out = statusRows(era, c, text, bytes, at)
+      return { capture: out.capture, rows: out.incidents }
+    },
+  })),
 ]
 
+/**
+ * An incident many copies list is one row. A copy at least as new as the one
+ * the row holds replaces every field; first_captured_at keeps the oldest copy
+ * either way. SQLite reads the old row in every SET expression, so the order
+ * of the assignments doesn't matter.
+ */
+function upsertIncident(row: Row): string {
+  const cols = Object.keys(row)
+  const t = 'archived_incidents'
+  const newer = `excluded.captured_at >= ${t}.captured_at`
+  const sets = cols
+    .filter((c) => c !== 'id' && c !== 'first_captured_at')
+    .map((c) => `${c} = CASE WHEN ${newer} THEN excluded.${c} ELSE ${t}.${c} END`)
+  sets.push(`first_captured_at = MIN(${t}.first_captured_at, excluded.first_captured_at)`)
+  return `${insert(t, row, 'INSERT')} ON CONFLICT(id) DO UPDATE SET ${sets.join(', ')}`
+}
+
 function statementsFor(job: Job, built: Built): string[] {
+  // A copy's incidents may be held from other copies too, so a re-read never deletes them.
+  if (job.table === 'archived_incidents') {
+    return [insert('archive_captures', built.capture), ...built.rows.map(upsertIncident)]
+  }
   return [
     `DELETE FROM ${job.table} WHERE capture_id = ${lit(built.capture.id)}`,
     insert('archive_captures', built.capture),
@@ -251,8 +289,11 @@ function save(key: string, saved: Saved, source_url: string) {
 async function main() {
   const flags = flagsOf(process.argv.slice(2))
   for (const name of flags.keys()) if (!KNOWN.has(name)) fail(`Unknown flag --${name}`)
-  const cadence = Number(flags.get('cadence-days') ?? 7)
-  if (!Number.isInteger(cadence) || cadence < 1 || cadence > 90) {
+  const cadenceFlag = flags.has('cadence-days') ? Number(flags.get('cadence-days')) : null
+  if (
+    cadenceFlag !== null &&
+    (!Number.isInteger(cadenceFlag) || cadenceFlag < 1 || cadenceFlag > 90)
+  ) {
     fail('--cadence-days must be a whole number from 1 to 90.')
   }
   const limit = flags.has('limit') ? Number(flags.get('limit')) : Infinity
@@ -260,8 +301,8 @@ async function main() {
     fail('--limit must be a positive whole number.')
   }
   const axis = flags.get('axis')
-  if (axis !== undefined && axis !== 'pricing' && axis !== 'hiring' && axis !== 'gpu') {
-    fail('--axis must be pricing, hiring or gpu.')
+  if (axis !== undefined && !['pricing', 'hiring', 'gpu', 'status'].includes(String(axis))) {
+    fail('--axis must be pricing, hiring, gpu or status.')
   }
   const jobs = JOBS.filter(
     (j) =>
@@ -294,6 +335,7 @@ async function main() {
       continue
     }
     const all = parseCdx(cdx.text)
+    const cadence = cadenceFlag ?? job.cadenceDays ?? 7
     const sampled = sampleCaptures(all, cadence)
     log(`${era.id}: ${all.length} distinct captures, ${sampled.length} at one per ${cadence}d`)
     if (plan) {
