@@ -10,13 +10,7 @@ import { includeSources } from '../server/pipeline/sources'
 import { terminalStamps } from '../server/utils/terminal-cache'
 import { queryContext, queryDataFreshness } from '../server/utils/terminal-db'
 import { queryHiringHistory } from '../server/utils/terminal-hiring'
-import {
-  queryPriceHistory,
-  queryPriceKeys,
-  queryPrices,
-  sitemapPriceKeys,
-  queryReleases,
-} from '../server/utils/terminal-prices'
+import { queryPriceHistory, queryPrices, queryReleases } from '../server/utils/terminal-prices'
 import {
   baselineInstants,
   compareWindow,
@@ -427,7 +421,6 @@ describe('the history queries on an empty store', () => {
   it('answer honestly and never throw', async () => {
     const c = await ctx()
     expect(await queryPriceHistory(db, c, GROK)).toBeNull()
-    expect(await queryPriceKeys(db)).toEqual([])
     expect(await queryDataFreshness(db)).toEqual({ changes: [], alertsAt: null })
     const releases = await queryReleases(db, c)
     expect(releases).toMatchObject({ rows: [], excluded_baseline: 0, log_from: null })
@@ -513,31 +506,6 @@ describe('after a baseline and a second poll', () => {
     // This Worker's baseline writes no change rows, so there was nothing to exclude.
     expect(releases.excluded_baseline).toBe(0)
     expect(releases.log_from).toMatch(/^2026-09-07T10:0\d:/)
-  })
-
-  it('sitemap keys: every SKU on record, dated by its newest observation', async () => {
-    const keys = await queryPriceKeys(db)
-    const byKey = Object.fromEntries(keys.map((k) => [k.entity_key, k.lastmod]))
-    expect(byKey[GROK]).toBe('2026-09-08')
-    expect(byKey['model:xai:grok-5-preview:standard']).toBe('2026-09-08')
-    expect(byKey['model:anthropic:claude-sonnet-5']).toBe('2026-09-07')
-    expect(keys.map((k) => k.entity_key)).toEqual([...keys.map((k) => k.entity_key)].sort())
-  })
-
-  it('sitemap keys: only a SKU with a change row or capture has a history', async () => {
-    const keys = await queryPriceKeys(db)
-    const history = Object.fromEntries(keys.map((k) => [k.entity_key, k.history]))
-    expect(history[GROK]).toBe(true)
-    expect(history['model:anthropic:claude-sonnet-5']).toBe(false)
-    // Listed on the second poll and never revised: one price, so not listed.
-    expect(history['model:xai:grok-5-preview:standard']).toBe(false)
-    const listed = sitemapPriceKeys(keys).map((k) => k.entity_key)
-    expect(listed).toContain(GROK)
-    expect(listed).toContain('model:anthropic:claude-sonnet-5')
-    for (const k of keys) {
-      if (!k.history && k.entity_key.split(':').length > 3)
-        expect(listed).not.toContain(k.entity_key)
-    }
   })
 
   it('sitemap freshness: the newest change per entity type and lab', async () => {

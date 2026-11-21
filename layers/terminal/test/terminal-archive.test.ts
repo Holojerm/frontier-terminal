@@ -13,7 +13,7 @@ import { PointInTimeError, pollStampAt } from '../server/utils/terminal-asof'
 import { terminalStamps } from '../server/utils/terminal-cache'
 import { assertArchiveKnowable, queryPriceReach } from '../server/utils/terminal-archive'
 import { queryContext } from '../server/utils/terminal-db'
-import { queryPriceHistory, queryPriceKeys, queryPrices } from '../server/utils/terminal-prices'
+import { queryPriceHistory, queryPrices } from '../server/utils/terminal-prices'
 import { exportTable } from '../server/utils/terminal-export'
 import { licenseWindow } from '../server/utils/terminal-export-history'
 import { PROVIDER_ORDER } from '../server/utils/terminal-sources'
@@ -129,19 +129,13 @@ describe('archived price history', () => {
     expect(h.archive_only).toBe(false)
   })
 
-  it('serves a SKU the archive alone priced, and lists it for the sitemap', POLLS, async () => {
+  it('serves a SKU the archive alone priced', POLLS, async () => {
     await poll()
     const h = (await queryPriceHistory(db, await live(), 'model:openai:gpt-4-0314'))!
     expect(h.archive_only).toBe(true)
     expect(h.provider).toBe('openai')
     expect(h.model_slug).toBe('gpt-4-0314')
     expect(h.points.map((p) => p.kind)).toEqual(['archived'])
-    const keys = await queryPriceKeys(db)
-    expect(keys).toContainEqual({
-      entity_key: 'model:openai:gpt-4-0314',
-      lastmod: '2023-07-01',
-      history: true,
-    })
   })
 
   it(

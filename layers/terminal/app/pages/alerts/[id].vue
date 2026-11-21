@@ -11,8 +11,8 @@ import type { AlertDetailData } from '../../../shared/utils/terminal-types'
 const stamps = useStamps()
 
 // Inert for a dynamic route: the collecting hook skips paths with a
-// parameter, and server/routes/sitemap.xml.get.ts enumerates the permalinks
-// from D1 instead. Declared anyway — the seo gate's invariant is per-page.
+// parameter, and the permalinks are kept out of the sitemap on purpose
+// (terminal-page-source.ts). Declared anyway — the seo gate's invariant is per-page.
 definePageMeta({
   publicPage: {
     changefreq: 'yearly',
