@@ -16,7 +16,7 @@ export function registerComputeTools({ server, deps }: McpKit): void {
         'Four readings on how full the data centers are, each from free public sources and none of them a measured utilization rate. ' +
         'spot: per GPU rental provider, the spot price against the on-demand price for the same instance on the same page (ratio, 0 to 1, as low and high bounds; ' +
         `near 1 means little spare capacity is on offer). combined is null for a GPU until ${SPOT_QUORUM} providers print a spot price for it. ` +
-        'implied: Alphabet’s stated tokens per minute (the release’s sentence, verbatim) divided by MLPerf inference results per H100-equivalent, as a share of Epoch AI’s estimate of Google’s fleet. ' +
+        'implied: Alphabet’s stated tokens per minute (the release’s sentence, verbatim) divided by the newest MLPerf Inference round’s results per H100-equivalent (benchmark.round names it), as a share of Epoch AI’s estimate of Google’s fleet. ' +
         'Every share is a pair of bounds and the site never prints a midpoint, so never quote one; it assumes one model served every token, which never holds. ' +
         'coreweave: CoreWeave’s quarterly revenue per megawatt of active power, from its filings, and floor, the newest quarter’s revenue as a share of what that power would bill at its list prices today ' +
         '(the gap to 100% is contract discount plus idle capacity, which filings don’t separate). demand_shape: OpenRouter’s average day against its busiest in the window, ' +
