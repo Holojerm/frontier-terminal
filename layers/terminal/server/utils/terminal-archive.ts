@@ -274,20 +274,6 @@ function archivedRowView(
   }
 }
 
-/** Every key the archive priced, with its newest capture day: sitemap entries for SKUs gone before we watched. */
-export async function archivedPriceKeys(
-  db: PipelineDb,
-): Promise<{ entity_key: string; at: string }[]> {
-  const rows = await db
-    .select({
-      entity_key: tables.archivedPrices.entity_key,
-      at: max(tables.archivedPrices.captured_at),
-    })
-    .from(tables.archivedPrices)
-    .groupBy(tables.archivedPrices.entity_key)
-  return rows.flatMap((r) => (r.at ? [{ entity_key: r.entity_key, at: r.at }] : []))
-}
-
 /** The labs with an archived job-board history to reach back through (hiring-eras.ts). */
 const HIRING_LABS: readonly LabId[] = ['openai', 'anthropic', 'google', 'xai', 'meta', 'mistral']
 

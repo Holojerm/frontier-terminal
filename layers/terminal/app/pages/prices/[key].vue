@@ -11,9 +11,9 @@ import { skuLede } from '../../../shared/utils/terminal-ledes'
 import type { PriceHistoryData, PricePoint } from '../../../shared/utils/terminal-types'
 import type { TableColumn } from '../../types/terminal-ui'
 
-// A dynamic route is one pattern, not N pages, so the sitemap hook skips it;
-// server/routes/sitemap.xml.get.ts enumerates the keys itself. These values
-// are inert and exist for the per-page invariant scripts/check-seo.ts holds.
+// A dynamic route is one pattern, not N pages, so the sitemap hook skips it,
+// and the SKU pages are kept out of the sitemap on purpose (terminal-page-source.ts).
+// These values are inert and exist for the per-page invariant scripts/check-seo.ts holds.
 definePageMeta({
   publicPage: {
     changefreq: 'daily',
