@@ -34,7 +34,7 @@ export type Waivers = Partial<Record<SurfaceKind, Readonly<Record<string, string
 // ── Routes ───────────────────────────────────────────────────────────────────
 
 /** Route folders that write or serve the subscribe flow: not datasets. */
-export const WRITER_DIRS = ['judge', 'gdelt', 'subscribe'] as const
+export const WRITER_DIRS = ['judge', 'gdelt', 'relay', 'subscribe'] as const
 
 /**
  * prices/[key].get.ts (relative to the layer's server/api/) gives
@@ -49,7 +49,7 @@ export function routeUrl(relFromApi: string): string | null {
   return stem ? `/api/${stem}` : '/api'
 }
 
-/** True for a route under a writer folder (judge/, gdelt/, subscribe/). */
+/** True for a route under a writer folder (judge/, gdelt/, relay/, subscribe/). */
 export function isWriterRoute(relFromApi: string): boolean {
   const first = relFromApi.replaceAll('\\', '/').split('/')[0]
   return (WRITER_DIRS as readonly string[]).includes(first ?? '')

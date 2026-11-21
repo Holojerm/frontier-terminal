@@ -466,6 +466,29 @@ describe('the ERCOT run and the payload', () => {
     expect(again.read).toEqual([])
   })
 
+  it('waits for the Mac mini relay without alerting, then reads its copy', async () => {
+    const copies = new Map<string, Uint8Array>()
+    const relay = {
+      read: async (url: string) => {
+        const body = copies.get(url)
+        return body ? { status: 200, fetched_at: new Date().toISOString(), body } : null
+      },
+      want: async () => {},
+    }
+    const deps = { fetcher, put, fetch, relay, userAgent: 'test', now: NOW }
+    const first = await runErcotLargeLoads(db, deps)
+    expect(first.read.map((x) => x.status)).toEqual(['pending', 'pending'])
+    expect(await db.select().from(schema.opsEvents)).toEqual([])
+    expect(await db.select().from(schema.ercotLargeLoadReports)).toEqual([])
+    copies.set(OVERVIEW_URL, OVERVIEW)
+    copies.set(MONTHLY_URL, MONTHLY)
+    const second = await runErcotLargeLoads(db, deps)
+    expect(second.read.map((x) => [x.status, x.facts])).toEqual([
+      ['read', 2],
+      ['read', 3],
+    ])
+  })
+
   it('places each lab site in an authority and attaches its tickers', async () => {
     await runErcotLargeLoads(db, { fetcher, put, fetch, userAgent: 'test', now: NOW })
     const rows = ['ERCO', 'MISO', 'PJM', 'NYIS', 'AZPS'].flatMap((ba) =>

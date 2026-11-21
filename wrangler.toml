@@ -328,8 +328,8 @@ NUXT_INDEXNOW_KEY = "fe2738e740b8c6b06a20d76ab1877559"
 #   NUXT_FLEET_TOKEN_PREVIOUS    only during a rotation — server/utils/fleet-auth.ts.
 #   NUXT_PRESS_LIST              JSON press list for the press notes (layers/terminal/server/pipeline/press.ts).
 #                                Names people, so never in git. Unset = no notes.
-#   NUXT_GDELT_TOKEN             bearer the GDELT job presents to /api/gdelt/*
-#                                (scripts/gdelt-search.ts); the same value is the repo secret
+#   NUXT_GDELT_TOKEN             bearer the mini's GDELT and relay jobs present to /api/gdelt/* and
+#                                /api/relay/* (scripts/gdelt-search.ts, relay-fetch.ts); the same value is the repo secret
 #                                GDELT_TOKEN and the mini's ~/agent-jobs/.gdelt-token. 32+ chars. Unset = those routes 404, no GDELT file is read.
 #   NUXT_SEC_CONTACT_EMAIL       contact address sec.gov's fair-access policy requires in
 #                                the User-Agent (layers/core/server/pipeline/fetch.ts). Unset = the
