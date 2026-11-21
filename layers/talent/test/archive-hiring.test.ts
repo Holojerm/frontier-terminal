@@ -8,7 +8,8 @@ import {
   liveDepartment,
 } from '../server/pipeline/archive/hiring-eras'
 import { ARCHIVE_FROM } from '#layers/core/server/utils/archive-floor'
-import { archiveRawKey, hiringRows } from '../../terminal/server/pipeline/archive/rows'
+import { archiveRawKey } from '../../core/server/pipeline/archive/captures'
+import { hiringRows } from '../../talent/server/pipeline/archive/rows'
 import {
   parseAshbyBoardHtml,
   parseGreenhouseBoardHtml,

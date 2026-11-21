@@ -109,7 +109,7 @@ export type ArchivedPrice = Pick<
  * One SKU's Internet Archive observations as points, oldest first: the first
  * capture that printed each new state of the row. A capture repeating the
  * state before it adds nothing, so a price that held for a year is one point,
- * not fifty. Captures are sampled (layers/terminal/server/pipeline/archive/wayback.ts › sampleCaptures), so a
+ * not fifty. Captures are sampled (layers/core/server/pipeline/archive/wayback.ts › sampleCaptures), so a
  * point's `at` is the first sampled capture showing that state, not the day
  * the lab changed it.
  */

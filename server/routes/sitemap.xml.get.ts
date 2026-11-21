@@ -25,7 +25,7 @@
 
 import { db } from '@nuxthub/db'
 
-import { crawlerPages, labScopedPages } from '#layers/terminal/server/utils/crawler-pages'
+import { crawlerPages, labScopedPages } from '#server/registries/crawler-pages'
 import { queryDataFreshness } from '#layers/core/server/utils/terminal-db'
 import { collectPublicPages } from '../utils/public-pages'
 import { dataLastmods, sitemapResponse } from '../utils/seo'

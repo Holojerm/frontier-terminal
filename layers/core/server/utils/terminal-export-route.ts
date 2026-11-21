@@ -11,7 +11,7 @@ import { cacheControlFor, rateLimitTerminal } from '#layers/core/server/utils/ap
 import { SCHEMA_VERSION, SCHEMA_VERSION_HEADER } from '#layers/core/server/utils/data-schema'
 import { PointInTimeError, assertKnowable } from '#layers/core/server/utils/terminal-asof'
 import { headResponse } from '#layers/core/server/utils/head-response'
-import { DICTIONARY_NAME, dataDictionary, dictionaryCsv } from './terminal-dictionary'
+import { DICTIONARY_NAME, dataDictionary, dictionaryCsv } from '#server/registries/dictionary'
 import {
   ARCHIVED_EXPORTS,
   EXPORT_TABLES,

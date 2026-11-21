@@ -6,7 +6,7 @@ import {
   registeredParsers,
   type ParserId,
 } from '#layers/core/server/pipeline/contracts'
-import '../../server/pipeline/parsers.manifest'
+import '../../../../server/registries/parsers'
 import { fixtureText, manifest } from '#layers/core/test/pipeline/fixtures'
 
 // Determinism gate: every registered parser, run twice on its committed

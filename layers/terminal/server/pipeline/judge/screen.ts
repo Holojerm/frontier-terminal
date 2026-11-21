@@ -8,7 +8,10 @@ import {
   type JudgeClassMapping,
 } from '#layers/pricing/server/pipeline/judge/class-map'
 import { clampRoutineAlerts } from './severity-gates'
-import { rejectFalseDelistings, stillListedRemovals } from './still-listed'
+import {
+  rejectFalseDelistings,
+  stillListedRemovals,
+} from '../../../../core/server/pipeline/judge/still-listed'
 
 // What the judge runner (layers/core/server/pipeline/judge/submit.ts) runs on
 // the grounded alerts before it stores them: no still-listed model called

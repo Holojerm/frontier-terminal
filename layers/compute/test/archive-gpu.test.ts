@@ -7,7 +7,8 @@ import {
   GPU_ARCHIVE_UNTIL,
   gpuEraById,
 } from '../server/pipeline/archive/gpu-eras'
-import { archiveRawKey, gpuRows } from '#layers/terminal/server/pipeline/archive/rows'
+import { archiveRawKey } from '#layers/core/server/pipeline/archive/captures'
+import { gpuRows } from '#layers/compute/server/pipeline/archive/rows'
 import { lambdaArchivedRows } from '../server/pipeline/parsers/gpu/wayback-gpu'
 import {
   archivedGpuSeries,

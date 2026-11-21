@@ -11,7 +11,7 @@ written down.
 
 | Surface | Where | How the gate sees it |
 | --- | --- | --- |
-| A page | its axis page under `layers/terminal/app/pages/` | a page or component fetches the route |
+| A page | its axis page, under its layer's `app/pages/` | a page or component fetches the route |
 | The lab page | `layers/terminal/app/pages/labs/[lab]/index.vue` | the page, or a component it renders, fetches the route |
 | The tear sheet | `layers/terminal/app/pages/labs/[lab]/tear-sheet.vue` | same, for the sheet |
 | An MCP tool | `layers/<name>/server/mcp/<domain>.ts`, listed in `server/registries/mcp-tools.ts` | `serve('<name>'` or `read('<name>'` with the route's cache name |
@@ -25,7 +25,7 @@ when it takes `?lab=` (`lab: z.…` in its query schema, or `lab` destructured f
 `getValidatedQuery`), or when the lab page or tear sheet already reads it. A lab-specific read
 uses the route's `?lab=` on the server. It never filters an all-lab payload in the page.
 
-Routes checked: every GET under `layers/terminal/server/api/` except the writers in `judge/`,
+Routes checked: every GET under each fork-owned layer's `server/api/` except the writers in `judge/`,
 `gdelt/` and `subscribe/`. Tables checked: every `sqliteTable` in each layer's `server/db/tables/`.
 Template routes and tables (`server/`) are not product data.
 

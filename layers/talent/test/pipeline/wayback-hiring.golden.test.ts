@@ -2,8 +2,8 @@ import { describe, expect, test } from 'vitest'
 
 import { contentHash } from '#layers/core/server/pipeline/contracts'
 import { HIRING_ARCHIVE_ERAS, hiringEraById } from '../../server/pipeline/archive/hiring-eras'
-import { hiringRows } from '../../../terminal/server/pipeline/archive/rows'
-import { captureInstant } from '../../../terminal/server/pipeline/archive/wayback'
+import { hiringRows } from '../../../talent/server/pipeline/archive/rows'
+import { captureInstant } from '../../../core/server/pipeline/archive/wayback'
 import { fixtureText, manifest, provenanceOf } from '#layers/core/test/pipeline/fixtures'
 
 // Golden tests for the archived job boards (archive/hiring-eras.ts): one

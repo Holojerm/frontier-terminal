@@ -7,3 +7,4 @@
 export * from './tables/power-sites'
 export * from './tables/grid-load'
 export * from './tables/prints'
+export * from './tables/archive'

@@ -4,28 +4,24 @@ import { drizzle } from 'drizzle-orm/d1'
 import { beforeEach, describe, expect, it } from 'vitest'
 
 import * as schema from '~~/server/db/schema'
-import { effectiveClassMap, overlayClassMap } from '../../../pricing/server/pipeline/class-map'
+import { effectiveClassMap, overlayClassMap } from '../../server/pipeline/class-map'
 import type { SourceFetcher } from '#layers/core/server/pipeline/fetch'
 import {
   basisNamesModel,
   classMapReview,
   modelNamedBy,
   REVIEW_WINDOW_MS,
-} from '../../../pricing/server/pipeline/judge/class-map'
+} from '../../server/pipeline/judge/class-map'
 import type { RawReader, RawStore } from '#layers/core/server/pipeline/raw'
-import { cardDescriptions, cardOwners } from '../../../pricing/server/pipeline/judge/page-cards'
+import { cardDescriptions, cardOwners } from '../../server/pipeline/judge/page-cards'
 import { submitJudgeRun } from '../../../core/server/pipeline/judge/submit'
-import { recommendationRows } from '../../../pricing/server/pipeline/recommendations'
+import { recommendationRows } from '../../server/pipeline/recommendations'
 import { runRefresh } from '../../../core/server/pipeline/refresh'
 import { terminalStamps } from '#layers/core/server/utils/terminal-cache'
 import { MODEL_FLOOR_RULE } from '../../../core/server/utils/terminal-asof'
-import {
-  CLASS_GAPS,
-  CLASS_MAP_SOURCES,
-  MODEL_CLASS_MAP,
-} from '../../../pricing/server/utils/terminal-classes'
+import { CLASS_GAPS, CLASS_MAP_SOURCES, MODEL_CLASS_MAP } from '../../server/utils/terminal-classes'
 import { queryContext } from '#layers/core/server/utils/terminal-db'
-import { queryPrices } from '../../../pricing/server/utils/terminal-prices'
+import { queryPrices } from '../../server/utils/terminal-prices'
 import { fixtureText, manifest } from '#layers/core/test/pipeline/fixtures'
 
 // The judge re-mapping a price-matrix cell. Pure halves first, then the whole

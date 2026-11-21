@@ -3,7 +3,7 @@ import { provenance } from '../../../../core/server/db/tables/columns'
 
 // Price lists and rate limits from before this site watched the labs, read
 // from the Internet Archive's captures of each lab's own pages. Each row
-// names its capture in archive_captures (layers/terminal/server/db/tables/archive.ts),
+// names its capture in archive_captures (layers/core/server/db/tables/archive.ts),
 // which logs the captures of every archived axis.
 
 // One row per (capture, SKU): what the archived page priced. payload is the

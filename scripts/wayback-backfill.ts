@@ -45,16 +45,15 @@ import { LIMITS_ARCHIVE_ERAS } from '../layers/pricing/server/pipeline/archive/l
 import { STATUS_ARCHIVE_ERAS } from '../layers/reliability/server/pipeline/archive/status-eras'
 import {
   archiveRawKey,
-  archiveRows,
   captureId,
-  gpuRows,
-  hiringRows,
-  limitsRows,
   skippedCapture,
-  statusRows,
   type CaptureAxis,
   type ArchiveCaptureRow,
-} from '../layers/terminal/server/pipeline/archive/rows'
+} from '../layers/core/server/pipeline/archive/captures'
+import { archiveRows, limitsRows } from '../layers/pricing/server/pipeline/archive/rows'
+import { gpuRows } from '../layers/compute/server/pipeline/archive/rows'
+import { hiringRows } from '../layers/talent/server/pipeline/archive/rows'
+import { statusRows } from '../layers/reliability/server/pipeline/archive/rows'
 import {
   captureUrl,
   cdxUrl,
@@ -64,7 +63,7 @@ import {
   sampleCaptures,
   waybackClient,
   type CdxCapture,
-} from '../layers/terminal/server/pipeline/archive/wayback'
+} from '../layers/core/server/pipeline/archive/wayback'
 
 const ROOT = join(import.meta.dir, '..')
 const LOCAL_DB = join(ROOT, '.data/db/sqlite.db')

@@ -125,8 +125,11 @@ need every domain's entries. Those lists are composition roots in `server/regist
 | `export-tables.ts` | its `…_TABLES` record, spread into `EXPORT_TABLES` in export order |
 | `recipes.ts` | its recipes, in run order |
 | `query-context.ts` | a reader for each sources.yaml block its queries take from `QueryContext` |
+| `parsers.ts` | its `parsers.manifest.ts`, which the determinism test iterates |
 
-Core defines each entry's type. An event that crosses the direction is a Nitro hook instead: the
+The shell's parts core needs (the data dictionary, the crawler pages, the judge's alert screen)
+reach it the same way: `dictionary.ts`, `crawler-pages.ts` and `judge.ts` re-export them, so neither
+core nor the app's own routes import `layers/terminal`. Core defines each entry's type. An event that crosses the direction is a Nitro hook instead: the
 judge calls `judge:applied` when a run's verdicts land, and the theses layer subscribes
 (`layers/theses/server/plugins/theses-judged.ts`). `bun run domains:check` holds the direction.
 

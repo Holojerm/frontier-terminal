@@ -81,6 +81,25 @@ export function edgeProblem(table: LayerTable, from: string, to: string): string
   return ok ? null : `${b.rest} is not on ${b.layer}'s public list`
 }
 
+/** Files at the app root that compose the layers, and so may import any of them. */
+export const isComposition = (file: string) =>
+  file.startsWith('server/registries/') || file === 'server/db/schema.ts'
+
+/**
+ * Why an app-root file may not import `to`, or null when it may. Outside its
+ * composition files (isComposition) the app root reaches a layer of the table
+ * only where every layer can: a base layer (no `uses`, i.e. core) and any
+ * layer's shared/ types. Anything else goes through server/registries/, so the
+ * app never depends on where a domain keeps its code.
+ */
+export function appRootProblem(table: LayerTable, from: string, to: string): string | null {
+  if (layerPath(from) || isComposition(from) || !/^(app|server|shared)\//.test(from)) return null
+  const b = layerPath(to)
+  if (!b || !table[b.layer] || table[b.layer]!.uses.length === 0) return null
+  if (b.rest.startsWith('shared/')) return null
+  return `the app root reaches ${b.layer} only through server/registries/`
+}
+
 // ── Import specifiers ───────────────────────────────────────────────────────
 
 const SPECIFIER =
@@ -203,6 +222,8 @@ export interface Finding {
  * turns a target path into the real file (adding the extension), or null when
  * it is not one; `free` is each identifier the file uses but never declares,
  * with its line; `autoImports` maps every auto-imported name to its file.
+ * `judge` rules on each edge: edgeProblem for a layer file, appRootProblem for
+ * the app root.
  */
 export function fileFindings(
   table: LayerTable,
@@ -211,20 +232,21 @@ export function fileFindings(
   resolve: (target: string) => string | null,
   free: readonly { name: string; line: number }[],
   autoImports: ReadonlyMap<string, string>,
+  judge: (table: LayerTable, from: string, to: string) => string | null = edgeProblem,
 ): Finding[] {
   const findings: Finding[] = []
   for (const { line, spec } of importSpecifiers(source)) {
     const target = specifierTarget(file, spec)
     const real = target === null ? null : (resolve(target) ?? target)
     if (real === null) continue
-    const problem = edgeProblem(table, file, real)
+    const problem = judge(table, file, real)
     if (problem) findings.push({ file, line, message: `imports ${spec}: ${problem}` })
   }
   const seen = new Set<string>()
   for (const { name, line } of free) {
     const defined = autoImports.get(name)
     if (!defined || seen.has(name)) continue
-    const problem = edgeProblem(table, file, defined)
+    const problem = judge(table, file, defined)
     if (!problem) continue
     seen.add(name)
     findings.push({
@@ -315,4 +337,95 @@ export function componentFindings(
     })
   }
   return findings
+}
+
+// ── What a layer actually uses ──────────────────────────────────────────────
+
+/**
+ * Every repo file a file reaches: its explicit imports (resolved where they
+ * resolve) and the files its auto-imported names come from.
+ */
+export function fileTargets(
+  file: string,
+  source: string,
+  resolve: (target: string) => string | null,
+  free: readonly { name: string }[],
+  autoImports: ReadonlyMap<string, string>,
+): string[] {
+  const out = new Set<string>()
+  for (const { spec } of importSpecifiers(source)) {
+    const target = specifierTarget(file, spec)
+    if (target !== null) out.add(resolve(target) ?? target)
+  }
+  for (const { name } of free) {
+    const defined = autoImports.get(name)
+    if (defined) out.add(defined)
+  }
+  return [...out].sort()
+}
+
+/**
+ * `uses` entries no file of the layer ever reaches. `used` maps each layer to
+ * the other layers its non-test files import, auto-import or render. An entry
+ * nothing reaches lets the layer grow an edge nobody decided on, so it goes.
+ */
+export function unusedUses(
+  table: LayerTable,
+  used: ReadonlyMap<string, ReadonlySet<string>>,
+): string[] {
+  const problems: string[] = []
+  for (const [name, rule] of Object.entries(table)) {
+    for (const dep of rule.uses) {
+      if (!used.get(name)?.has(dep))
+        problems.push(`${name} lists ${dep} in its uses but never imports it`)
+    }
+  }
+  return problems
+}
+
+/**
+ * Public-list entries no other layer's non-test file reaches. `reached` is every
+ * file a layer file reached in another layer. An entry nothing reads opens a
+ * file to every layer above for no caller, so it goes.
+ */
+export function unusedPublic(table: LayerTable, reached: ReadonlySet<string>): string[] {
+  const problems: string[] = []
+  for (const [name, rule] of Object.entries(table)) {
+    for (const entry of rule.public ?? []) {
+      const path = `layers/${name}/${entry}`
+      const read = [...reached].some((t) => (entry.endsWith('/') ? t.startsWith(path) : t === path))
+      if (!read) problems.push(`${name}'s public list names ${entry}, which no other layer reads`)
+    }
+  }
+  return problems
+}
+
+/**
+ * `?raw` imports whose file is not there. A `?raw` module is typed by a
+ * wildcard declaration, so neither typecheck nor the build notices a moved
+ * target; only the test or page that reads it fails, at run time.
+ */
+export function rawFindings(
+  file: string,
+  source: string,
+  resolve: (target: string) => string | null,
+): Finding[] {
+  const findings: Finding[] = []
+  for (const { line, spec } of importSpecifiers(source)) {
+    if (!/\?raw\b/.test(spec)) continue
+    const target = specifierTarget(file, spec)
+    if (target !== null && resolve(target) === null)
+      findings.push({ file, line, message: `imports ${spec}, which is not a file` })
+  }
+  return findings
+}
+
+/**
+ * The names a compiled template reads off its render context. Compiled with
+ * `prefixIdentifiers`, every name the template neither declares (v-for, slot
+ * props) nor gets from Vue's globals is written `_ctx.<name>`: the script's
+ * bindings, props, and auto-imports.
+ */
+export function templateNames(code: string): string[] {
+  return [...new Set([...code.matchAll(/\b_ctx\.([A-Za-z_$][\w$]*)/g)].map((m) => m[1]!))]
 }

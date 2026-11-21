@@ -31,5 +31,11 @@ export default defineNuxtConfig({
     // Resend. NUXT_RESEND_API_KEY / NUXT_SUBSCRIBE_EMAIL_FROM.
     resendApiKey: '',
     subscribeEmailFrom: '',
+    // Optional. Sent by the core fetcher to api.github.com/search/* (the adoption
+    // layer's agent-PR counts), and authenticates the reliability:deploys read of
+    // the public smoke test runs (layers/reliability/server/pipeline/reliability/deploys.ts),
+    // which GitHub otherwise limits per shared Workers IP. Any token that can read
+    // public repositories; a Worker secret: NUXT_GITHUB_TOKEN.
+    githubToken: '',
   },
 })
