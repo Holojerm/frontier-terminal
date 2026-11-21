@@ -1,4 +1,4 @@
-// The hardware layer's monthly prints (GET /api/prints, the /compute page, the
+// The hardware layer's monthly prints (GET /api/prints, the /hardware page, the
 // get_hardware_prints MCP tool): Taiwan's monthly revenue for the foundry, the
 // server builders and the power and networking makers, and Korea's chip
 // exports. Each figure is stored as we first saw it, and a later different

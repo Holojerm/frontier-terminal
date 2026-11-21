@@ -3001,7 +3001,7 @@ power_site_sources:
       one sentence. Read 2026-11-20.
     rights: restricted
 # The files behind /api/grid-load and the "Grid load where the lab sites are"
-# and "Large loads on ERCOT" panels on /compute (layers/terminal/server/power/
+# and "Large loads on ERCOT" panels on /power (layers/terminal/server/power/
 # grid-load.ts, ercot-large-loads.ts). Each lab site is placed in a balancing
 # authority by a grid row of power_site_ties, or by its utility's row in
 # EIA-861 (layers/terminal/server/curated/grid-areas.json). With

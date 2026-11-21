@@ -53,6 +53,8 @@ const ROUTES = [
   '/releases',
   '/rankings',
   '/compute',
+  '/hardware',
+  '/power',
   '/dependencies',
   '/alerts',
   // Filtered: the selects show a value and the "Clear filters" link and filtered gap render.

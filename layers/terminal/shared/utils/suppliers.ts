@@ -1,5 +1,5 @@
 // The chip, hardware and compute-rental companies whose own filings tie them
-// to a lab or a cloud (GET /api/suppliers, the /dependencies page, the
+// to a lab or a cloud (GET /api/suppliers, the /dependencies and /hardware pages, the
 // get_suppliers MCP tool). Every row is one passage of one SEC document, read
 // by hand (layers/terminal/server/curated/suppliers.json) or by the judge from
 // a filing the filings lane stored (layers/terminal/server/suppliers/).
@@ -22,6 +22,17 @@ export const SUPPLIER_LAYERS = [
   'hosting',
 ] as const
 export type SupplierLayer = (typeof SUPPLIER_LAYERS)[number]
+
+/** The layers /hardware lists. Compute rental and hosting read on /dependencies only. */
+export const HARDWARE_LAYERS: readonly SupplierLayer[] = [
+  'chips',
+  'memory',
+  'foundry',
+  'networking',
+  'optics',
+  'servers',
+  'cooling',
+]
 
 export const SUPPLIER_LAYER_LABEL: Record<SupplierLayer, string> = {
   chips: 'Chips',

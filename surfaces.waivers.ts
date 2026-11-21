@@ -30,7 +30,7 @@ export const SURFACE_WAIVERS = {
     '/api/call-guidance':
       'not yet: guidance is per listed company, not per lab; the lab page renders /ground-truth’s panels, the sheet does not',
     '/api/adoption': 'not yet: adoption panels are on the lab page and /rankings only',
-    '/api/datacenters': 'not yet: data-center power is on the lab page, /hiring and /compute only',
+    '/api/datacenters': 'not yet: data-center power is on the lab page, /hiring and /power only',
     '/api/disclosures': 'not yet: the disclosure summary is on the lab page and /disclosures only',
     '/api/hiring/listed':
       'not yet: listed-company hiring is on the lab page’s listed table and /hiring only',
