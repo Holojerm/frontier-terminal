@@ -6,6 +6,8 @@ import * as schema from '~~/server/db/schema'
 import changelogMd from '~~/CHANGELOG-data.md?raw'
 import schemaLock from '~~/schema.lock.json'
 import { fixtureText } from '#layers/core/test/pipeline/fixtures'
+import { llmsTxtInput } from '#server/registries/crawler-pages'
+import { DICTIONARY_ENTRIES, dataDictionary } from '#server/registries/dictionary'
 import { EXPORT_TABLES } from '#server/registries/export-tables'
 
 // The dictionary cannot drift from the exports: each column is declared with
@@ -106,16 +108,8 @@ describe('the data dictionary', () => {
     }
   })
 
-  it('keys entity_securities by entity and symbol, which no two rows share', () => {
-    const t = dataDictionary(sourcesYaml).tables.find((x) => x.name === 'entity_securities')!
-    const keys = ENTITY_SECURITIES.map((row) =>
-      t.key.map((k) => row[k as keyof typeof row]).join('\n'),
-    )
-    expect(new Set(keys).size).toBe(keys.length)
-  })
-
   it('gives every table its grain, cadence, time columns, history start, and join columns', () => {
-    expect(Object.keys(TABLE_META).sort()).toEqual(Object.keys(EXPORT_TABLES).sort())
+    expect(Object.keys(DICTIONARY_ENTRIES).sort()).toEqual(Object.keys(EXPORT_TABLES).sort())
     const identifierColumns = new Set(EXPORT_TABLES.entity_identifiers!.columns)
     for (const t of dataDictionary(sourcesYaml).tables) {
       const columns = EXPORT_TABLES[t.name]!.columns

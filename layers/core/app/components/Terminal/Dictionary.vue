@@ -5,7 +5,7 @@
 // entry. `#dictionary-<table>` (the link on each download row) opens its
 // section; `open` is the list of open tables, so the page can open one too.
 
-import type { DataDictionary } from '../../../../core/shared/types/coverage'
+import type { DataDictionary } from '../../../shared/types/coverage'
 
 const props = defineProps<{ dictionary: DataDictionary }>()
 const open = defineModel<string[]>('open', { default: () => [] })

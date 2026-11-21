@@ -8,7 +8,7 @@ import { describe, expect, it } from 'vitest'
 
 import readme from '~~/README.md?raw'
 import about from '../app/pages/about.vue?raw'
-import license from '../app/pages/license.vue?raw'
+import license from '../../core/app/pages/license.vue?raw'
 import prices from '../../pricing/app/pages/prices/index.vue?raw'
 import releases from '../../models/app/pages/releases.vue?raw'
 
