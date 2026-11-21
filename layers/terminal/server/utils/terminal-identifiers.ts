@@ -61,7 +61,7 @@ export interface EntityIdentifier extends Record<Column, string | null> {
 /** SEC's ticker file: CIK, name, ticker and exchange for every listed filer. */
 export const SEC_TICKERS = {
   url: 'https://www.sec.gov/files/company_tickers_exchange.json',
-  fetched_at: '2026-11-05T04:42:32Z',
+  fetched_at: '2026-11-21T01:44:43Z',
 } as const
 
 /** The LEIs below, read from GLEIF in one request. */
@@ -208,19 +208,19 @@ export const ENTITY_IDENTIFIERS: readonly EntityIdentifier[] = [
     entity_kind: 'lab',
     legal_name: 'ANTHROPIC, PBC',
     country: 'US',
-    listing_status: 'registered',
+    listing_status: 'listed',
     cik: '0002130357',
     lei: '984500B6DEB8CEBC4Z70',
     lei_note: NAMED_LISTED,
     listing: {
       ticker: 'ANT',
-      exchange: null,
+      exchange: 'Nasdaq',
       mic: 'XNGS',
       figi: 'BBG0118LR3N0',
       share_class_figi: 'BBG0118LR3P8',
       figi_fetched_at: FIGI_SECOND,
     },
-    note: 'Not yet trading. ANT is the symbol the S-1 proposes on the Nasdaq Global Select Market, and OpenFIGI already lists it there. EDGAR lists ANT with no exchange.',
+    note: 'Listed on the Nasdaq Global Select Market as ANT, trading since 2026-11-19 (the pricing term sheet’s trade date): the 424B4 of 2026-11-19 prices the IPO at $83.00 a share, and SEC’s ticker file lists ANT on Nasdaq.',
   }),
   identified({
     entity_id: 'google',

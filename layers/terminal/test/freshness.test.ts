@@ -29,6 +29,7 @@ import {
   freshnessChecks,
   gdeltFreshnessCheck,
   listingStatusCheck,
+  listingStatusCheckOf,
   socialOutboxFreshnessCheck,
 } from '../server/utils/terminal-freshness'
 import { TERMINAL_OPS_SEVERITY } from '../server/utils/terminal-ops-severity'
@@ -500,7 +501,8 @@ describe('hand-checked listing status', () => {
   })
 
   it('owes a review once a filer still listed as registered files its 424B4', async () => {
-    const run = () => checkFreshness(db, memoryMarker(), [listingStatusCheck], NOW)
+    const check = listingStatusCheckOf([{ entity_id: 'anthropic', listing_status: 'registered' }])
+    const run = () => checkFreshness(db, memoryMarker(), [check], NOW)
     await db.insert(schema.entities).values(filing('S-1/A', '2026-11-10', '0001628280-26-070001'))
     expect(await run()).toEqual({ 'listing-status': 'not-owed' })
 
@@ -509,6 +511,13 @@ describe('hand-checked listing status', () => {
     const [event] = await db.select().from(schema.opsEvents)
     expect(event).toMatchObject({ kind: 'listing_status_stale' })
     expect(event!.detail).toContain('anthropic filed a 424B4 on 2026-12-01')
+  })
+
+  it('owes nothing for Anthropic’s 424B4 of 2026-11-19, now its rows say listed', async () => {
+    await db.insert(schema.entities).values(filing('424B4', '2026-11-19', '0001628280-26-074944'))
+    expect(await checkFreshness(db, memoryMarker(), [listingStatusCheck], NOW)).toEqual({
+      'listing-status': 'not-owed',
+    })
   })
 })
 
