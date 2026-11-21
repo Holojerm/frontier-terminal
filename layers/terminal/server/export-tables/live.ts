@@ -194,8 +194,14 @@ export const LIVE_TABLES = {
       },
       title: verbatim('The entry’s title'),
       summary: verbatim('The index’s one-sentence summary'),
-      model: verbatim('The model the report concerns', 'on a notice'),
-      observed_during: verbatim('The context the behavior was observed in', 'on a notice'),
+      model: verbatim(
+        'The model the report concerns, as the index prints it',
+        'on a notice, and on every OpenAI row since its index stopped printing it on 2026-11-20 (disclosure_timelines.model has it)',
+      ),
+      observed_during: verbatim(
+        'The context the behavior was observed in, as the index prints it',
+        'on a notice, and on every OpenAI row since 2026-11-20 (disclosure_timelines.observed_during has it)',
+      ),
       listed_on: {
         type: 'date',
         meaning:
@@ -212,10 +218,18 @@ export const LIVE_TABLES = {
     {
       entry_id: { type: 'text', meaning: 'The report’s slug. It joins disclosures.entry_id.' },
       title: verbatim('The report page’s own title'),
+      model: verbatim(
+        'The model the report concerns, from the page’s scope line',
+        'before 2026-11-20',
+      ),
+      observed_during: verbatim(
+        'The context the behavior was observed in, from the page’s scope line',
+        'before 2026-11-20, or when the scope line names no context',
+      ),
       lines: {
         type: 'json',
         meaning:
-          'Every “Label: value” line of the page’s metadata, verbatim and in page order, minus “Report updated”: an array of {label, value} objects.',
+          'Every “Label: value” line of the page’s metadata, verbatim and in page order, minus “Last updated” / “Report updated”: an array of {label, value} objects.',
       },
       discovered_on: {
         type: 'date',
@@ -226,7 +240,8 @@ export const LIVE_TABLES = {
       disclosed_on: {
         type: 'date',
         nullable: true,
-        meaning: 'A printed disclosure date, when the page has one that is a single date.',
+        meaning:
+          'A printed disclosure date (“Disclosure date” or “First posted”), when the page has one that is a single date.',
       },
     },
   ),

@@ -18,6 +18,7 @@ import { registerFleetExtraContributor } from '~~/server/utils/extensions'
 import { collectFleetCounters, latestFetchBySource } from '~~/server/utils/fleet-status'
 import { collectTerminalCounters } from '../../server/utils/fleet-counters'
 import { fixtureText, manifest } from './fixtures'
+import { indexPage } from './misalignment-index'
 
 // The refresh end-to-end against the real D1 and R2 test bindings, driven by
 // a fetcher that serves the committed fixtures (edited in place for the
@@ -249,8 +250,8 @@ describe('baseline', () => {
     // 316 RSS items, one per (component, incident), fold to 97 incidents.
     expect(perSource.get('xai-status')).toBe(97)
     expect(perSource.get('deepseek-status')).toBe(28)
-    // The disclosure index: 12 reports and 3 notices, a baseline like any first parse.
-    expect(perSource.get('openai-misalignment-reports')).toBe(15)
+    // The disclosure index: 26 reports and 3 notices, a baseline like any first parse.
+    expect(perSource.get('openai-misalignment-reports')).toBe(29)
     expect(perSource.has('openrouter-models')).toBe(false)
     expect(perSource.get('openrouter-rankings-daily')).toBe(1530)
 
@@ -1104,10 +1105,7 @@ describe('failures', () => {
 
   it('an index that is empty from the start is quiet, not a mass-removal failure', async () => {
     const ID = 'openai-misalignment-reports'
-    const empty = fixtureText('fixtures/disclosures/openai-misalignment-reports.html').replace(
-      /<tbody class="report-entry"[\s\S]*?<\/tbody>/g,
-      '',
-    )
+    const empty = indexPage([])
     const fetcher = fixtureFetcher({ [ID]: empty })
     const first = await run('survey', [ID], fetcher)
     expect(first.sources[0]).toMatchObject({ status: 'baseline', detail: '0 entities' })

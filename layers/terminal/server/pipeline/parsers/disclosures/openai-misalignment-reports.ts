@@ -5,39 +5,37 @@ import {
   type Provenance,
 } from '../../contracts'
 import { fixtureProvenance } from '../fixture-provenance'
-import { decodeEntities, textOf } from './html-text'
 
-// openai-misalignment-reports — https://alignment.openai.com/misalignment-reports/
+// openai-misalignment-reports — https://openai.com/safety-alignment/misalignment-reports/
 //
-// Deterministic parse of a server-rendered page. Reports and notices are one
-// `<tbody class="report-entry" id="report-<slug>">` / `id="notice-<id>"` each,
-// holding a title row and a description row:
+// Deterministic parse of a server-rendered Next.js page. The HTML lists the
+// first 20 entries behind a "Load more" button; every entry is in the page's
+// flight payload (the `self.__next_f.push([1,"…"])` script strings), as one
+// `"items":[…]` array:
 //
-//   report  <a class="report-title" href="/misalignment-reports/<slug>/">title</a>
-//           <td data-label="Last updated"><time datetime="YYYY-MM-DD">
-//           <a class="description-content" href="…"><p>observation</p>
-//             <p class="report-topics">Model · Observed-during context</p>
-//             <p class="report-topics">Topic · Topic</p></a>
-//   notice  <a class="report-title" href="https://openai.com/…">title</a>
-//           <td data-label="First posted"><time datetime="YYYY-MM-DD">
-//           <a class="description-content" href="https://openai.com/…"><p>summary</p></a>
+//   {"title": "…", "href": "/safety-alignment/misalignment-reports/<slug>/",
+//    "description": "…", "date": "YYYY-MM-DD",
+//    "reportDates": {"incidents": […], "discovered": […],
+//                    "firstPosted": "YYYY-MM-DD", "lastUpdated": "YYYY-MM-DD"},
+//    "filters": {"type": ["reports"] | ["notices"], "category": […], …}}
 //
-// Both `report-topics` paragraphs share a class; the topics one is told apart
-// by matching the tbody's `data-topics` JSON, and what is left is the model
-// line (absent on a report that prints none).
+// A notice's href is an absolute openai.com update link. The index no longer
+// prints a report's model or the context it was observed in; the report's own
+// page does (openai-misalignment-report.ts), so both are null here.
 //
-// The page has been redesigned twice: before 2026-10-03 a report carried a
-// `cb-meta` line and a Model / Observed during `<dl>`; until 2026-10-07 it was
-// a list of `<details class="cb-entry">`; it is now a sortable table. Each time
-// every entry parsed as "unrecognised" and the source failed.
+// The page has been redesigned four times: a `cb-meta` line until 2026-10-03,
+// `<details class="cb-entry">` until 2026-10-07, a `<tbody class="report-entry">`
+// table on alignment.openai.com until 2026-11-20, then this page on openai.com
+// (the old host answers 308 to it). Each time every entry failed to parse and
+// the source failed.
 //
 // Honesty rules:
 //   1. Every string a reader sees is the page's own text, verbatim.
 //   2. An entry whose structure is not recognised is reported in `skipped`,
 //      never dropped silently; a page with entries but no recognised report
 //      throws, so a redesign fails the source instead of emptying it.
-//   3. A page that has the index container but no entries at all is an empty
-//      index (no disclosures yet), not a failure.
+//   3. A page whose items array is empty is an empty index (no disclosures
+//      yet), not a failure.
 //   4. Provenance is an argument. Nothing here reads a clock.
 
 export interface SkippedEntry {
@@ -50,75 +48,109 @@ export interface MisalignmentIndexResult {
   skipped: SkippedEntry[]
 }
 
-const ENTRY = /<tbody class="([^"]*)" id="([^"]*)"([^>]*)>([\s\S]*?)<\/tbody>/g
-const REPORT_PATH = /^\/misalignment-reports\/([a-z0-9]+(?:-[a-z0-9]+)*)\/$/
-const INDEX_CONTAINER = /class="cb-index"/
-// "Highly persistent internal model · Internal deployment": model, then the
-// context it was observed in. Split on the last separator.
-const MODEL_SEPARATOR = ' · '
+const FLIGHT_CHUNK = /self\.__next_f\.push\(\[1,"((?:[^"\\]|\\.)*)"\]\)/g
+const ITEMS = '"items":['
+const REPORT_PATH = /^\/safety-alignment\/misalignment-reports\/([a-z0-9]+(?:-[a-z0-9]+)*)\/$/
+const ISO = /^\d{4}-\d{2}-\d{2}$/
 
-const first = (html: string, re: RegExp): string | null => html.match(re)?.[1] ?? null
-
-/** The ISO date in the `<time>` of the cell labelled `label`. */
-function dateCell(body: string, label: string): string | null {
-  return first(
-    body,
-    new RegExp(`<td [^>]*data-label="${label}"[^>]*>\\s*<time datetime="(\\d{4}-\\d{2}-\\d{2})"`),
-  )
+/** The flight payload: every script string, decoded and joined in page order. */
+function flightOf(html: string): string {
+  return [...html.matchAll(FLIGHT_CHUNK)].map((m) => JSON.parse(`"${m[1]}"`) as string).join('')
 }
 
-/** The topics line the page prints under a report ("Compaction behavior · Concealment"),
- * rebuilt from the tbody's `data-topics` JSON so it can be told from the model line. */
-function topicsLine(attrs: string): string | null {
-  const raw = first(attrs, /\bdata-topics="([^"]*)"/)
-  if (raw === null) return null
-  try {
-    const topics: unknown = JSON.parse(decodeEntities(raw))
-    return Array.isArray(topics) && topics.every((t) => typeof t === 'string')
-      ? topics.join(MODEL_SEPARATOR)
-      : null
-  } catch {
-    return null
+/** The JSON array that opens at `start` (a '['), or null when it never closes. */
+function arrayAt(text: string, start: number): unknown[] | null {
+  let depth = 0
+  let inString = false
+  for (let i = start; i < text.length; i++) {
+    const c = text[i]
+    if (inString) {
+      if (c === '\\') i++
+      else if (c === '"') inString = false
+    } else if (c === '"') inString = true
+    else if (c === '[' || c === '{') depth++
+    else if (c === ']' || c === '}') {
+      if (--depth === 0) {
+        try {
+          const value: unknown = JSON.parse(text.slice(start, i + 1))
+          return Array.isArray(value) ? value : null
+        } catch {
+          return null
+        }
+      }
+    }
   }
+  return null
 }
+
+/** Every `"items":[…]` array whose entries are disclosure entries (they carry `reportDates`). */
+function itemsOf(flight: string): Record<string, unknown>[] | null {
+  for (let at = flight.indexOf(ITEMS); at !== -1; at = flight.indexOf(ITEMS, at + 1)) {
+    const items = arrayAt(flight, at + ITEMS.length - 1)
+    if (!items) continue
+    const entries = items.filter(
+      (i): i is Record<string, unknown> => typeof i === 'object' && i !== null,
+    )
+    if (entries.length === items.length && entries.every((i) => 'reportDates' in i)) return entries
+  }
+  return null
+}
+
+const text = (v: unknown): string => (typeof v === 'string' ? v.replace(/\s+/g, ' ').trim() : '')
+const isoOf = (v: unknown): string | null => (typeof v === 'string' && ISO.test(v) ? v : null)
+
+/** A notice's id is its title as a slug ("Hugging Face" → hugging-face), as the old index printed it. */
+const noticeId = (title: string) =>
+  title
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-|-$/g, '')
+
+/** The index's entries as the page's payload holds them, or null when it holds none. */
+export const misalignmentIndexItems = (html: string) => itemsOf(flightOf(html))
 
 export function parseOpenAiMisalignmentReports(
   html: string,
   prov: Provenance = fixtureProvenance('openai-misalignment-reports'),
 ): MisalignmentIndexResult {
+  const items = misalignmentIndexItems(html)
+  if (!items) throw new Error('misalignment index has no "items" payload of reports and notices')
+
   const rows: DisclosureRow[] = []
   const skipped: SkippedEntry[] = []
-  let entries = 0
-
-  for (const [, classAttr, id, attrs, body] of html.matchAll(ENTRY)) {
-    if (!classAttr!.split(/\s+/).includes('report-entry')) continue
-    entries++
-
-    const title = textOf(first(body!, /<a class="report-title"[^>]*>([\s\S]*?)<\/a>/) ?? '')
-    const isNotice = id!.startsWith('notice-')
+  items.forEach((item, n) => {
+    const title = text(item.title)
+    const summary = text(item.description)
+    const href = text(item.href)
+    const type = (item.filters as { type?: unknown } | undefined)?.type
+    const dates = (item.reportDates ?? {}) as Record<string, unknown>
+    const name = title || `(untitled entry ${n + 1})`
+    const kind = Array.isArray(type) && type.length === 1 ? type[0] : null
+    if (kind !== 'reports' && kind !== 'notices') {
+      skipped.push({
+        entry: name,
+        reason: `type is not reports or notices: ${JSON.stringify(type)}`,
+      })
+      return
+    }
+    const isNotice = kind === 'notices'
     // Reports are listed by their last update, notices by when they were posted.
-    const listedOn = dateCell(body!, isNotice ? 'First posted' : 'Last updated')
-    const description = body!.match(
-      /<a class="description-content" href="([^"]+)"[^>]*>\s*<p>([\s\S]*?)<\/p>/,
-    )
-    const summary = description ? textOf(description[2]!) : ''
-    const name = title || `(untitled entry ${entries})`
-    if (!title || !listedOn || !summary) {
-      skipped.push({ entry: name, reason: 'no title, dated line or summary' })
-      continue
+    const listedOn = isoOf(isNotice ? dates.firstPosted : dates.lastUpdated)
+    if (!title || !summary || !href || !listedOn) {
+      skipped.push({ entry: name, reason: 'no title, summary, link or dated line' })
+      return
     }
 
     if (isNotice) {
-      const noticeId = first(id!, /^notice-([a-z0-9]+(?:-[a-z0-9]+)*)$/)
-      const href = first(body!, /<a class="report-title" href="([^"]+)"/)
-      if (!noticeId || !href) {
-        skipped.push({ entry: name, reason: 'notice without an id or an update link' })
-        continue
+      const id = noticeId(title)
+      if (!id) {
+        skipped.push({ entry: name, reason: 'notice title gives no id' })
+        return
       }
       rows.push({
         provider: 'openai',
         kind: 'notice',
-        entry_id: noticeId,
+        entry_id: id,
         title,
         summary,
         model: null,
@@ -127,46 +159,33 @@ export function parseOpenAiMisalignmentReports(
         entry_url: new URL(href, prov.source_url).href,
         ...prov,
       })
-      continue
+      return
     }
 
-    const href = first(body!, /<a class="report-title" href="([^"]+)"/)
-    const slug = href ? first(href, REPORT_PATH) : null
-    if (!href || !slug) {
+    const slug = href.match(REPORT_PATH)?.[1]
+    if (!slug) {
       skipped.push({
         entry: name,
-        reason: `report link is not /misalignment-reports/<slug>/: ${href}`,
+        reason: `report link is not /safety-alignment/misalignment-reports/<slug>/: ${href}`,
       })
-      continue
+      return
     }
-    const topics = topicsLine(attrs!)
-    const modelLine =
-      [...body!.matchAll(/<p class="report-topics">([\s\S]*?)<\/p>/g)]
-        .map((m) => textOf(m[1]!))
-        .find((line) => line !== topics) ?? ''
-    const cut = modelLine.lastIndexOf(MODEL_SEPARATOR)
-    const model = (cut === -1 ? modelLine : modelLine.slice(0, cut)) || null
-    const observedDuring = cut === -1 ? null : modelLine.slice(cut + MODEL_SEPARATOR.length) || null
     rows.push({
       provider: 'openai',
       kind: 'report',
       entry_id: slug,
       title,
       summary,
-      model,
-      observed_during: observedDuring,
+      model: null,
+      observed_during: null,
       listed_on: listedOn,
       entry_url: new URL(href, prov.source_url).href,
       ...prov,
     })
-  }
+  })
 
-  if (entries === 0) {
-    if (INDEX_CONTAINER.test(html)) return { rows, skipped }
-    throw new Error('misalignment index has no <tbody class="report-entry"> entries')
-  }
-  if (!rows.some((r) => r.kind === 'report')) {
-    throw new Error(`misalignment index: none of ${entries} entries parsed as a report`)
+  if (items.length > 0 && !rows.some((r) => r.kind === 'report')) {
+    throw new Error(`misalignment index: none of ${items.length} entries parsed as a report`)
   }
   const out = DisclosureIndexOutput.parse({ rows })
   return { rows: out.rows, skipped }

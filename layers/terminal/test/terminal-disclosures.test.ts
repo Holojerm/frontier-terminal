@@ -17,6 +17,7 @@ import {
   queryDisclosures,
 } from '../server/utils/terminal-disclosures'
 import { fixtureText, manifest } from './pipeline/fixtures'
+import { indexPage, withReport } from './pipeline/misalignment-index'
 
 // The disclosures axis end to end: poll the index, derive one page per
 // report from the stored rows, poll those, and read the payload the page and
@@ -26,8 +27,7 @@ import { fixtureText, manifest } from './pipeline/fixtures'
 const db = drizzle(env.DB, { schema })
 const sourcesYaml = fixtureText('sources.yaml')
 const INDEX_ID = 'openai-misalignment-reports'
-const INDEX = fixtureText('fixtures/disclosures/openai-misalignment-reports.html')
-const BASE = 'https://alignment.openai.com/misalignment-reports/'
+const BASE = 'https://openai.com/safety-alignment/misalignment-reports/'
 const DNS = 'an-agent-used-dns-to-reach-an-external-chatbot'
 const SELF_REPLICATING = 'self-replicating-prompt-injections-exist'
 const UPLOADING = 'uploading-files-to-the-internet-in-order-to-cite-them'
@@ -119,7 +119,7 @@ describe('the disclosures axis end to end', () => {
   it('derives one page per report, joins its dates by title, and measures the days', async () => {
     await run([INDEX_ID], fetcher())
     const ids = await reportPageIds()
-    expect(ids).toHaveLength(12)
+    expect(ids).toHaveLength(26)
     expect(ids).toContain(`openai-misalignment-report-${DNS}`)
 
     // The deception report's URL answers with another report's page: its
@@ -137,8 +137,8 @@ describe('the disclosures axis end to end', () => {
 
     const data = await queryDisclosures(db, await ctx())
     const openai = data.providers.find((p) => p.provider === 'openai')!
-    expect(openai).toMatchObject({ feed: 'ok', reports: 12, notices: 3, timed_reports: 3 })
-    // 5 (DNS), 90 (printed disclosure date), 114 (uploading): the median is 90.
+    expect(openai).toMatchObject({ feed: 'ok', reports: 26, notices: 3, timed_reports: 3 })
+    // 5 (DNS), 90 (self-replicating), 114 (uploading), each to its printed date: the median is 90.
     expect(openai.median_days_to_disclosure).toBe(90)
     expect(openai.sources[0]!.source_id).toBe(INDEX_ID)
 
@@ -146,10 +146,16 @@ describe('the disclosures axis end to end', () => {
     expect(byId.get(DNS)!.timeline).toMatchObject({
       discovered_on: '2026-09-20',
       disclosed_on: '2026-09-25',
-      disclosed_basis: 'first_listed',
+      disclosed_basis: 'printed',
       days_to_disclosure: 5,
       source_url: `${BASE}${DNS}/`,
     })
+    // The index no longer prints the model; the report's own page does.
+    expect(byId.get(DNS)).toMatchObject({
+      model: 'Internal research model',
+      observed_during: 'RL training',
+    })
+    expect(byId.get('searching-github-for-leaked-api-keys')!.model).toBeNull()
     expect(byId.get(SELF_REPLICATING)!.timeline).toMatchObject({
       disclosed_on: '2026-09-25',
       disclosed_basis: 'printed',
@@ -163,29 +169,39 @@ describe('the disclosures axis end to end', () => {
       timeline_status: 'not_applicable',
     })
     // Newest listed first.
-    expect(data.entries[0]!.listed_on).toBe('2026-10-02')
+    expect(data.entries[0]!.listed_on).toBe('2026-11-18')
     expect(data.entries.at(-1)!.entry_id).toBe('hugging-face')
   })
 
   it('a revision moves the printed date but not the publication date, and never wakes the judge', async () => {
-    await run([INDEX_ID], fetcher())
-    await run(await reportPageIds(), fetcher())
+    // Without its "First posted" line, the DNS page's publication date is the earliest the index showed.
+    const dnsPage = fixtureText(
+      `fixtures/disclosures/openai-misalignment-report-${DNS}.html`,
+    ).replace('First posted: Sep 25, 2026', '')
+    const pages = fetcher({ [`${BASE}${DNS}/`]: dnsPage })
+    await run([INDEX_ID], pages)
+    await run(await reportPageIds(), pages)
 
     const NEW = 'a-new-report'
-    const newEntry =
-      `<tbody class="report-entry" id="report-${NEW}" data-title="A new report" ` +
-      'data-incident="2026-10-01" data-date="2026-10-02" data-created="2026-10-02" data-topics="[]">\n' +
-      `<tr class="entry-main"><th scope="row"><a class="report-title" href="/misalignment-reports/${NEW}/">A new report</a></th>\n` +
-      '<td class="table-date" data-label="Incident date"><time datetime="2026-10-01">10/1/26</time></td>' +
-      '<td class="table-date" data-label="First posted"><time datetime="2026-10-02">10/2/26</time></td>\n' +
-      '<td class="table-date" data-label="Last updated"><time datetime="2026-10-02">10/2/26</time></td></tr>\n' +
-      '<tr class="entry-detail"><td colspan="5"><div class="description-drawer"><div class="description-clip">' +
-      `<a class="description-content" href="/misalignment-reports/${NEW}/"><p>An agent did something new.</p>` +
-      '<p class="report-topics">Internal research model · RL training</p></a></div></div></td></tr>\n</tbody>'
-    const nextIndex = INDEX.replace(
-      /(id="report-an-agent-used-dns[\s\S]*?data-label="Last updated"><time datetime=")2026-09-25/,
-      '$12026-10-02',
-    ).replace('<tbody class="report-entry"', `${newEntry}<tbody class="report-entry"`)
+    const items = withReport(DNS, (i) => ({
+      ...i,
+      reportDates: { ...i.reportDates, lastUpdated: '2026-11-20' },
+    }))
+    const nextIndex = indexPage([
+      {
+        title: 'A new report',
+        href: `/safety-alignment/misalignment-reports/${NEW}/`,
+        description: 'An agent did something new.',
+        date: '2026-11-20',
+        reportDates: {
+          incidents: ['2026-11-19'],
+          firstPosted: '2026-11-20',
+          lastUpdated: '2026-11-20',
+        },
+        filters: { year: ['2026'], type: ['reports'], category: [] },
+      },
+      ...items,
+    ])
     const second = await run([INDEX_ID], fetcher({ [BASE]: nextIndex }))
     expect(second.sources[0]).toMatchObject({ status: 'ok', added: 1, modified: 1 })
 
@@ -197,9 +213,13 @@ describe('the disclosures axis end to end', () => {
 
     const data = await queryDisclosures(db, await ctx())
     const dns = data.entries.find((e) => e.entry_id === DNS)!
-    expect(dns.listed_on).toBe('2026-10-02')
+    expect(dns.listed_on).toBe('2026-11-20')
     // The earliest date the index ever showed is still the publication date.
-    expect(dns.timeline).toMatchObject({ disclosed_on: '2026-09-25', days_to_disclosure: 5 })
+    expect(dns.timeline).toMatchObject({
+      disclosed_on: '2026-09-25',
+      disclosed_basis: 'first_listed',
+      days_to_disclosure: 5,
+    })
     expect(data.entries[0]!.entry_id).toBe(NEW)
     expect(data.entries[0]!.timeline_status).toBe('not_fetched')
     // The next tick derives the new report's page.
