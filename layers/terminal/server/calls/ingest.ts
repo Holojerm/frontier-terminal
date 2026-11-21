@@ -246,6 +246,28 @@ interface Listed {
   cik: string
 }
 
+const READ_COLUMNS = 10
+export const LISTED_ROWS_PER_STATEMENT = Math.floor(D1_MAX_BOUND_PARAMS / READ_COLUMNS)
+
+/**
+ * Lists filings, or re-lists ones whose index read failed. The update reads only
+ * `excluded`: a bound value in `set` adds to the rows' parameters, and a full chunk
+ * then passes D1's cap (the backfill's first runs failed at 102).
+ */
+export function upsertListed(db: PipelineDb, rows: (typeof tables.filedFactReads.$inferInsert)[]) {
+  return db
+    .insert(tables.filedFactReads)
+    .values(rows)
+    .onConflictDoUpdate({
+      target: tables.filedFactReads.id,
+      set: {
+        status: sql`excluded.status`,
+        detail: sql`excluded.detail`,
+        started_at: sql`excluded.started_at`,
+      },
+    })
+}
+
 /** The submissions feeds of a company: its own, and its earlier CIK's until it redomiciled. */
 function feedsOf(c: CallCompany): { cik: string; until: string | null }[] {
   return [{ cik: c.cik, until: null }, ...(c.prior_cik ? [c.prior_cik] : [])]
@@ -347,14 +369,8 @@ export async function listFilings(db: PipelineDb, deps: CallDeps): Promise<numbe
         started_at: at,
         source_url: f.index_url,
       }))
-      for (const part of chunk(values, Math.floor(D1_MAX_BOUND_PARAMS / 10))) {
-        await db
-          .insert(tables.filedFactReads)
-          .values(part)
-          .onConflictDoUpdate({
-            target: tables.filedFactReads.id,
-            set: { status: 'listed', detail: sql`excluded.detail`, started_at: at },
-          })
+      for (const part of chunk(values, LISTED_ROWS_PER_STATEMENT)) {
+        await upsertListed(db, part)
       }
       for (const f of fresh) known.add(f.accession_no)
       found += fresh.length
