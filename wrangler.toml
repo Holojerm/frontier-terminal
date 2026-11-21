@@ -133,12 +133,17 @@ head_sampling_rate = 1
 # failed; a trace says which call inside it was slow or threw. OTel-shaped, so
 # a dashboard OTLP destination can export it later without touching code.
 # Spans record full URLs, query strings included, as invocation logs already
-# do. From 2026-12-01 stored traces count toward Observability billing: a fork
-# that outgrows "low traffic" lowers this rate and records why in its
-# divergence doc.
+# do. From 2026-12-01 stored traces count toward Observability billing, against
+# one allowance the whole account shares (50 GB ingested a month, logs
+# included). This app's volume is its crons, not its visitors: about 160K D1
+# queries a day, each one a span, so it traces 1 invocation in 10. That still
+# catches about 29 of the 5-minute polls a day and one 6-hourly survey every
+# two to three days. Logs above stay at 1, so every failure is still logged.
+# To trace every run while chasing a slow cron, raise this and deploy.
+# Reason recorded in docs/template-divergence.md.
 [observability.traces]
 enabled = true
-head_sampling_rate = 1
+head_sampling_rate = 0.1
 
 # Workers Issues: groups uncaught exceptions, failed invocations, 5xx responses
 # and console.error lines into issues, and the account's Workers Issues
