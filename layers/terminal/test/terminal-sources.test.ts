@@ -124,7 +124,6 @@ describe('readSourceRegistry', () => {
       'mops-monthly-revenue-history',
       'taiwan-ir-revenue-pages',
       'census-hs-847150',
-      'kcs-chip-exports',
     ])
   })
 

@@ -547,18 +547,29 @@ export const TABLE_META: Readonly<Record<string, TableMeta>> = {
     feeds: [{ ids: ['ercot-large-loads'] }],
   },
   hardware_prints: {
-    grain: 'One row per figure a source gave for a company’s month, each vintage its own row.',
+    grain:
+      'One row per figure a source gave for a company’s month (or Korea’s chip exports for a month or its first 10 or 20 days), each vintage its own row.',
     cadence:
-      'Hourly. Taiwan revenue is due by the 10th of the next month; TSMC files its 6-K the same day.',
+      'Hourly. Taiwan revenue is due by the 10th of the next month, and TSMC files its 6-K the same day. Korea Customs Service posts the 10-day figure on the 11th, the 20-day figure on the 21st and the confirmed month around the 15th.',
     event: 'period',
     knowledge: 'first_seen_at',
     start:
-      'TSMC from January 2015 (its 6-Ks), Accton from July 2023 (its own page), the others from our first read of the exchange feed on 2026-11-21.',
+      'TSMC from January 2015 (its 6-Ks), Accton from July 2023 (its own page), the others from our first read of the exchange feed on 2026-11-21. Korea’s chip exports from September 2026, the first releases under KOGL Type 1.',
     joins: [
       { column: 'ticker', to: 'your security master' },
       { column: 'entity', to: 'your security master' },
     ],
-    feeds: ['prints'],
+    // The figures' sources. The ties aren't rows of this table, and the held KCS releases are never exported.
+    feeds: [
+      {
+        ids: [
+          'twse-monthly-revenue',
+          'tsmc-revenue-6k',
+          'accton-monthly-revenue',
+          'kcs-chip-exports',
+        ],
+      },
+    ],
   },
 }
 

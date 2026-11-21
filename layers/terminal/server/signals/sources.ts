@@ -9,6 +9,7 @@ import * as tables from '#server/db/schema'
 import { gridMonths, gridWeeks } from '../../shared/utils/grid-load'
 import { PRIMARY_PLACEMENT } from '../pipeline/probes/placement'
 import type { PipelineDb } from '../pipeline/store'
+import { KCS } from '../prints/ingest'
 import type { QueryContext } from '../utils/terminal-db'
 import { queryGpuPrices } from '../utils/terminal-gpu'
 import { queryGroundTruth } from '../utils/terminal-ground-truth'
@@ -19,6 +20,9 @@ import type { EventPoint, Point } from './harness'
 import type { SignalSource } from './registry'
 
 export type Loaded = { kind: 'points'; points: Point[] } | { kind: 'events'; events: EventPoint[] }
+
+/** The print reader whose document log dates each Korean release (print_documents.filed is KCS's posting day). */
+const KCS_READER = KCS.reader
 
 export interface LoadDeps {
   db: PipelineDb
@@ -249,33 +253,47 @@ export function createLoader(deps: LoadDeps) {
         }
       }
       case 'prints': {
-        // Each month as its first release stated it: vintage 1 of a print row,
-        // from whichever source carried a year-on-year figure.
+        // Each month (or 10- or 20-day count) as the first release to state a
+        // year-on-year change put it: the earliest print row with one, from
+        // whichever source (a provisional Korean month can state the value
+        // alone, its confirmed release the change). It is dated public on
+        // the release's own time where it states one, else on the day KCS
+        // posted it (print_documents.filed), else available_after_days after
+        // the period. Every source is read, the held ones included
+        // (PRINT_HELD_SOURCES): the harness publishes statistics, never rows.
+        const t = tables.hardwarePrints
+        const d = tables.printDocuments
         const rows = await deps.db
           .select({
-            period: tables.hardwarePrints.period,
-            yoy: tables.hardwarePrints.yoy_pct,
-            vintage: tables.hardwarePrints.vintage,
+            period: t.period,
+            yoy: t.yoy_pct,
+            published_at: t.published_at,
+            posted: d.filed,
           })
-          .from(tables.hardwarePrints)
+          .from(t)
+          .leftJoin(d, and(eq(d.raw_key, t.raw_key), eq(d.source_id, KCS_READER)))
           .where(
             and(
-              eq(tables.hardwarePrints.series, source.series),
-              eq(tables.hardwarePrints.entity, source.entity),
-              eq(tables.hardwarePrints.window, 'month'),
-              eq(tables.hardwarePrints.observed_as, 'print'),
-              eq(tables.hardwarePrints.vintage, 1),
+              eq(t.series, source.series),
+              eq(t.entity, source.entity),
+              eq(t.window, source.window ?? 'month'),
+              eq(t.observed_as, 'print'),
             ),
           )
-        const byMonth = new Map<string, number>()
+          .orderBy(t.first_seen_at, t.vintage)
+        const byMonth = new Map<string, Point>()
         for (const r of rows) {
-          if (r.yoy !== null && !byMonth.has(r.period)) byMonth.set(r.period, r.yoy)
+          if (r.yoy === null || byMonth.has(r.period)) continue
+          const date = `${r.period}-01`
+          const available = r.published_at?.slice(0, 10) ?? r.posted
+          byMonth.set(
+            r.period,
+            available ? { date, value: r.yoy, available } : { date, value: r.yoy },
+          )
         }
         return {
           kind: 'points',
-          points: [...byMonth.entries()]
-            .map(([period, value]) => ({ date: `${period}-01`, value }))
-            .sort((a, b) => (a.date < b.date ? -1 : 1)),
+          points: [...byMonth.values()].sort((a, b) => (a.date < b.date ? -1 : 1)),
         }
       }
       case 'revenue_vs_reported':

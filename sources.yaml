@@ -3151,6 +3151,54 @@ print_sources:
       the stated YoY, the company's own figures, hourly; the page is stored
       once per change. Read 2026-11-21.
     rights: restricted
+  kcs-chip-exports:
+    publisher: Korea Customs Service (관세청), press releases on customs.go.kr (bbsId 1362)
+    url: https://www.customs.go.kr/kcs/na/ntt/selectNttList.do?mi=2891&bbsId=1362
+    format: >-
+      HTML board and release pages, and each release's HWP, HWPX or PDF as
+      plain text from KCS's own document viewer (/streamdocs/v4/documents/<id>/texts)
+    verdict: include
+    license: KOGL Type 1, 출처표시 (https://www.kogl.or.kr/info/licenseType1.do)
+    citation: >-
+      관세청(Korea Customs Service), the release's title and year, and its URL
+      on customs.go.kr. 이 저작물은 공공누리 제1유형(출처표시) 조건에 따라 이용할 수
+      있습니다.
+    terms: >-
+      Each release page since 2026-09-29 carries the KOGL Type 1 block
+      ("관세청이(가) 창작한 … 저작물은 공공누리 "출처표시" 조건에 따라 이용할 수
+      있습니다", image new_img_opentype01.png, link licenseType1.do). KOGL
+      Type 1 allows commercial use and changes with the source indicated, so
+      the rows travel under it. robots.txt names only Googlebot, Yeti, Daum
+      and Bingbot and has no rule for other agents. No key. Taken: the
+      semiconductor (반도체) export figure and its stated year-on-year change
+      from the 1–10 day, 1–20 day and confirmed monthly releases, and the
+      embargo time (보도시점). The board is read hourly, page 1 only once the
+      whole board is held; each release is read once (its page, the
+      viewer's id, the viewer's text: three GETs, five where the PDF's text
+      lost its digits and the HWP is read too), oldest first, at most 12 a
+      run. A release's rows go here only when its own page carries the
+      Type 1 block. Read 2026-11-21.
+    rights: upstream
+    caveats: >-
+      Customs-basis figures, revised until the year's statistics are
+      confirmed in February. The 10- and 20-day figures are provisional
+      counts for part of a month. The provisional monthly release (the 1st)
+      states the chip figure only some months. The confirmed one (about the
+      15th) always does, in US$ million in its table.
+  kcs-chip-exports-unmarked:
+    publisher: Korea Customs Service (관세청), press releases on customs.go.kr (bbsId 1362)
+    url: https://www.customs.go.kr/kcs/na/ntt/selectNttList.do?mi=2891&bbsId=1362
+    format: the same releases as kcs-chip-exports, posted before the KOGL mark
+    verdict: include (signals harness and internal research only, never shown or exported)
+    terms: >-
+      Releases posted up to 2026-09-21 carry no KOGL block. KCS's copyright
+      policy (customs.go.kr cntntsId=2610) asks users to consult KCS before
+      using a work without a KOGL mark. Until KCS answers, their figures are
+      held for the signals harness, which publishes statistics and never
+      rows. No route, page, export or MCP tool reads them
+      (PRINT_HELD_SOURCES). Fetched as under kcs-chip-exports. Read
+      2026-11-21.
+    rights: not-cleared
   print-ties-filings:
     publisher: SEC EDGAR filings (NVIDIA 10-K, AMD 10-K)
     url: https://www.sec.gov/Archives/edgar/data/
@@ -3606,24 +3654,4 @@ cut:
       US Census international trade API imports under HS 8471.50 (servers),
       public domain. Since 2026 every request without a key is redirected to
       api.census.gov/data/missing_key.html. A free key is an owner step.
-      Read 2026-11-21.
-  kcs-chip-exports:
-    verdict: deferred (read in a follow-up; no figure stored yet)
-    reason: >-
-      Korea Customs Service posts the 1–10 and 1–20 day preliminary export
-      figures (the 11th and the 21st) and the final month (about the 15th)
-      on its press board (customs.go.kr bbsId=1362), each with an HWP, HWPX
-      or PDF whose text its own viewer (/streamdocs/v4/documents/<id>/texts)
-      returns as plain text; the 반도체 row gives the USD value and the YoY.
-      No key needed. robots.txt has no rule for every agent (it names only
-      Googlebot, Yeti, Daum and Bingbot). Releases since about October 2026
-      carry KOGL Type 1 ("출처표시": commercial use and changes allowed, with
-      the year, agency and URL), so they can go in the CC BY 4.0 tier and a
-      paid licence. Earlier releases carry no KOGL mark, and KCS's policy
-      (customs.go.kr cntntsId=2610) asks for consultation before using
-      unmarked works, so history before the mark is free-site only
-      (not-cleared) until KCS says otherwise. MOTIR's monthly release (the
-      1st) is the same: KOGL Type 1 only where marked, and no per-release
-      mark. data.go.kr's keyed APIs (15101609, 15100475: HS-code monthly
-      exports, "이용허락범위 제한 없음") need a service key, an owner step.
       Read 2026-11-21.
