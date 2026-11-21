@@ -1,4 +1,5 @@
 import { env } from 'cloudflare:test'
+import { eq } from 'drizzle-orm'
 import { drizzle } from 'drizzle-orm/d1'
 import { beforeAll, describe, expect, it } from 'vitest'
 
@@ -7,7 +8,8 @@ import chipUsers from '~~/fixtures/recipes/epoch-chip-users.csv?raw'
 import epochSites from '~~/fixtures/recipes/epoch-data-centers.csv?raw'
 import azure from '~~/fixtures/recipes/gpu-azure.json?raw'
 import coreweave from '~~/fixtures/recipes/gpu-coreweave.html?raw'
-import mlperf from '~~/fixtures/recipes/mlperf-inference-datacenter.json?raw'
+import mlperf51 from '~~/fixtures/recipes/mlperf-inference-datacenter-v5.1.json?raw'
+import mlperf from '~~/fixtures/recipes/mlperf-inference-datacenter-v6.0.json?raw'
 import crwvFacts from '~~/fixtures/recipes/sec-companyfacts-crwv.json?raw'
 import crwvRelease from '~~/fixtures/recipes/sec-crwv-active-power.html?raw'
 import googlRelease from '~~/fixtures/recipes/sec-googl-api-tokens.html?raw'
@@ -33,8 +35,11 @@ import { GPU_COREWEAVE } from '../server/theses/recipes/gpu-pages'
 import { gpuObservations, gpuPricePayload } from '../server/theses/recipes/gpu-prices'
 import {
   MLPERF_INFERENCE,
+  MLPERF_ROUNDS,
   extractMlperf,
   mlperfFootnote,
+  mlperfUrl,
+  nextMlperfRound,
 } from '../server/theses/recipes/mlperf-inference'
 import { runRecipes } from '../server/theses/recipes/run'
 import { SEC_REVENUE_CRWV } from '../server/theses/recipes/sec-revenue'
@@ -263,13 +268,13 @@ describe('earnings releases', () => {
 })
 
 describe('MLPerf Inference', () => {
-  const obs = extractMlperf(mlperf, { date: '2026-11-20' })
+  const obs = extractMlperf(mlperf)
 
   it('keeps closed, available, Server results in tokens per second, divided by the accelerator count', () => {
     expect(obs).toHaveLength(150)
     expect(obs[0]).toEqual({
       key: '6.0-0001|llama2-70b-99',
-      date: '2026-11-20',
+      date: '2026-04-01',
       value: 1_016_380 / 88,
       payload: {
         result_id: '6.0-0001',
@@ -286,19 +291,59 @@ describe('MLPerf Inference', () => {
     expect(new Set(obs.map((o) => o.payload.scenario))).toEqual(new Set(['Server']))
   })
 
-  it('fails on another round, or a body that is not the summary', () => {
-    expect(() =>
-      extractMlperf(mlperf.replaceAll('"version": "v6.0"', '"version": "v6.1"'), {
-        date: '2026-11-20',
-      }),
-    ).toThrow(/round v6.1/)
-    expect(() => extractMlperf('[]', { date: '2026-11-20' })).toThrow(/not an MLPerf/)
+  it('reads v5.1, which states nodes and accelerators per node instead of a total', () => {
+    const v51 = extractMlperf(mlperf51)
+    // 155 results, less the six CPU-only systems.
+    expect(v51).toHaveLength(149)
+    expect(new Set(v51.map((o) => o.date))).toEqual(new Set(['2025-09-09']))
+    expect(new Set(v51.map((o) => o.payload.round))).toEqual(new Set(['v5.1']))
+    expect(v51[0]).toEqual({
+      key: '5.1-0001|llama2-70b-99',
+      date: '2025-09-09',
+      value: 24_593.8 / 8,
+      payload: {
+        result_id: '5.1-0001',
+        round: 'v5.1',
+        model: 'llama2-70b-99',
+        scenario: 'Server',
+        submitter: 'AMD',
+        system: 'Supermicro AS-8125GS-TNMR2',
+        accelerator: 'AMD Instinct MI300X 192GB HBM3',
+        accelerators: 8,
+        tokens_per_second: 24_593.8,
+      },
+    })
+    // A mixed cluster: 6 nodes of 8, the 32 MI300X and 16 MI325X its accelerator string lists.
+    expect(v51.find((o) => o.key === '5.1-0065|llama2-70b-99')!.payload.accelerators).toBe(48)
+    // Result IDs carry the round, so no key is shared with v6.0.
+    const keys = new Set(obs.map((o) => o.key))
+    expect(v51.filter((o) => keys.has(o.key))).toEqual([])
   })
 
-  it('carries the footnote MLCommons requires, with the unverified statement', () => {
-    const footnote = mlperfFootnote('2026-11-20')
+  it('reads the rounds oldest first, one per run, then stays on the newest', () => {
+    expect(MLPERF_ROUNDS.map((r) => r.round)).toEqual(['v5.1', 'v6.0'])
+    expect(nextMlperfRound(null).round).toBe('v5.1')
+    expect(nextMlperfRound('2025-09-09').round).toBe('v6.0')
+    expect(nextMlperfRound('2026-04-01').round).toBe('v6.0')
+    expect(MLPERF_INFERENCE.url({ now: NOW, newest: null })).toBe(
+      'https://raw.githubusercontent.com/mlcommons/inference_results_v5.1/main/summary_results.json',
+    )
+  })
+
+  it('fails on an unlisted round, a mixed body, or a body that is not the summary', () => {
+    expect(() =>
+      extractMlperf(mlperf.replaceAll('"version": "v6.0"', '"version": "v6.1"')),
+    ).toThrow(/round v6.1 is not listed/)
+    expect(() => extractMlperf(mlperf.replace('"version": "v6.0"', '"version": "v5.1"'))).toThrow(
+      /round v6.0 in v5.1/,
+    )
+    expect(() => extractMlperf('[]')).toThrow(/not an MLPerf/)
+  })
+
+  it('carries the footnote MLCommons requires, with the round and the unverified statement', () => {
+    const footnote = mlperfFootnote('v5.1', '2026-11-20')
     expect(footnote).toContain(
-      'MLPerf® Inference v6.0, Datacenter, Closed division, Server scenario. Retrieved from https://github.com/mlcommons/inference_results_v6.0 on 2026-11-20.',
+      'MLPerf® Inference v5.1, Datacenter, Closed division, Server scenario. Retrieved from https://github.com/mlcommons/inference_results_v5.1 on 2026-11-20.',
     )
     expect(footnote).toContain('Result not verified by MLCommons Association.')
     expect(footnote).toContain(
@@ -555,7 +600,8 @@ const stated = (
 const BODIES: Record<string, string> = {
   'https://www.coreweave.com/pricing': coreweave,
   [GPU_AZURE.url({ now: NOW, newest: null })]: azure,
-  [MLPERF_INFERENCE.url({ now: NOW, newest: null })]: mlperf,
+  [mlperfUrl('v5.1')]: mlperf51,
+  [mlperfUrl('v6.0')]: mlperf,
   'https://epoch.ai/data/ai_chip_users_intermediates_by_lab.csv': chipUsers,
   'https://epoch.ai/data/ai_chip_sales_chip_types.csv': chipTypes,
   'https://epoch.ai/data/data_centers/data_centers.csv': epochSites,
@@ -586,6 +632,11 @@ describe('queryUtilization', () => {
       ),
     ])
     expect(results.filter((r) => r.status !== 'ok')).toEqual([])
+    // The first run read v5.1; the next reads v6.0, and the one after has nothing new.
+    const later = []
+    for (let i = 0; i < 2; i++)
+      later.push(...(await runRecipes(db, { raw, fetcher, now: () => NOW }, [MLPERF_INFERENCE])))
+    expect(later.map((r) => r.status)).toEqual(['ok', 'unchanged'])
   })
 
   const query = () =>
@@ -644,7 +695,24 @@ describe('queryUtilization', () => {
     expect(large.share.low).toBeGreaterThan(1)
     expect(implied!.models.at(-1)!.model).toBe('llama3.1-405b')
     expect(implied!.unrated_results).toBeGreaterThan(0)
-    expect(implied!.benchmark.footnote).toBe(mlperfFootnote('2026-11-20'))
+    expect(implied!.benchmark.round).toBe('v6.0')
+    expect(implied!.benchmark.footnote).toBe(mlperfFootnote('v6.0', '2026-11-20'))
+    expect(implied!.benchmark.source.source_url).toBe(mlperfUrl('v6.0'))
+  })
+
+  it('keeps each past round’s rows under their own round and source, out of the newest read', async () => {
+    const rows = await db
+      .select()
+      .from(schema.recipeObservations)
+      .where(eq(schema.recipeObservations.recipe_id, MLPERF_INFERENCE.id))
+    expect([...new Set(rows.map((r) => r.date))].sort()).toEqual(['2025-09-09', '2026-04-01'])
+    const v51 = rows.filter((r) => r.date === '2025-09-09')
+    expect(v51).toHaveLength(149)
+    expect(new Set(v51.map((r) => r.source_url))).toEqual(new Set([mlperfUrl('v5.1')]))
+    expect(new Set(v51.map((r) => JSON.parse(r.payload).round))).toEqual(new Set(['v5.1']))
+    const { implied } = await query()
+    const ids = implied!.models.flatMap((m) => [m.slowest.result_id, m.fastest.result_id])
+    expect(ids.filter((id) => !id.startsWith('6.0-'))).toEqual([])
   })
 
   it('reads CoreWeave’s revenue per megawatt for quarters with a filed revenue and a stated power', async () => {

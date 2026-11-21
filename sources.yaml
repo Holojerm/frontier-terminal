@@ -2288,31 +2288,43 @@ recipe_sources:
       the run.
   mlperf-inference-datacenter:
     company: frontier-labs
-    url: https://raw.githubusercontent.com/mlcommons/inference_results_v6.0/main/summary_results.json
-    format: JSON, one object per submitted result (520 at the audit)
+    url: https://raw.githubusercontent.com/mlcommons/inference_results_{round}/main/summary_results.json
+    format: >-
+      JSON, one object per submitted result, one file per round: v5.1 (1,448
+      results) and v6.0 (520) at the audits
     verdict: include
     terms: >-
-      The results repository is under the Apache License 2.0
-      (mlcommons/inference_results_v6.0, LICENSE.md). The MLPerf Results
-      Messaging Guidelines (mlcommons/policies) apply to every use: "Any use
-      of or reference to an MLPerf benchmark result must also include the
-      following in a footnote", and "Secondary and derived metrics must not
-      be presented as official or verified MLPerf metrics. You must follow
-      the rules above for citing an unverified score." raw.githubusercontent.com
-      has no robots.txt (404). Taken: closed-division, available, Server
-      results in tokens per second, every 6 hours. Read 2026-11-19.
+      Each round's results repository is under the Apache License 2.0
+      (mlcommons/inference_results_v5.1 and inference_results_v6.0,
+      LICENSE.md). The MLPerf Results Messaging Guidelines (mlcommons/policies)
+      apply to every use: "Any use of or reference to an MLPerf benchmark
+      result must also include the following in a footnote", and "Secondary
+      and derived metrics must not be presented as official or verified
+      MLPerf metrics. You must follow the rules above for citing an unverified
+      score." raw.githubusercontent.com has no robots.txt (404). Taken:
+      closed-division, available, Server results in tokens per second. A past
+      round is read once; the newest is re-read every 6 hours. Read 2026-11-19
+      (v6.0) and 2026-11-20 (v5.1).
     rights: upstream
-    license: Apache License 2.0 (github.com/mlcommons/inference_results_v6.0, read 2026-11-19)
+    license: >-
+      Apache License 2.0 (github.com/mlcommons/inference_results_v6.0, read
+      2026-11-19; inference_results_v5.1, read 2026-11-20)
     caveats: >-
       Tokens per second per accelerator is our division of a system's result
       by its accelerator count. MLCommons has not verified that figure, and
       every page that shows it carries "Result not verified by MLCommons
-      Association." with the result IDs. The benchmarks run open-weight
-      models on submitters' hardware (NVIDIA, AMD, Intel). No closed lab's
-      model and no TPU is measured. Per H100-equivalent, results span 49
-      tokens a second (Llama 3.1 405B) to 7,326 (Llama 3.1 8B), which is why
-      anything built on them is a range. The round is in the URL, so a new
-      round is a new URL changed by hand.
+      Association." with the round and the result IDs. The benchmarks run
+      open-weight models on submitters' hardware (NVIDIA, AMD, Intel). No
+      closed lab's model and no TPU is measured. Per H100-equivalent, v6.0
+      results span 49 tokens a second (Llama 3.1 405B) to 7,326 (Llama 3.1
+      8B), which is why anything built on them is a range. Each row is dated
+      by its round's announcement (v5.1 2025-09-09, v6.0 2026-04-01) and
+      cites its round's URL. The utilization read uses the newest round alone.
+      v5.1 states nodes and accelerators per node, not a total, so its count
+      is their product, which is how v6.0's total is formed on every result.
+      v5.0 is left out because its repository states no license, and v4.1
+      and earlier because they publish no summary file. A new round is a line
+      added to the recipe by hand.
   epoch-chip-users:
     company: frontier-labs
     url: https://epoch.ai/data/ai_chip_users_intermediates_by_lab.csv

@@ -1633,7 +1633,17 @@
       "note": "The release for Q2 2026 (accession 0001769628-26-000362, filed 2026-08-11): the newest quarter the committed company-facts fixture (2026-11-02) has revenue for, so the offline fill can show the two together. All seven releases were fetched the same day and their active-power sentences are quoted in the test."
     },
     {
-      "path": "fixtures/recipes/mlperf-inference-datacenter.json",
+      "path": "fixtures/recipes/mlperf-inference-datacenter-v5.1.json",
+      "source_id": "mlperf-inference-datacenter",
+      "source_url": "https://raw.githubusercontent.com/mlcommons/inference_results_v5.1/main/summary_results.json",
+      "fetched_at": "2026-11-21T00:15:00Z",
+      "http_status": 200,
+      "raw_bytes": 2221336,
+      "trim": "datacenter suite only (586 of 1,448 results), and only the fields the extractor reads, in upstream order and spelling",
+      "note": "MLPerf Inference v5.1 summary; the recipe keeps 149 (155 closed, available Server results in tokens per second, less 6 CPU-only systems)."
+    },
+    {
+      "path": "fixtures/recipes/mlperf-inference-datacenter-v6.0.json",
       "source_id": "mlperf-inference-datacenter",
       "source_url": "https://raw.githubusercontent.com/mlcommons/inference_results_v6.0/main/summary_results.json",
       "fetched_at": "2026-11-20T00:34:42Z",

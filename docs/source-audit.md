@@ -882,3 +882,22 @@ Totals on the local run (one copy per week of each era): 290 copies read (852 ro
 **Gaps.** Stated in `GPU_ARCHIVE_GAPS`, each with its reason: Lambda before 2023-05-12; CoreWeave before 2025 (it priced each GPU as a component, with vCPUs and RAM on top, which isn't the instance price the live page prints); Nebius before 2023-11-01 and 2024-09-15 → 2024-11-15 (the move to nebius.com); Crusoe before 2025-04-03; Together before 2026-03-08; DigitalOcean before 2024-10-20; Verda before 2023-09-23 and 2025-09 → 2026-07 (no copy of either products page); Oracle before 2026-08-12; Google Cloud before 2026-09-21. Not covered (`GPU_ARCHIVE_NOT_COVERED`): Azure, whose query has no copy. Within an era, the weekly median drops a provider whose newest copy is more than 90 days old, so a stretch with few copies shows as fewer providers, never a carried price.
 
 **Verdict.** Include, as a one-off backfill (never on a cron), `rights: not-cleared`. Archived rows carry `basis: archived` and stay in `archived_gpu_prices`: the median floor, the Compute thesis, the alerts and the judge read `recipe_observations` only. `/compute` and `get_gpu_prices` show them as `archived`, and `/export/archived_gpu_prices` has every row.
+
+## Addendum, 2026-11-20: MLPerf Inference rounds before v6.0
+
+Checked so tokens per second per accelerator has a history across chip generations. Each `mlcommons/inference_results_v*` repository was read through the GitHub API, and each `summary_results.json` was fetched from `raw.githubusercontent.com` on 2026-11-21 00:15Z (2026-11-20 in New York) with a generic client.
+
+| Round | Summary file | Shape against v6.0 | License | Verdict |
+|---|---|---|---|---|
+| v6.0 | 200, 784,457 bytes, 520 results | The shape the recipe was written for | Apache License 2.0 (`LICENSE.md`) | **Included** since 2026-11-19 |
+| v5.1 | 200, 2,221,336 bytes, 1,448 results, every one `"version": "v5.1"` | The same field names and values, except that `Total Accelerators` is missing. It gives `Nodes` and `a#` (accelerators per node). In v6.0, `Total Accelerators` equals `Nodes` × `a#` on all 156 kept results, so the count is that product. Closed, available, Server results in tokens per second: 155, across llama2-70b-99 and -99.9, llama3.1-8b, llama3.1-405b, mixtral-8x7b and deepseek-r1. Six are CPU-only (`a#` empty), leaving 149 | Apache License 2.0. `LICENSE.md` was added on 2026-01-16 (commit f40471c) | **Include** |
+| v5.0 | 200, 27,696,289 bytes, 17,454 results | The same as v5.1. 248 kept results, including gptj and llama2-70b-interactive | No license file, and GitHub detects none. The only license files are inside submitters' vendored code (`closed/AMD/setup/vllm/LICENSE` and similar) | **Cut**: no license for the results. Revisit if MLCommons adds one, as it did for v5.1 |
+| v4.1, v4.0, v3.1, v3.0 | 404 | No summary file. Results are per-run `mlperf_log_summary.txt` files, one per system, model and scenario. v4.1 has llama2-70b and mixtral among them | Apache License 2.0 | **Not read**: a different shape and hundreds of fetches per round |
+
+Rounds are dated by MLCommons's announcements: v5.1 on 2025-09-09 (`mlcommons.org/2025/09/mlperf-inference-v5-1-results/`) and v6.0 on 2026-04-01 (`mlcommons.org/2026/04/mlperf-inference-v6-0-results/`).
+
+**How they are stored.** One recipe (`mlperf-inference-datacenter`) with a fixed list of rounds. Each row is dated by its round and cites its round's URL and round label. A run reads the oldest listed round newer than the newest stored date, through the `newest` the contract already passes to `url`, so the runner needs no change. Each past round is read once, and the newest round is re-read every survey. Migration 0062 clears the v6.0 rows dated by their fetch day (2026-11-20), so the first two surveys after deploy read v5.1 and then v6.0. For about six hours in between, the implied read on `/compute` shows v5.1, labeled as v5.1.
+
+**Surfaces.** The implied read on `/compute`, `/api/utilization` and the `get_utilization` MCP tool show one benchmark round, the newest stored, and name it in the footnote and citation. The bulk export carries every round's rows, each with its `round`, date and source URL. No thesis or alert reads this recipe, so a past round never appears as a change.
+
+**Verdict: include v5.1. Cut v5.0 until it has a license. Leave v4.1 and earlier unread.**

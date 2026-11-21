@@ -37,7 +37,7 @@ import { SEC_CRWV_ACTIVE_POWER, SEC_GOOGL_API_TOKENS } from '../theses/recipes/e
 import { EPOCH_CHIP_TYPES, EPOCH_CHIP_USERS } from '../theses/recipes/epoch-chip-users'
 import { EPOCH_DATA_CENTERS } from '../theses/recipes/epoch-data-centers'
 import { GPU_MODELS } from '../theses/recipes/gpu-prices'
-import { MLPERF_INFERENCE, MLPERF_ROUND, mlperfFootnote } from '../theses/recipes/mlperf-inference'
+import { MLPERF_INFERENCE, mlperfFootnote } from '../theses/recipes/mlperf-inference'
 import { GPU_RECIPES } from '../theses/recipes/registry'
 import { SEC_REVENUE_CRWV } from '../theses/recipes/sec-revenue'
 import { sourceReads, type QueryContext } from './terminal-db'
@@ -366,7 +366,9 @@ export async function queryUtilization(
     .filter((r) => r.key === FLEET_KEY)
     .toSorted((a, b) => byString(a.date, b.date))
     .at(-1)
+  // A row's date is its round's, so the newest date is the newest round stored.
   const benchRows = snapshot(of(MLPERF_INFERENCE.id))
+  const benchRound = benchRows[0] ? (text(payloadOf(benchRows[0]).round) ?? '') : ''
   let implied: UtilizationData['implied'] = null
   if (stated && fleetRow && benchRows.length > 0 && chipRows.length > 0) {
     const fleet = payloadOf(fleetRow) as { p5: number; p95: number; label?: string }
@@ -404,11 +406,11 @@ export async function queryUtilization(
       },
       ...impliedRows(stated.value!, fleet, results, ratings),
       benchmark: {
-        round: MLPERF_ROUND,
-        footnote: mlperfFootnote(newestFetched(benchRows)!.fetched_at.slice(0, 10)),
+        round: benchRound,
+        footnote: mlperfFootnote(benchRound, newestFetched(benchRows)!.fetched_at.slice(0, 10)),
         source: cite(
           MLPERF_INFERENCE.id,
-          `MLPerf Inference ${MLPERF_ROUND} results`,
+          `MLPerf Inference ${benchRound} results`,
           newestFetched(benchRows)!,
         ),
       },
