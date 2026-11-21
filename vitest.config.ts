@@ -14,9 +14,12 @@ import { fileURLToPath } from 'node:url'
 import { cloudflareTest, readD1Migrations } from '@cloudflare/vitest-plugin'
 import { defineConfig } from 'vitest/config'
 
-// Every committed fixture (plus sources.yaml) keyed by repo-relative path, handed to
-// the tests as a binding. Importing them with `?raw` made each test file transform and
-// evaluate ~10 MB of strings in workerd (about 2 s per file, ~100 s across the suite).
+// Every committed fixture (plus sources.yaml) keyed by repo-relative path, served to the
+// tests by a Node-side service binding. Importing them with `?raw` made each test file
+// transform and evaluate ~10 MB of strings in workerd (about 2 s per file). A plain JSON
+// binding was copied into every file's worker at spawn, used or not: ~0.45 s per file,
+// over a third of the suite's wall time at 13 MB. Only the files that import
+// layers/terminal/test/pipeline/fixtures.ts fetch it now.
 function readFixtures(): Record<string, string> {
   const out: Record<string, string> = { 'sources.yaml': readFileSync('sources.yaml', 'utf8') }
   const walk = (dir: string) => {
@@ -32,6 +35,12 @@ function readFixtures(): Record<string, string> {
 
 const migrationsPath = fileURLToPath(new URL('./server/db/migrations', import.meta.url))
 
+let fixturesJson: string | undefined
+const serveFixtures = () =>
+  new Response((fixturesJson ??= JSON.stringify(readFixtures())), {
+    headers: { 'content-type': 'application/json' },
+  })
+
 export default defineConfig({
   plugins: [
     cloudflareTest(async () => ({
@@ -42,8 +51,8 @@ export default defineConfig({
         // rather than a hand-written copy that drifts.
         bindings: {
           TEST_MIGRATIONS: await readD1Migrations(migrationsPath),
-          FIXTURES: readFixtures(),
         },
+        serviceBindings: { FIXTURES: serveFixtures },
       },
     })),
   ],
