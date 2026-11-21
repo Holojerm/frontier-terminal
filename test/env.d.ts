@@ -12,8 +12,9 @@ declare global {
       BLOB: R2Bucket
       /** Migrations read from server/db/migrations, applied by test/setup.ts. */
       TEST_MIGRATIONS: D1Migration[]
-      /** Committed fixtures + sources.yaml by repo-relative path (vitest.config.ts). */
-      FIXTURES: Record<string, string>
+      /** Serves the committed fixtures + sources.yaml as one JSON object keyed by
+       * repo-relative path (vitest.config.ts); read it through pipeline/fixtures.ts. */
+      FIXTURES: Fetcher
     }
   }
 }

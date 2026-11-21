@@ -1,9 +1,10 @@
 // Committed fixtures, by repo-relative path — the same strings parsers register as
 // fixturePath / sideFixturePaths, so the determinism harness resolves a registration
 // straight to its bytes. workerd has no filesystem, so vitest.config.ts reads every file
-// under fixtures/ (plus sources.yaml) in Node and hands them over as the FIXTURES binding.
-// Do not turn these back into `?raw` imports: each test file would then transform and
-// evaluate ~10 MB of strings (about 2 s per file).
+// under fixtures/ (plus sources.yaml) in Node and serves them from the FIXTURES service
+// binding, fetched once when this module loads. Do not turn these back into `?raw` imports
+// (each test file would transform and evaluate ~13 MB of strings) or a plain binding (every
+// file's worker would copy them at spawn, whether it reads them or not).
 
 import { env } from 'cloudflare:test'
 
@@ -13,7 +14,9 @@ import { fixtureProvenance } from '../../server/pipeline/parsers/fixture-provena
 
 export const manifest = manifestJson
 
-const files: Readonly<Record<string, string>> = env.FIXTURES
+const files: Readonly<Record<string, string>> = await (
+  await env.FIXTURES.fetch('http://fixtures/')
+).json()
 
 /** Text of a committed file by repo-relative path. Throws on an unknown path
  * so a parser registered against a fixture that is not committed fails loudly. */
