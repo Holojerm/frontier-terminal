@@ -1,5 +1,5 @@
 // List prices: the catalog and one SKU’s history. First listings are the
-// shell's (layers/terminal/server/mcp/releases.ts), registered right after.
+// models layer's (layers/models/server/mcp/models.ts), registered right after.
 
 import { z } from 'zod'
 import { queryPriceHistory, queryPrices } from '../utils/terminal-prices'
