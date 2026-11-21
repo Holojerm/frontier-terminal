@@ -346,6 +346,15 @@ export const TABLE_META: Readonly<Record<string, TableMeta>> = {
     joins: [{ column: 'company', to: ID }],
     feeds: ['recipes'],
   },
+  download_series: {
+    grain: 'One row per series and day.',
+    cadence: 'Rebuilt from recipe_observations on each request.',
+    event: 'date',
+    knowledge: 'fetched_at',
+    start: 'npm series from 2025-05-13, PyPI shares from the first PyPI day stored.',
+    joins: [{ column: 'company', to: ID }],
+    feeds: ['recipes'],
+  },
   filed_facts: {
     grain: 'One row per XBRL fact per filing.',
     cadence: 'Every 30 minutes. Company facts every 6 hours.',

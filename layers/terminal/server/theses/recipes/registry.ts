@@ -22,7 +22,7 @@ import { GREENHOUSE_CLOUDFLARE } from './greenhouse-departments'
 import { INVESTEE_RECIPES } from './investee-facts'
 import { MLPERF_INFERENCE } from './mlperf-inference'
 import { NEWSROOM_RECIPES } from './newsrooms'
-import { NPM_LAB_RECIPES, NPM_WRANGLER } from './npm-downloads'
+import { NPM_CONTROL_RECIPES, NPM_LAB_RECIPES, NPM_WRANGLER } from './npm-downloads'
 import { PAY_RECIPES } from './pay-bands'
 import { PYPI_LAB_RECIPES } from './pypi-downloads'
 import { RAMP_AI_INDEX } from './ramp-ai-index'
@@ -60,6 +60,8 @@ export const RECIPES: readonly Recipe[] = [
   // Demand and supply beside OpenRouter, audited 2026-11-04 (docs/source-audit.md).
   RAMP_AI_INDEX,
   ...NPM_LAB_RECIPES,
+  // Non-AI packages the npm series are divided by, added 2026-11-20.
+  ...NPM_CONTROL_RECIPES,
   ...PYPI_LAB_RECIPES,
   ...GITHUB_AGENT_RECIPES,
   EPOCH_DATA_CENTERS,

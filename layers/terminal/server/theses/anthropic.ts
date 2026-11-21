@@ -133,13 +133,14 @@ export const ANTHROPIC_THESIS: ThesisDef = {
       id: 'anthropic-sdk-downloads',
       n: 7,
       text: "Developers keep building on Anthropic's API",
-      signal_label: 'npm downloads of @anthropic-ai/sdk, trailing 28 days',
+      signal_label:
+        'npm downloads of @anthropic-ai/sdk, trailing 28 days, divided by the median of five non-AI npm packages',
       kill_condition: '30% or more below its 90-day high for 4 straight weeks',
+      // Divided since 2026-11-20 (docs/theses/anthropic.md › Revisions).
       spec: {
         kind: 'measured',
-        signal: 'recipe-trailing-sum',
+        signal: 'npm-normalized-trailing-sum',
         recipe: 'npm-anthropic-sdk',
-        key: '@anthropic-ai/sdk',
         days: 28,
         format: 'count',
         rule: { rule: 'sustained-drawdown', drop: 0.3, days: 90, weeks: 4 },

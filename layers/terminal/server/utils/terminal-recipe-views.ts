@@ -45,7 +45,19 @@ import {
 } from '../theses/recipes/epoch-data-centers'
 import { GITHUB_AGENT_RECIPES } from '../theses/recipes/github-agent-prs'
 import { INVESTEE_RECIPES } from '../theses/recipes/investee-facts'
-import { NPM_LAB_RECIPES } from '../theses/recipes/npm-downloads'
+import {
+  CONTROL_BASE,
+  CONTROL_INDEX_ID,
+  DOWNLOAD_SERIES,
+  deriveDownloadSeries,
+  dayRows,
+  normalizedId,
+  shareId,
+  trailingRatio,
+  weeklyRatio,
+  type SeriesPoint,
+} from '../theses/download-series'
+import { NPM_CONTROL_RECIPES, NPM_LAB_RECIPES } from '../theses/recipes/npm-downloads'
 import { PAY_RECIPES } from '../theses/recipes/pay-bands'
 import { PYPI_LAB_RECIPES } from '../theses/recipes/pypi-downloads'
 import { RAMP_AI_INDEX } from '../theses/recipes/ramp-ai-index'
@@ -83,7 +95,11 @@ const asOf = (rows: readonly Row[]) => newestRow(rows)?.fetched_at ?? null
 export const RAMP_CAVEAT =
   'Share of US businesses on Ramp that spent anything with the vendor in the month, by card or bill pay. It measures adoption, not spend, and covers Ramp’s customers only. Ramp restates past months between releases. This is the newest release, and each earlier one is in the export. Google and Meta aren’t in Ramp’s vendor series.'
 export const DOWNLOADS_CAVEAT =
-  'Every download counts, including CI and bots. Days when npm’s stats were down read as zero. Watch the trend instead of the level, and don’t read downloads as users.'
+  'Every download counts, including CI and bots. Days when npm’s stats were down are left out, so a week with one is partial. Watch the trend instead of the level, and don’t read downloads as users.'
+export const NORMALIZED_CAVEAT =
+  'Divided by the median of react, typescript, express, lodash and axios, each against its own June 2025 average. That cancels swings across all of npm. It doesn’t cancel growth AI coding brings to every package.'
+export const SHARE_CAVEAT =
+  'Each lab’s main SDK against the other tracked labs’ main SDKs on the same registry. The openai package also calls other labs’ OpenAI-compatible APIs, so it overstates OpenAI.'
 export const AGENT_PRS_CAVEAT =
   'Public repositories only, one trend per agent. Each agent leaves a different trace (a default-on PR footer users can turn off, a bot author, a branch name), so the counts can’t be read as shares of one market. Days before we started counting were counted later, from the pull requests that still existed then. Those rows are marked retrospective.'
 
@@ -157,10 +173,16 @@ export async function queryAdoption(db: PipelineDb): Promise<AdoptionData> {
   const ids = [
     RAMP_AI_INDEX.id,
     ...pkgRecipes.map((p) => p.r.id),
+    ...NPM_CONTROL_RECIPES.map((r) => r.id),
     ...GITHUB_AGENT_RECIPES.map((r) => r.id),
   ]
   const rows = await rowsOf(db, ids)
   const of = (id: string) => rows.filter((r) => r.recipe_id === id)
+  const days = new Map(
+    [...pkgRecipes.map((p) => p.r), ...NPM_CONTROL_RECIPES].map((r) => [r.id, dayRows(of(r.id))]),
+  )
+  const derived = deriveDownloadSeries(days)
+  const hasSeries = new Set(DOWNLOAD_SERIES.map((s) => s.id))
 
   const rampRows = of(RAMP_AI_INDEX.id)
   const current = rampRows.filter((r) => !r.key.includes('@') && r.value !== null)
@@ -200,7 +222,19 @@ export async function queryAdoption(db: PipelineDb): Promise<AdoptionData> {
     const pkg =
       rs[0]?.key ?? /\/([^/]+)\/?$/.exec(r.url({ now: new Date(), newest: null }))?.[1] ?? r.id
     const newest = newestRow(rs)
-    const points = rs.map((x) => ({ date: x.date, value: x.value! }))
+    const clean = days.get(r.id)!.filter((d) => !d.outage)
+    const points = clean.map((x) => ({ date: x.date, value: x.value }))
+    const windows = windowSums(points)
+    const normalized =
+      registry === 'npm' ? derivedWindows(clean, derived.index, windows.through, 'downloads') : null
+    const shareDays = derived.share.get(r.id)
+    const shareOf = shareDays?.length
+      ? (() => {
+          const on = new Set(shareDays.map((p) => p.date))
+          const lab = clean.filter((d) => on.has(d.date))
+          return derivedWindows(lab, derived.share_totals[registry], windows.through, 'share')
+        })()
+      : null
     return [
       {
         recipe_id: r.id,
@@ -208,8 +242,17 @@ export async function queryAdoption(db: PipelineDb): Promise<AdoptionData> {
         registry,
         package: pkg,
         kind: AGENT_PACKAGES.has(pkg) ? ('agent' as const) : ('sdk' as const),
-        ...windowSums(points),
+        ...windows,
         weekly: weeklySums(points).map(({ retrospective: _, ...w }) => w),
+        normalized_last_28d: normalized?.last ?? null,
+        normalized_prior_28d: normalized?.prior ?? null,
+        normalized: normalized?.weekly ?? [],
+        share_28d: shareOf?.last ?? null,
+        share: shareOf?.weekly ?? [],
+        series: {
+          normalized: hasSeries.has(normalizedId(r.id)) ? normalizedId(r.id) : null,
+          share: hasSeries.has(shareId(r.id)) ? shareId(r.id) : null,
+        },
         source: newest ? cite(r.id, `${registry} ${pkg}`, newest) : null,
       },
     ]
@@ -241,13 +284,61 @@ export async function queryAdoption(db: PipelineDb): Promise<AdoptionData> {
     ]
   })
 
+  const controls: AdoptionData['controls'] = {
+    series_id: CONTROL_INDEX_ID,
+    base: { ...CONTROL_BASE },
+    packages: NPM_CONTROL_RECIPES.map((r) => {
+      const rs = of(r.id).filter((x) => x.value !== null)
+      const newest = newestRow(rs)
+      const pkg = rs[0]?.key ?? r.description.replace(/^Daily npm downloads of (\S+),.*$/, '$1')
+      return {
+        recipe_id: r.id,
+        package: pkg,
+        source: newest ? cite(r.id, `npm ${pkg}`, newest) : null,
+      }
+    }),
+    index: weeklyRatio(
+      derived.index,
+      derived.index.map((p) => ({ date: p.date, value: 1 })),
+    ),
+    outage_days: derived.outage_days,
+  }
+
   return {
     as_of: asOf(rows),
     ramp,
     downloads,
+    controls,
     agent_prs,
-    caveats: { ramp: RAMP_CAVEAT, downloads: DOWNLOADS_CAVEAT, agent_prs: AGENT_PRS_CAVEAT },
+    caveats: {
+      ramp: RAMP_CAVEAT,
+      downloads: DOWNLOADS_CAVEAT,
+      normalized: NORMALIZED_CAVEAT,
+      share: SHARE_CAVEAT,
+      agent_prs: AGENT_PRS_CAVEAT,
+    },
   }
+}
+
+/**
+ * A derived series read the way the raw one is: per week, and the 28 days
+ * through `through` against the 28 before, each a ratio of sums over the days
+ * both carry (at least 21 of 28). Downloads are scaled to the days in the
+ * week or window; a share isn't.
+ */
+function derivedWindows(
+  num: readonly SeriesPoint[],
+  den: readonly { date: string; value: number }[],
+  through: string | null,
+  as: 'downloads' | 'share',
+) {
+  const [weekScale, windowScale] = as === 'share' ? [1, 1] : [7, 28]
+  const trailing = trailingRatio(num, den, 28, 21, windowScale)
+  const at = (d: string | null) => (d ? (trailing.find((p) => p.date === d)?.value ?? null) : null)
+  const prior = through
+    ? new Date(Date.parse(`${through}T00:00:00Z`) - 28 * DAY_MS).toISOString().slice(0, 10)
+    : null
+  return { weekly: weeklyRatio(num, den, weekScale), last: at(through), prior: at(prior) }
 }
 
 // ── Rate limits ─────────────────────────────────────────────────────────────
@@ -699,9 +790,13 @@ function uncoveredGap(u: PowerUncovered): PowerSiteGap {
 
 /** Every recipe the views read, for the cache key. */
 export const VIEW_RECIPES = {
-  adoption: [RAMP_AI_INDEX, ...NPM_LAB_RECIPES, ...PYPI_LAB_RECIPES, ...GITHUB_AGENT_RECIPES].map(
-    (r) => r.id,
-  ),
+  adoption: [
+    RAMP_AI_INDEX,
+    ...NPM_LAB_RECIPES,
+    ...PYPI_LAB_RECIPES,
+    ...NPM_CONTROL_RECIPES,
+    ...GITHUB_AGENT_RECIPES,
+  ].map((r) => r.id),
   limits: RATE_LIMIT_RECIPES.map((r) => r.id),
   pay: PAY_RECIPES.map((r) => r.id),
   parents: INVESTEE_RECIPES.map((r) => r.id),

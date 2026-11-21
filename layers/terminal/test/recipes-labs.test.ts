@@ -39,7 +39,7 @@ describe('package downloads', () => {
       'https://api.npmjs.org/downloads/range/2025-05-13:2026-11-03/@openai/codex',
     )
     expect(codex.url({ now: NOW, newest: '2026-11-02' })).toBe(
-      'https://api.npmjs.org/downloads/range/2026-10-26:2026-11-03/@openai/codex',
+      'https://api.npmjs.org/downloads/range/2025-05-13:2026-11-03/@openai/codex',
     )
     expect(NPM_LAB_RECIPES.some((r) => r.company === 'xai')).toBe(false)
   })

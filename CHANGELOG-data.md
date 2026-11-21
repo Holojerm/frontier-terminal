@@ -23,6 +23,28 @@ is smaller than its changes need. `bun run schema:lock` rewrites the lock only
 when the newest release in `layers/terminal/server/utils/data-schema.ts` says
 exactly which columns changed.
 
+## 1.19.0 (2026-11-21)
+
+Package downloads made comparable. Raw counts of every growing package rise
+together, so each lab package gets two derived reads.
+
+- Five non-AI npm packages (react, typescript, express, lodash, axios) are read
+  from 2025-05-13 as controls, under recipe ids `npm-control-*`.
+- New table `download_series`, one row per series and day:
+  `npm-control-index` (the controls' median, each against its own mean from
+  2025-06-02 to 2025-06-29), `<recipe_id>-normalized` (npm downloads ÷ that
+  index) and `<recipe_id>-share` (each lab's main SDK as a share of the
+  tracked labs' main SDKs, on npm and on PyPI).
+- `/api/adoption` gains, on each `downloads` entry, `normalized` and `share`
+  per ISO week, `normalized_last_28d`, `normalized_prior_28d`, `share_28d` and
+  `series` (the ids above), plus a `controls` block: the basket, its base
+  weeks, its weekly index and npm's outage days. `get_adoption` returns them.
+- A day npm reported as zero after a package's first download is an outage.
+  Its `recipe_observations` row keeps the zero and gains `"outage": true` in
+  `payload`. It is left out of weekly totals and 28-day sums, so a week with
+  one is partial.
+- Anthropic claim 7 and Cloudflare claim 2 read the normalized series.
+
 ## 1.18.0 (2026-11-21)
 
 The latency probes now leave from one place, a Cloudflare data center in

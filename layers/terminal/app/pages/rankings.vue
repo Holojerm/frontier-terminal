@@ -178,6 +178,34 @@ const tabs = computed(() => [
           </TerminalPanel>
 
           <TerminalPanel
+            id="sdk-share"
+            title="SDK share by week"
+            note="Each lab’s main SDK as a share of the tracked labs’ main SDKs on the same registry."
+            class="mt-6"
+          >
+            <TerminalDownloadsWeekly
+              :downloads="adoption.downloads"
+              kind="sdk"
+              measure="share"
+              :caveat="adoption.caveats.share"
+            />
+          </TerminalPanel>
+
+          <TerminalPanel
+            id="sdk-adjusted"
+            title="SDK downloads against npm"
+            note="npm downloads per week at June 2025’s registry volume. Each chart has its own scale."
+            class="mt-6"
+          >
+            <TerminalDownloadsWeekly
+              :downloads="adoption.downloads"
+              kind="sdk"
+              measure="normalized"
+              :caveat="adoption.caveats.normalized"
+            />
+          </TerminalPanel>
+
+          <TerminalPanel
             id="agents-weekly"
             title="Coding agents by week"
             note="npm downloads and public GitHub pull requests per week. Each chart has its own scale."

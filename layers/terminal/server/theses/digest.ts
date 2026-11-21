@@ -21,6 +21,7 @@ import type { CompanyId } from '../../shared/utils/companies'
 import type { ClaimStatusChange, RecipeRun } from '#server/db/schema'
 import { renderEmail, type RenderedEmail } from '#server/utils/render-email'
 import { daysBefore } from '../utils/terminal-rankings'
+import { NPM_CONTROL_RECIPES } from './recipes/npm-downloads'
 import { THESES } from './registry'
 import { presentation } from './signals'
 
@@ -57,6 +58,8 @@ export function recipesOf(def: ClaimDef): string[] {
   const spec = def.spec
   if (spec.kind === 'judged') return spec.review === 'recipe-items' ? [spec.recipe] : []
   if (spec.signal === 'recipe-yoy-growth') return [spec.recipe, ...spec.compare_recipes]
+  if (spec.signal === 'npm-normalized-trailing-sum')
+    return [spec.recipe, ...NPM_CONTROL_RECIPES.map((r) => r.id)]
   if (
     spec.signal === 'recipe-trailing-sum' ||
     spec.signal === 'recipe-sum-of-keys' ||

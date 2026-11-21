@@ -23,6 +23,7 @@ import {
   flagshipPriceToGpu,
   labsCombinedShare,
 } from './compute-signals'
+import { readNormalizedTrailing } from './download-series'
 import { readRecipeSignal } from './recipe-signals'
 import { secRevenueGrowth } from './sec-signals'
 import type { Formatter } from './status'
@@ -192,6 +193,8 @@ export async function readSignal(
     case 'recipe-key-ratio':
     case 'recipe-snapshot-total':
       return readRecipeSignal(db, spec)
+    case 'npm-normalized-trailing-sum':
+      return readNormalizedTrailing(db, spec)
     case 'flagship-blended-price':
       return flagshipBlendedPrice(db, claim.id, spec, deps)
     case 'flagship-price-to-gpu':
