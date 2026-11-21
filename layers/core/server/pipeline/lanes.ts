@@ -5,7 +5,6 @@ import {
   type EntityRow,
   type Provenance,
 } from './contracts'
-import type { FetchSource } from './sources'
 import type { PipelineDb } from './store'
 import type { LaneBlocks, TickInputs } from '#server/registries/lane-context'
 
@@ -179,6 +178,3 @@ export type ChangeAlertRule = (
   sourceId: string,
   changes: readonly ChangeRow[],
 ) => Promise<AlertRow[]>
-
-/** Sources a domain derives from the store each tick: server/registries/lanes.ts › DERIVED_SOURCES. */
-export type SourceDeriver = (db: PipelineDb, sourcesYaml: string) => Promise<FetchSource[]>

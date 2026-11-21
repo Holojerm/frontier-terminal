@@ -7,8 +7,8 @@
 // a 1,300px row in a 356px box.
 
 import { clipHeadline } from '../../../shared/utils/terminal-labs'
+import { labPath } from '../../../../core/shared/utils/lab-names'
 import {
-  labPath,
   summarizeLab,
   tearSheetPath,
   type LabInputs,

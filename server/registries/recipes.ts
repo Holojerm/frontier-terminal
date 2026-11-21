@@ -14,7 +14,7 @@ import {
 import { GITHUB_AGENT_RECIPES } from '#layers/adoption/server/recipes/github-agent-prs'
 import { GPU_RECIPES } from '#layers/compute/server/recipes/gpu-recipes'
 import { GREENHOUSE_CLOUDFLARE } from '#layers/talent/server/recipes/greenhouse-departments'
-import { INVESTEE_RECIPES } from '#layers/terminal/server/theses/recipes/investee-facts'
+import { INVESTEE_RECIPES } from '#layers/companies/server/recipes/investee-facts'
 import { MLPERF_INFERENCE } from '#layers/compute/server/recipes/mlperf-inference'
 import { NEWSROOM_RECIPES } from '#layers/terminal/server/pipeline/track-record/newsrooms'
 import {
@@ -31,7 +31,7 @@ import {
   SEC_REVENUE_CRWV,
   SEC_REVENUE_FSLY,
   SEC_REVENUE_NET,
-} from '#layers/terminal/server/theses/recipes/sec-revenue'
+} from '#layers/companies/server/recipes/sec-revenue'
 
 export const RECIPES: readonly Recipe[] = [
   SEC_REVENUE_NET,

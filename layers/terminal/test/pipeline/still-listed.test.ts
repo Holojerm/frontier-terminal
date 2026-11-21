@@ -9,7 +9,7 @@ import {
   slugPattern,
   stillListedRemovals,
 } from '../../server/pipeline/judge/still-listed'
-import { submitJudgeRun } from '../../server/pipeline/judge/submit'
+import { submitJudgeRun } from '../../../core/server/pipeline/judge/submit'
 import { insertRows } from '#layers/core/server/pipeline/store'
 
 // A model one page of a lab drops while another page still lists it is not

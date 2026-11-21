@@ -6,8 +6,8 @@ import { sql } from 'drizzle-orm'
 
 import * as tables from '#server/db/schema'
 import type { ForwardCall, ForwardMetric } from '../../shared/utils/signals'
-import { REVENUE_CONCEPTS } from '../calls/actuals'
-import { CALL_COMPANIES } from '../calls/curated'
+import { REVENUE_CONCEPTS } from '../../../companies/server/calls/actuals'
+import { CALL_COMPANIES } from '../../../companies/server/calls/curated'
 import type { PipelineDb } from '#layers/core/server/pipeline/store'
 import { REGISTERED_CALLS } from './forward-calls-registered'
 

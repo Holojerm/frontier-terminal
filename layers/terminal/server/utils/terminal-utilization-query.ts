@@ -42,7 +42,7 @@ import {
   roundRows,
   spotRead,
 } from '#layers/compute/server/utils/terminal-utilization'
-import { SEC_REVENUE_CRWV } from '../theses/recipes/sec-revenue'
+import { SEC_REVENUE_CRWV } from '../../../companies/server/recipes/sec-revenue'
 import { sourceReads, type QueryContext } from '#layers/core/server/utils/terminal-db'
 import { byString } from '#layers/core/server/utils/terminal-json'
 import {

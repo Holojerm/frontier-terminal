@@ -12,7 +12,7 @@ import { KIND_FORWARD_CALLS_FAILED } from '../../signals/forward-calls'
 import { runForwardCalls, type ForwardRunReport } from '../../signals/forward-rules'
 import { runSignals } from '../../signals/run'
 import { queryContext } from '#layers/core/server/utils/terminal-db'
-import { queryRevenue } from '../../utils/terminal-revenue'
+import { queryRevenue } from '../../../../companies/server/utils/terminal-revenue'
 import { withHeartbeat } from '#layers/core/server/utils/task-heartbeat'
 
 const task = defineTask({

@@ -6,7 +6,7 @@ import type { FetchSource } from './sources'
 // that keeps going can have its egress blocked. A tick fetches its SEC
 // documents one after another through one paced fetcher, so the spacing counts
 // every SEC request the tick makes: the edgar tick's feeds and its filed facts
-// (layers/terminal/server/exposure/ingest.ts) alike. Other hosts pass straight through.
+// (layers/companies/server/exposure/ingest.ts) alike. Other hosts pass straight through.
 //
 // Spacing is start to start, so a slow response does not buy the next request
 // a burst, and each request reserves its slot before it waits, so two callers

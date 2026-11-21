@@ -1,7 +1,8 @@
 // The compute layer: GPU rental prices, Epoch AI's data centers and the
 // utilization reads, who powers each lab site and the grid load around it,
-// and the hardware prints. Fork-owned, not in layers.lock.json. Builds on
-// core only (domains.config.ts); it registers its tables, recipes, MCP tools
+// and the hardware prints with /hardware. Fork-owned, not in layers.lock.json.
+// Builds on core, and on companies for the hardware suppliers /hardware lists
+// (domains.config.ts); it registers its tables, recipes, MCP tools
 // and export tables through the app's server/registries/ and server/db/schema.ts.
 export default defineNuxtConfig({
   $meta: { name: 'compute' },

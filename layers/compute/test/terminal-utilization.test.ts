@@ -43,7 +43,7 @@ import {
   nextMlperfRound,
 } from '../server/recipes/mlperf-inference'
 import { runRecipes } from '#layers/terminal/server/theses/recipes/run'
-import { SEC_REVENUE_CRWV } from '#layers/terminal/server/theses/recipes/sec-revenue'
+import { SEC_REVENUE_CRWV } from '#layers/companies/server/recipes/sec-revenue'
 import { queryContext } from '#layers/core/server/utils/terminal-db'
 import {
   SPOT_QUORUM,

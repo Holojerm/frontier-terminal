@@ -10,12 +10,12 @@
 
 import type { TickInput } from '#layers/core/server/pipeline/lanes'
 import type { Provider } from '#layers/core/server/pipeline/contracts'
-import type { PendingFilers } from '#layers/terminal/server/pipeline/parsers/sec/pending-filers'
-import type { RevenueFilers } from '#layers/terminal/server/pipeline/parsers/sec/revenue-filers'
-import type { CikWhitelist } from '#layers/terminal/server/pipeline/parsers/sec/whitelist'
+import type { PendingFilers } from '#layers/companies/server/pipeline/parsers/sec/pending-filers'
+import type { RevenueFilers } from '#layers/companies/server/pipeline/parsers/sec/revenue-filers'
+import type { CikWhitelist } from '#layers/companies/server/pipeline/parsers/sec/whitelist'
 import type { PipelineDb } from '#layers/core/server/pipeline/store'
 import { CLASS_MAP_INPUT } from '#layers/pricing/server/pipeline/class-map'
-import { loadFilerBlocks } from '#layers/terminal/server/pipeline/lane-blocks'
+import { loadFilerBlocks } from '#layers/companies/server/pipeline/lane-blocks'
 
 export interface LaneBlocks {
   whitelist: CikWhitelist

@@ -9,7 +9,7 @@ import { percent } from '#layers/core/shared/utils/terminal-format'
 import { alertLabs } from '../../../shared/utils/terminal-labs'
 import { LAB_DISPLAY } from '#layers/core/shared/utils/lab-names'
 import { comparePath, pairTitle, parsePair } from '../../../shared/utils/terminal-compare'
-import { labPath } from '../../../shared/utils/terminal-lab-summary'
+import { labPath } from '../../../../core/shared/utils/lab-names'
 import { listedBoth, type ListedData } from '../../../shared/utils/listed'
 import type {
   AlertsData,

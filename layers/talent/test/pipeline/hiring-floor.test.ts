@@ -16,7 +16,7 @@ import {
   lastCompleteWeek,
   writeHiringRollups,
 } from '../../server/pipeline/hiring-rollup'
-import { submitJudgeRun } from '../../../terminal/server/pipeline/judge/submit'
+import { submitJudgeRun } from '../../../core/server/pipeline/judge/submit'
 import { enqueueCriticalAlerts } from '../../../terminal/server/pipeline/social'
 import { insertRows } from '#layers/core/server/pipeline/store'
 import { parseDepartmentClusters } from '../../server/utils/terminal-clusters'

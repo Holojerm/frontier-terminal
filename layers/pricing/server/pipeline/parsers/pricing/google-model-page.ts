@@ -8,7 +8,7 @@ import { fixtureProvenance } from '#layers/core/server/pipeline/parsers/fixture-
 
 // google-model-md-<slug> — https://aistudio.google.com/docs/models/<slug>.md
 // One page per priced Standard-tier SKU, derived from google-pricing-html
-// (layers/terminal/server/pipeline/derived.ts). The pricing page prints no context windows;
+// (layers/companies/server/pipeline/derived.ts). The pricing page prints no context windows;
 // this page does, in a "Property | Description" table whose "Token limits"
 // row reads either
 //   **Input token limit** 1,048,576 **Output token limit** 65,536

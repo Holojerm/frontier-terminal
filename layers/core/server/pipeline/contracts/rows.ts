@@ -59,7 +59,7 @@ export const entityTypeEnum = z.enum([
   'shares',
   'risk_factors',
   // 'filed_fact': a hyperscaler series point a new 10-Q/10-K moved
-  // (layers/terminal/server/exposure/alerts.ts). Written only as the change an
+  // (layers/companies/server/exposure/alerts.ts). Written only as the change an
   // alert cites; the facts themselves live in filed_facts, not entities.
   'filed_fact',
   // 'guidance': a capex figure a hyperscaler's earnings release prints for a
@@ -76,8 +76,8 @@ export const entityTypeEnum = z.enum([
 ])
 export const changeTypeEnum = z.enum(['added', 'removed', 'modified'])
 export const severityEnum = z.enum(['info', 'notable', 'critical'])
-// The deterministic rules (layers/terminal/server/pipeline/filing-floors.ts, prospectus-floor.ts, layers/models/server/pipeline/model-floor.ts,
-// hiring-rollup.ts, gpu-median-floor.ts; layers/terminal/server/exposure/alerts.ts, guidance-alerts.ts) and the judge lane.
+// The deterministic rules (layers/companies/server/pipeline/filing-floors.ts, prospectus-floor.ts, layers/models/server/pipeline/model-floor.ts,
+// hiring-rollup.ts, gpu-median-floor.ts; layers/companies/server/exposure/alerts.ts, guidance-alerts.ts) and the judge lane.
 export const alertRuleEnum = z.enum([
   'agent-judge',
   's1-floor',
@@ -108,7 +108,7 @@ export const sourceRunStatusEnum = z.enum([
 ])
 // 'tripwire': an off-cycle poll of the model catalogs (layers/models/server/pipeline/tripwire.ts).
 // 'careers': the sources too big to share the survey's invocation (layers/talent/server/pipeline/scopes.ts › CAREERS_SOURCES).
-// 'filings': the registration filings, ~14 MB a prospectus (layers/terminal/server/pipeline/scopes.ts › REGISTRATION_PREFIXES).
+// 'filings': the registration filings, ~14 MB a prospectus (layers/companies/server/pipeline/scopes.ts › REGISTRATION_PREFIXES).
 export const pollScopeEnum = z.enum(['edgar', 'survey', 'tripwire', 'careers', 'filings'])
 export type PollScope = z.infer<typeof pollScopeEnum>
 

@@ -1,5 +1,5 @@
 // Submit the backfill's call replays to AssemblyAI from the mini, under the
-// one-time BACKFILL_SPEND_CAP_USD (layers/terminal/server/calls/assemblyai.ts).
+// one-time BACKFILL_SPEND_CAP_USD (layers/companies/server/calls/assemblyai.ts).
 //
 //   ASSEMBLYAI_API_KEY="$(op read 'op://Agents/assemblyai/credential')" bun scripts/calls-audio-backfill.ts [--dry-run] [--spend]
 //
@@ -21,10 +21,10 @@ import {
   replaySeconds,
   spendBasis,
   transcriptRequest,
-} from '../layers/terminal/server/calls/assemblyai'
-import { CuratedCalls } from '../layers/terminal/server/calls/curated'
+} from '../layers/companies/server/calls/assemblyai'
+import { CuratedCalls } from '../layers/companies/server/calls/curated'
 
-const FILE = join(import.meta.dir, '../layers/terminal/server/curated/earnings-calls.json')
+const FILE = join(import.meta.dir, '../layers/companies/server/curated/earnings-calls.json')
 const UA = 'Mozilla/5.0 (compatible; FrontierTerminal/1.0; +https://frontierterm.com)'
 const dryRun = process.argv.includes('--dry-run')
 const spendOnly = process.argv.includes('--spend')

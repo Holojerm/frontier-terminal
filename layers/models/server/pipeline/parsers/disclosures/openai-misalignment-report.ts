@@ -11,7 +11,7 @@ import { printedDate, textOf } from '#layers/core/server/pipeline/parsers/html-t
 // https://openai.com/safety-alignment/misalignment-reports/<slug>/
 //
 // One page per report listed on the index, derived from the stored index
-// rows (layers/terminal/server/pipeline/derived.ts). The title is the page's
+// rows (layers/companies/server/pipeline/derived.ts). The title is the page's
 // `<h1>`; under it a `<div data-safety-report-metadata>` block holds one
 // paragraph per line:
 //

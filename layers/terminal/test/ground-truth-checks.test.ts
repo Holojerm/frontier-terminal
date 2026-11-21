@@ -4,16 +4,16 @@ import { drizzle } from 'drizzle-orm/d1'
 import { beforeEach, describe, expect, it } from 'vitest'
 
 import * as schema from '~~/server/db/schema'
-import { extractCompanyfacts } from '../server/exposure/facts'
+import { extractCompanyfacts } from '../../companies/server/exposure/facts'
 import {
   GUIDANCE_SINCE,
   exhibitUrl,
   extractGuidance,
   guidanceIn,
   releaseDocuments,
-} from '../server/exposure/guidance'
-import { runFiledFacts } from '../server/exposure/ingest'
-import type { StoredFact } from '../server/exposure/series'
+} from '../../companies/server/exposure/guidance'
+import { runFiledFacts } from '../../companies/server/exposure/ingest'
+import type { StoredFact } from '../../companies/server/exposure/series'
 import type { FetchOutcome, FetchSource } from '#layers/core/server/pipeline/fetch'
 import { figureHeadline } from '../server/pipeline/reported/figures'
 import {
@@ -39,7 +39,7 @@ import {
   guidanceTally,
   scoreGuidance,
   type StoredGuidance,
-} from '../server/utils/terminal-ground-truth-guidance'
+} from '../../companies/server/utils/terminal-ground-truth-guidance'
 import type { StoredDeal } from '../server/utils/terminal-reported'
 import { fixtureText, provenanceOf } from '#layers/core/test/pipeline/fixtures'
 

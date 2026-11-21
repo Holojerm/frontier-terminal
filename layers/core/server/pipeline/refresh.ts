@@ -15,13 +15,8 @@ import {
 import { diff, repeatChangeId } from '#layers/core/server/pipeline/diff'
 import type { SourceFetcher } from '#layers/core/server/pipeline/fetch'
 import type { RawStore } from '#layers/core/server/pipeline/raw'
-import {
-  CHANGE_ALERTS,
-  derivedKeyOf,
-  deriveSources,
-  laneFor,
-  PAYLOAD_REDACTIONS,
-} from '#server/registries/lanes'
+import { CHANGE_ALERTS, derivedKeyOf, laneFor, PAYLOAD_REDACTIONS } from '#server/registries/lanes'
+import { deriveSources } from '#server/registries/derived'
 import { loadLaneBlocks, TICK_INPUTS, type TickInputs } from '#server/registries/lane-context'
 import {
   contextFingerprint,
@@ -532,7 +527,7 @@ export async function runRefresh(
   const now = deps.now ?? (() => new Date())
   const started_at = now().toISOString()
   // The audited sources plus the ones the store derives for itself (a
-  // resolved lab's feeds, the OpenAI model pages): server/registries/lanes.ts › deriveSources.
+  // resolved lab's feeds, the OpenAI model pages): server/registries/derived.ts › deriveSources.
   const all = [
     ...includeSources(deps.sourcesYaml, manifestFixtures),
     ...(await deriveSources(deps.db, deps.sourcesYaml)),

@@ -47,6 +47,7 @@ describe('the domain table', () => {
     expect(
       tableProblems(DOMAIN_LAYERS, [
         'adoption',
+        'companies',
         'compute',
         'core',
         'models',
@@ -57,7 +58,8 @@ describe('the domain table', () => {
       ]),
     ).toEqual([])
     expect(DOMAIN_LAYERS.core.uses).toEqual([])
-    expect(DOMAIN_LAYERS.compute.uses).toEqual(['core'])
+    expect(DOMAIN_LAYERS.companies.uses).toEqual(['core'])
+    expect(DOMAIN_LAYERS.compute.uses).toEqual(['core', 'companies'])
     expect(DOMAIN_LAYERS.pricing.uses).toEqual(['core'])
     expect(DOMAIN_LAYERS.talent.uses).toEqual(['core'])
     expect(DOMAIN_LAYERS.reliability.uses).toEqual(['core', 'pricing'])

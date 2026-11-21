@@ -5,7 +5,7 @@ import coreweave from '~~/fixtures/recipes/gpu-coreweave.html?raw'
 
 import type { RevenuePeriod } from '../shared/utils/terminal-types'
 import { detailRows, earlyReadLines, earlyReadSummary } from '../shared/utils/thesis-format'
-import type { StoredFact } from '../server/exposure/series'
+import type { StoredFact } from '../../companies/server/exposure/series'
 import {
   guidanceShortfalls,
   peakThroughputReadings,
@@ -18,7 +18,7 @@ import { RECIPES } from '#server/registries/recipes'
 import { presentation } from '../server/theses/signals'
 import { evaluateClaim, type MeasuredClaim, type StoredReading } from '../server/theses/status'
 import { pressEarlyRead } from '../server/utils/terminal-ground-truth'
-import type { StoredGuidance } from '../server/utils/terminal-ground-truth-guidance'
+import type { StoredGuidance } from '../../companies/server/utils/terminal-ground-truth-guidance'
 import type { StoredHeadline } from '../server/utils/terminal-reported'
 
 // The Compute thesis's capacity claims (7 to 9) and the press early read

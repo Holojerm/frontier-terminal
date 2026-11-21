@@ -60,7 +60,7 @@ export const TERMINAL_OPS_SEVERITY: Record<string, OpsKindPolicy> = {
   listing_status_stale: {
     severity: 'warning',
     action:
-      'A filer listed as "registered" has filed its final prospectus (424B4), so the site still says its shares are not trading. Check the listing, then update its rows in layers/terminal/server/utils/terminal-identifiers.ts and terminal-entities.ts (listing_status, exchange, note).',
+      'A filer listed as "registered" has filed its final prospectus (424B4), so the site still says its shares are not trading. Check the listing, then update its rows in layers/companies/server/utils/terminal-identifiers.ts and terminal-entities.ts (listing_status, exchange, note).',
   },
   freshness_check_failed: { severity: 'warning' },
   // tasks/probes/latency.ts: a latency probe was refused for a reason of ours.
@@ -127,7 +127,7 @@ export const TERMINAL_OPS_SEVERITY: Record<string, OpsKindPolicy> = {
   source_absent: { severity: 'warning' },
   filed_facts_failed: { severity: 'warning' },
   filed_facts_run_failed: { severity: 'warning' },
-  // The suppliers reader (layers/terminal/server/suppliers/ingest.ts): a feed
+  // The suppliers reader (layers/companies/server/suppliers/ingest.ts): a feed
   // it could not parse, a 429, or the run itself throwing.
   supplier_read_failed: { severity: 'warning' },
   // The power-sites reader (layers/compute/server/power/ingest.ts): a search
@@ -136,7 +136,7 @@ export const TERMINAL_OPS_SEVERITY: Record<string, OpsKindPolicy> = {
   // The print reader (layers/compute/server/prints/ingest.ts): a feed or 6-K
   // it could not fetch or parse, a 429, or a step throwing.
   print_read_failed: { severity: 'warning' },
-  // The call reader (layers/terminal/server/calls/ingest.ts): a document it
+  // The call reader (layers/companies/server/calls/ingest.ts): a document it
   // could not fetch after three tries, an EDGAR read, or a step throwing.
   call_read_failed: { severity: 'warning' },
   // AssemblyAI refused for credits or billing, or the $40 spend cap was

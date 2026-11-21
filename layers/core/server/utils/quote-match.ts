@@ -1,5 +1,5 @@
 // Whether a quoted passage is on the page it was read from: the suppliers
-// reader's check of a stored filing (layers/terminal/server/suppliers/), the
+// reader's check of a stored filing (layers/companies/server/suppliers/), the
 // power-sites reader's (layers/compute/server/power/) and its weekly re-read
 // of the pages off EDGAR (power/verify.ts).
 

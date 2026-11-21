@@ -5,7 +5,7 @@
 // has no primary source for most of these companies yet, and this page's
 // job is to say so precisely and to be ready the day that changes.
 
-import type { ProspectusData } from '../../shared/utils/terminal-prospectus'
+import type { ProspectusData } from '../../../companies/shared/utils/terminal-prospectus'
 import type { ReportedData, RevenueData } from '../../shared/utils/terminal-types'
 
 const watchlist = useWatchlist()

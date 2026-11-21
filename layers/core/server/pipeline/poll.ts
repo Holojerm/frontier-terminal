@@ -1,5 +1,5 @@
 import { recordOpsEvent } from '#server/utils/ops'
-import { deriveSources } from '#server/registries/lanes'
+import { deriveSources } from '#server/registries/derived'
 import type { PollScope } from './contracts'
 import { withPollLock, type LockRetry, type LockStore } from './lock'
 import { manifestFixtures } from './parsers/fixture-provenance'

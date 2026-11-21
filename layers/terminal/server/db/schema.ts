@@ -16,10 +16,8 @@
 // chance to lose the offset.
 
 export * from './tables/theses'
-export * from './tables/filings'
 export * from './tables/track-record'
 export * from './tables/reported'
 export * from './tables/archive'
 export * from './tables/subscribers'
-export * from './tables/suppliers'
 export * from './tables/signals'

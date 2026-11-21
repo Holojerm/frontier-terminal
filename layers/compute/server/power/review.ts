@@ -31,6 +31,7 @@ import { mwWritten, powerExcerpts, roleStated, siteNamed } from './excerpts'
 import { documentRef, filerOf, pendingDocuments } from './ingest'
 import { epochLabSites } from './sites'
 import { currentTies, insertTies, settleDocument, tieId } from './store'
+import { judgeReview } from '#layers/core/server/pipeline/judge/review'
 
 /** Documents offered per judge run, oldest filing first. */
 export const POWER_SITE_REVIEW_LIMIT = 4
@@ -295,3 +296,14 @@ export async function applyPowerSiteReadings(
   }
   return report
 }
+
+/** The power-site review (server/registries/judge.ts): ties read from an SEC document naming a lab site. */
+export const POWER_SITE_REVIEW = judgeReview({
+  key: 'power_sites',
+  reading: JudgePowerSiteReading,
+  max: 20,
+  empty: { accepted: 0, ended: 0, settled: 0, rejected: [] } as PowerSiteReport,
+  apply: ({ db, readRaw, now }, readings) => applyPowerSiteReadings(db, readRaw, readings, now),
+  rejected: { noun: 'power-site tie(s)', subject: 'document_id' },
+  offer: { key: 'power_site_review', read: ({ db, readRaw }) => powerSiteReview(db, readRaw) },
+})

@@ -492,7 +492,7 @@ export function readSourceRegistry(sourcesYaml: string): SourceRegistry {
   return { sources, cuts, recipes, track_record }
 }
 
-/** Derived source ids (layers/terminal/server/pipeline/derived.ts) are named by their template. */
+/** Derived source ids (layers/companies/server/pipeline/derived.ts) are named by their template. */
 /** `anthropic-s-1-a-…` -> `S-1/A`: the form slug a registration key carries (parsers/sec/filing-index.ts). */
 const registrationForm = (key: string) =>
   (key.match(/^[a-z]+-(s-1-a|s-1|424b4)-/)?.[1] ?? '').toUpperCase().replace(/-A$/, '/A')

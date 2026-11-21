@@ -35,7 +35,7 @@
 import { LIVE_TABLES } from '#layers/core/server/export-tables/live'
 import { PROBE_TABLES } from '#layers/reliability/server/export-tables/probes'
 import { PRINT_TABLES } from '#layers/compute/server/export-tables/prints'
-import { FILING_TABLES } from '#layers/terminal/server/export-tables/filings'
+import { FILING_TABLES } from '#layers/companies/server/export-tables/filings'
 import { HISTORY_TABLES } from '#layers/core/server/export-tables/history'
 import { CLAIM_TABLES } from '#layers/terminal/server/export-tables/theses'
 import { PRESS_TABLES } from '#layers/terminal/server/export-tables/press'
@@ -43,8 +43,10 @@ import { RECIPE_TABLES } from '#layers/terminal/server/export-tables/recipes'
 import { DOWNLOAD_TABLES } from '#layers/adoption/server/export-tables/downloads'
 import { GRID_LOAD_TABLES } from '#layers/compute/server/export-tables/grid-load'
 import { LISTED_HIRING_TABLES } from '#layers/talent/server/export-tables/listed-hiring'
-import { EXPOSURE_TABLES } from '#layers/terminal/server/export-tables/exposure'
-import { REFERENCE_TABLES } from '#layers/terminal/server/export-tables/reference'
+import { EXPOSURE_TABLES } from '#layers/companies/server/export-tables/exposure'
+import { RUN_TABLES } from '#layers/core/server/export-tables/runs'
+import { COMPANY_REFERENCE_TABLES } from '#layers/companies/server/export-tables/reference'
+import { POWER_SITE_TABLES } from '#layers/compute/server/export-tables/power-sites'
 import { SIGNAL_TABLES } from '#layers/terminal/server/export-tables/signals'
 import type { ExportTable } from '#layers/core/server/utils/terminal-export-views'
 
@@ -68,7 +70,9 @@ export const EXPORT_TABLES: Readonly<Record<string, ExportTable>> = {
   ...RECIPE_TABLES,
   ...DOWNLOAD_TABLES,
   ...EXPOSURE_TABLES,
-  ...REFERENCE_TABLES,
+  ...RUN_TABLES,
+  ...COMPANY_REFERENCE_TABLES,
+  ...POWER_SITE_TABLES,
   ...SIGNAL_TABLES,
   ...GRID_LOAD_TABLES,
   ...LISTED_HIRING_TABLES,

@@ -17,6 +17,7 @@ import * as tables from '#server/db/schema'
 import { ChangeRow, contentHash } from '#layers/core/server/pipeline/contracts'
 import { corpusOf, groundingFailure } from '#layers/core/server/pipeline/judge/grounding'
 import { D1_MAX_BOUND_PARAMS, chunk, type PipelineDb } from '#layers/core/server/pipeline/store'
+import { judgeReview } from '#layers/core/server/pipeline/judge/review'
 
 /** Candidates offered per alert and kind per run. */
 export const REVIEW_PER_SIDE = 5
@@ -261,3 +262,14 @@ export async function applyTrackRecordVerdicts(
   }
   return report
 }
+
+/** The track-record review (server/registries/judge.ts): same-event ratings of the candidates. */
+export const TRACK_RECORD_REVIEW = judgeReview({
+  key: 'track_record',
+  reading: JudgeTrackRecordVerdict,
+  max: 200,
+  empty: { accepted: 0, inserted: 0, rejected: [] } as TrackRecordVerdictReport,
+  apply: ({ db, now }, readings) => applyTrackRecordVerdicts(db, readings, now),
+  rejected: { noun: 'track-record rating(s)', subject: 'candidate_id' },
+  offer: { key: 'track_record_review', read: ({ db }) => trackRecordReview(db) },
+})

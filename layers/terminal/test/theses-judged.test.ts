@@ -6,7 +6,7 @@ import type { ClaimDef, JudgedSpec, ThesisDef } from '../shared/utils/thesis-typ
 
 import * as schema from '~~/server/db/schema'
 import { contentHash, type ChangeRow } from '#layers/core/server/pipeline/contracts'
-import { submitJudgeRun } from '../server/pipeline/judge/submit'
+import { submitJudgeRun } from '../../core/server/pipeline/judge/submit'
 import { ANTHROPIC_THESIS } from '../server/theses/anthropic'
 import { claimCandidates } from '../server/theses/candidates'
 import { evaluateJudgedTheses } from '../server/theses/evaluate'

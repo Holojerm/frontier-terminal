@@ -2702,7 +2702,7 @@
       "http_status": 200,
       "raw_bytes": 1390361,
       "trim": "only the p, div and td blocks that name Anthropic kept, 1390361 -> 1449 bytes; the text reader gives the same figures on the whole document",
-      "note": "Amazon’s 10-Q filed 2023-10-27, its primary document. Read for filed_text_facts (layers/terminal/server/exposure/text-facts.ts)."
+      "note": "Amazon’s 10-Q filed 2023-10-27, its primary document. Read for filed_text_facts (layers/companies/server/exposure/text-facts.ts)."
     },
     {
       "path": "fixtures/filed-facts/text/amzn-2025-02-07-10-K.htm",
@@ -2712,7 +2712,7 @@
       "http_status": 200,
       "raw_bytes": 1922460,
       "trim": "only the p, div and td blocks that name Anthropic kept, 1922460 -> 4973 bytes; the text reader gives the same figures on the whole document",
-      "note": "Amazon’s 10-K filed 2025-02-07, its primary document. Read for filed_text_facts (layers/terminal/server/exposure/text-facts.ts)."
+      "note": "Amazon’s 10-K filed 2025-02-07, its primary document. Read for filed_text_facts (layers/companies/server/exposure/text-facts.ts)."
     },
     {
       "path": "fixtures/filed-facts/text/amzn-2025-10-31-10-Q.htm",
@@ -2722,7 +2722,7 @@
       "http_status": 200,
       "raw_bytes": 1405984,
       "trim": "only the p, div and td blocks that name Anthropic kept, 1405984 -> 12915 bytes; the text reader gives the same figures on the whole document",
-      "note": "Amazon’s 10-Q filed 2025-10-31, its primary document. Read for filed_text_facts (layers/terminal/server/exposure/text-facts.ts)."
+      "note": "Amazon’s 10-Q filed 2025-10-31, its primary document. Read for filed_text_facts (layers/companies/server/exposure/text-facts.ts)."
     },
     {
       "path": "fixtures/filed-facts/text/amzn-2026-02-06-10-K.htm",
@@ -2732,7 +2732,7 @@
       "http_status": 200,
       "raw_bytes": 1968447,
       "trim": "only the p, div and td blocks that name Anthropic kept, 1968447 -> 10881 bytes; the text reader gives the same figures on the whole document",
-      "note": "Amazon’s 10-K filed 2026-02-06, its primary document. Read for filed_text_facts (layers/terminal/server/exposure/text-facts.ts)."
+      "note": "Amazon’s 10-K filed 2026-02-06, its primary document. Read for filed_text_facts (layers/companies/server/exposure/text-facts.ts)."
     }
   ]
 }

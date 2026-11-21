@@ -5,8 +5,8 @@
 // figure are on /exposure and /revenue.
 
 import type { ListedData } from '../../shared/utils/listed'
-import type { SuppliersData } from '../../shared/utils/suppliers'
-import type { DependenciesData } from '../../shared/utils/terminal-dependencies'
+import type { SuppliersData } from '../../../companies/shared/utils/suppliers'
+import type { DependenciesData } from '../../../companies/shared/utils/terminal-dependencies'
 
 definePageMeta({
   publicPage: {
