@@ -6,7 +6,7 @@ import {
   type Provenance,
 } from '../../contracts'
 import { fixtureProvenance } from '../fixture-provenance'
-import { tableAfterHeading, usdAmount } from './md-table'
+import { isoDate, tableAfterHeading, usdAmount } from './md-table'
 
 // anthropic-pricing-md — https://platform.claude.com/docs/en/about-claude/pricing.md
 // Two per-model $/MTok tables are parsed:
@@ -24,6 +24,14 @@ import { tableAfterHeading, usdAmount } from './md-table'
 // cache-tier repricing still changes the row's content hash and diffs.
 // The fast-mode table (one combined two-model row) is deliberately not
 // parsed.
+//
+// A launch can price a model on a schedule (Claude Sonnet 5, June 2026): one
+// row "through August 31, 2026" (a link to the note saying so) and one
+// "starting September 1, 2026". The first ends the day after its last day and
+// the second starts then, the shape openai-pricing gives a promotion, so the
+// scheduled row keys as `standard@<date>` (normalize.ts › priceTier). A
+// schedule we can't date fails the source rather than storing a future price
+// as today's.
 
 // "Claude Opus 4.1 ([retired, except on Bedrock and Google Cloud](url))"
 const NAME_WITH_ANNOTATION = /^(.*?)\s*\(\[([^\]]+)\]\([^)]*\)\)$/
@@ -44,9 +52,50 @@ interface ModelCell {
   annotation: string | null
   /** Set when the row is one prompt-length band of a model. */
   band: { long: boolean; note: string } | null
+  /** Set when the row is one period of a scheduled price. */
+  dated?: { effective_from: string | null; effective_until: string | null; note: string }
+}
+
+// "Claude Sonnet 5 [through August 31, 2026](/docs/…#…)" and "Claude Sonnet 5 starting September 1, 2026"
+const THROUGH = /^(.*?)\s*\[?through ([A-Z][a-z]+ \d{1,2}, \d{4})\]?(?:\([^)]*\))?$/
+const STARTING = /^(.*?)\s+starting ([A-Z][a-z]+ \d{1,2}, \d{4})$/
+
+const dayAfter = (date: string) =>
+  new Date(Date.parse(`${date}T00:00:00Z`) + 86_400_000).toISOString().slice(0, 10)
+
+function datedOf(printed: string): string {
+  const iso = isoDate(printed)
+  if (!iso) throw new Error(`a scheduled price with a date we can't read: ${printed}`)
+  return iso
 }
 
 function splitModelCell(cell: string): ModelCell {
+  const through = cell.match(THROUGH)
+  if (through) {
+    return {
+      name: through[1]!,
+      annotation: null,
+      band: null,
+      dated: {
+        effective_from: null,
+        effective_until: dayAfter(datedOf(through[2]!)),
+        note: `through ${through[2]!}`,
+      },
+    }
+  }
+  const starting = cell.match(STARTING)
+  if (starting) {
+    return {
+      name: starting[1]!,
+      annotation: null,
+      band: null,
+      dated: {
+        effective_from: datedOf(starting[2]!),
+        effective_until: null,
+        note: `starting ${starting[2]!}`,
+      },
+    }
+  }
   const band = cell.match(PROMPT_BAND)
   if (band) {
     const long = band[2] === 'over'
@@ -78,10 +127,11 @@ export function parseAnthropicPricingMd(
   const base = tableAfterHeading(text, '## Model pricing')
   for (const cells of base.slice(1)) {
     if (cells.length < 6) throw new Error(`model pricing row has ${cells.length} cells`)
-    const { name, annotation, band } = splitModelCell(cells[0]!)
+    const { name, annotation, band, dated } = splitModelCell(cells[0]!)
     const notes = [
       ...(annotation ? [annotation] : []),
       ...(band ? [band.note] : []),
+      ...(dated ? [dated.note] : []),
       `5m cache writes ${cells[2]!}`,
       `1h cache writes ${cells[3]!}`,
     ].join('; ')
@@ -94,8 +144,8 @@ export function parseAnthropicPricingMd(
       cached_input_per_mtok: usdAmount(cells[4]!),
       output_per_mtok: usdAmount(cells[5]!),
       currency: 'USD',
-      effective_from: null,
-      effective_until: null,
+      effective_from: dated?.effective_from ?? null,
+      effective_until: dated?.effective_until ?? null,
       notes,
       ...prov,
     })
@@ -105,7 +155,7 @@ export function parseAnthropicPricingMd(
   const batch = tableAfterHeading(text, '### Batch processing')
   for (const cells of batch.slice(1)) {
     if (cells.length < 3) throw new Error(`batch pricing row has ${cells.length} cells`)
-    const { name, annotation, band } = splitModelCell(cells[0]!)
+    const { name, annotation, band, dated } = splitModelCell(cells[0]!)
     rows.push({
       provider: 'anthropic',
       model_slug: anthropicSlug(name),
@@ -115,9 +165,9 @@ export function parseAnthropicPricingMd(
       cached_input_per_mtok: null, // batch table prints no cached-input price
       output_per_mtok: usdAmount(cells[2]!),
       currency: 'USD',
-      effective_from: null,
-      effective_until: null,
-      notes: band ? band.note : annotation,
+      effective_from: dated?.effective_from ?? null,
+      effective_until: dated?.effective_until ?? null,
+      notes: band ? band.note : dated ? dated.note : annotation,
       ...prov,
     })
   }
