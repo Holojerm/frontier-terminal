@@ -23,6 +23,20 @@ is smaller than its changes need. `bun run schema:lock` rewrites the lock only
 when the newest release in `layers/terminal/server/utils/data-schema.ts` says
 exactly which columns changed.
 
+## 1.27.0 (2026-11-21)
+
+Forward calls. Two new tables:
+
+- `forward_calls` holds each dated estimate of a company's revenue, capex or
+  remaining performance obligations made before the filing, with every method
+  run and its inputs as they stood. Rows are inserted once and never edited.
+- `forward_call_scores` holds each method's error once a later 10-Q or 10-K
+  settles the period, and whether the actual landed inside the call's range.
+
+In `/api/signals`, each of `forward_calls` replaces `prior` with `inputs` and
+adds `rule`, `kind`, `fiscal_year`, `fiscal_quarter` and `resolves_from`; the
+payload gains `forward_rule`.
+
 ## 1.26.0 (2026-11-21)
 
 `hardware_prints` gains Korea's monthly exports of HS 8542 (electronic

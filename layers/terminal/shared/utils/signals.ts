@@ -61,26 +61,68 @@ export interface SignalSeriesView {
   cells: SignalCell[]
 }
 
-export interface ForwardCallMethod {
+/** hand: registered in code and pinned by a lock test. The others record themselves daily. */
+export type ForwardRule = 'hand' | 'guidance-bias' | 'prints-ratio'
+export type ForwardMetric = 'revenue' | 'capex' | 'backlog'
+
+/** One method's estimate, in USD. A range where the method gives one. */
+export interface ForwardMethod {
   method: string
   value: number
+  low: number | null
+  high: number | null
+  /** Uses an unrelated input on purpose: if it scores as well, the real input adds nothing. */
   control: boolean
-  /** Percent off the actual, once it is filed. */
-  error_pct: number | null
 }
 
-export interface ForwardCallView {
-  id: string
-  ticker: string
+/** An input as it stood when the call was recorded. value is null for a figure held under its source's terms. */
+export interface ForwardInput {
   label: string
-  metric: string
-  recorded: string
+  value: number | null
+  unit: string
+  as_of: string | null
+  source_url: string | null
+}
+
+/** A figure estimated before it is filed. Never edited once recorded. */
+export interface ForwardCall {
+  id: string
+  rule: ForwardRule
+  /** calibration: the inputs nearly fix the answer, so a hit proves little. */
+  kind: 'forecast' | 'calibration'
+  ticker: string
+  metric: ForwardMetric
+  fiscal_year: number
+  fiscal_quarter: number | null
   period: { start: string; end: string }
+  label: string
+  /** The XBRL concepts that settle it, comma-separated, or `lab-revenue:<lab>`. */
+  resolves_from: string
+  methods: ForwardMethod[]
+  inputs: ForwardInput[]
+  note: string
+  /** A date for a call registered in code, a timestamp for one a rule recorded. */
+  recorded: string
+}
+
+export interface ForwardCallMethod extends ForwardMethod {
+  /** Percent off the actual, once it is filed. */
+  error_pct: number | null
+  /** Whether the actual fell inside this method's range; null for a single figure or before it's filed. */
+  in_range: boolean | null
+}
+
+export interface ForwardCallView extends Omit<ForwardCall, 'methods'> {
   unit: 'USD'
   methods: ForwardCallMethod[]
-  prior: { label: string; value: number; basis: string }
-  actual: { value: number; filed: string; filing_url: string } | null
-  note: string
+  actual: {
+    value: number
+    filed: string
+    form: string
+    filing_url: string
+    /** Inside the call's range: the lowest to the highest non-control method. */
+    in_range: boolean
+  } | null
 }
 
 export interface SignalsData extends Stamp {
@@ -100,6 +142,7 @@ export interface SignalsData extends Stamp {
   holdout: number
   series: SignalSeriesView[]
   forward_calls: ForwardCallView[]
+  forward_rule: string
   method: string
   credit: string
 }

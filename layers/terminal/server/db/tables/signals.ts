@@ -1,4 +1,5 @@
 import { index, integer, primaryKey, real, sqliteTable, text } from 'drizzle-orm/sqlite-core'
+import { provenance } from './columns'
 
 // Daily closes from Databento, licensed for internal use only. Only the signals
 // harness reads this table (layers/terminal/server/signals/), and nothing that
@@ -83,3 +84,72 @@ export const signalRuns = sqliteTable(
 export type MarketBar = typeof marketBars.$inferSelect
 export type SignalResult = typeof signalResults.$inferSelect
 export type SignalRun = typeof signalRuns.$inferSelect
+
+// Forward calls: a figure estimated before it is filed, by every method we ran,
+// with the inputs as they stood (layers/terminal/server/signals/forward-calls.ts).
+// rule `hand` rows mirror FORWARD_CALLS in code, which a lock test pins; the
+// other rules record themselves on the daily run. Rows are only ever inserted
+// (layers/terminal/test/forward-calls.test.ts holds that line): a revised
+// estimate is a new call with its own recorded_at.
+export const forwardCalls = sqliteTable(
+  'forward_calls',
+  {
+    id: text('id').primaryKey(),
+    rule: text('rule').notNull(), // hand | guidance-bias | prints-ratio
+    kind: text('kind').notNull(), // forecast | calibration
+    ticker: text('ticker').notNull(),
+    metric: text('metric').notNull(), // revenue | capex | backlog
+    fiscal_year: integer('fiscal_year').notNull(),
+    fiscal_quarter: integer('fiscal_quarter'), // null for a fiscal year
+    period_start: text('period_start').notNull(),
+    period_end: text('period_end').notNull(),
+    label: text('label').notNull(),
+    // What settles it: the XBRL concepts read (comma-separated), or `lab-revenue`.
+    resolves_from: text('resolves_from').notNull(),
+    // JSON: [{ method, value, low, high, control }], in USD.
+    methods: text('methods').notNull(),
+    // JSON: [{ label, value, unit, as_of, source_url }]; value null for a held figure.
+    inputs: text('inputs').notNull(),
+    note: text('note').notNull(),
+    recorded_at: text('recorded_at').notNull(),
+    // The call on /signals, and when it was recorded.
+    ...provenance,
+  },
+  (t) => [
+    index('forward_calls_target_idx').on(t.ticker, t.metric, t.period_end),
+    index('forward_calls_recorded_idx').on(t.recorded_at),
+  ],
+)
+
+// How each forward call scored: one row per method, written the first time we
+// hold the filed figure for the call's period, filed after the call was recorded.
+export const forwardCallScores = sqliteTable(
+  'forward_call_scores',
+  {
+    id: text('id').primaryKey(),
+    call_id: text('call_id').notNull(),
+    method: text('method').notNull(),
+    control: integer('control').notNull(), // 1 when the method uses an unrelated input on purpose
+    estimate: real('estimate').notNull(),
+    low: real('low'),
+    high: real('high'),
+    actual: real('actual').notNull(),
+    // (estimate − actual) / actual × 100.
+    error_pct: real('error_pct').notNull(),
+    // 1 when the actual is inside this method's own range; null when it gave one figure.
+    in_method_range: integer('in_method_range'),
+    // 1 when the actual is inside the call's range: lowest to highest non-control method.
+    in_call_range: integer('in_call_range').notNull(),
+    concept: text('concept').notNull(),
+    form: text('form').notNull(),
+    filed: text('filed').notNull(),
+    accession_no: text('accession_no').notNull(),
+    first_seen_at: text('first_seen_at').notNull(),
+    // The filing the actual comes from, and when we read it.
+    ...provenance,
+  },
+  (t) => [index('forward_call_scores_call_idx').on(t.call_id)],
+)
+
+export type ForwardCallRow = typeof forwardCalls.$inferSelect
+export type ForwardCallScore = typeof forwardCallScores.$inferSelect

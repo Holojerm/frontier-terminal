@@ -14,7 +14,7 @@ export function registerSignalTools({ server, deps }: McpKit): void {
         'lead_lag: the correlation between the series’ change each period and the ticker’s return less SPY’s from the first session after the figure was public. ' +
         'event: the mean of that abnormal return from the close before each event. status thin means under min_sample and carries no number: say there is not enough history. ' +
         'tests is how many results had enough sample; a p_value is uncorrected, so compare it with bonferroni_p (0.05 / tests) before calling anything significant. ' +
-        'forward_calls are dated estimates scored once the filing prints the actual; methods marked control use another lab’s data. ' +
+        'forward_calls are dated estimates of revenue, capex or remaining performance obligations, each with every method run and its inputs as they stood, never edited after it was recorded, and scored per method once a 10-Q or 10-K filed after it prints the actual (actual.in_range: inside the lowest-to-highest non-control estimate). Methods marked control use unrelated data on purpose. ' +
         'Prices behind the statistics are licensed for internal use and never served. A research exercise, not investment advice. ' +
         PROVENANCE,
       annotations: READ_ONLY,

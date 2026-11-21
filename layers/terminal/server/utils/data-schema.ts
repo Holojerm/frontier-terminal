@@ -409,6 +409,16 @@ export const SCHEMA_RELEASES: readonly SchemaRelease[] = [
       },
     },
   },
+  {
+    version: '1.27.0',
+    date: '2026-11-21',
+    summary:
+      'Forward calls. forward_calls holds each dated estimate of a company’s revenue, capex or remaining performance obligations made before the filing, with every method run and its inputs as they stood, inserted once and never edited. forward_call_scores holds each method’s error once a later 10-Q or 10-K settles the period, and whether the actual landed inside the call’s range. /api/signals and get_signals serve both; forward_calls in it replaces prior with inputs and adds rule, kind, fiscal_year, fiscal_quarter and resolves_from.',
+    tables: {
+      forward_calls: { note: 'New table.' },
+      forward_call_scores: { note: 'New table.' },
+    },
+  },
 ]
 
 export const SCHEMA_VERSION = SCHEMA_RELEASES.at(-1)!.version

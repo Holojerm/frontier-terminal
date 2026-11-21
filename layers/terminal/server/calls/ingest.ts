@@ -49,6 +49,7 @@ import {
   MONTHLY_SPEND_CAP_USD,
   transcriptRequest,
 } from './assemblyai'
+import { forwardConceptNeeds, forwardFiler } from '../signals/forward-filers'
 import { CALL_COMPANIES, callCompany, curatedCalls, type CallCompany } from './curated'
 import { CALLS_SINCE, earningsExhibits, earningsFilings } from './edgar'
 import { extractStatements, type Statement } from './extract'
@@ -679,7 +680,7 @@ async function openStatements(db: PipelineDb, today: string): Promise<GuidanceRo
 }
 
 /** The concept facts held for a ticker. */
-async function conceptFacts(db: PipelineDb, ticker: string): Promise<ConceptFact[]> {
+export async function conceptFacts(db: PipelineDb, ticker: string): Promise<ConceptFact[]> {
   return db
     .select({
       concept: tables.filedFacts.concept,
@@ -707,6 +708,8 @@ export async function readConcepts(
   db: PipelineDb,
   deps: CallDeps,
   open: readonly GuidanceRow[],
+  /** Concepts forward calls need (signals/forward-filers.ts). */
+  extra: readonly { ticker: string; concept: string }[] = [],
 ): Promise<number> {
   const dayAgo = new Date(deps.now.getTime() - 86_400_000).toISOString()
   const wanted: { ticker: string; concept: string }[] = []
@@ -720,6 +723,8 @@ export async function readConcepts(
       wanted.push({ ticker, concept })
     }
   }
+  const asked = new Set(wanted.map((w) => `${w.ticker}|${w.concept}`))
+  for (const w of extra) if (!asked.has(`${w.ticker}|${w.concept}`)) wanted.push(w)
   if (!wanted.length) return 0
   const recent = await db
     .select({ ticker: tables.filedFactReads.ticker, url: tables.filedFactReads.source_url })
@@ -734,7 +739,8 @@ export async function readConcepts(
   let reads = 0
   for (const w of wanted) {
     if (reads >= CONCEPT_READS_PER_RUN) break
-    const c = callCompany(w.ticker)
+    const c = forwardFiler(w.ticker)
+    if (!c) continue
     const url = conceptUrl(c.cik, w.concept)
     if (done.has(url)) continue
     reads++
@@ -910,8 +916,9 @@ export async function runCallReads(db: PipelineDb, deps: CallDeps): Promise<Call
     report.statements += statements
   })
   await step('resolve', async () => {
-    const open = await openStatements(db, deps.now.toISOString().slice(0, 10))
-    report.concepts = await readConcepts(db, deps, open)
+    const today = deps.now.toISOString().slice(0, 10)
+    const open = await openStatements(db, today)
+    report.concepts = await readConcepts(db, deps, open, await forwardConceptNeeds(db, today))
     report.resolved = await resolveStatements(db, open, deps.now)
   })
   return report

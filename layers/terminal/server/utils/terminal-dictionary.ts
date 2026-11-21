@@ -100,6 +100,9 @@ const AS_OF_CUT: Readonly<Record<string, string>> = {
     'Rows whose release or call was filed or held before the UTC day of as_of. A figure counts from the day after it was stated, whenever we read it, so this table answers as_of back to 2024 for the release capex and to October 2025 for the calls.',
   guidance_resolutions:
     'Rows with first_seen_at at or before as_of: a guided figure as settled by what we held then.',
+  forward_calls:
+    'Rows with recorded_at at or before as_of: the calls made by then. A registered call is dated the day it was committed.',
+  forward_call_scores: 'Rows with first_seen_at at or before as_of: each call as settled then.',
   call_documents: 'Rows with first_seen_at at or before as_of.',
   exposure_quarters:
     'Built from the filed_facts rows filed before the UTC day of as_of, so it answers back to 2019.',
@@ -513,6 +516,26 @@ export const TABLE_META: Readonly<Record<string, TableMeta>> = {
     start: 'Each series from its own first observation; prices from 2018-05-01 or the listing.',
     joins: [{ column: 'ticker', to: 'entity_identifiers.ticker' }],
     feeds: ['own'],
+  },
+  forward_calls: {
+    grain: 'One row per forward call.',
+    cadence: 'Registered calls with each deploy; rule calls on the daily run after the US close.',
+    event: 'period_end',
+    knowledge: 'recorded_at',
+    start: '2026-11-20, the first call.',
+    joins: [{ column: 'ticker', to: 'entity_identifiers.ticker' }],
+    feeds: ['own', 'filed_facts', 'calls', 'prints'],
+    licenseNote:
+      'methods are ours. inputs quote filed figures, call guidance and hardware prints under their own sources’ terms; a print held under its source’s terms has no value.',
+  },
+  forward_call_scores: {
+    grain: 'One row per forward call and method, once the period is filed.',
+    cadence: 'Daily, after the US close, from the XBRL the call reader holds.',
+    event: 'filed',
+    knowledge: 'first_seen_at',
+    start: 'The first filing after 2026-11-20 that settles a call.',
+    joins: [],
+    feeds: ['own', 'filed_facts'],
   },
   entity_identifiers: {
     grain: 'One row per company we name.',
