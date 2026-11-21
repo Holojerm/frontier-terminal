@@ -3220,6 +3220,93 @@ print_sources:
       pages' own terms were not read one by one. Taken: one attributed
       sentence per tie, with its URL, never the page. Read 2026-11-21.
     rights: restricted
+call_sources:
+  call-edgar-exhibits:
+    publisher: SEC EDGAR, the earnings 8-K (item 2.02) and 6-K filings of the 45 listed companies
+    url: https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&type=8-K
+    format: HTML, each EX-99 exhibit (release, CFO commentary, shareholder letter, deck) on the filing's index page
+    verdict: include
+    terms: >-
+      SEC fair-access policy, as recorded under sec-msft-openai; requests
+      send the contact address via userAgentFor() and go through the SEC
+      pacer. www.sec.gov/robots.txt allows /Archives/edgar/data. Taken: each
+      exhibit's text, kept privately in R2, and the guidance figures it
+      states with a quote of at most 25 words. Read 2026-11-21.
+    rights: ours
+  call-xbrl-companyconcept:
+    publisher: SEC EDGAR XBRL company-concept API
+    url: https://data.sec.gov/api/xbrl/companyconcept/CIK0001045810/us-gaap/Revenues.json
+    format: JSON, one concept's facts per filer, with the accession and filing date of each
+    verdict: include
+    terms: >-
+      US government work, not under copyright (17 U.S.C. 105). SEC fair
+      access, as filed-facts-msft. Taken: revenue, gross profit, capex
+      and remaining performance obligations of the companies with guidance
+      to score, at most once a day per concept, stored as filed_facts rows
+      with basis companyconcept. Read 2026-11-21.
+    rights: ours
+  call-transcripts-company:
+    publisher: The companies' own IR sites and file hosts (Microsoft, Alphabet, Meta, AMD, Dell, HPE, CoreWeave, GE Vernova, Hut 8, IREN, Intel, Super Micro, Core Scientific)
+    url: https://ir.amd.com/financial-information/financial-results
+    format: PDF or HTML transcripts and prepared remarks, on q4cdn.com, cloudfront.net, cdn.sanity.io and the companies' own domains
+    verdict: include, quote-only
+    terms: >-
+      Each file is one the company links from its own results or event
+      page (curated/earnings-calls.json lists every URL). Q4 Inc's terms
+      (q4inc.com/terms-of-use, effective 2020-12-31), which cover its
+      platform, bar crawling and "copies or stores any significant portion
+      of the Content"; we fetch each linked file once, never crawl, keep the
+      text privately in R2 and publish only the figures and a quote of at
+      most 25 words with a link to the company's page, as the owner decided
+      on 2026-11-20. Read 2026-11-21.
+    rights: restricted
+    caveats: >-
+      A transcript is the company's or its vendor's rendering of the call;
+      where the PDF names its producer (LSEG, FactSet, S&P Global,
+      Bloomberg) the document row says so.
+  call-transcripts-vendor:
+    publisher: LSEG StreetEvents, FactSet CallStreet, S&P Global Market Intelligence and Bloomberg transcripts the companies host (Qualcomm, NVIDIA, CoreWeave, DTE, Ciena)
+    url: https://s204.q4cdn.com/645488518/files/content_files/Q4FY26-Earnings-Conference-Call_Transcript_11-5-26_Final.pdf
+    format: PDF
+    verdict: include, quote-only
+    terms: >-
+      Each carries its vendor's notice; Bloomberg's reads "Any
+      reproduction, redistribution or retransmission is expressly
+      prohibited", and S&P's and FactSet's are copyright notices. We
+      redistribute nothing: the text stays in private R2 storage, and a
+      published row is a figure, a quote of at most 25 words and a link to
+      the company's own page for the file. Read 2026-11-21.
+    rights: restricted
+  call-audio-company:
+    publisher: Call replays a company posts as an MP3 file (Amazon on its IR file host, AEP on docs.aep.com)
+    url: https://docs.aep.com/docs/newsroom/resources/earnings/2026-10/2026q3_conf_call.mp3
+    format: MP3, sent by URL to AssemblyAI, which fetches it
+    verdict: include, quote-only
+    terms: >-
+      Only a media file the company itself links from its event page,
+      without registration, is transcribed. The audio is never stored or
+      served here, and our transcript stays in private R2 storage; a
+      published row is a figure, a quote of at most 25 words, the time into
+      the replay, and a link to the company's page. Amazon keeps its replay
+      up for about three months, so earlier calls are gone. Read 2026-11-21.
+    rights: restricted
+  assemblyai:
+    publisher: AssemblyAI (speech-to-text processor)
+    url: https://www.assemblyai.com/legal/terms-of-service
+    format: JSON transcripts (sentences with start times and identified speakers), model assemblyai-stt-3-7
+    verdict: include, as a processor
+    terms: >-
+      Terms of Service effective 2026-07-01, section 4.3: "Customer shall
+      retain all right, title and interest in and to the Customer Data",
+      and AssemblyAI may use it to improve its models unless the account
+      opts out. Section 4.4: Output "may contain errors and misstatements",
+      and the customer may not "represent that any Output is
+      human-generated", so a quote from a replay is labelled as our machine
+      transcript. Billing: $0.21 an hour for the model, plus $0.05 for key
+      terms, $0.05 for a prompt, $0.02 for speaker labels and $0.02 for
+      speaker identification. Spend is capped at $40 of the $50 free
+      credit (calls/assemblyai.ts). Read 2026-11-21.
+    rights: restricted
 department_clusters:
   physical-infrastructure:
     label: Physical infrastructure
@@ -3655,3 +3742,26 @@ cut:
       public domain. Since 2026 every request without a key is redirected to
       api.census.gov/data/missing_key.html. A free key is an owner step.
       Read 2026-11-21.
+  call-webcast-players:
+    verdict: cut (registration pages)
+    reason: >-
+      Q4 (events.q4inc.com), Notified (edge.media-server.com), Chorus Call
+      (event.choruscall.com), Viavid (viavid.webcasts.com), webinar.net and
+      the companies' YouTube streams serve replays only through a player,
+      most behind a registration form, and none links a media file. Q4's
+      terms bar crawling and storing its content; YouTube's bar downloading.
+      We transcribe only a file a company posts, so the calls of Oracle,
+      Broadcom, Marvell, Arista, Applied Optoelectronics, Applied Digital,
+      IREN, TeraWulf, Riot, Akamai, Celestica, Astera Labs and the Q&A of
+      Intel, Super Micro, Nebius and Core Scientific are gaps. Read
+      2026-11-21.
+  call-ir-sites-blocked:
+    verdict: cut (refuses automated clients)
+    reason: >-
+      investors.arm.com, investor.tsmc.com, investor.williams.com,
+      investors.broadcom.com, ir.coherent.com, investor.fabrinet.com,
+      investors.cipherdigital.com, investor.galaxy.com and
+      wecenergygroup.com answer an identified client with HTTP 403 or a bot
+      challenge, so their posted transcripts can't be fetched; only their
+      EDGAR exhibits are read. Entergy's terms bar automatic reading
+      (power-site-unread). Read 2026-11-21.

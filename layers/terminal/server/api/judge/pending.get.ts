@@ -44,6 +44,10 @@
 // naming one of Epoch's lab sites and speaking of power near it, each with
 // excerpts and the ties already held for that site
 // (layers/terminal/server/power/review.ts); likewise.
+// `guidance_review` lists the call transcripts, remarks and replays the
+// guidance parser found no figure in but that have sentences looking ahead
+// with a figure, each with those sentences (layers/terminal/server/calls/review.ts);
+// likewise.
 
 import { blob } from '@nuxthub/blob'
 import { db } from '@nuxthub/db'
@@ -58,6 +62,7 @@ import { priceReview } from '../../pipeline/judge/price-review'
 import { JUDGE_CHANGE_LIMIT, incidentCounts, pendingChanges } from '../../pipeline/judge/pending'
 import { stillListedRemovals } from '../../pipeline/judge/still-listed'
 import { figureReview } from '../../pipeline/reported/review'
+import { guidanceReview } from '../../calls/review'
 import { powerSiteReview } from '../../power/review'
 import { supplierReview } from '../../suppliers/review'
 import { trackRecordReview } from '../../pipeline/track-record/review'
@@ -80,6 +85,7 @@ export default defineEventHandler(async (event) => {
     price_review,
     supplier_review,
     power_site_review,
+    guidance_review,
   ] = await Promise.all([
     pendingChanges(db, JUDGE_CHANGE_LIMIT),
     classMapReview(db, blobRawReader(blob)),
@@ -90,6 +96,7 @@ export default defineEventHandler(async (event) => {
     priceReview(db, blobRawReader(blob)),
     supplierReview(db, blobRawReader(blob)),
     powerSiteReview(db, blobRawReader(blob)),
+    guidanceReview(db, blobRawReader(blob), new Date()),
   ])
   const [claim_review, hiring, incidents, still_listed] = await Promise.all([
     claimReview(db, changes, flagships),
@@ -116,6 +123,7 @@ export default defineEventHandler(async (event) => {
     price_review,
     supplier_review,
     power_site_review,
+    guidance_review,
     prompt: judgePrompt,
   }
 })

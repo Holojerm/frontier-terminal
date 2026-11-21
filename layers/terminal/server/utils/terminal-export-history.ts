@@ -196,9 +196,21 @@ export const EXPORT_HISTORY: Readonly<Record<string, HistoryRule>> = {
   filed_facts: windowed(['end'], 'end, the period end', 'first_seen_at', tables.filedFacts.end),
   filed_guidance: windowed(
     ['filed'],
-    'filed, the release’s filing date',
+    'filed, the filing or call date',
     'first_seen_at',
     tables.filedGuidance.filed,
+  ),
+  guidance_resolutions: windowed(
+    ['filed'],
+    'filed, when the settling figure was filed',
+    'first_seen_at',
+    tables.guidanceResolutions.filed,
+  ),
+  call_documents: windowed(
+    ['call_date'],
+    'call_date, the call’s date',
+    'first_seen_at',
+    tables.callDocuments.call_date,
   ),
   exposure_quarters: windowed(['end'], 'end, the period end', 'fetched_at'),
   dependency_edges: whole(

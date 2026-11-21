@@ -10,6 +10,8 @@
 // rollups (pipeline/probes/, probe_days).
 
 import { PRINT_ENTITIES, type PrintSeries, type PrintWindow } from '../../shared/utils/prints'
+import { FOREIGN_FILERS } from '../calls/actuals'
+import { curatedCalls } from '../calls/curated'
 import type { LabId } from '../../shared/utils/terminal-types'
 import type {
   SignalEntityKind,
@@ -43,6 +45,8 @@ export type SignalSource =
   | { kind: 'ercot_large_loads'; metric: 'observed_peak_mw' | 'approved_to_energize_mw' }
   /** A print series (hardware_prints) in one window: the year-on-year change its first release stated. */
   | { kind: 'prints'; series: PrintSeries; entity: string; window?: PrintWindow }
+  /** Each filing that settles a company's call guidance (guidance_resolutions), signed: the error against the guided midpoint, positive for a beat. */
+  | { kind: 'guidance_surprise'; ticker: string; metric?: 'capex' }
 
 export interface SignalDef {
   /** Stable: results, exports and links key on it. Never reuse a retired id. */
@@ -336,6 +340,44 @@ const krChips = (window: PrintWindow, label: string, lag: number): SignalDef => 
   history_from: window === 'month' ? '2016-08-01' : '2021-08-01',
 })
 
+/**
+ * A company's guidance surprise: each filing that settles a figure its
+ * management guided on a call, the error against the midpoint (averaged when
+ * one filing settles several). The 10-Q or 10-K is the event; the call that
+ * gave the guidance is earlier. Foreign filers' quarters carry no XBRL, so
+ * they have no events. History starts with the first calls read.
+ */
+const guidanceSurprise = (ticker: string, company: string): SignalDef => ({
+  id: `guidance-surprise-${ticker.toLowerCase()}`,
+  label: `${company} filed results against its call guidance`,
+  entity: { kind: 'listed', id: ticker },
+  tickers: [ticker],
+  source: { kind: 'guidance_surprise', ticker },
+  transform: 'change',
+  frequency: 'event',
+  test: 'event',
+  signed: true,
+  available_after_days: 0,
+  history_from: '2025-10-01',
+})
+
+/** The chip and network makers a hyperscaler's capex is expected to lead. */
+export const CAPEX_LEADS: readonly string[] = ['NVDA', 'AVGO', 'AMD', 'ANET']
+
+/** A hyperscaler's filed capex against the capex it guided on its calls, tested on the suppliers it buys from. */
+const capexSurprise = (ticker: string, company: string): SignalDef => ({
+  ...guidanceSurprise(ticker, company),
+  id: `guidance-capex-surprise-${ticker.toLowerCase()}`,
+  label: `${company} filed capex against its call guidance`,
+  tickers: CAPEX_LEADS,
+  source: { kind: 'guidance_surprise', ticker, metric: 'capex' },
+})
+
+/** The companies whose calls are read, by ticker; the four foreign filers have no scorable quarters. */
+export const GUIDANCE_SIGNAL_COMPANIES: readonly [string, string][] = curatedCalls.companies
+  .filter((c) => !FOREIGN_FILERS.has(c.ticker))
+  .map((c) => [c.ticker, c.company])
+
 export const SIGNALS: readonly SignalDef[] = [
   npm('npm-anthropic-sdk', 'anthropic', '@anthropic-ai/sdk npm downloads'),
   npm('npm-claude-code', 'anthropic', 'Claude Code npm downloads'),
@@ -436,6 +478,12 @@ export const SIGNALS: readonly SignalDef[] = [
   krChips('d10', 'Korea chip exports, first 10 days, year on year', 0),
   krChips('d20', 'Korea chip exports, first 20 days, year on year', 0),
   krChips('month', 'Korea chip exports, month, year on year', 20),
+  ...GUIDANCE_SIGNAL_COMPANIES.map(([ticker, company]) => guidanceSurprise(ticker, company)),
+  // Amazon guides net capex, which isn't scored (calls/actuals.ts).
+  capexSurprise('MSFT', 'Microsoft'),
+  capexSurprise('GOOGL', 'Alphabet'),
+  capexSurprise('META', 'Meta'),
+  capexSurprise('ORCL', 'Oracle'),
 ]
 
 /** Where a series is read from, in the names /data and the exports use. */
@@ -465,5 +513,7 @@ export function sourceLabel(source: SignalSource): string {
       return `ercot_large_load_facts: ${source.metric}, first stated`
     case 'prints':
       return `hardware_prints: ${source.series} ${source.entity}${source.window && source.window !== 'month' ? ` ${source.window}` : ''}, stated year-on-year change, first release`
+    case 'guidance_surprise':
+      return `guidance_resolutions: ${source.ticker}${source.metric ? ` ${source.metric}` : ''}, error against the guided midpoint`
   }
 }

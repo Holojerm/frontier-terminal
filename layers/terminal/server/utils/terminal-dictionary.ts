@@ -44,6 +44,7 @@ import {
   readGridLoadSources,
   readPowerSiteSources,
   readPrintSources,
+  readCallSources,
   readSourceRegistry,
 } from './terminal-sources'
 
@@ -94,7 +95,10 @@ const AS_OF_CUT: Readonly<Record<string, string>> = {
   filed_facts:
     'Rows whose filing date is before the UTC day of as_of. A fact counts from the day after its filing, whenever we read it, so this table answers as_of back to 2019.',
   filed_guidance:
-    'Rows whose release was filed before the UTC day of as_of. A release counts from the day after its filing, whenever we read it, so this table answers as_of back to 2024.',
+    'Rows whose release or call was filed or held before the UTC day of as_of. A figure counts from the day after it was stated, whenever we read it, so this table answers as_of back to 2024 for the release capex and to October 2025 for the calls.',
+  guidance_resolutions:
+    'Rows with first_seen_at at or before as_of: a guided figure as settled by what we held then.',
+  call_documents: 'Rows with first_seen_at at or before as_of.',
   exposure_quarters:
     'Built from the filed_facts rows filed before the UTC day of as_of, so it answers back to 2019.',
   dependency_edges:
@@ -128,6 +132,7 @@ type Feed =
   | 'power_sites'
   | 'grid_load'
   | 'prints'
+  | 'calls'
   | { axes: readonly SourceAxis[] }
   /** Named sources, by id. */
   | { ids: readonly string[] }
@@ -373,13 +378,34 @@ export const TABLE_META: Readonly<Record<string, TableMeta>> = {
     feeds: ['filed_facts'],
   },
   filed_guidance: {
-    grain: 'One row per earnings release and fiscal year it gives a capex figure or range for.',
-    cadence: 'Every 30 minutes with the filed-facts read, up to four releases a run.',
+    grain:
+      'One row per figure: a release’s capex for a fiscal year (source release), or a metric and period a call document guides.',
+    cadence:
+      'Release capex every 30 minutes with the filed-facts read. Call documents hourly, up to eight a run; a replay the run after AssemblyAI finishes it.',
     event: 'filed',
     knowledge: 'filed',
-    start: 'Each earnings release filed from 2024-01-01.',
+    start: 'Release capex from 2024-01-01; the calls of the 45 listed companies from October 2025.',
     joins: [byTicker, byCik],
+    feeds: ['filed_facts', 'calls'],
+  },
+  guidance_resolutions: {
+    grain: 'One row per call guidance row a later filing settled.',
+    cadence: 'Hourly, once the guided period’s 10-Q or 10-K is in XBRL.',
+    event: 'filed',
+    knowledge: 'first_seen_at',
+    start: 'Guidance from calls held from October 2025.',
+    joins: [byTicker],
     feeds: ['filed_facts'],
+  },
+  call_documents: {
+    grain: 'One row per document or replay an earnings call is read from.',
+    cadence:
+      'Hourly: new EDGAR exhibits for three companies a run, and every curated document once.',
+    event: 'call_date',
+    knowledge: 'first_seen_at',
+    start: 'Calls held from October 2025.',
+    joins: [byTicker],
+    feeds: ['calls', 'filed_facts'],
   },
   exposure_quarters: {
     grain: 'One row per series and period.',
@@ -630,6 +656,7 @@ function ratedSources(sourcesYaml: string): Rated[] {
       ...flat('prints')(s),
       license: s.license,
     })),
+    ...readCallSources(sourcesYaml).map(flat('calls')),
   ]
 }
 

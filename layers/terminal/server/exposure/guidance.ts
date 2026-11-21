@@ -8,7 +8,7 @@
 // amount is the first one after the words "capital expenditures", or the last
 // one before them when none follows ("invest about $200 billion in capital
 // expenditures"). A release with no such sentence yields nothing: guidance
-// given only on the call isn't in the release, and we don't read transcripts.
+// given only on the call isn't in the release; layers/terminal/server/calls/ reads the calls.
 //
 // Pure, and dependency-free like facts.ts.
 

@@ -74,7 +74,7 @@ export const GUIDANCE_MEASURES: Readonly<Record<ExposureTicker, GuidanceMeasure>
   MSFT: {
     parts: null,
     compared_with: null,
-    gap: 'Microsoft’s release prints no capex figure. It says guidance is given on the earnings call, and we don’t read call transcripts.',
+    gap: 'Microsoft’s release prints no capex figure. It gives guidance on the earnings call, which the earnings-call panel reads.',
   },
 }
 
@@ -258,7 +258,12 @@ export async function queryGuidance(
     db
       .select()
       .from(tables.filedGuidance)
-      .where(at ? lt(tables.filedGuidance.filed, filedBefore(at)) : undefined),
+      .where(
+        and(
+          eq(tables.filedGuidance.source, 'release'),
+          at ? lt(tables.filedGuidance.filed, filedBefore(at)) : undefined,
+        ),
+      ),
     db
       .select({
         ticker: tables.filedFactReads.ticker,

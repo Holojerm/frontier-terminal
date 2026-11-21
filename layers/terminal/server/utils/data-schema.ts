@@ -358,6 +358,36 @@ export const SCHEMA_RELEASES: readonly SchemaRelease[] = [
       },
     },
   },
+  {
+    version: '1.24.0',
+    date: '2026-11-21',
+    summary:
+      'Earnings-call guidance for the 45 listed companies around the labs. filed_guidance gains the call rows (source exhibit, transcript, remarks or audio) and the columns that place each figure: metric, segment, basis, unit, bound, fiscal_quarter, period_start, period_end, speaker, at_ms, page, call_document_id, page_url and method; the release capex rows are unchanged and read source release. Two new tables: guidance_resolutions (the later 10-Q or 10-K figure that settles a row, with error_share) and call_documents (every exhibit, transcript and replay read). /api/call-guidance and get_call_guidance serve them.',
+    tables: {
+      filed_guidance: {
+        added: [
+          'source',
+          'metric',
+          'segment',
+          'basis',
+          'unit',
+          'bound',
+          'fiscal_quarter',
+          'period_start',
+          'period_end',
+          'speaker',
+          'at_ms',
+          'page',
+          'call_document_id',
+          'page_url',
+          'method',
+        ],
+        note: 'low and high are in unit, no longer always USD; the release rows are USD.',
+      },
+      guidance_resolutions: { note: 'New table.' },
+      call_documents: { note: 'New table.' },
+    },
+  },
 ]
 
 export const SCHEMA_VERSION = SCHEMA_RELEASES.at(-1)!.version

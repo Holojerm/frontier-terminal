@@ -12,9 +12,33 @@
 
 export const decoder = new TextDecoder('latin1')
 
+// Some writers (LSEG's transcripts) end a stream without its checksum, and
+// DecompressionStream then errors after it has emitted every byte. What it
+// emitted before the error is kept; a stream that yields nothing still throws.
 async function inflate(data: Uint8Array): Promise<Uint8Array> {
-  const out = new Blob([data as BlobPart]).stream().pipeThrough(new DecompressionStream('deflate'))
-  return new Uint8Array(await new Response(out).arrayBuffer())
+  const reader = new Blob([data as BlobPart])
+    .stream()
+    .pipeThrough(new DecompressionStream('deflate'))
+    .getReader()
+  const chunks: Uint8Array[] = []
+  let size = 0
+  try {
+    for (;;) {
+      const { done, value } = await reader.read()
+      if (done) break
+      chunks.push(value)
+      size += value.byteLength
+    }
+  } catch (error) {
+    if (size === 0) throw error
+  }
+  const out = new Uint8Array(size)
+  let at = 0
+  for (const c of chunks) {
+    out.set(c, at)
+    at += c.byteLength
+  }
+  return out
 }
 
 interface PdfObject {

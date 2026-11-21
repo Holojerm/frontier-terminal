@@ -329,6 +329,8 @@ describe('queryRankings', () => {
       'mops-monthly-revenue-history',
       'taiwan-ir-revenue-pages',
       'census-hs-847150',
+      'call-webcast-players',
+      'call-ir-sites-blocked',
     ])
     expect(coverage.cuts.find((c) => c.id === 'artificial-analysis')!.reason).toContain(
       '"Internal use only; no redistribution."',

@@ -682,7 +682,7 @@ Checked for the guidance check on `/ground-truth`: does a filer's earnings relea
 
 **Amazon, listed and not scored.** Amazon guides cash capital expenditures, which its releases define as purchases of property and equipment net of proceeds from sales and incentives. Its 10-K for 2025 gives $128.3 billion on that basis. Company facts carry the gross purchases line only (the proceeds line is a custom tag), so no filed figure we hold answers the guidance.
 
-**Microsoft, a gap.** Guidance given only on the call is out of scope. We don’t read call transcripts.
+**Microsoft, a gap here.** Its release prints no capex figure; the call reader below reads its call.
 
 **Terms.** EDGAR's are the SEC's: fair-access rate and a declared contact. A release is the filer's own text, not a government work. We keep the guided figure, the year, and the one sentence that states it, with a link to the exhibit. The saved release is stored under `guidance/` and is in no export.
 
@@ -984,3 +984,30 @@ Taiwan's listed companies must publish the month before's revenue by the 10th (S
 Korea Customs Service, read 2026-11-21. The press board (bbsId 1362) searched on "수출입 현황" lists 471 posts back to August 2016, newest first, 20 a page. Each release page links its attachment to KCS's own viewer: `/streamdocs/v4/documents/view/tnnf/<fileKey>` answers `viewCallback({"url":"<id>"})`, and `/streamdocs/v4/documents/<id>/texts` returns the attachment as plain text, HWP, HWPX and PDF alike, so nothing in the Worker parses those formats. Where a PDF draws its digits as shapes (June 2021's confirmed release), the HWP's text is read instead. The 1–10 and 1–20 day releases list the semiconductor (반도체) export figure in an annex table in US$ million from August 2021 on. Before that they state only its change. The confirmed month (about the 15th) gives it in a table by commodity in US$ million, beside a sentence in 억 달러 (US$ 100 million) that the parser checks it against. The table's columns have moved (the month before or after the same month a year earlier, or four months across in early 2017), so the parser takes the pair whose change is the stated one. The provisional month (the 1st) gives it only some months, and then only in 억 달러. The KOGL Type 1 block first appears on the post of 2026-09-29; every release before, back to 2016, has none. KCS's copyright policy (cntntsId=2610) asks for consultation before an unmarked work is reused. So the rights split is per release, read from each page. Marked releases go out under KOGL Type 1, and unmarked ones stay in the harness. data.go.kr's keyed HS-code APIs (15101609, 15100475) would need a service key, an owner step, and weren't used.
 
 Ties from each Taiwan company to whom it builds for or supplies are quotes from NVIDIA's and AMD's 10-Ks, NVIDIA, OpenAI, Samsung, Micron and Meta newsrooms, and Wiwynn's annual report (`layers/terminal/server/curated/print-ties.json`). No hyperscaler tie for Quanta, Wiwynn, TSMC, Gigabyte or Delta came from a primary source, so none is listed.
+
+## Addendum, 2026-11-21: earnings-call guidance for the 45 listed companies
+
+What management guided on each call (capex, revenue, a segment or AI line, gross margin, backlog), scored against what the company filed later. The reader is `layers/terminal/server/calls/`; every company's source and gap is in `layers/terminal/server/curated/earnings-calls.json`.
+
+**What each company posts, read 2026-11-21.** A survey on 2026-11-20 sorted the 45; this pass fetched each file it lists.
+
+| Posts | Companies | What we read |
+| --- | --- | --- |
+| Own transcript | MSFT, GOOGL, META, NVDA, AMD, QCOM, DELL, HPE, CRWV, CIEN, HUT, GEV, DTE | Every file the company links at a fixed address since October 2025: 54 transcripts. Several are vendor files: LSEG (Qualcomm), FactSet (NVIDIA, CoreWeave, DTE), S&P Global (Ciena), Bloomberg (NVIDIA Q3 FY2027, whose body our PDF reader can't decode). |
+| Own transcript, host refuses us | ARM, TSM, WMB, GLXY | investors.arm.com, investor.tsmc.com and investor.williams.com answer 403 or a bot challenge; Galaxy's IR site too. Their EDGAR exhibits only. |
+| Prepared remarks | INTC, SMCI, CORZ, NBIS | Intel's five, Super Micro's one at a fixed address, Core Scientific's three; Nebius's shareholder letter from its 6-K. The Q&A is on a registration-gated webcast. |
+| Replay MP3 | AMZN, AEP | Transcribed with AssemblyAI: Amazon's Q3 2026 call (its earlier replays are gone after about three months) and AEP's last five. GE Vernova posts MP3s too, beside its transcripts, so its audio isn't sent. |
+| Webcast only | ORCL, AVGO, MRVL, ANET, AAOI, APLD, IREN, WULF, AKAM, CLS, ALAB, CRDO, LITE, COHR, FN, CBRS, CIFR, RIOT, BE, ETR, PNW, WEC | No transcript and no media file the company links: replays are Q4, Notified, Chorus Call, Viavid or webinar.net players, most behind registration. Their 8-K/6-K exhibits only, which for most print the next quarter's outlook. IREN filed one transcript as an 8-K exhibit (May 2026). Entergy's terms bar automatic reading. |
+
+**EDGAR.** Every earnings 8-K (item 2.02) and 6-K since 2025-10-01, and each EX-99 exhibit on its index page: the release, NVIDIA's CFO commentary, Nebius's shareholder letter, Cipher's and Core Scientific's decks. These are read for all 45 and carry most of the scored figures.
+
+**AssemblyAI.** Model `assemblyai-stt-3-7` with key terms (company, ticker, executives, products, segments, the labs and model families we track), a one-sentence prompt, speaker labels with a speaker range, speaker identification by name (executives, the operator, and "Analyst" for every questioner, so only an executive's sentence becomes a statement), custom spelling and no disfluencies: $0.35 an hour in all. The six backfill calls (6.15 hours) cost about $2.15 of the $50 free credit; the Worker caps spend at $40 and spools `assemblyai_credits` at the cap or on a billing refusal. Terms (effective 2026-07-01): the customer keeps its data, and Output may not be represented as human-generated, so a replay quote is labelled as our machine transcript.
+
+**Terms and what is published.** Q4 Inc's platform terms bar crawling and storing a significant portion of its content; Bloomberg's transcripts say any reproduction is prohibited. We fetch each linked file once, keep its text (and our transcripts) privately in R2, and publish only the scored figures, quotes of at most 25 words and links to the company's own pages, as the owner decided on 2026-11-20. Audio and transcripts are never served. Verdict: include, quote-only (`rights: restricted`).
+
+**The rule.** A sentence is taken when it looks ahead, doesn't report a result, isn't a question, and states an amount after a metric it names, as a range, a band ("plus or minus"), or one figure with its bound. The period is the one named nearest the figure, else the outlook's a few sentences back, else the next quarter for a "plus or minus" figure; a period not after the quarter the call reported is dropped. A document the rule finds nothing in is offered to the judge routine (GUIDANCE REVIEW), whose answers are checked against the stored text with the same rules.
+
+**Scoring.** Against XBRL company concepts, at the first filing that printed the figure: total revenue (a fourth quarter as the year less the nine months), capex (Meta's with finance-lease principal; Amazon's net figure unscored), GAAP gross margin, and remaining performance obligations. A range is met when the figure is inside it, a single figure within 5% (half a point for a percentage). A segment line, an AI figure, a non-GAAP margin and the four foreign filers' quarters (6-Ks carry no XBRL) are listed and not scored.
+
+**Verdict.** Include.
+

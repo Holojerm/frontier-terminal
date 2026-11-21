@@ -60,10 +60,18 @@ export const filedFactReads = sqliteTable(
   ],
 )
 
-// Capex guidance as a filer's earnings release prints it (the 8-K's exhibit
-// 99.1), one row per fiscal year a release gives a figure or range for
-// (layers/terminal/server/exposure/guidance.ts). `sentence` is the release's
-// own sentence. A release that prints none leaves only its filed_fact_reads row.
+// Forward guidance as a company stated it. `source` says where:
+//   release     the hyperscalers' capex sentence in an 8-K's exhibit 99.1
+//               (layers/terminal/server/exposure/guidance.ts), one row per fiscal year;
+//   exhibit     any earnings 8-K/6-K exhibit (release, CFO commentary, letter);
+//   transcript  a call transcript the company posts;
+//   remarks     prepared remarks the company posts;
+//   audio       our transcript of the call replay (AssemblyAI), never published.
+// The last four are read by layers/terminal/server/calls/, one row per figure:
+// `metric` over `period_start`..`period_end`, `low`..`high` in `unit`, and
+// `sentence` a quote of at most QUOTE_MAX_WORDS words. `filed` is the call or
+// filing date and `accession_no` the earnings filing it went with ('' when
+// none). Rows are append-only; how each was resolved is guidance_resolutions.
 export const filedGuidance = sqliteTable(
   'filed_guidance',
   {
@@ -78,10 +86,102 @@ export const filedGuidance = sqliteTable(
     sentence: text('sentence').notNull(),
     raw_key: text('raw_key').notNull(),
     first_seen_at: text('first_seen_at').notNull(),
+    source: text('source').notNull().default('release'),
+    metric: text('metric').notNull().default('capex'), // capex | revenue | segment_revenue | ai_revenue | gross_margin | backlog
+    segment: text('segment'),
+    basis: text('basis'), // gaap | non_gaap, when the sentence says
+    unit: text('unit').notNull().default('USD'), // USD | percent | growth_yoy | growth_qoq
+    bound: text('bound').notNull().default('range'), // range | about | at_least | at_most
+    fiscal_quarter: integer('fiscal_quarter'), // null for a fiscal year
+    period_start: text('period_start'),
+    period_end: text('period_end'),
+    speaker: text('speaker'),
+    at_ms: integer('at_ms'), // where in the replay the sentence starts (audio)
+    page: integer('page'), // the document page it is on (PDF)
+    call_document_id: text('call_document_id'),
+    page_url: text('page_url'), // the company's own page for the call
+    method: text('method').notNull().default('parser'), // parser | judge
     ...provenance,
   },
-  (t) => [index('filed_guidance_filer_idx').on(t.ticker, t.fiscal_year, t.filed)],
+  (t) => [
+    index('filed_guidance_filer_idx').on(t.ticker, t.fiscal_year, t.filed),
+    index('filed_guidance_source_idx').on(t.source, t.ticker, t.filed),
+  ],
 )
+
+// Every document an earnings call is read from (layers/terminal/server/calls/):
+// the 8-K/6-K exhibits EDGAR lists, the transcripts and remarks a company
+// posts (curated/earnings-calls.json), and the replays we send to AssemblyAI.
+// Text and audio transcripts live in R2 under `raw_key` and are never served.
+// An audio row moves pending → submitted (job_id, estimated cost) → read
+// (cost from the duration AssemblyAI billed) or failed.
+export const callDocuments = sqliteTable(
+  'call_documents',
+  {
+    id: text('id').primaryKey(),
+    ticker: text('ticker').notNull(),
+    call_date: text('call_date').notNull(),
+    period_label: text('period_label').notNull(), // the quarter the call reported, e.g. Q3 FY2027
+    fiscal_year: integer('fiscal_year').notNull(),
+    fiscal_quarter: integer('fiscal_quarter').notNull(),
+    kind: text('kind').notNull(), // exhibit | transcript | remarks | audio
+    url: text('url').notNull(),
+    page_url: text('page_url'),
+    produced_by: text('produced_by'), // LSEG, FactSet, S&P, Bloomberg, company, AssemblyAI
+    accession_no: text('accession_no'),
+    status: text('status').notNull(), // pending | submitted | read | failed | skipped
+    detail: text('detail'),
+    job_id: text('job_id'),
+    audio_seconds: real('audio_seconds'),
+    cost_usd: real('cost_usd'),
+    raw_key: text('raw_key'),
+    content_hash: text('content_hash'),
+    statements: integer('statements').notNull().default(0),
+    attempts: integer('attempts').notNull().default(0),
+    first_seen_at: text('first_seen_at').notNull(),
+    submitted_at: text('submitted_at'),
+    read_at: text('read_at'),
+    judged_at: text('judged_at'),
+    ...provenance,
+  },
+  (t) => [
+    index('call_documents_status_idx').on(t.status, t.kind),
+    index('call_documents_ticker_idx').on(t.ticker, t.call_date),
+  ],
+)
+
+// A guidance row against the figure a later filing printed for its metric
+// and period (layers/terminal/server/calls/resolve.ts). Append-only: one row
+// per (guidance, filing), written the first time we hold the filed figure, so
+// `first_seen_at` is when the resolution became knowable here and `filed` the
+// day it became public. `error_share` is (actual - guided midpoint) / midpoint
+// for a dollar figure, and actual minus midpoint in points for a percentage.
+export const guidanceResolutions = sqliteTable(
+  'guidance_resolutions',
+  {
+    id: text('id').primaryKey(),
+    guidance_id: text('guidance_id').notNull(),
+    ticker: text('ticker').notNull(),
+    metric: text('metric').notNull(),
+    actual: real('actual').notNull(),
+    guided_mid: real('guided_mid').notNull(),
+    error_share: real('error_share').notNull(),
+    state: text('state').notNull(), // met | above | below
+    concept: text('concept').notNull(),
+    form: text('form').notNull(),
+    filed: text('filed').notNull(),
+    accession_no: text('accession_no').notNull(),
+    first_seen_at: text('first_seen_at').notNull(),
+    ...provenance,
+  },
+  (t) => [
+    index('guidance_resolutions_guidance_idx').on(t.guidance_id),
+    index('guidance_resolutions_ticker_idx').on(t.ticker, t.filed),
+  ],
+)
+
+export type CallDocument = typeof callDocuments.$inferSelect
+export type GuidanceResolution = typeof guidanceResolutions.$inferSelect
 
 export type FiledFact = typeof filedFacts.$inferSelect
 

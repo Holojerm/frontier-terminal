@@ -95,7 +95,7 @@ const INSTRUCTIONS =
   'and adoption outside the labs’ own numbers (get_adoption). ' +
   'Around the labs: hyperscaler exposure, what Microsoft and Amazon file about OpenAI and Anthropic (get_parents), who sells to and funds whom, suppliers, listed companies, ' +
   'compute (GPU rental prices, utilization readings in get_utilization, Epoch AI’s data-center power in get_datacenters, who powers each lab site in get_power_sites, grid load where those sites are in get_grid_load), the hardware layer’s monthly prints, point in time (get_hardware_prints), ' +
-  'press-reported revenue, valuations and funding (get_reported), and those reports scored against later filings (get_ground_truth). ' +
+  'press-reported revenue, valuations and funding (get_reported), and those reports scored against later filings (get_ground_truth), and what the listed companies guided on their earnings calls, scored the same way (get_call_guidance). ' +
   'Theses (get_theses) are arguments built on this data, each claim checked against a kill condition. ' +
   'The signal scorecard (get_signals) tests each series against the stocks it is expected to lead, with a held-out sample. ' +
   'Not investment advice. Start with `describe` (the site map) or `get_overview` (what moved). ' +

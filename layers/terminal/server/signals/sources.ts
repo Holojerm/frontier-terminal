@@ -296,6 +296,32 @@ export function createLoader(deps: LoadDeps) {
           points: [...byMonth.values()].sort((a, b) => (a.date < b.date ? -1 : 1)),
         }
       }
+      case 'guidance_surprise': {
+        const rows = await deps.db
+          .select({
+            filed: tables.guidanceResolutions.filed,
+            error_share: tables.guidanceResolutions.error_share,
+          })
+          .from(tables.guidanceResolutions)
+          .where(
+            and(
+              eq(tables.guidanceResolutions.ticker, source.ticker),
+              source.metric ? eq(tables.guidanceResolutions.metric, source.metric) : undefined,
+            ),
+          )
+        // One event per filing: the mean error of what it settled.
+        const byDay = new Map<string, number[]>()
+        for (const r of rows) byDay.set(r.filed, [...(byDay.get(r.filed) ?? []), r.error_share])
+        return {
+          kind: 'events',
+          events: [...byDay]
+            .sort(([a], [b]) => a.localeCompare(b))
+            .map(([date, errors]) => ({
+              date,
+              value: errors.reduce((s, e) => s + e, 0) / errors.length,
+            })),
+        }
+      }
       case 'revenue_vs_reported':
         return {
           kind: 'events',
