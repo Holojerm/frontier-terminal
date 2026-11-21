@@ -5,7 +5,7 @@
 
 import { licenseSplit, PAID_LICENSE, type LicenseSplit } from '#shared/utils/license'
 import { absoluteUrl } from '#shared/utils/site'
-import { alertPath, type AlertSeverity } from './terminal-tiers'
+import { alertPath, type AlertSeverity } from '../../../core/shared/utils/terminal-tiers'
 
 export const WEBHOOK_SEVERITIES = [
   'info',

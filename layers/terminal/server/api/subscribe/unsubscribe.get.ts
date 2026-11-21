@@ -1,7 +1,7 @@
 // GET /api/subscribe/unsubscribe — a client that opens the List-Unsubscribe URL
 // in a browser lands on the page, which does the POST. A GET never unsubscribes.
 
-import { requireSubscribe } from '../../utils/subscribe-config'
+import { requireSubscribe } from '../../../../core/server/utils/subscribe-config'
 
 export default defineEventHandler((event) => {
   requireSubscribe(event)

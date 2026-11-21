@@ -2,7 +2,7 @@
 // owner's Mac mini by a launchd job outside this repo (~/agent-jobs/gdelt-search.sh), or by
 // hand from .github/workflows/gdelt-search.yml while the mini is down.
 //
-// Reads GDELT's 15-minute GKG files (layers/terminal/server/pipeline/track-record/gkg.ts),
+// Reads GDELT's 15-minute GKG files (layers/press/server/pipeline/track-record/gkg.ts),
 // each once, oldest first:
 //
 //   1. GET  /api/gdelt/work  the next unread files, the vocabulary (lab, filer
@@ -19,7 +19,7 @@
 // /api/gdelt/figures. A new file needs no such pass: the Worker finds its
 // figure headlines among the rows it keeps. Once those are read too, the run
 // reads the archive (`archive_files`): files from before GKG_FROM that the
-// Worker picks (layers/terminal/server/pipeline/reported/archive.ts), four
+// Worker picks (layers/press/server/pipeline/reported/archive.ts), four
 // downloads at a time but posted in order, figure headlines only, to
 // /api/gdelt/archive. Every call to /api/gdelt/work puts live files first, so
 // the archive only ever fills idle time. The files are static, with no per-IP
@@ -30,7 +30,7 @@
 //
 // No alert is matched here. The Worker keeps the rows, and its cron matches
 // each alert against them once the alert's window has closed
-// (layers/terminal/server/pipeline/track-record/search.ts › runTrackRecordSearch).
+// (layers/press/server/pipeline/track-record/search.ts › runTrackRecordSearch).
 //
 //   GDELT_TOKEN=… bun run gdelt:search                    # against production
 //   GDELT_TOKEN=… bun run gdelt:search -- --minutes 5     # a shorter run
@@ -42,9 +42,9 @@ import { readFileSync } from 'node:fs'
 import { join, resolve } from 'node:path'
 import { parseArgs } from 'node:util'
 
-import { parseGkgRow, unzipOne } from '../layers/terminal/server/pipeline/track-record/gkg'
-import { vocabularyHits } from '../layers/terminal/server/pipeline/track-record/terms'
-import { figureHeadline } from '../layers/terminal/server/pipeline/reported/figures'
+import { parseGkgRow, unzipOne } from '../layers/press/server/pipeline/track-record/gkg'
+import { vocabularyHits } from '../layers/press/server/pipeline/track-record/terms'
+import { figureHeadline } from '../layers/press/server/pipeline/reported/figures'
 
 const ROOT = resolve(import.meta.dir, '..')
 

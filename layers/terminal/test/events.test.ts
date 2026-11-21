@@ -32,7 +32,7 @@ import {
   setEventSender,
   type EventMessage,
 } from '#layers/core/server/utils/events'
-import type { MailMessage } from '../server/utils/resend'
+import type { MailMessage } from '../../core/server/utils/resend'
 import type { CacheStore } from '#layers/core/server/utils/terminal-cache'
 import { signingKeyId, type WebhookRequest } from '../server/utils/webhook-sign'
 

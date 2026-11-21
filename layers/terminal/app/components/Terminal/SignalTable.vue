@@ -16,7 +16,7 @@ import {
   clipHeadline,
 } from '../../../shared/utils/terminal-labs'
 import { LAB_DISPLAY } from '#layers/core/shared/utils/lab-names'
-import { alertPath } from '../../../shared/utils/terminal-tiers'
+import { alertPath } from '../../../../core/shared/utils/terminal-tiers'
 import type { AlertView } from '../../../shared/utils/terminal-types'
 import type { TableColumn } from '#layers/core/app/types/terminal-ui'
 

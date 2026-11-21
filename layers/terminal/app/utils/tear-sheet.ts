@@ -30,7 +30,7 @@ import {
 } from '#layers/core/shared/utils/terminal-format'
 import { listedGroup, listedTieText, type ListedData } from '../../shared/utils/listed'
 import { summarizeLab, type LabInputs } from '../../shared/utils/terminal-lab-summary'
-import type { AlertSeverity } from '../../shared/utils/terminal-tiers'
+import type { AlertSeverity } from '../../../core/shared/utils/terminal-tiers'
 import {
   SAME_PRICE,
   moveText,

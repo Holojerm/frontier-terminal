@@ -24,8 +24,8 @@ import * as tables from '#server/db/schema'
 
 import { deployDriftCheck } from '../../../reliability/server/pipeline/deploy-watch'
 import { judgeFreshnessCheck } from '../../../core/server/pipeline/judge/watchdog'
-import { GKG_READY_MS, stampIso } from '../pipeline/track-record/gkg'
-import { oldestUnread } from '../pipeline/track-record/search'
+import { GKG_READY_MS, stampIso } from '../../../press/server/pipeline/track-record/gkg'
+import { oldestUnread } from '../../../press/server/pipeline/track-record/search'
 import {
   heartbeatLoader,
   taskHeartbeatCheck,

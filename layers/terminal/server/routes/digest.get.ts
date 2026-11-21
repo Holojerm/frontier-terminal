@@ -6,7 +6,7 @@ import { rateLimit } from '#server/utils/rate-limit'
 
 import { buildThesisDigest } from '../theses/digest'
 import { loadDigestInput } from '../utils/digest-input'
-import { requireSubscribe } from '../utils/subscribe-config'
+import { requireSubscribe } from '../../../core/server/utils/subscribe-config'
 
 export default defineEventHandler(async (event) => {
   const cfg = requireSubscribe(event)

@@ -11,7 +11,7 @@ import {
   LICENSE_WINDOW_DAYS,
 } from '#shared/utils/license'
 import { count } from '#layers/core/shared/utils/terminal-format'
-import { CRITICAL_FEED_QUERY, INFO_FEED_QUERY } from '../../shared/utils/terminal-tiers'
+import { CRITICAL_FEED_QUERY, INFO_FEED_QUERY } from '../../../core/shared/utils/terminal-tiers'
 import type {
   CoverageData,
   DataDictionary,

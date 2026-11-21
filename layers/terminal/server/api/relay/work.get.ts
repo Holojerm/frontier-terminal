@@ -6,7 +6,7 @@ import { kv } from '@nuxthub/kv'
 
 import { userAgentFor } from '#layers/core/server/pipeline/fetch'
 import { wantedUrls } from '#layers/core/server/pipeline/relay'
-import { requireGdeltToken } from '../../utils/gdelt-auth'
+import { requireGdeltToken } from '../../../../press/server/utils/gdelt-auth'
 
 export default defineEventHandler(async (event) => {
   await rateLimit(event, { name: 'relay', limit: 60, windowSeconds: 60 })
