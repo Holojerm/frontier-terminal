@@ -25,7 +25,8 @@ const last = computed(() => weeks.value.at(-1) ?? null)
 
 const monthLabel = (d: string) => `${MONTHS[Number(d.slice(5, 7)) - 1]} ’${d.slice(2, 4)}`
 const weekLabel = (d: string) => `Week of ${stamps.date(d)}`
-const wholePct = (v: number) => `${Math.round(v * 100)}%`
+// Ticks fall on 12.5% steps when the top is 50%; one decimal, dropped when zero.
+const tickPct = (v: number) => `${Number((v * 100).toFixed(1))}%`
 
 const yMax = computed(() =>
   Math.max(0, ...weeks.value.flatMap((w) => LABS.map((p) => w.share[p] ?? 0))),
@@ -69,7 +70,7 @@ const rows = computed(() =>
     />
     <template v-else>
       <p class="text-xs text-muted">
-        Week of {{ stamps.date(first!.week) }} to week of {{ stamps.date(last!.week) }}.
+        {{ stamps.date(first!.from) }} to {{ stamps.date(last!.to) }}.
         <template v-if="last!.days < 7">
           The newest week has {{ last!.days }} day{{ last!.days === 1 ? '' : 's' }} so far.
         </template>
@@ -84,12 +85,12 @@ const rows = computed(() =>
             :x="x"
             :series="c.series"
             :format="sharePct"
-            :tick-format="wholePct"
+            :tick-format="tickPct"
             :y-max="yMax"
             :height="140"
             :x-label="monthLabel"
             :point-label="weekLabel"
-            :title="`${c.label}’s weekly share of OpenRouter tokens, week of ${stamps.date(first!.week)} to week of ${stamps.date(last!.week)}`"
+            :title="`${c.label}’s weekly share of OpenRouter tokens, ${stamps.date(first!.from)} to ${stamps.date(last!.to)}`"
           />
         </section>
       </div>
