@@ -80,5 +80,18 @@ export const DOMAIN_LAYERS = {
       'server/pipeline/reliability/deploys.ts',
     ],
   },
-  terminal: { uses: ['core', 'compute', 'pricing', 'talent', 'reliability'] },
+  adoption: {
+    uses: ['core', 'reliability'],
+    public: [
+      // Its queries (the demand share, the implied spend, the adoption view), which the lab
+      // page, the tear sheet, the utilization query, the theses and the signals read.
+      'server/utils/',
+      // Its recipes and the download series derived from them, which the theses and the
+      // signals read.
+      'server/recipes/',
+      // Its parser manifest, which the shell's manifest imports.
+      'server/pipeline/parsers.manifest.ts',
+    ],
+  },
+  terminal: { uses: ['core', 'compute', 'pricing', 'talent', 'reliability', 'adoption'] },
 } satisfies LayerTable

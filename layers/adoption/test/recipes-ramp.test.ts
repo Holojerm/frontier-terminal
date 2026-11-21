@@ -6,7 +6,7 @@ import {
   extractAiIndex,
   readIndexProps,
   vendorKey,
-} from '../server/theses/recipes/ramp-ai-index'
+} from '../server/recipes/ramp-ai-index'
 
 // The Ramp AI Index recipe against the page fetched 2026-11-04T04:52Z
 // (fixtures/recipes/, trimmed to the one push chunk holding the series).

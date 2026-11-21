@@ -18,9 +18,12 @@ import {
   extractSearchCount,
   githubPrRecipe,
   walkBackDays,
-} from '../server/theses/recipes/github-agent-prs'
-import { NPM_LAB_RECIPES, extractDownloads } from '../server/theses/recipes/npm-downloads'
-import { PYPI_LAB_RECIPES, extractPypiDownloads } from '../server/theses/recipes/pypi-downloads'
+} from '../../adoption/server/recipes/github-agent-prs'
+import { NPM_LAB_RECIPES, extractDownloads } from '../../adoption/server/recipes/npm-downloads'
+import {
+  PYPI_LAB_RECIPES,
+  extractPypiDownloads,
+} from '../../adoption/server/recipes/pypi-downloads'
 import { RECIPES } from '#server/registries/recipes'
 
 // The lab demand and supply recipes audited 2026-11-04 (docs/source-audit.md),

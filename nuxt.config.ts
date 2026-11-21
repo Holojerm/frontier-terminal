@@ -584,7 +584,7 @@ export default defineNuxtConfig({
     // `op read "op://Agents/assemblyai/credential" | bunx wrangler secret put NUXT_ASSEMBLYAI_API_KEY`.
     assemblyaiApiKey: '',
     // Bearer for GitHub's search API, which the coding-agent PR recipes read
-    // (layers/terminal/server/theses/recipes/github-agent-prs.ts). A fine-grained
+    // (layers/adoption/server/recipes/github-agent-prs.ts). A fine-grained
     // token with no permissions is enough: public data only. Empty = those
     // recipes record 'skipped'; nothing is fetched anonymously.
     githubToken: '',

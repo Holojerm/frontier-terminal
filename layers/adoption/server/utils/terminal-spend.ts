@@ -13,21 +13,20 @@
 // with coverage printed beside the share so the gap is never hidden.
 //
 // The pure half (summarizeSpend, matchSku) has no clock and no database;
-// layers/terminal/test/terminal-spend.test.ts drives it on fixture rows.
+// layers/adoption/test/terminal-spend.test.ts drives it on fixture rows.
 
 import { eq } from 'drizzle-orm'
 
+import type { LabId, SourceRef } from '#layers/core/shared/utils/terminal-types/common'
+import type { DateWindow } from '../../shared/utils/terminal-types/rankings'
 import type {
-  LabId,
-  DateWindow,
-  SourceRef,
   SpendData,
   SpendModel,
   SpendProviderView,
-} from '../../shared/utils/terminal-types'
+} from '../../shared/utils/terminal-types/spend'
 
 import * as tables from '#server/db/schema'
-import { providerOfOpenRouterId } from '../../../reliability/server/pipeline/parsers/openrouter'
+import { providerOfOpenRouterId } from '#layers/reliability/server/pipeline/parsers/openrouter'
 import type { PipelineDb } from '#layers/core/server/pipeline/store'
 import { sourceReads, type QueryContext } from '#layers/core/server/utils/terminal-db'
 import { byString, num, parseJson, str } from '#layers/core/server/utils/terminal-json'

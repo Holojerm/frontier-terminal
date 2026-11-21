@@ -9,12 +9,10 @@ import {
   normalizeFilings,
   normalizeOfferings,
   normalizeProspectusDetails,
-  normalizeRankings,
   normalizeRevenues,
 } from './normalize'
 import { parseOpenAiMisalignmentReport } from './parsers/disclosures/openai-misalignment-report'
 import { parseOpenAiMisalignmentReports } from './parsers/disclosures/openai-misalignment-reports'
-import { parseOpenRouterRankings } from './parsers/openrouter-rankings'
 import { COMPANYFACTS_SOURCES, parseEdgarCompanyfacts } from './parsers/sec/edgar-companyfacts'
 import { FTS_SOURCES, parseEdgarFts } from './parsers/sec/edgar-fts'
 import { archivesCik, parseFilingIndex, registrationTarget } from './parsers/sec/filing-index'
@@ -29,15 +27,11 @@ import {
 } from './parsers/sec/revenue-filers'
 import { parseXbrlSegment, segmentTarget } from './parsers/sec/xbrl-segment'
 import type { CikWhitelist } from './parsers/sec/whitelist'
-import { asOfFromDetail } from './as-of'
 
-// Every lane of the domains still in the shell: SEC filings and revenue,
-// disclosures and the OpenRouter rankings. The lane contract is core's
-// (layers/core/server/pipeline/lanes.ts); pricing's, talent's and reliability's
-// lanes are in their layers' server/pipeline/lanes.ts, and server/registries/lanes.ts
-// assembles them. The OpenRouter rankings feed has a lane: it is the source of
-// record for the demand-share axis, held out as one aggregator's traffic
-// rather than the market's.
+// Every lane of the domains still in the shell: SEC filings and revenue, and
+// disclosures. The lane contract is core's (layers/core/server/pipeline/lanes.ts);
+// pricing's, talent's, reliability's and adoption's lanes are in their layers'
+// server/pipeline/lanes.ts, and server/registries/lanes.ts assembles them.
 
 const set = setLane
 
@@ -250,19 +244,4 @@ export const LANES: Readonly<Record<string, Lane>> = {
         : undefined,
     }
   }),
-  // A rolling window of daily buckets: a day scrolling out of the window was
-  // not un-observed, so no removal is recorded and the series accumulates.
-  // meta.as_of rides on the run's detail (`as_of <iso>`) rather than in each
-  // row's payload, where it would mark every row modified on every tick;
-  // /api/rankings reads it back from the newest run that carries it.
-  'openrouter-rankings-daily': {
-    sides: [],
-    removals: 'append-only',
-    parse: (text, { prov, snapshotId }) => {
-      const { rows, as_of } = parseOpenRouterRankings(text, prov)
-      return { entities: normalizeRankings(rows, snapshotId), note: `as_of ${as_of}` }
-    },
-  },
 }
-
-export { asOfFromDetail }

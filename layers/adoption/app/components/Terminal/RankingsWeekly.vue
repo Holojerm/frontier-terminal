@@ -8,7 +8,8 @@
 
 import { LAB_DISPLAY } from '#layers/core/shared/utils/lab-names'
 import { percent, sharePct } from '#layers/core/shared/utils/terminal-format'
-import type { ProviderId, RankingsData } from '../../../shared/utils/terminal-types'
+import type { ProviderId } from '#layers/core/shared/utils/terminal-types/common'
+import type { RankingsData } from '../../../shared/utils/terminal-types/rankings'
 import type { TableColumn } from '#layers/core/app/types/terminal-ui'
 
 const props = defineProps<{ rankings: RankingsData }>()
