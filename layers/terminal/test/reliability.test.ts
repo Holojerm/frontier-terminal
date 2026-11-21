@@ -5,7 +5,7 @@ import { beforeEach, describe, expect, it } from 'vitest'
 import msftSubmissions from '~~/fixtures/sec/edgar-submissions-msft.json?raw'
 import anthropicIndex from '~~/fixtures/sec/filing-index-anthropic-s-1.html?raw'
 import * as schema from '~~/server/db/schema'
-import { contentHash } from '../server/pipeline/contracts'
+import { contentHash } from '#layers/core/server/pipeline/contracts'
 import {
   acceptanceFromFilingIndex,
   acceptanceFromSubmissions,
@@ -24,11 +24,11 @@ import {
 } from '../server/pipeline/reliability/deploys'
 import { rollRuns, rollSourceRuns, type RunPoint } from '../server/pipeline/reliability/rollup'
 import { statedIntervalMinutes } from '../server/pipeline/scopes'
-import { insertRows } from '../server/pipeline/store'
-import { queryContext } from '../server/utils/terminal-db'
+import { insertRows } from '#layers/core/server/pipeline/store'
+import { queryContext } from '#layers/core/server/utils/terminal-db'
 import { queryReliability } from '../server/utils/terminal-reliability'
 import { durationLabel, medianOf } from '../shared/utils/terminal-reliability'
-import { fixtureText } from './pipeline/fixtures'
+import { fixtureText } from '#layers/core/test/pipeline/fixtures'
 
 const db = drizzle(env.DB, { schema })
 const sourcesYaml = fixtureText('sources.yaml')

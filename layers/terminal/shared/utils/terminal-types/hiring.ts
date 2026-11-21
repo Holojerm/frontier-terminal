@@ -1,4 +1,9 @@
-import type { ArchiveReach, LabId, SourceRef, Stamp } from './common'
+import type {
+  ArchiveReach,
+  LabId,
+  SourceRef,
+  Stamp,
+} from '#layers/core/shared/utils/terminal-types/common'
 
 export interface DeptCount {
   department: string

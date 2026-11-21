@@ -12,7 +12,7 @@ import {
   asOfErrors,
   PROVENANCE,
   type McpKit,
-} from './kit'
+} from '#layers/core/server/mcp/kit'
 
 export function registerPriceTools({ server, deps, read }: McpKit): void {
   server.registerTool(

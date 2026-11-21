@@ -1,5 +1,5 @@
 // Cron task: re-render the enumerable pages after a deploy or a poll moves the
-// payload cache key (layers/terminal/server/utils/cache-warm.ts says why).
+// payload cache key (layers/core/server/utils/cache-warm.ts says why).
 //
 // Scheduled every five minutes from nuxt.config.ts (SCHEDULED_TASKS); a tick
 // whose (build, stamp) is already warm costs one D1 read and one KV read.
@@ -8,12 +8,12 @@ import { db } from '@nuxthub/db'
 import { kv } from '@nuxthub/kv'
 
 import { LAB_PAGES } from '../../../shared/utils/terminal-lab-summary'
-import { POLL_LOCK_KEY } from '../../pipeline/lock'
+import { POLL_LOCK_KEY } from '#layers/core/server/pipeline/lock'
 import { thesisPages } from '../../../shared/utils/thesis-format'
 import { THESES } from '../../theses/registry'
-import { warmCaches, warmPaths } from '../../utils/cache-warm'
-import { terminalStamps } from '../../utils/terminal-cache'
-import { withHeartbeat } from '../../utils/task-heartbeat'
+import { warmCaches, warmPaths } from '#layers/core/server/utils/cache-warm'
+import { terminalStamps } from '#layers/core/server/utils/terminal-cache'
+import { withHeartbeat } from '#layers/core/server/utils/task-heartbeat'
 
 interface CloudflareTaskContext {
   cloudflare?: { context?: { waitUntil?: (promise: Promise<unknown>) => void } }

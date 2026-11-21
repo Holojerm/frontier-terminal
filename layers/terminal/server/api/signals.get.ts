@@ -5,8 +5,8 @@
 // never served. `as_of` is refused, since the statistics are recomputed whole
 // each day.
 
-import { rateLimitTerminal } from '../utils/api-access'
-import { serveTerminal, terminalDb } from '../utils/terminal-handler'
+import { rateLimitTerminal } from '#layers/core/server/utils/api-access'
+import { serveTerminal, terminalDb } from '#layers/core/server/utils/terminal-handler'
 import { querySignals, signalsStamp } from '../utils/terminal-signals'
 
 export default defineEventHandler(async (event) => {

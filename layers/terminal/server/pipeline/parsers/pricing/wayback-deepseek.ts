@@ -1,4 +1,9 @@
-import { VendorMdPricingOutput, modelKey, type PriceRow, type Provenance } from '../../contracts'
+import {
+  VendorMdPricingOutput,
+  modelKey,
+  type PriceRow,
+  type Provenance,
+} from '#layers/core/server/pipeline/contracts'
 import { htmlGridTables, htmlText, stripInvisible } from './html-table'
 
 // DeepSeek's own pricing page as the Internet Archive captured it

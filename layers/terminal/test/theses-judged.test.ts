@@ -5,15 +5,16 @@ import { beforeAll, describe, expect, it } from 'vitest'
 import type { ClaimDef, JudgedSpec, ThesisDef } from '../shared/utils/thesis-types'
 
 import * as schema from '~~/server/db/schema'
-import { contentHash, type ChangeRow } from '../server/pipeline/contracts'
+import { contentHash, type ChangeRow } from '#layers/core/server/pipeline/contracts'
 import { submitJudgeRun } from '../server/pipeline/judge/submit'
 import { ANTHROPIC_THESIS } from '../server/theses/anthropic'
 import { claimCandidates } from '../server/theses/candidates'
+import { evaluateJudgedTheses } from '../server/theses/evaluate'
 import { evaluateJudgedClaim, type StoredVerdict } from '../server/theses/judged-status'
 import { claimReview } from '../server/theses/verdicts'
-import { queryContext } from '../server/utils/terminal-db'
+import { queryContext } from '#layers/core/server/utils/terminal-db'
 import { queryTheses } from '../server/utils/terminal-theses'
-import { fixtureText } from './pipeline/fixtures'
+import { fixtureText } from '#layers/core/test/pipeline/fixtures'
 
 // Judged claims end to end: which changes the Worker offers, the status rules
 // over stored verdicts, and the judge's verdicts gated through the real
@@ -343,6 +344,7 @@ describe('verdicts through the judge submit path', () => {
     const report = await submitJudgeRun(db, JSON.stringify(body), {
       now: new Date('2026-10-10T07:00:00Z'),
       sourcesYaml,
+      applied: evaluateJudgedTheses,
     })
     expect(report.claims.accepted).toBe(2)
     expect(report.claims.inserted).toBe(2)
@@ -389,7 +391,10 @@ describe('verdicts through the judge submit path', () => {
         },
       ],
     }
-    const report = await submitJudgeRun(db, JSON.stringify(body), { sourcesYaml })
+    const report = await submitJudgeRun(db, JSON.stringify(body), {
+      sourcesYaml,
+      applied: evaluateJudgedTheses,
+    })
     expect(report.claims).toMatchObject({ accepted: 1, inserted: 0 })
   })
 })

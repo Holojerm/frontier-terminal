@@ -19,14 +19,14 @@ import {
   quarterly,
   type StoredFact,
 } from '../server/exposure/series'
-import type { FetchOutcome, FetchSource } from '../server/pipeline/fetch'
-import { queryContext } from '../server/utils/terminal-db'
-import { EXPORT_TABLES } from '../server/utils/terminal-export'
-import { collect, csvChunks } from '../server/utils/terminal-export-format'
+import type { FetchOutcome, FetchSource } from '#layers/core/server/pipeline/fetch'
+import { queryContext } from '#layers/core/server/utils/terminal-db'
+import { EXPORT_TABLES } from '#server/registries/export-tables'
+import { collect, csvChunks } from '#layers/core/server/utils/terminal-export-format'
 import { queryExposure } from '../server/utils/terminal-exposure'
-import { readFiledFactSources } from '../server/utils/terminal-sources'
+import { readFiledFactSources } from '#layers/core/server/utils/terminal-sources'
 import { parseCikWhitelistBlock } from '../server/pipeline/parsers/sec/whitelist'
-import { fixtureText } from './pipeline/fixtures'
+import { fixtureText } from '#layers/core/test/pipeline/fixtures'
 
 // The hyperscaler filed facts: the two readers on trimmed EDGAR documents,
 // the quarterly series and their restatements, the run's fetch policy and its

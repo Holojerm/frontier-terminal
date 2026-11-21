@@ -5,10 +5,10 @@
 
 import { z } from 'zod'
 
-import { PERMALINK_LIMIT } from '../../utils/rate-limits'
+import { PERMALINK_LIMIT } from '#layers/core/server/utils/rate-limits'
 import { queryAlert } from '../../utils/terminal-alerts'
-import { serveTerminal, terminalDb } from '../../utils/terminal-handler'
-import { rateLimitTerminal } from '../../utils/api-access'
+import { serveTerminal, terminalDb } from '#layers/core/server/utils/terminal-handler'
+import { rateLimitTerminal } from '#layers/core/server/utils/api-access'
 
 const idSchema = z.string().regex(/^[0-9a-f]{64}$/)
 

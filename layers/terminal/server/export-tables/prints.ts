@@ -1,10 +1,15 @@
-// The hardware layer's monthly prints, every vintage. Part of EXPORT_TABLES (utils/terminal-export.ts), which fixes the order.
+// The hardware layer's monthly prints, every vintage. Part of EXPORT_TABLES (server/registries/export-tables.ts), which fixes the order.
 
 import { notInArray } from 'drizzle-orm'
 
 import * as tables from '#server/db/schema'
 import { PRINT_HELD_SOURCES } from '../../shared/utils/prints'
-import { byColumn, plainTable, SOURCE_NAME, type ExportTable } from '../utils/terminal-export-views'
+import {
+  byColumn,
+  plainTable,
+  SOURCE_NAME,
+  type ExportTable,
+} from '#layers/core/server/utils/terminal-export-views'
 
 const t = tables.hardwarePrints
 

@@ -10,8 +10,13 @@ import {
   type PowerBasis,
 } from '../../shared/utils/power-sites'
 import curated from '../curated/power-sites.json'
-import { contentHash } from '../pipeline/contracts/keys'
-import { chunk, D1_MAX_BOUND_PARAMS, runStatements, type PipelineDb } from '../pipeline/store'
+import { contentHash } from '#layers/core/server/pipeline/contracts/keys'
+import {
+  chunk,
+  D1_MAX_BOUND_PARAMS,
+  runStatements,
+  type PipelineDb,
+} from '#layers/core/server/pipeline/store'
 import { accessionOf } from '../suppliers/store'
 import { contains } from './excerpts'
 

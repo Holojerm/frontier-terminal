@@ -2,7 +2,7 @@
 
 import { z } from 'zod'
 import { listedHiringStamp, queryListedHiring } from '../listed-hiring/query'
-import { recipeRunsStamp } from '../utils/terminal-db'
+import { recipeRunsStamp } from '#layers/core/server/utils/terminal-db'
 import { HIRING_WINDOW_DAYS, queryHiring, queryHiringHistory } from '../utils/terminal-hiring'
 import { queryPay, VIEW_RECIPES } from '../utils/terminal-recipe-views'
 import {
@@ -13,7 +13,7 @@ import {
   asOfErrors,
   PROVENANCE,
   type McpKit,
-} from './kit'
+} from '#layers/core/server/mcp/kit'
 
 export function registerHiringTools({ server, deps, read }: McpKit): void {
   server.registerTool(

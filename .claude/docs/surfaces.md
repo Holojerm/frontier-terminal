@@ -14,8 +14,8 @@ written down.
 | A page | its axis page under `layers/terminal/app/pages/` | a page or component fetches the route |
 | The lab page | `layers/terminal/app/pages/labs/[lab]/index.vue` | the page, or a component it renders, fetches the route |
 | The tear sheet | `layers/terminal/app/pages/labs/[lab]/tear-sheet.vue` | same, for the sheet |
-| An MCP tool | `layers/terminal/server/mcp/<domain>.ts` | `serve('<name>'` or `read('<name>'` with the route's cache name |
-| The bulk export | `EXPORT_TABLES`, composed from `layers/terminal/server/export-tables/<domain>.ts` | an export builder reads the table |
+| An MCP tool | `layers/<name>/server/mcp/<domain>.ts`, listed in `server/registries/mcp-tools.ts` | `serve('<name>'` or `read('<name>'` with the route's cache name |
+| The bulk export | `EXPORT_TABLES` in `server/registries/export-tables.ts`, composed from `layers/<name>/server/export-tables/<domain>.ts` | an export builder reads the table |
 | An alert axis | `AXIS_PATH` in `layers/terminal/shared/utils/terminal-labs.ts` | the route sits under an axis page (`/api/hiring/history` is under `/hiring`), or the axis's `AXIS_ROUTES` entry names it (`/api/gpu-prices` on `compute`) |
 | The overview | `app/pages/index.vue` | not gated: only headline datasets belong there |
 | `llms.txt` and the sitemap | `definePageMeta({ publicPage })` | `bun run seo:check` |

@@ -9,15 +9,15 @@
 // The page is fetched in-process, so it is served by the stamp-keyed HTML
 // cache when the document is there and rendered (and stored) when it is not:
 // the payload is never older than the poll stamp, the same guarantee the
-// document carries (layers/terminal/server/utils/html-cache.ts). Nuxt's own
+// document carries (layers/core/server/utils/html-cache.ts). Nuxt's own
 // `/<path>/_payload.json` would need `cache`/`isr` route rules, which bring a
 // time-based cache with them.
 
 import { z } from 'zod'
 
-import { CACHE_STATUS, isCacheableDocument } from '../utils/html-cache'
-import { rateLimitTerminal } from '../utils/api-access'
-import { refuseAsOf } from '../utils/terminal-handler'
+import { CACHE_STATUS, isCacheableDocument } from '#layers/core/server/utils/html-cache'
+import { rateLimitTerminal } from '#layers/core/server/utils/api-access'
+import { refuseAsOf } from '#layers/core/server/utils/terminal-handler'
 
 const PAYLOAD_RE = /<script[^>]*\bid="__NUXT_DATA__"[^>]*>([\s\S]*?)<\/script>/
 

@@ -1,9 +1,13 @@
 import { describe, expect, test } from 'vitest'
 
-import { VendorMdPricingOutput, contentHash, type PriceRow } from '../../server/pipeline/contracts'
+import {
+  VendorMdPricingOutput,
+  contentHash,
+  type PriceRow,
+} from '#layers/core/server/pipeline/contracts'
 import { eraById } from '../../server/pipeline/archive/eras'
-import { fixtureProvenance } from '../../server/pipeline/parsers/fixture-provenance'
-import { fixtureText } from './fixtures'
+import { fixtureProvenance } from '#layers/core/server/pipeline/parsers/fixture-provenance'
+import { fixtureText } from '#layers/core/test/pipeline/fixtures'
 
 // Golden tests for the archive eras added after the first backfill: the
 // OpenAI windows it left open, and Google, xAI, Mistral, DeepSeek and

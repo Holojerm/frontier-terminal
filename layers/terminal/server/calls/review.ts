@@ -21,7 +21,7 @@ import { z } from 'zod'
 
 import * as tables from '#server/db/schema'
 import type { RawReader } from '../pipeline/judge/class-map'
-import type { PipelineDb } from '../pipeline/store'
+import type { PipelineDb } from '#layers/core/server/pipeline/store'
 import { callCompany, type CallCompany } from './curated'
 import { BOUNDS, firstAmount, METRICS, QUOTE_MAX_WORDS, UNITS, type Statement } from './extract'
 import { guidanceRows } from './ingest'

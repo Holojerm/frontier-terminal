@@ -7,7 +7,7 @@ import { COMPANIES, companyName, gpuProviderName } from '../../shared/utils/comp
 import type { LabId } from '../../shared/utils/terminal-types'
 import type { ClaimView, ReadingPoint, ThesesData } from '../../shared/utils/thesis-types'
 
-import type { PipelineDb } from '../pipeline/store'
+import type { PipelineDb } from '#layers/core/server/pipeline/store'
 import {
   currentEvaluation,
   latestStatusChange,
@@ -17,7 +17,7 @@ import {
 import { confirmationOf } from '../theses/judged-status'
 import { THESES } from '../theses/registry'
 import { valueFormatOf } from '../theses/signals'
-import type { QueryContext } from './terminal-db'
+import type { QueryContext } from '#layers/core/server/utils/terminal-db'
 import { queryPressEarlyRead } from './terminal-ground-truth'
 
 export const THESES_CAVEAT =

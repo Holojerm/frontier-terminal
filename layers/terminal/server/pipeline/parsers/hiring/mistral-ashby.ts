@@ -1,5 +1,9 @@
-import { AshbyJobsOutput, registerParser, type Provenance } from '../../contracts'
-import { fixtureProvenance } from '../fixture-provenance'
+import {
+  AshbyJobsOutput,
+  registerParser,
+  type Provenance,
+} from '#layers/core/server/pipeline/contracts'
+import { fixtureProvenance } from '#layers/core/server/pipeline/parsers/fixture-provenance'
 import { parseOpenaiAshby } from './openai-ashby'
 
 // Mistral job board via Ashby's posting API — the same payload shape as

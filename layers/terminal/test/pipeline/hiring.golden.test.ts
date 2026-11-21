@@ -6,7 +6,7 @@ import {
   GreenhouseJobsOutput,
   contentHash,
   jobKey,
-} from '../../server/pipeline/contracts'
+} from '#layers/core/server/pipeline/contracts'
 import { parseAnthropicGreenhouse } from '../../server/pipeline/parsers/hiring/anthropic-greenhouse'
 import { parseGoogleCareers } from '../../server/pipeline/parsers/hiring/google-careers'
 import { parseMistralAshby } from '../../server/pipeline/parsers/hiring/mistral-ashby'
@@ -16,7 +16,7 @@ import {
   parseOpenaiAshby,
 } from '../../server/pipeline/parsers/hiring/openai-ashby'
 import { parseXaiGreenhouse } from '../../server/pipeline/parsers/hiring/xai-greenhouse'
-import { fixtureText } from './fixtures'
+import { fixtureText } from '#layers/core/test/pipeline/fixtures'
 
 // Hiring lane golden tests. Expected values below are read straight from the
 // committed fixtures + fixtures/manifest.json (provenance), never from live

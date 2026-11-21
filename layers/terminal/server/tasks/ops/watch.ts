@@ -21,10 +21,10 @@ import { pruneRateLimits } from '#server/utils/rate-limit'
 import rawManifest from '../../../../../fleet.json'
 import { fetchMainHead } from '../../pipeline/deploy-watch'
 import { checkLaunchCoverage } from '../../pipeline/launch-watch'
-import { unstorageLockStore } from '../../pipeline/lock'
-import { checkFreshness } from '../../utils/freshness'
+import { unstorageLockStore } from '#layers/core/server/pipeline/lock'
+import { checkFreshness } from '#layers/core/server/utils/freshness'
 import { freshnessChecks } from '../../utils/terminal-freshness'
-import { withHeartbeat } from '../../utils/task-heartbeat'
+import { withHeartbeat } from '#layers/core/server/utils/task-heartbeat'
 
 const manifest = FleetManifestSchema.parse(rawManifest)
 

@@ -3,8 +3,8 @@ import {
   VendorMdPricingOutput,
   type PriceRow,
   type Provenance,
-} from '../../contracts'
-import { fixtureProvenance } from '../fixture-provenance'
+} from '#layers/core/server/pipeline/contracts'
+import { fixtureProvenance } from '#layers/core/server/pipeline/parsers/fixture-provenance'
 import { tableAfterHeading } from './md-table'
 import { apiName, isThirdPartyName, linkText } from './mistral-models'
 

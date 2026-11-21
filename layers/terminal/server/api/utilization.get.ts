@@ -3,10 +3,10 @@
 // megawatt of active power, and OpenRouter's average day against its busiest. Read from the thesis recipes
 // (layers/terminal/server/utils/terminal-utilization.ts); every figure cites its source and fetch time.
 
-import { recipeRunsStamp } from '../utils/terminal-db'
-import { serveTerminal, terminalDb } from '../utils/terminal-handler'
+import { recipeRunsStamp } from '#layers/core/server/utils/terminal-db'
+import { serveTerminal, terminalDb } from '#layers/core/server/utils/terminal-handler'
 import { queryUtilization, UTILIZATION_RECIPES } from '../utils/terminal-utilization'
-import { rateLimitTerminal } from '../utils/api-access'
+import { rateLimitTerminal } from '#layers/core/server/utils/api-access'
 
 export default defineEventHandler(async (event) => {
   await rateLimitTerminal(event, { name: 'utilization', limit: 60, windowSeconds: 60 })

@@ -7,8 +7,13 @@ import { desc, max } from 'drizzle-orm'
 
 import * as tables from '#server/db/schema'
 import type { SignalFrequency } from '../../shared/utils/signals'
-import { chunk, rowsPerStatement, runStatements, type PipelineDb } from '../pipeline/store'
-import type { QueryContext } from '../utils/terminal-db'
+import {
+  chunk,
+  rowsPerStatement,
+  runStatements,
+  type PipelineDb,
+} from '#layers/core/server/pipeline/store'
+import type { QueryContext } from '#layers/core/server/utils/terminal-db'
 import {
   changesOf,
   eventDays,

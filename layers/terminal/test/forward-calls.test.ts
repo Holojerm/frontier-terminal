@@ -4,7 +4,7 @@ import { beforeEach, describe, expect, it } from 'vitest'
 
 import * as schema from '~~/server/db/schema'
 import type { ForwardCall } from '../shared/utils/signals'
-import { contentHash } from '../server/pipeline/contracts'
+import { contentHash } from '#layers/core/server/pipeline/contracts'
 import {
   allCalls,
   callRange,

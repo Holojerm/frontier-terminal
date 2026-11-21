@@ -4,8 +4,8 @@ import * as tables from '#server/db/schema'
 import { boardLabel } from '../../shared/utils/terminal-format'
 import { inCluster, type DepartmentCluster } from '../utils/terminal-clusters'
 import { NO_DEPARTMENT, openRolesAt, type OpenRole } from '../utils/terminal-history'
-import type { ChangeRow } from './contracts'
-import type { PipelineDb } from './store'
+import type { ChangeRow } from '#layers/core/server/pipeline/contracts'
+import type { PipelineDb } from '#layers/core/server/pipeline/store'
 
 // The hiring materiality floor: when a set of job changes is worth the alert
 // tier. A move counts relative to the board or department it happens on,

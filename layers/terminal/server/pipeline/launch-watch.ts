@@ -4,8 +4,8 @@ import * as tables from '#server/db/schema'
 import { recordOpsEvent } from '#server/utils/ops'
 import { basisChecks } from '../utils/terminal-prices'
 import { effectiveClassMap } from './class-map'
-import type { LockStore } from './lock'
-import type { PipelineDb } from './store'
+import type { LockStore } from '#layers/core/server/pipeline/lock'
+import type { PipelineDb } from '#layers/core/server/pipeline/store'
 
 // Launch-day coverage: does the site show a launch it has already stored?
 //

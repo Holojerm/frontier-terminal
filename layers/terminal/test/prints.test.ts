@@ -4,7 +4,7 @@ import { beforeEach, describe, expect, it } from 'vitest'
 
 import * as schema from '~~/server/db/schema'
 import tiesJson from '../server/curated/print-ties.json'
-import type { FetchOutcome, SourceFetcher } from '../server/pipeline/fetch'
+import type { FetchOutcome, SourceFetcher } from '#layers/core/server/pipeline/fetch'
 import { ACCTON_REVENUE, runPrintReads, TSMC_6K, TWSE_REVENUE } from '../server/prints/ingest'
 import {
   parseAcctonRevenue,
@@ -19,9 +19,9 @@ import {
 import { printsStamp, storeObservations } from '../server/prints/store'
 import { buildListed } from '../server/utils/terminal-listed'
 import { buildPoints, printRows, printTies, queryPrints } from '../server/utils/terminal-prints'
-import { queryContext } from '../server/utils/terminal-db'
+import { queryContext } from '#layers/core/server/utils/terminal-db'
 import { curatedPrintTies, PRINT_ENTITIES } from '../shared/utils/prints'
-import { fixtureText } from './pipeline/fixtures'
+import { fixtureText } from '#layers/core/test/pipeline/fixtures'
 
 // The print reader on the committed bytes: the exchange feed, Accton's page
 // and three of TSMC's 6-Ks (2015, 2019, 2026), then the append-only store and

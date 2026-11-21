@@ -6,8 +6,8 @@ import {
   XaiStatusIncidentsOutput,
   contentHash,
   incidentKey,
-} from '../../server/pipeline/contracts'
-import { diff } from '../../server/pipeline/diff'
+} from '#layers/core/server/pipeline/contracts'
+import { diff } from '#layers/core/server/pipeline/diff'
 import { normalizeIncidents } from '../../server/pipeline/normalize'
 import { parseAnthropicStatus } from '../../server/pipeline/parsers/status/anthropic-status'
 import {
@@ -22,7 +22,7 @@ import {
   parseStatuspageAtom,
   updateStamp,
 } from '../../server/pipeline/parsers/status/statuspage-atom'
-import { fixtureText, provenanceOf } from './fixtures'
+import { fixtureText, provenanceOf } from '#layers/core/test/pipeline/fixtures'
 
 // Status lane golden tests. Expected values are read straight from the
 // committed fixtures + fixtures/manifest.json (provenance), never from live

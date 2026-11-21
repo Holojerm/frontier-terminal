@@ -5,7 +5,7 @@ import {
   contentHash,
   type ChangeRow,
   type EntityRow,
-} from './contracts'
+} from '#layers/core/server/pipeline/contracts'
 import { isPeriodicForm, isS1FloorForm } from './parsers/sec/s1-floor'
 
 // The synchronous SEC floors (boundary table, judge row): a NEW row of the

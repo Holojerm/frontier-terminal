@@ -3,23 +3,27 @@ import { drizzle } from 'drizzle-orm/d1'
 import { beforeAll, describe, expect, it } from 'vitest'
 
 import * as schema from '~~/server/db/schema'
-import handlerSource from '~~/layers/terminal/server/utils/terminal-handler.ts?raw'
-import type { SourceFetcher } from '../server/pipeline/fetch'
+import handlerSource from '~~/layers/core/server/utils/terminal-handler.ts?raw'
+import type { SourceFetcher } from '#layers/core/server/pipeline/fetch'
 import { runRefresh, type RawStore } from '../server/pipeline/refresh'
-import { includeSources } from '../server/pipeline/sources'
-import { ALERT_SEARCH_DEPTH } from '../server/mcp/kit'
-import { createTerminalMcpHandler, type McpDeps } from '../server/utils/mcp'
-import { assertKnowable, pointInTimeMeta, pollStampAt } from '../server/utils/terminal-asof'
-import { SCHEMA_VERSION } from '../server/utils/data-schema'
-import { terminalStamps } from '../server/utils/terminal-cache'
-import { queryContext, recipeRunsStamp } from '../server/utils/terminal-db'
+import { includeSources } from '#layers/core/server/pipeline/sources'
+import { ALERT_SEARCH_DEPTH } from '#layers/core/server/mcp/kit'
+import { createTerminalMcpHandler, type McpDeps } from '#layers/core/server/utils/mcp'
+import {
+  assertKnowable,
+  pointInTimeMeta,
+  pollStampAt,
+} from '#layers/core/server/utils/terminal-asof'
+import { SCHEMA_VERSION } from '#layers/core/server/utils/data-schema'
+import { terminalStamps } from '#layers/core/server/utils/terminal-cache'
+import { queryContext, recipeRunsStamp } from '#layers/core/server/utils/terminal-db'
 import { VIEW_RECIPES } from '../server/utils/terminal-recipe-views'
 import { powerSitesStamp } from '../server/power/stamp'
 import { reportedStamp } from '../server/utils/terminal-reported'
 import { UTILIZATION_RECIPES } from '../server/utils/terminal-utilization'
 import { THESES } from '../server/theses/registry'
-import { served } from '../server/utils/terminal-envelope'
-import { fixtureText, manifest } from './pipeline/fixtures'
+import { served } from '#layers/core/server/utils/terminal-envelope'
+import { fixtureText, manifest } from '#layers/core/test/pipeline/fixtures'
 
 // The MCP endpoint over HTTP, as a client speaks it: a legacy (2025-era)
 // `initialize`, then tools/list and tools/call, each a stateless POST with

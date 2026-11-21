@@ -1,5 +1,5 @@
 import { index, integer, primaryKey, real, sqliteTable, text } from 'drizzle-orm/sqlite-core'
-import { provenance } from './columns'
+import { provenance } from '../../../../core/server/db/tables/columns'
 
 // Daily closes from Databento, licensed for internal use only. Only the signals
 // harness reads this table (layers/terminal/server/signals/), and nothing that

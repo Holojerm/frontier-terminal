@@ -11,7 +11,7 @@ import { beforeEach, describe, expect, it } from 'vitest'
 import * as schema from '~~/server/db/schema'
 import type { SocialPublisher } from '#layers/social/server/utils/buffer'
 import { JUDGED_HOLD_MS } from '../server/pipeline/social'
-import { expiryAfter } from '../server/utils/api-key-token'
+import { expiryAfter } from '#layers/core/server/utils/api-key-token'
 import { handleEventBatch, type QueueMessageLike } from '../server/utils/event-consumer'
 import {
   FANOUT_SETTLE_SECONDS,
@@ -31,9 +31,9 @@ import {
   scheduledKey,
   setEventSender,
   type EventMessage,
-} from '../server/utils/events'
+} from '#layers/core/server/utils/events'
 import type { MailMessage } from '../server/utils/resend'
-import type { CacheStore } from '../server/utils/terminal-cache'
+import type { CacheStore } from '#layers/core/server/utils/terminal-cache'
 import { signingKeyId, type WebhookRequest } from '../server/utils/webhook-sign'
 
 const db = drizzle(env.DB, { schema })

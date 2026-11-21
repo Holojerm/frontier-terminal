@@ -5,10 +5,10 @@ import { beforeEach, describe, expect, it } from 'vitest'
 
 import * as schema from '~~/server/db/schema'
 import migration from '~~/server/db/migrations/0045_correct_fable_alert.sql?raw'
-import { AlertRow, ChangeRow } from '../../server/pipeline/contracts'
-import { corpusOf, groundingFailure } from '../../server/pipeline/judge/grounding'
+import { AlertRow, ChangeRow } from '#layers/core/server/pipeline/contracts'
+import { corpusOf, groundingFailure } from '#layers/core/server/pipeline/judge/grounding'
 import { falseDelisting } from '../../server/pipeline/judge/still-listed'
-import { insertRows } from '../../server/pipeline/store'
+import { insertRows } from '#layers/core/server/pipeline/store'
 
 // Migration 0045 rewrites the 2026-11-09 judge alert that called
 // claude-fable-5-1 delisted. The records below are the six change rows it

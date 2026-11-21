@@ -3,8 +3,8 @@ import {
   VendorMdPricingOutput,
   type PriceRow,
   type Provenance,
-} from '../../contracts'
-import { fixtureProvenance } from '../fixture-provenance'
+} from '#layers/core/server/pipeline/contracts'
+import { fixtureProvenance } from '#layers/core/server/pipeline/parsers/fixture-provenance'
 
 // openai-models-md — https://developers.openai.com/api/docs/models.md
 // The page is a catalog: model links + one-line descriptions. It prints NO

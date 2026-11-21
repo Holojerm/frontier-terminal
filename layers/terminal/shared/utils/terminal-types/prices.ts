@@ -1,6 +1,12 @@
-import type { ArchiveReach, LabId, Prov, ProviderId, Stamp } from './common'
-import type { SnapshotStamp } from './coverage'
-import type { FieldDiff } from './alerts'
+import type {
+  ArchiveReach,
+  LabId,
+  Prov,
+  ProviderId,
+  Stamp,
+} from '#layers/core/shared/utils/terminal-types/common'
+import type { SnapshotStamp } from '#layers/core/shared/utils/terminal-types/coverage'
+import type { FieldDiff } from '#layers/core/shared/utils/terminal-types/common'
 
 export interface PriceDeltaView extends Prov {
   change_type: 'added' | 'removed' | 'modified'

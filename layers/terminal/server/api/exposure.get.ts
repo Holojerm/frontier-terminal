@@ -4,8 +4,8 @@
 // filed before that day.
 
 import { queryExposure } from '../utils/terminal-exposure'
-import { serveTerminal, terminalDb } from '../utils/terminal-handler'
-import { rateLimitTerminal } from '../utils/api-access'
+import { serveTerminal, terminalDb } from '#layers/core/server/utils/terminal-handler'
+import { rateLimitTerminal } from '#layers/core/server/utils/api-access'
 
 export default defineEventHandler(async (event) => {
   await rateLimitTerminal(event, { name: 'exposure', limit: 60, windowSeconds: 60 })

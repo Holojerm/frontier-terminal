@@ -19,8 +19,8 @@ import {
 } from '../../shared/utils/suppliers'
 import type { DependenciesData } from '../../shared/utils/terminal-dependencies'
 
-import type { PipelineDb } from '../pipeline/store'
-import type { QueryContext } from './terminal-db'
+import type { PipelineDb } from '#layers/core/server/pipeline/store'
+import type { QueryContext } from '#layers/core/server/utils/terminal-db'
 import { queryDependencies } from './terminal-dependencies'
 import { queryPowerSites } from './terminal-recipe-views'
 import { printTies } from './terminal-prints'

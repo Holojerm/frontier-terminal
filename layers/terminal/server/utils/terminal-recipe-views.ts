@@ -23,8 +23,8 @@ import {
 import type { LabId } from '../../shared/utils/terminal-types'
 
 import * as tables from '#server/db/schema'
-import type { PipelineDb } from '../pipeline/store'
-import { PROVIDER_ORDER } from './terminal-sources'
+import type { PipelineDb } from '#layers/core/server/pipeline/store'
+import { PROVIDER_ORDER } from '#layers/core/server/utils/terminal-sources'
 import type {
   PowerBasis,
   PowerGrid,

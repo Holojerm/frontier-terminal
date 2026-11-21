@@ -4,14 +4,14 @@ import { beforeEach, describe, expect, it } from 'vitest'
 
 import * as schema from '~~/server/db/schema'
 import migration from '~~/server/db/migrations/0056_correct_lab_filing_provider.sql?raw'
-import { ChangeRow, StoredEntityRow } from '../../server/pipeline/contracts'
+import { ChangeRow, StoredEntityRow } from '#layers/core/server/pipeline/contracts'
 import {
   issuerProviderFor,
   parseRevenueFilersBlock,
 } from '../../server/pipeline/parsers/sec/revenue-filers'
 import { parseCikWhitelistBlock } from '../../server/pipeline/parsers/sec/whitelist'
-import { insertRows } from '../../server/pipeline/store'
-import { fixtureText } from './fixtures'
+import { insertRows } from '#layers/core/server/pipeline/store'
+import { fixtureText } from '#layers/core/test/pipeline/fixtures'
 
 // Every filing was stored under provider 'other', so /alerts listed the
 // 2026-11-19 "424B4 filed by Anthropic, PBC" under Lab "Other". The lanes now

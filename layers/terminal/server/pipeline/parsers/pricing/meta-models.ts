@@ -3,8 +3,8 @@ import {
   VendorMdPricingOutput,
   type PriceRow,
   type Provenance,
-} from '../../contracts'
-import { fixtureProvenance } from '../fixture-provenance'
+} from '#layers/core/server/pipeline/contracts'
+import { fixtureProvenance } from '#layers/core/server/pipeline/parsers/fixture-provenance'
 import { tableAfterHeading } from './md-table'
 
 // meta-models-md — https://dev.meta.ai/docs/models.md, joined with each

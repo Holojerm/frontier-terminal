@@ -56,11 +56,11 @@ import {
   sentencesOf,
   spokenSentences,
 } from '../server/calls/text'
-import type { FetchOutcome, SourceFetcher } from '../server/pipeline/fetch'
+import type { FetchOutcome, SourceFetcher } from '#layers/core/server/pipeline/fetch'
 import { decoded, pdfPages } from '../server/power/pdf-text'
 import { queryCallGuidance } from '../server/utils/terminal-call-guidance'
-import { queryContext } from '../server/utils/terminal-db'
-import { fixtureText } from './pipeline/fixtures'
+import { queryContext } from '#layers/core/server/utils/terminal-db'
+import { fixtureText } from '#layers/core/test/pipeline/fixtures'
 
 // The earnings-call reader on committed bytes: EDGAR's submissions feed, an
 // 8-K index and release outlook, a company-concept document, excerpts of

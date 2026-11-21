@@ -25,13 +25,17 @@ import {
 import type { ProviderId, SourceAxis } from '../../shared/utils/terminal-types'
 
 import * as tables from '#server/db/schema'
-import { manifestFixtures } from '../pipeline/parsers/fixture-provenance'
+import { manifestFixtures } from '#layers/core/server/pipeline/parsers/fixture-provenance'
 import { filingIndexUrl, releasedAt } from '../pipeline/reliability/acceptance'
 import { ROLLUP_NAME, addDays, dayOf } from '../pipeline/reliability/rollup'
 import { statedIntervalMinutes } from '../pipeline/scopes'
-import type { PipelineDb } from '../pipeline/store'
-import type { QueryContext } from './terminal-db'
-import { PROVIDER_ORDER, derivedTemplateOf, labelOf } from './terminal-sources'
+import type { PipelineDb } from '#layers/core/server/pipeline/store'
+import type { QueryContext } from '#layers/core/server/utils/terminal-db'
+import {
+  PROVIDER_ORDER,
+  derivedTemplateOf,
+  labelOf,
+} from '#layers/core/server/utils/terminal-sources'
 
 /** Stale periods listed per lane, newest first; the totals count them all. */
 const PERIODS_SHOWN = 50

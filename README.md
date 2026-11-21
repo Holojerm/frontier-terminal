@@ -118,8 +118,8 @@ Start with `describe` (the site map) or `get_overview` (what moved). A client li
 it connects: there is a tool for each dataset on the site. Every result is the matching `/api/*`
 response, provenance included, served through the same cache and the same per-IP rate limit (60
 requests a minute). The server is stateless. Each call is one POST with a JSON reply, so there's
-no session to keep. Tools and their descriptions live in `layers/terminal/server/utils/mcp.ts` and
-`layers/terminal/server/mcp/`.
+no session to keep. The server is `layers/core/server/utils/mcp.ts`; the tools and their
+descriptions are in `layers/terminal/server/mcp/`, listed in `server/registries/mcp-tools.ts`.
 
 ## For agents
 

@@ -13,9 +13,11 @@
 // Rules and how to waive: .claude/docs/surfaces.md.
 
 import { existsSync, readFileSync } from 'node:fs'
-import { join, relative, resolve } from 'node:path'
+import { basename, join, relative, resolve } from 'node:path'
 
 import { SURFACE_WAIVERS } from '../surfaces.waivers'
+
+import { ownLayerDirs } from './lib/layers'
 
 import {
   SURFACE_LABEL,
@@ -44,19 +46,25 @@ import {
 import { walk } from './lib/walk'
 
 const ROOT = resolve(import.meta.dir, '..')
-const LAYER = join(ROOT, 'layers/terminal')
+const CORE = join(ROOT, 'layers/core')
+const TERMINAL = join(ROOT, 'layers/terminal')
 const read = (file: string) => readFileSync(file, 'utf8')
 const rel = (file: string) => relative(ROOT, file)
 const ts = { extensions: ['.ts'], missingOk: true } as const
+// Every fork-owned layer's copy of a directory (core, terminal, each domain).
+const inLayers = (sub: string) => ownLayerDirs(sub).flatMap((dir) => walk(dir, ts))
 
 // One file per domain for each: MCP tools, export tables, schema tables.
-const MCP_FILES = walk(join(LAYER, 'server/mcp'), ts)
-const EXPORT_FILES = walk(join(LAYER, 'server/export-tables'), ts)
-const SCHEMA_FILES = walk(join(LAYER, 'server/db/tables'), ts)
-const VIEWS_FILE = join(LAYER, 'server/utils/terminal-export-views.ts')
-const LABS_FILE = join(LAYER, 'shared/utils/terminal-labs.ts')
-const LAB_PAGE = join(LAYER, 'app/pages/labs/[lab]/index.vue')
-const TEAR_SHEET = join(LAYER, 'app/pages/labs/[lab]/tear-sheet.vue')
+const MCP_FILES = inLayers('server/mcp')
+// Sorted by file name, so the order the matrix lists exports in is not the order of the layers.
+const EXPORT_FILES = inLayers('server/export-tables').sort((a, b) =>
+  basename(a).localeCompare(basename(b)),
+)
+const SCHEMA_FILES = inLayers('server/db/tables')
+const VIEWS_FILE = join(CORE, 'server/utils/terminal-export-views.ts')
+const LABS_FILE = join(TERMINAL, 'shared/utils/terminal-labs.ts')
+const LAB_PAGE = join(TERMINAL, 'app/pages/labs/[lab]/index.vue')
+const TEAR_SHEET = join(TERMINAL, 'app/pages/labs/[lab]/tear-sheet.vue')
 
 const broken: string[] = []
 if (MCP_FILES.length === 0) broken.push('no MCP tool files found')
@@ -72,9 +80,8 @@ if (broken.length) {
 }
 
 // ── Routes ───────────────────────────────────────────────────────────────────
-const API = join(LAYER, 'server/api')
-const routes = walk(API, ts)
-  .map((file) => ({ file, relApi: relative(API, file) }))
+const routes = ownLayerDirs('server/api')
+  .flatMap((api) => walk(api, ts).map((file) => ({ file, relApi: relative(api, file) })))
   .filter(({ relApi }) => !isWriterRoute(relApi))
   .flatMap(({ file, relApi }) => {
     const url = routeUrl(relApi)
@@ -83,7 +90,7 @@ const routes = walk(API, ts)
 const urls = routes.map((r) => r.url)
 
 // ── Pages and components ─────────────────────────────────────────────────────
-const appDirs = [join(ROOT, 'app'), join(LAYER, 'app')]
+const appDirs = [join(ROOT, 'app'), ...ownLayerDirs('app')]
 const appFiles = appDirs.flatMap((d) => walk(d, { extensions: ['.vue', '.ts'], missingOk: true }))
 const components = new Map<string, string>()
 for (const dir of appDirs) {
@@ -132,7 +139,8 @@ const routeRows: RouteRow[] = routes
 
 // ── Tables ───────────────────────────────────────────────────────────────────
 const decls = SCHEMA_FILES.flatMap((f) => tableDecls(read(f)))
-const builders = exportBuilders(read(VIEWS_FILE))
+// The shared builders, and any a domain's export file defines for itself.
+const builders = new Map([VIEWS_FILE, ...EXPORT_FILES].flatMap((f) => [...exportBuilders(read(f))]))
 const entries = EXPORT_FILES.flatMap((f) => exportEntries(read(f), builders))
 const tableRows: TableRow[] = decls
   .map(({ camel, sql }) => ({

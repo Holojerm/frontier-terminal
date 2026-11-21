@@ -3,9 +3,9 @@ import { drizzle } from 'drizzle-orm/d1'
 import { beforeEach, describe, expect, it } from 'vitest'
 
 import * as schema from '~~/server/db/schema'
-import { ChangeRow, contentHash } from '../../server/pipeline/contracts'
+import { ChangeRow, contentHash } from '#layers/core/server/pipeline/contracts'
 import { requotedKey } from '../../server/pipeline/judge/class-map'
-import { incidentCounts } from '../../server/pipeline/judge/pending'
+import { incidentCounts } from '#layers/core/server/pipeline/judge/pending'
 import { clampRoutineAlerts } from '../../server/pipeline/judge/severity-gates'
 import { submitJudgeRun } from '../../server/pipeline/judge/submit'
 import { modelFloorAlerts } from '../../server/pipeline/model-floor'
@@ -15,8 +15,8 @@ import {
 } from '../../server/pipeline/parsers/sec/edgar-submissions'
 import { eightKItems, isRoutine8K } from '../../server/pipeline/parsers/sec/forms'
 import { parseCikWhitelistBlock } from '../../server/pipeline/parsers/sec/whitelist'
-import { insertRows } from '../../server/pipeline/store'
-import { fixtureText } from './fixtures'
+import { insertRows } from '#layers/core/server/pipeline/store'
+import { fixtureText } from '#layers/core/test/pipeline/fixtures'
 
 // The severity rules outside the hiring floor: routine 8-Ks and minor price
 // moves stored as ticker lines, the incident window, and the model floor's

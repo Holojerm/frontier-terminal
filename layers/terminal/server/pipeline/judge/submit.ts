@@ -2,8 +2,13 @@ import { inArray } from 'drizzle-orm'
 
 import * as tables from '#server/db/schema'
 import { recordOpsEvent } from '#server/utils/ops'
-import { ChangeRow, contentHash } from '../contracts'
-import { D1_MAX_BOUND_PARAMS, chunk, insertRows, type PipelineDb } from '../store'
+import { ChangeRow, contentHash } from '#layers/core/server/pipeline/contracts'
+import {
+  D1_MAX_BOUND_PARAMS,
+  chunk,
+  insertRows,
+  type PipelineDb,
+} from '#layers/core/server/pipeline/store'
 import { applyClaimVerdicts, type VerdictReport } from '../../theses/verdicts'
 import { applyFigureReadings, type FigureReport } from '../reported/review'
 import { applyFilingReadings, type FilingReport } from './filing-review'
@@ -12,16 +17,19 @@ import { applySupplierReadings, type SupplierReport } from '../../suppliers/revi
 import { applyGuidanceReadings, type GuidanceReviewReport } from '../../calls/review'
 import { applyPowerSiteReadings, type PowerSiteReport } from '../../power/review'
 import { applyTrackRecordVerdicts, type TrackRecordVerdictReport } from '../track-record/review'
-import { evaluateTheses } from '../../theses/evaluate'
 import { parseDepartmentClusters, type DepartmentCluster } from '../../utils/terminal-clusters'
 import { effectiveClassMap } from '../class-map'
 import { clampHiringAlerts, type FloorClamp } from '../hiring-floor'
 import { clampRoutineAlerts } from './severity-gates'
 import { applyClassMappings, type RawReader } from './class-map'
-import { emitEvent } from '../../utils/events'
-import { buildAlertRows, gateJudgeSubmission, type JudgeSubmission } from './contract'
-import { groundAlerts, type AlertGroundingRejection } from './grounding'
-import { judgedThrough, pendingChanges } from './pending'
+import { emitEvent } from '#layers/core/server/utils/events'
+import { buildAlertRows } from '#layers/core/server/pipeline/judge/alerts'
+import { gateJudgeSubmission, type JudgeSubmission } from './contract'
+import {
+  groundAlerts,
+  type AlertGroundingRejection,
+} from '#layers/core/server/pipeline/judge/grounding'
+import { judgedThrough, pendingChanges } from '#layers/core/server/pipeline/judge/pending'
 import { rejectFalseDelistings, stillListedRemovals } from './still-listed'
 
 // POST /api/judge/alerts, minus the request: raw body -> schema gate ->
@@ -34,6 +42,26 @@ import { rejectFalseDelistings, stillListedRemovals } from './still-listed'
 // D1 itself can throw here.
 
 export const JUDGE_OPS_PATH = '/api/judge/alerts'
+
+/**
+ * What a run hands its `judge:applied` subscribers once every reading is
+ * stored: the theses layer re-evaluates its judged claims on it
+ * (layers/terminal/server/plugins/theses-judged.ts), so the judge never
+ * imports the code that reads its verdicts.
+ */
+export interface JudgeAppliedContext {
+  db: PipelineDb
+  sourcesYaml: string
+  now: Date
+}
+
+export type JudgeAppliedHook = (ctx: JudgeAppliedContext) => void | Promise<void>
+
+declare module 'nitropack/types' {
+  interface NitroRuntimeHooks {
+    'judge:applied': JudgeAppliedHook
+  }
+}
 
 export interface JudgeRunReport {
   /** Change ids the routine said it looked at. */
@@ -209,6 +237,11 @@ export async function submitJudgeRun(
     sourcesYaml?: string
     /** The buildout clusters the floor reads; parsed from sourcesYaml when omitted. */
     clusters?: readonly DepartmentCluster[]
+    /**
+     * Called after every reading is applied, when sourcesYaml is given. The
+     * route passes the Nitro `judge:applied` hook; a test passes its subscriber.
+     */
+    applied?: JudgeAppliedHook
   } = {},
 ): Promise<JudgeRunReport> {
   const started_at = (opts.now ?? new Date()).toISOString()
@@ -460,11 +493,7 @@ export async function submitJudgeRun(
       path: JUDGE_OPS_PATH,
     })
   }
-  if (opts.sourcesYaml) {
-    await evaluateTheses(db, { sourcesYaml: opts.sourcesYaml, now: () => now }, undefined, {
-      judgedOnly: true,
-    })
-  }
+  if (opts.sourcesYaml) await opts.applied?.({ db, sourcesYaml: opts.sourcesYaml, now })
 
   return {
     claims,

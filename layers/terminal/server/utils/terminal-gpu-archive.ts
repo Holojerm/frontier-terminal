@@ -17,11 +17,11 @@ import {
   GPU_ARCHIVE_NOT_COVERED,
   GPU_ARCHIVE_UNTIL,
 } from '../pipeline/archive/gpu-eras'
-import type { PipelineDb } from '../pipeline/store'
-import { gpuMedian, type GpuObservation } from '../theses/compute-signals'
+import type { PipelineDb } from '#layers/core/server/pipeline/store'
+import { gpuMedian, type GpuObservation } from '../theses/recipes/gpu-series'
 import { GPU_MODELS, gpuPricePayload } from '../theses/recipes/gpu-prices'
 import { archiveSourceId } from './terminal-history'
-import { byString } from './terminal-json'
+import { byString } from '#layers/core/server/utils/terminal-json'
 
 /** A provider's newest copy counts toward a week's median for this long, then drops out. */
 export const GPU_ARCHIVE_STALE_DAYS = 90

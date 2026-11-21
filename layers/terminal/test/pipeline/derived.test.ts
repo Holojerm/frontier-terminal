@@ -3,7 +3,7 @@ import { drizzle } from 'drizzle-orm/d1'
 import { beforeEach, describe, expect, it } from 'vitest'
 
 import * as schema from '~~/server/db/schema'
-import type { FilingRow } from '../../server/pipeline/contracts'
+import type { FilingRow } from '#layers/core/server/pipeline/contracts'
 import {
   deriveSources,
   derivedSourceId,
@@ -12,8 +12,8 @@ import {
   parseDerivedSourcesBlock,
   resolvedFilers,
 } from '../../server/pipeline/derived'
-import type { FetchOutcome, SourceFetcher } from '../../server/pipeline/fetch'
-import { derivedKeyOf, laneFor } from '../../server/pipeline/lanes'
+import type { FetchOutcome, SourceFetcher } from '#layers/core/server/pipeline/fetch'
+import { derivedKeyOf, laneFor } from '#server/registries/lanes'
 import { parseGoogleModelPage } from '../../server/pipeline/parsers/pricing/google-model-page'
 import { parseOpenAiModelPage } from '../../server/pipeline/parsers/pricing/openai-model-page'
 import {
@@ -23,13 +23,13 @@ import {
 } from '../../server/pipeline/parsers/sec/pending-filers'
 import { runRefresh, type RawStore } from '../../server/pipeline/refresh'
 import { CAREERS_SOURCES, sourceIdsForScope } from '../../server/pipeline/scopes'
-import { includeSources } from '../../server/pipeline/sources'
-import { terminalStamps } from '../../server/utils/terminal-cache'
-import { queryContext, queryCoverage } from '../../server/utils/terminal-db'
+import { includeSources } from '#layers/core/server/pipeline/sources'
+import { terminalStamps } from '#layers/core/server/utils/terminal-cache'
+import { queryContext, queryCoverage } from '#layers/core/server/utils/terminal-db'
 import { queryPrices } from '../../server/utils/terminal-prices'
 import { queryRevenue } from '../../server/utils/terminal-revenue'
-import { labelOf } from '../../server/utils/terminal-sources'
-import { fixtureText, manifest } from './fixtures'
+import { labelOf } from '#layers/core/server/utils/terminal-sources'
+import { fixtureText, manifest } from '#layers/core/test/pipeline/fixtures'
 
 // The two things the store derives for itself: a lab's CIK from its own S-1
 // (and the feeds that follow from it), and the OpenAI per-model pages from

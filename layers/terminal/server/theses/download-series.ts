@@ -20,7 +20,7 @@ import type { CompanyId } from '../../shared/utils/companies'
 import type { SignalSpec } from '../../shared/utils/thesis-types'
 
 import * as tables from '#server/db/schema'
-import type { PipelineDb } from '../pipeline/store'
+import type { PipelineDb } from '#layers/core/server/pipeline/store'
 import type { Recipe } from './recipes/contract'
 import { NPM_CONTROL_RECIPES, NPM_LAB_RECIPES, NPM_WRANGLER } from './recipes/npm-downloads'
 import { PYPI_LAB_RECIPES } from './recipes/pypi-downloads'

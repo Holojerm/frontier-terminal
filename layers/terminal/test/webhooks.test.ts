@@ -10,7 +10,7 @@ import { beforeEach, describe, expect, it } from 'vitest'
 import * as schema from '~~/server/db/schema'
 import { PAID_LICENSE } from '~~/shared/utils/license'
 import { JUDGED_HOLD_MS } from '../server/pipeline/social'
-import { expiryAfter } from '../server/utils/api-key-token'
+import { expiryAfter } from '#layers/core/server/utils/api-key-token'
 import {
   WEBHOOK_ALERT_LOOKBACK_MS,
   drainWebhookDeliveries,

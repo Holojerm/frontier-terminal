@@ -3,7 +3,7 @@
 import { z } from 'zod'
 import { THESES } from '../theses/registry'
 import { queryTheses } from '../utils/terminal-theses'
-import { json, READ_ONLY, PROVENANCE, type McpKit } from './kit'
+import { json, READ_ONLY, PROVENANCE, type McpKit } from '#layers/core/server/mcp/kit'
 
 const ThesisSchema = z
   .enum(THESES.map((t) => t.id) as [string, ...string[]])

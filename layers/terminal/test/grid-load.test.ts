@@ -5,7 +5,7 @@ import { beforeAll, beforeEach, describe, expect, it } from 'vitest'
 import epochTimelines from '~~/fixtures/recipes/epoch-data-center-timelines.csv?raw'
 import epochSites from '~~/fixtures/recipes/epoch-data-centers.csv?raw'
 import * as schema from '~~/server/db/schema'
-import type { FetchOutcome, SourceFetcher } from '../server/pipeline/fetch'
+import type { FetchOutcome, SourceFetcher } from '#layers/core/server/pipeline/fetch'
 import {
   csvFields,
   eia930FileUrl,
@@ -32,9 +32,9 @@ import {
 import { runRecipes } from '../server/theses/recipes/run'
 import { SIGNALS } from '../server/signals/registry'
 import { createLoader } from '../server/signals/sources'
-import { queryContext } from '../server/utils/terminal-db'
+import { queryContext } from '#layers/core/server/utils/terminal-db'
 import { GRID_AREAS, gridMonths, gridWeeks } from '../shared/utils/grid-load'
-import { fixtureText } from './pipeline/fixtures'
+import { fixtureText } from '#layers/core/test/pipeline/fixtures'
 
 // The grid-load reader: EIA-930's six-month files read line by line into
 // days, ERCOT's monthly PDFs read for their large-load sentences, and the

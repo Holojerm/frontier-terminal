@@ -29,9 +29,14 @@ import type { ExposureTicker } from '../../shared/utils/terminal-exposure'
 
 import * as tables from '#server/db/schema'
 import { recordOpsEvent } from '#server/utils/ops'
-import { AlertRow, ChangeRow, contentHash, type Provider } from '../pipeline/contracts'
+import {
+  AlertRow,
+  ChangeRow,
+  contentHash,
+  type Provider,
+} from '#layers/core/server/pipeline/contracts'
 import type { RawReader } from '../pipeline/judge/class-map'
-import type { PipelineDb } from '../pipeline/store'
+import type { PipelineDb } from '#layers/core/server/pipeline/store'
 import {
   GUIDANCE_MEASURES,
   TOLERANCE_PCT,

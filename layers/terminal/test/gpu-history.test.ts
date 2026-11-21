@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { gpuMedian } from '../server/theses/compute-signals'
+import { gpuMedian } from '../server/theses/recipes/gpu-series'
 import { gpuHistory, type StoredGpuRead } from '../server/utils/terminal-gpu'
 import { spotRead } from '../server/utils/terminal-utilization'
 

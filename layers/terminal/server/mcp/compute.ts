@@ -5,10 +5,16 @@ import { gridLoadStamp, queryGridLoad } from '../power/grid-query'
 import { powerSitesStamp } from '../power/stamp'
 import { printsStamp } from '../prints/store'
 import { queryPrints } from '../utils/terminal-prints'
-import { recipeRunsStamp } from '../utils/terminal-db'
+import { recipeRunsStamp } from '#layers/core/server/utils/terminal-db'
 import { queryDataCenters, queryPowerSites, VIEW_RECIPES } from '../utils/terminal-recipe-views'
 import { queryUtilization, SPOT_QUORUM, UTILIZATION_RECIPES } from '../utils/terminal-utilization'
-import { ProviderSchema, json, READ_ONLY, PROVENANCE, type McpKit } from './kit'
+import {
+  ProviderSchema,
+  json,
+  READ_ONLY,
+  PROVENANCE,
+  type McpKit,
+} from '#layers/core/server/mcp/kit'
 
 export function registerComputeTools({ server, deps }: McpKit): void {
   server.registerTool(

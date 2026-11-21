@@ -3,15 +3,15 @@ import { drizzle } from 'drizzle-orm/d1'
 import { beforeEach, describe, expect, it } from 'vitest'
 
 import * as schema from '~~/server/db/schema'
-import type { SourceFetcher } from '../../server/pipeline/fetch'
+import type { SourceFetcher } from '#layers/core/server/pipeline/fetch'
 import { checkLaunchCoverage } from '../../server/pipeline/launch-watch'
-import type { LockStore } from '../../server/pipeline/lock'
+import type { LockStore } from '#layers/core/server/pipeline/lock'
 import { runRefresh, type RawStore } from '../../server/pipeline/refresh'
 import { isPollInstant, runTripwire } from '../../server/pipeline/tripwire'
 import { registerFleetExtraContributor } from '~~/server/utils/extensions'
 import { collectFleetCounters } from '~~/server/utils/fleet-status'
 import { collectTerminalCounters } from '../../server/utils/fleet-counters'
-import { fixtureText, manifest } from './fixtures'
+import { fixtureText, manifest } from '#layers/core/test/pipeline/fixtures'
 
 // Launch day, end to end on the workerd D1/R2 bindings: a lab ships a model
 // and rewrites its "start with" sentence, and the terminal has to (1) poll the

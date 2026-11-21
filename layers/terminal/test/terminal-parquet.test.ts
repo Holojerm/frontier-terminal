@@ -11,17 +11,17 @@ import {
   r2Endpoint,
   s3SecretOf,
   staleGrants,
-} from '../server/utils/bulk-grant'
-import { EXPORT_TABLES } from '../server/utils/terminal-export'
-import { licensedColumns } from '../server/utils/terminal-export-history'
-import { type ExportTable } from '../server/utils/terminal-export-views'
+} from '#layers/core/server/utils/bulk-grant'
+import { EXPORT_TABLES } from '#server/registries/export-tables'
+import { licensedColumns } from '#layers/core/server/utils/terminal-export-history'
+import { type ExportTable } from '#layers/core/server/utils/terminal-export-views'
 import {
   PARQUET_CODEC,
   parquetBuilder,
   parquetSchema,
   parquetValue,
   timestampMicros,
-} from '../server/utils/terminal-parquet'
+} from '#layers/core/server/utils/terminal-parquet'
 
 // The Parquet half of the bulk feed, without D1: every exported column has a
 // Parquet type, values convert or fail loudly, and a file split into row

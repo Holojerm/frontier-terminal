@@ -24,11 +24,11 @@ import type {
 import { labName } from '../../shared/utils/terminal-labs'
 import type { ProspectusData } from '../../shared/utils/terminal-prospectus'
 
-import type { PipelineDb } from '../pipeline/store'
-import type { QueryContext } from './terminal-db'
+import type { PipelineDb } from '#layers/core/server/pipeline/store'
+import type { QueryContext } from '#layers/core/server/utils/terminal-db'
 import { queryExposure } from './terminal-exposure'
 import { queryProspectus } from './terminal-prospectus'
-import { PROVIDER_ORDER } from './terminal-sources'
+import { PROVIDER_ORDER } from '#layers/core/server/utils/terminal-sources'
 
 export const DEPENDENCIES_RULE =
   'Filed figures only. A line is a number one company’s SEC filing puts on another, read from the filer’s XBRL (the SEC’s tagged financial data). A circle is sized by the company’s own filed figure. Deals reported in the press aren’t drawn. Not investment advice.'

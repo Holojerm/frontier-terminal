@@ -10,18 +10,18 @@ import {
   revenueProviderFor,
 } from '../server/pipeline/parsers/sec/revenue-filers'
 import { parseCikWhitelistBlock } from '../server/pipeline/parsers/sec/whitelist'
-import type { SourceFetcher } from '../server/pipeline/fetch'
+import type { SourceFetcher } from '#layers/core/server/pipeline/fetch'
 import { runRefresh, type RawStore } from '../server/pipeline/refresh'
-import { includeSources } from '../server/pipeline/sources'
-import { terminalStamps } from '../server/utils/terminal-cache'
-import { queryContext } from '../server/utils/terminal-db'
+import { includeSources } from '#layers/core/server/pipeline/sources'
+import { terminalStamps } from '#layers/core/server/utils/terminal-cache'
+import { queryContext } from '#layers/core/server/utils/terminal-db'
 import {
   filingIndexUrl,
   queryRevenue,
   revenuePeriodFromPayload,
   splitPeriods,
 } from '../server/utils/terminal-revenue'
-import { fixtureText, manifest, provenanceOf } from './pipeline/fixtures'
+import { fixtureText, manifest, provenanceOf } from '#layers/core/test/pipeline/fixtures'
 
 // The disclosed-revenue axis: the company-facts parser on its committed
 // fixture, the revenue_filers reader, the period arithmetic as a pure

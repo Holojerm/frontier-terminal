@@ -1,5 +1,13 @@
-import type { LabId, Prov, ProviderId, Stamp } from './common'
-import type { SnapshotStamp, SourceRunStamp } from './coverage'
+import type {
+  LabId,
+  Prov,
+  ProviderId,
+  Stamp,
+} from '#layers/core/shared/utils/terminal-types/common'
+import type {
+  SnapshotStamp,
+  SourceRunStamp,
+} from '#layers/core/shared/utils/terminal-types/coverage'
 
 export interface ProviderShare {
   provider: ProviderId

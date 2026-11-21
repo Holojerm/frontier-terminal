@@ -30,7 +30,7 @@ import { CALL_SOURCES, conceptFacts } from '../calls/ingest'
 import { daysBetween, fiscalPeriod, periodLabel, type FiscalPeriod } from '../calls/periods'
 import { filingUrl } from '../exposure/series'
 import type { RevenueData } from '../../shared/utils/terminal-types'
-import type { PipelineDb } from '../pipeline/store'
+import type { PipelineDb } from '#layers/core/server/pipeline/store'
 import { FORWARD_CALLS, recordCalls, resolveForwardCalls, settle } from './forward-calls'
 import { forwardFiler, PRINT_RULES, ruleConcepts, type PrintRule } from './forward-filers'
 

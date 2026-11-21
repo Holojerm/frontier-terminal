@@ -3,7 +3,7 @@ import { drizzle } from 'drizzle-orm/d1'
 import { beforeEach, describe, expect, it } from 'vitest'
 
 import * as schema from '~~/server/db/schema'
-import { ChangeRow, contentHash } from '../../server/pipeline/contracts'
+import { ChangeRow, contentHash } from '#layers/core/server/pipeline/contracts'
 import {
   boardMoves,
   describeReason,
@@ -18,10 +18,10 @@ import {
 } from '../../server/pipeline/hiring-rollup'
 import { submitJudgeRun } from '../../server/pipeline/judge/submit'
 import { enqueueCriticalAlerts } from '../../server/pipeline/social'
-import { insertRows } from '../../server/pipeline/store'
+import { insertRows } from '#layers/core/server/pipeline/store'
 import { parseDepartmentClusters } from '../../server/utils/terminal-clusters'
 import { NO_DEPARTMENT } from '../../server/utils/terminal-history'
-import { fixtureText } from './fixtures'
+import { fixtureText } from '#layers/core/test/pipeline/fixtures'
 
 // The hiring materiality floor: scored relative to the board and department,
 // enforced at the judge's submit gate (only ever lowering a severity), and

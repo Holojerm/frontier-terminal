@@ -1,5 +1,9 @@
-import { isSecHost, type FetchOutcome, type SourceFetcher } from './fetch'
-import type { FetchSource } from './sources'
+import {
+  isSecHost,
+  type FetchOutcome,
+  type SourceFetcher,
+} from '#layers/core/server/pipeline/fetch'
+import type { FetchSource } from '#layers/core/server/pipeline/sources'
 
 // SEC's fair-access policy caps a client at 10 requests a second
 // (sec.gov/os/accessing-edgar-data); past it SEC answers 429, and a client

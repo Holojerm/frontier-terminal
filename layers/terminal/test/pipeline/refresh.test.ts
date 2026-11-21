@@ -3,8 +3,8 @@ import { drizzle } from 'drizzle-orm/d1'
 import { beforeEach, describe, expect, it } from 'vitest'
 
 import * as schema from '~~/server/db/schema'
-import { contentHash, type PollScope } from '../../server/pipeline/contracts'
-import type { FetchOutcome, SourceFetcher } from '../../server/pipeline/fetch'
+import { contentHash, type PollScope } from '#layers/core/server/pipeline/contracts'
+import type { FetchOutcome, SourceFetcher } from '#layers/core/server/pipeline/fetch'
 import { MAX_UNJOINED_JOBS } from '../../server/pipeline/parsers/hiring/common'
 import {
   describeError,
@@ -13,11 +13,11 @@ import {
   type RefreshDeps,
 } from '../../server/pipeline/refresh'
 import { sourceIdsForScope } from '../../server/pipeline/scopes'
-import { includeSources } from '../../server/pipeline/sources'
+import { includeSources } from '#layers/core/server/pipeline/sources'
 import { registerFleetExtraContributor } from '~~/server/utils/extensions'
 import { collectFleetCounters, latestFetchBySource } from '~~/server/utils/fleet-status'
 import { collectTerminalCounters } from '../../server/utils/fleet-counters'
-import { fixtureText, manifest } from './fixtures'
+import { fixtureText, manifest } from '#layers/core/test/pipeline/fixtures'
 import { indexPage } from './misalignment-index'
 
 // The refresh end-to-end against the real D1 and R2 test bindings, driven by
@@ -1187,7 +1187,7 @@ describe('failures', () => {
 
   it('SEC sources are refused, not fetched, without the contact email', async () => {
     // The real fetcher with the real refusal; a fetch that throws proves it was never called.
-    const { createFetcher } = await import('../../server/pipeline/fetch')
+    const { createFetcher } = await import('#layers/core/server/pipeline/fetch')
     const fetcher = createFetcher({
       secContactEmail: '',
       appUrl: 'https://frontier-terminal.example',

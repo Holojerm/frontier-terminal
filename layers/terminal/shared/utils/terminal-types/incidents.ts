@@ -1,4 +1,4 @@
-import type { LabId, Prov, SourceRef, Stamp } from './common'
+import type { LabId, Prov, SourceRef, Stamp } from '#layers/core/shared/utils/terminal-types/common'
 
 /** One posted incident, as the vendor's own feed states it. */
 export interface IncidentView extends Prov {

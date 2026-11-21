@@ -3,20 +3,20 @@ import { drizzle } from 'drizzle-orm/d1'
 import { beforeEach, describe, expect, it } from 'vitest'
 
 import * as schema from '~~/server/db/schema'
-import { disclosureKey } from '../server/pipeline/contracts'
+import { disclosureKey } from '#layers/core/server/pipeline/contracts'
 import { deriveSources } from '../server/pipeline/derived'
-import type { SourceFetcher } from '../server/pipeline/fetch'
-import { pendingChanges } from '../server/pipeline/judge/pending'
+import type { SourceFetcher } from '#layers/core/server/pipeline/fetch'
+import { pendingChanges } from '#layers/core/server/pipeline/judge/pending'
 import { runRefresh, type RawStore } from '../server/pipeline/refresh'
-import { terminalStamps } from '../server/utils/terminal-cache'
-import { queryContext } from '../server/utils/terminal-db'
+import { terminalStamps } from '#layers/core/server/utils/terminal-cache'
+import { queryContext } from '#layers/core/server/utils/terminal-db'
 import {
   daysBetween,
   earliestListed,
   median,
   queryDisclosures,
 } from '../server/utils/terminal-disclosures'
-import { fixtureText, manifest } from './pipeline/fixtures'
+import { fixtureText, manifest } from '#layers/core/test/pipeline/fixtures'
 import { indexPage, withReport } from './pipeline/misalignment-index'
 
 // The disclosures axis end to end: poll the index, derive one page per

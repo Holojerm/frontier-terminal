@@ -18,7 +18,7 @@ import type {
 } from '../../shared/utils/terminal-types'
 
 import type * as tables from '#server/db/schema'
-import { byString, fieldDiff, num, parseJson, str } from './terminal-json'
+import { byString, fieldDiff, num, parseJson, str } from '#layers/core/server/utils/terminal-json'
 
 type Change = typeof tables.changes.$inferSelect
 type Entity = typeof tables.entities.$inferSelect
@@ -31,38 +31,6 @@ export function byDetectedAt(a: Change, b: Change): number {
 }
 
 // ---- baseline --------------------------------------------------------------
-
-/**
- * The (source_url, fetched_at) pairs of every baseline fetch: the first
- * snapshot each source ever produced, plus any snapshot a source_runs row
- * marks 'baseline'. This Worker's baseline writes entities and no change
- * rows (layers/terminal/server/pipeline/refresh.ts), so the first form is what matters for
- * the history imported at the 2026-09-08 cutover — that build logged its
- * first Google parse as an `added` row per SKU, and those are first
- * sightings of a watcher, not of a model.
- */
-export function baselineInstants(
-  snapshots: readonly Pick<
-    typeof tables.snapshots.$inferSelect,
-    'id' | 'source_url' | 'fetched_at'
-  >[],
-  runs: readonly Pick<typeof tables.sourceRuns.$inferSelect, 'status' | 'snapshot_id'>[],
-): Set<string> {
-  const first = new Map<string, string>()
-  for (const s of snapshots) {
-    const seen = first.get(s.source_url)
-    if (seen === undefined || at(s.fetched_at) < at(seen)) first.set(s.source_url, s.fetched_at)
-  }
-  const out = new Set<string>()
-  for (const [url, fetched] of first) out.add(`${url}\n${fetched}`)
-  const byId = new Map(snapshots.map((s) => [s.id, s]))
-  for (const run of runs) {
-    if (run.status !== 'baseline' || !run.snapshot_id) continue
-    const snap = byId.get(run.snapshot_id)
-    if (snap) out.add(`${snap.source_url}\n${snap.fetched_at}`)
-  }
-  return out
-}
 
 export const isBaseline = (change: Change, instants: ReadonlySet<string>): boolean =>
   change.change_type === 'added' && instants.has(`${change.source_url}\n${change.fetched_at}`)

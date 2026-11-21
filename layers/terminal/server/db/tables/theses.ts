@@ -1,5 +1,5 @@
 import { index, integer, primaryKey, real, sqliteTable, text } from 'drizzle-orm/sqlite-core'
-import { provenance } from './columns'
+import { provenance } from '../../../../core/server/db/tables/columns'
 
 // Claim readings — one row per (claim, data date): the measured value a
 // thesis claim is checked against (layers/terminal/server/theses). The newest date is

@@ -4,8 +4,8 @@ import {
   modelKey,
   type PriceRow,
   type Provenance,
-} from '../../contracts'
-import { fixtureProvenance } from '../fixture-provenance'
+} from '#layers/core/server/pipeline/contracts'
+import { fixtureProvenance } from '#layers/core/server/pipeline/parsers/fixture-provenance'
 import { isoDate, tablesUnderHeading, usdAmount } from './md-table'
 
 // openai-pricing-md — https://developers.openai.com/api/docs/pricing.md

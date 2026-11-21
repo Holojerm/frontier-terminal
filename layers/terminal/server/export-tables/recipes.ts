@@ -1,15 +1,15 @@
-// What the thesis recipes read from non-lab sources. Part of EXPORT_TABLES (utils/terminal-export.ts), which fixes the order.
+// What the thesis recipes read from non-lab sources. Part of EXPORT_TABLES (server/registries/export-tables.ts), which fixes the order.
 
 import * as tables from '#server/db/schema'
-import type { PipelineDb } from '../pipeline/store'
+import type { PipelineDb } from '#layers/core/server/pipeline/store'
 import { DOWNLOAD_SERIES, readDownloadSeries, seriesById } from '../theses/download-series'
-import { PointInTimeError } from '../utils/terminal-asof'
+import { PointInTimeError } from '#layers/core/server/utils/terminal-asof'
 import {
   plainTable,
   type ColumnDocs,
   type ExportTable,
   type Row,
-} from '../utils/terminal-export-views'
+} from '#layers/core/server/utils/terminal-export-views'
 
 const DOWNLOAD_SERIES_DOCS: ColumnDocs = {
   series_id: {

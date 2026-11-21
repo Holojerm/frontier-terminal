@@ -10,9 +10,9 @@
 import { z } from 'zod'
 
 import { CALL_TICKERS } from '../calls/curated'
-import { rateLimitTerminal } from '../utils/api-access'
+import { rateLimitTerminal } from '#layers/core/server/utils/api-access'
 import { callGuidanceStamp, queryCallGuidance } from '../utils/terminal-call-guidance'
-import { serveTerminal, terminalDb } from '../utils/terminal-handler'
+import { serveTerminal, terminalDb } from '#layers/core/server/utils/terminal-handler'
 
 const query = z.object({
   ticker: z.enum(CALL_TICKERS as [string, ...string[]]).optional(),

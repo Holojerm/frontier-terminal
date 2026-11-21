@@ -1,5 +1,5 @@
 import { index, integer, sqliteTable, text } from 'drizzle-orm/sqlite-core'
-import { provenance } from './columns'
+import { provenance } from '../../../../core/server/db/tables/columns'
 
 // ─────────────────────────────────────────────
 // Suppliers (layers/terminal/server/suppliers/, /api/suppliers)

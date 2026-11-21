@@ -10,7 +10,7 @@ import { z } from 'zod'
 import { tierFilterOf } from '../../shared/utils/terminal-tiers'
 import { queryAlerts } from '../utils/terminal-alerts'
 import { buildAlertsAtom, type FeedTier } from '../utils/terminal-feed'
-import { serveTerminal, terminalDb } from '../utils/terminal-handler'
+import { serveTerminal, terminalDb } from '#layers/core/server/utils/terminal-handler'
 
 const FEED_ENTRIES = 100
 

@@ -3,7 +3,7 @@ import { drizzle } from 'drizzle-orm/d1'
 import { beforeEach, describe, expect, it } from 'vitest'
 
 import * as schema from '~~/server/db/schema'
-import { OPENROUTER_KEY_UNSET } from '../server/pipeline/fetch'
+import { OPENROUTER_KEY_UNSET } from '#layers/core/server/pipeline/fetch'
 import {
   MIN_WINDOW_SAMPLES,
   dayReading,
@@ -57,11 +57,11 @@ import {
   type ProbeTarget,
 } from '../server/pipeline/probes/targets'
 import { MODEL_CLASS_MAP } from '../server/utils/terminal-classes'
-import { queryContext } from '../server/utils/terminal-db'
+import { queryContext } from '#layers/core/server/utils/terminal-db'
 import { PROBE_BINDING, dispatchPinnedProbes } from '../server/utils/probe-runner'
 import { probesStamp, queryProbes } from '../server/utils/terminal-probes'
-import { PROVIDER_ORDER } from '../server/utils/terminal-sources'
-import { fixtureText } from './pipeline/fixtures'
+import { PROVIDER_ORDER } from '#layers/core/server/utils/terminal-sources'
+import { fixtureText } from '#layers/core/test/pipeline/fixtures'
 
 const db = drizzle(env.DB, { schema })
 const sourcesYaml = fixtureText('sources.yaml')

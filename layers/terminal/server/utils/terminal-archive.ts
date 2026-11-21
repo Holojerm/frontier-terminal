@@ -31,12 +31,16 @@ import {
   type HiringArchiveProvider,
 } from '../pipeline/archive/hiring-eras'
 import type { ArchiveAxis } from '../pipeline/archive/rows'
-import type { PipelineDb } from '../pipeline/store'
-import { PointInTimeError, firstSnapshotAt } from './terminal-asof'
+import type { PipelineDb } from '#layers/core/server/pipeline/store'
+import { parsedOn } from '#layers/core/server/utils/archive-floor'
 import { inCluster, type DepartmentCluster } from './terminal-clusters'
 import { archiveSourceId, type ArchivedPrice } from './terminal-history'
-import { byString, num, parseJson, str } from './terminal-json'
-import { HIRING_SOURCES, PROVIDER_ORDER, type SourceRegistry } from './terminal-sources'
+import { byString, num, parseJson, str } from '#layers/core/server/utils/terminal-json'
+import {
+  HIRING_SOURCES,
+  PROVIDER_ORDER,
+  type SourceRegistry,
+} from '#layers/core/server/utils/terminal-sources'
 
 export const ARCHIVE_SOURCE_NOTE =
   'Read from the Internet Archive’s capture of the lab’s own pricing page, before this site watched it.'
@@ -69,12 +73,6 @@ export async function archivedRowsForKey(
     .from(tables.archivedPrices)
     .where(where)
     .orderBy(asc(tables.archivedPrices.captured_at))
-}
-
-/** Whether `at` is before every lab's live floor, so the whole answer comes from the archive. */
-export async function beforeLiveFloor(db: PipelineDb, at: string): Promise<boolean> {
-  const first = await firstSnapshotAt(db)
-  return first === null || at < first
 }
 
 /**
@@ -129,46 +127,6 @@ export function labsBeforeFloor(
     const floor = floors.get(lab)
     return floor === undefined || at < floor
   })
-}
-
-const parsedOn = (axis: ArchiveAxis) =>
-  and(eq(tables.archiveCaptures.status, 'parsed'), eq(tables.archiveCaptures.axis, axis))
-
-/** The earliest parsed capture of an axis: before it, not even the archive knew a price (or a board). */
-export async function firstArchivedAt(
-  db: PipelineDb,
-  axis: ArchiveAxis = 'pricing',
-): Promise<string | null> {
-  const [row] = await db
-    .select({ at: min(tables.archiveCaptures.captured_at) })
-    .from(tables.archiveCaptures)
-    .where(parsedOn(axis))
-  return row?.at ?? null
-}
-
-const WHAT: Record<ArchiveAxis, { history: string; list: string }> = {
-  pricing: { history: 'price history', list: 'a price list' },
-  hiring: { history: 'hiring history', list: 'a job board' },
-}
-
-/**
- * The refusal for an instant before anything was fetched, unless the archive
- * can answer it. Price and hiring routes call this in place of assertKnowable.
- */
-export async function assertArchiveKnowable(
-  db: PipelineDb,
-  at: string,
-  axis: ArchiveAxis = 'pricing',
-): Promise<void> {
-  if (!(await beforeLiveFloor(db, at))) return
-  const archived = await firstArchivedAt(db, axis)
-  if (archived !== null && at >= archived) return
-  const first = await firstSnapshotAt(db)
-  throw new PointInTimeError(
-    archived === null
-      ? `as_of ${at} is before the first snapshot (${first ?? 'none yet'}), and no archived ${WHAT[axis].history} is loaded`
-      : `as_of ${at} is before the earliest archived ${axis === 'pricing' ? 'price' : 'job board'} capture (${archived}), so we have no ${WHAT[axis].list} for then`,
-  )
 }
 
 export interface ArchivedCatalog {

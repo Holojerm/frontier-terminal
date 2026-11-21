@@ -1,5 +1,9 @@
-import { StatuspageIncidentsOutput, registerParser, type Provenance } from '../../contracts'
-import { fixtureProvenance } from '../fixture-provenance'
+import {
+  StatuspageIncidentsOutput,
+  registerParser,
+  type Provenance,
+} from '#layers/core/server/pipeline/contracts'
+import { fixtureProvenance } from '#layers/core/server/pipeline/parsers/fixture-provenance'
 import { parseStatuspageIncidents } from './statuspage'
 
 // mistral-status — status.mistral.ai incidents (Statuspage v2). No component

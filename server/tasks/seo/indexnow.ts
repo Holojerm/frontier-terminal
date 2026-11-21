@@ -17,7 +17,7 @@ import {
   INDEXNOW_STATE_KEY,
 } from '../../utils/indexnow'
 import { logEvent } from '../../utils/log'
-import { withHeartbeat } from '#layers/terminal/server/utils/task-heartbeat'
+import { withHeartbeat } from '#layers/core/server/utils/task-heartbeat'
 
 // Spelled out because TypeScript infers the result type from the first `return`
 // alone, and this task has three shapes.

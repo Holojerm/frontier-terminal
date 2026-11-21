@@ -13,7 +13,7 @@ import { filingPath, revenueFilings } from '../../shared/utils/terminal-filings'
 
 import type { PublicPageSource } from '#server/utils/public-pages'
 
-import { terminalPayload } from './terminal-handler'
+import { terminalPayload } from '#layers/core/server/utils/terminal-handler'
 import { queryRevenue } from './terminal-revenue'
 
 export const terminalPagesSource: PublicPageSource = {

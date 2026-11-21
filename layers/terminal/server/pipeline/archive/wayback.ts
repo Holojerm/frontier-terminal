@@ -5,7 +5,7 @@
 // or rewritten links. Terms and rate verdict: sources.yaml › archive_recipes ›
 // wayback-pricing, docs/source-audit.md › Internet Archive.
 
-import { readCappedBody } from '../fetch'
+import { readCappedBody } from '#layers/core/server/pipeline/fetch'
 
 export const WAYBACK_USER_AGENT =
   'FrontierTerminal/1.0 (+https://frontierterm.com; one-off history backfill from the Wayback Machine)'

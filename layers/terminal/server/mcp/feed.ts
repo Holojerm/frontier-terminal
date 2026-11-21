@@ -2,12 +2,12 @@
 
 import { LICENSE_WINDOW_DAYS } from '#shared/utils/license'
 import { collectStatus } from '#server/utils/fleet-status'
-import { queryCoverage, recipeRunsStamp } from '../utils/terminal-db'
+import { queryCoverage, recipeRunsStamp } from '#layers/core/server/utils/terminal-db'
 import { queryReliability, reliabilityStamp } from '../utils/terminal-reliability'
 import { repoSlug, workflowRunsUrl } from '../pipeline/reliability/deploys'
 import { DETECTION_RULES, RELIABILITY_DAYS } from '../../shared/utils/terminal-reliability'
 import manifest from '~~/fleet.json'
-import { json, READ_ONLY, PROVENANCE, type McpKit } from './kit'
+import { json, READ_ONLY, PROVENANCE, type McpKit } from '#layers/core/server/mcp/kit'
 
 export function registerFeedTools({ server, deps }: McpKit): void {
   server.registerTool(

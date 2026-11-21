@@ -1,7 +1,7 @@
 // Capacity strain and safety: incidents, latency probes, published rate limits, misalignment disclosures.
 
 import { z } from 'zod'
-import { recipeRunsStamp } from '../utils/terminal-db'
+import { recipeRunsStamp } from '#layers/core/server/utils/terminal-db'
 import { queryLimits, VIEW_RECIPES } from '../utils/terminal-recipe-views'
 import {
   INCIDENT_HISTORY_DAYS,
@@ -11,7 +11,13 @@ import {
 } from '../utils/terminal-incidents'
 import { queryDisclosures } from '../utils/terminal-disclosures'
 import { probesStamp, queryProbes } from '../utils/terminal-probes'
-import { ProviderSchema, json, READ_ONLY, PROVENANCE, type McpKit } from './kit'
+import {
+  ProviderSchema,
+  json,
+  READ_ONLY,
+  PROVENANCE,
+  type McpKit,
+} from '#layers/core/server/mcp/kit'
 
 export function registerOperationsTools({ server, deps }: McpKit): void {
   server.registerTool(

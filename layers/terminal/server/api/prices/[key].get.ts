@@ -5,12 +5,12 @@
 
 import { z } from 'zod'
 
-import { PERMALINK_LIMIT } from '../../utils/rate-limits'
+import { PERMALINK_LIMIT } from '#layers/core/server/utils/rate-limits'
 import { queryPriceHistory } from '../../utils/terminal-prices'
-import { serveTerminal, terminalDb } from '../../utils/terminal-handler'
-import { rateLimitTerminal } from '../../utils/api-access'
+import { serveTerminal, terminalDb } from '#layers/core/server/utils/terminal-handler'
+import { rateLimitTerminal } from '#layers/core/server/utils/api-access'
 
-// modelKey() output: `model:<provider>:<slug>[:<tier>]` (layers/terminal/server/pipeline/contracts/keys.ts).
+// modelKey() output: `model:<provider>:<slug>[:<tier>]` (layers/core/server/pipeline/contracts/keys.ts).
 const keySchema = z
   .string()
   .min(1)

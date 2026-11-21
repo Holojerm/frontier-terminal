@@ -2,11 +2,11 @@
 // token share per lab with the change against the prior 7 days, each lab's
 // top models, the 30-day daily series, the weekly share over the whole stored
 // history, and the CC BY 4.0 citation. Cached in
-// KV for the current poll tick (layers/terminal/server/utils/terminal-handler.ts).
+// KV for the current poll tick (layers/core/server/utils/terminal-handler.ts).
 
-import { serveTerminal, terminalDb } from '../utils/terminal-handler'
+import { serveTerminal, terminalDb } from '#layers/core/server/utils/terminal-handler'
 import { queryRankings } from '../utils/terminal-rankings'
-import { rateLimitTerminal } from '../utils/api-access'
+import { rateLimitTerminal } from '#layers/core/server/utils/api-access'
 
 export default defineEventHandler(async (event) => {
   await rateLimitTerminal(event, { name: 'rankings', limit: 60, windowSeconds: 60 })

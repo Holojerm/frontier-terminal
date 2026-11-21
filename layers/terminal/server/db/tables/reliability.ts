@@ -124,8 +124,8 @@ export const deployChecks = sqliteTable(
 // ─────────────────────────────────────────────
 // One row per scheduled task: when it last ran to completion and when it last
 // threw. Every task file wraps its definition in withHeartbeat()
-// (layers/terminal/server/utils/task-heartbeat.ts), which upserts this row when the
-// run ends. The freshness checks (layers/terminal/server/utils/freshness.ts) read it
+// (layers/core/server/utils/task-heartbeat.ts), which upserts this row when the
+// run ends. The freshness checks (layers/core/server/utils/freshness.ts) read it
 // to see a task that stopped running at all: a cron that no longer fires, a
 // run killed at the CPU limit, a task that throws every tick. A task that
 // catches its own failure and returns still counts as completed here; its
