@@ -524,12 +524,12 @@ export const TABLE_META: Readonly<Record<string, TableMeta>> = {
   grid_load_days: {
     grain: 'One row per balancing authority and local day.',
     cadence:
-      'Six-hourly. We read EIA-930’s current six-month file when it changes, and the one before it for six weeks after it closes. A day EIA revises is rewritten in place.',
+      'Six-hourly. We read EIA’s API from six weeks before the newest day we hold, or the current six-month file when the API fails. A day EIA revises is rewritten in place.',
     event: 'date',
     knowledge: 'fetched_at',
-    start: '2018-01-01, from EIA’s six-month files, read back on 2026-11-21.',
+    start: '2018-01-01: 2018 from EIA’s six-month files, 2019 on from its API.',
     joins: [],
-    feeds: [{ ids: ['eia930-balance'] }],
+    feeds: [{ ids: ['eia930-api', 'eia930-balance'] }],
   },
   ercot_large_load_facts: {
     grain: 'One row per figure an ERCOT report states, per report.',

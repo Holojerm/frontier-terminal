@@ -6,7 +6,7 @@ import { byColumn, plainTable, type ExportTable } from '../utils/terminal-export
 export const GRID_LOAD_TABLES = {
   grid_load_days: plainTable(
     'grid_load_days',
-    'Daily demand for each balancing authority that holds a lab’s data-center site, from the U.S. Energy Information Administration’s EIA-930 six-month Grid Monitor files (public domain; Source: U.S. Energy Information Administration). One row per authority and local day: the sum of the hourly "Demand (MW) (Adjusted)" values, EIA’s cleaned copy of what the authority reported, over the hours that carry one. A load reading, not a measure of how busy any data center is. /api/grid-load derives the monthly and weekly averages and their change on a year before from these rows.',
+    'Daily demand for each balancing authority that holds a lab’s data-center site, from the U.S. Energy Information Administration’s EIA-930 data (public domain; Source: U.S. Energy Information Administration): its API v2 from 2019, its six-month Grid Monitor files for 2018. One row per authority and local day: the sum of the hourly "Demand (MW) (Adjusted)" values, EIA’s cleaned copy of what the authority reported, over the hours that carry one. A load reading, not a measure of how busy any data center is. /api/grid-load derives the monthly and weekly averages and their change on a year before from these rows.',
     tables.gridLoadDays,
     {
       ba: {
@@ -33,10 +33,15 @@ export const GRID_LOAD_TABLES = {
       raw_key: {
         type: 'text',
         meaning:
-          'Key in this site’s object store (R2) of the file’s header and every line for the tracked authorities, verbatim.',
+          'Key in this site’s object store (R2) of the API response, whole, or of the file’s header and every line for the tracked authorities, verbatim.',
       },
       first_seen_at: { type: 'timestamp', meaning: 'When the day was first read, in UTC.' },
-      source_url: { type: 'text', provenance: true, meaning: 'The EIA-930 six-month file read.' },
+      source_url: {
+        type: 'text',
+        provenance: true,
+        meaning:
+          'The EIA API v2 request (a key is needed to repeat it, and none is in the URL) or the EIA-930 six-month file read.',
+      },
       fetched_at: {
         type: 'timestamp',
         provenance: true,
