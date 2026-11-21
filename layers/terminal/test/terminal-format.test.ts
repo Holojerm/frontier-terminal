@@ -23,8 +23,13 @@ import {
   tierLabel,
   pctChange,
   pctLabel,
+  percent,
+  preciseUsd,
   relativeStamp,
+  roundBillions,
   signed,
+  signedPercent,
+  trimmed,
   zoneName,
 } from '../shared/utils/terminal-format'
 import { formatTick, formatValue } from '../shared/utils/thesis-format'
@@ -328,5 +333,75 @@ describe('labels', () => {
       '424B4 filed by Anthropic, PBC (2026-11-19)',
     )
     expect(readableEdgarNames('SEC EDGAR XBRL facts')).toBe('SEC EDGAR XBRL facts')
+  })
+})
+
+// Panels used to carry their own percent, billions and hours helpers: the same
+// median error read '12%' on one page and '12.0%' on another, and a negative
+// printed toFixed's hyphen.
+
+describe('figures every panel shares', () => {
+  it('trims a figure for prose and keeps the true minus', () => {
+    expect(trimmed(12)).toBe('12')
+    expect(trimmed(12.34)).toBe('12.3')
+    expect(trimmed(1260.5)).toBe('1,260.5')
+    expect(trimmed(-0.44)).toBe('−0.4')
+    expect(trimmed(-0.04)).toBe('0')
+    expect(percent(12)).toBe('12%')
+    expect(percent(0.94)).toBe('0.9%')
+  })
+
+  it('signs an error at one decimal, with ± for one that rounds to nothing', () => {
+    expect(signedPercent(0.94)).toBe('+0.9%')
+    expect(signedPercent(-0.94)).toBe('−0.9%')
+    expect(signedPercent(12)).toBe('+12.0%')
+    expect(signedPercent(0)).toBe('±0.0%')
+    expect(signedPercent(-0.04)).toBe('±0.0%')
+  })
+
+  it('prints a stated figure in round billions and a filed one at two decimals', () => {
+    expect(roundBillions(38e9)).toBe('$38B')
+    expect(roundBillions(38.5e9)).toBe('$38.5B')
+    expect(roundBillions(1250e9)).toBe('$1,250B')
+    expect(preciseUsd(17e9)).toBe('$17.00B')
+    expect(preciseUsd(16.85e9)).toBe('$16.85B')
+    expect(preciseUsd(-1.2e9)).toBe('−$1.20B')
+    expect(preciseUsd(412e6)).toBe('$412M')
+  })
+})
+
+// A figure formatted in a component is one more form on the page. The shared
+// modules own toLocaleString and toFixed; a component that needs a new form
+// adds it there. The three files below call them for something else.
+const NOT_FIGURES: Record<string, string> = {
+  'components/Terminal/Sparkline.vue': 'SVG path coordinates',
+  'components/Terminal/LineChart.vue': 'SVG path coordinates and a CSS offset',
+  'components/Terminal/AdoptionRamp.vue': 'a month label, from a Date',
+}
+
+describe('app code formats figures through the shared module', () => {
+  const sources = {
+    ...import.meta.glob<string>('../app/**/*.{vue,ts}', {
+      query: '?raw',
+      import: 'default',
+      eager: true,
+    }),
+    ...import.meta.glob<string>('../../../app/**/*.{vue,ts}', {
+      query: '?raw',
+      import: 'default',
+      eager: true,
+    }),
+  }
+  const offenders = Object.entries(sources)
+    .filter(([path]) => !Object.keys(NOT_FIGURES).some((skip) => path.endsWith(skip)))
+    .filter(([, text]) => /\.toLocaleString\(|\.toFixed\(|Intl\.NumberFormat/.test(text))
+    .map(([path]) => path)
+
+  it('reads the sources', () => {
+    expect(Object.keys(sources).length).toBeGreaterThan(100)
+  })
+
+  it('no component or page calls toLocaleString, toFixed or Intl.NumberFormat', () => {
+    expect(offenders).toEqual([])
   })
 })

@@ -8,6 +8,7 @@
 // its own reason behind an info control (TerminalTable `foldGaps`): where most
 // labs publish no index, eight gap rows were taller than the one row of figures.
 
+import { grouped } from '../../../shared/utils/terminal-format'
 import type { DisclosuresData } from '../../../shared/utils/terminal-types'
 import type { GapRef, TableColumn } from '../../types/terminal-ui'
 
@@ -17,7 +18,7 @@ const watchlist = useWatchlist()
 // page can drop the array before it is serialised into the hydration payload.
 const props = defineProps<{ disclosures: Omit<DisclosuresData, 'entries'> }>()
 
-const days = (n: number) => (Number.isInteger(n) ? `${n}d` : `${n.toFixed(1)}d`)
+const days = (n: number) => `${grouped(n, Number.isInteger(n) ? 0 : 1)}d`
 
 const columns: TableColumn[] = [
   { key: 'display', label: 'Lab', class: 'whitespace-nowrap' },
