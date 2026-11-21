@@ -257,7 +257,7 @@ const criticalFeed = `/alerts.xml?${CRITICAL_FEED_QUERY}`
               <TerminalGap
                 v-else-if="shown.length === 0"
                 title="No alerts yet."
-                reason="An alert needs a change big enough to matter. Right after our first check, an empty list is normal."
+                reason="An alert needs a change big enough to matter."
                 :action="{ label: 'Recent changes', to: '/#signal' }"
               />
               <TerminalSignalTable v-else :alerts="shown" flow />
