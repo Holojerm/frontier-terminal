@@ -35,6 +35,7 @@ import type {
 } from '../../shared/utils/terminal-types'
 
 import * as tables from '#server/db/schema'
+import { READ_RUN_STATUSES } from '../db/tables/columns'
 import { manifestFixtures } from '../pipeline/parsers/fixture-provenance'
 import { parseDerivedSourcesBlock, type DerivedTemplate } from '../pipeline/derived'
 import { parseRevenueFilersBlock, type RevenueFilers } from '../pipeline/parsers/sec/revenue-filers'
@@ -189,15 +190,22 @@ export interface SourceReads {
  * source, so each correlated subquery is an index seek on
  * (source_id, fetched_at) or (source_id, started_at) rather than a scan of
  * tables that grow by a row per source per tick. Two rows in the same instant:
- * the larger id wins.
+ * the larger id wins. The newest read seeks source_runs_read_idx, which holds
+ * only the runs that read their page, so a source that keeps failing does not
+ * cost a walk back through every failed run.
+ *
+ * Every subquery names its index. D1 keeps no planner statistics, and left to
+ * choose, SQLite took the (fetched_at, id) and (started_at, id) indexes for
+ * their ORDER BY: a tick starts every source in the same instant, so each
+ * source's seek read the whole tick (13k rows a call in production, 3k named).
  */
 export async function sourceReads(db: PipelineDb, at: string | null = null): Promise<SourceReads> {
   const newestSnapshot = at
-    ? sql`(select s1.id from snapshots s1 where s1.source_id = st.source_id and s1.fetched_at <= ${at} order by s1.fetched_at desc, s1.id desc limit 1)`
-    : sql`(select s1.id from snapshots s1 where s1.source_id = st.source_id and s1.fetched_at = st.last_fetched_at order by s1.id desc limit 1)`
+    ? sql`(select s1.id from snapshots s1 indexed by snapshots_source_fetched_idx where s1.source_id = st.source_id and s1.fetched_at <= ${at} order by s1.fetched_at desc, s1.id desc limit 1)`
+    : sql`(select s1.id from snapshots s1 indexed by snapshots_source_fetched_idx where s1.source_id = st.source_id and s1.fetched_at = st.last_fetched_at order by s1.id desc limit 1)`
   const newestRun = at
     ? sql`null`
-    : sql`(select r1.id from source_runs r1 where r1.source_id = st.source_id and r1.started_at = st.last_run_at order by r1.id desc limit 1)`
+    : sql`(select r1.id from source_runs r1 indexed by source_runs_source_started_idx where r1.source_id = st.source_id and r1.started_at = st.last_run_at order by r1.id desc limit 1)`
   const rows = await db.all<{
     source_id: string
     n: number
@@ -213,8 +221,9 @@ export async function sourceReads(db: PipelineDb, at: string | null = null): Pro
     run_source_url: string | null
   }>(sql`select st.source_id as source_id, st.snapshot_count as n,
       s.source_url as source_url, s.fetched_at as fetched_at, s.http_status as http_status, s.bytes as bytes,
-      (select s2.fetched_at from source_runs r2 join snapshots s2 on s2.id = r2.snapshot_id
-        where r2.source_id = st.source_id and r2.status in ('ok', 'unchanged', 'baseline')${at ? sql` and s2.fetched_at <= ${at}` : sql``}
+      (select s2.fetched_at from source_runs r2 indexed by source_runs_read_idx
+        join snapshots s2 on s2.id = r2.snapshot_id
+        where r2.source_id = st.source_id and r2.status in ${sql.raw(READ_RUN_STATUSES)}${at ? sql` and s2.fetched_at <= ${at}` : sql``}
         order by r2.started_at desc limit 1) as read_at,
       r.started_at as run_started_at, r.status as run_status, r.detail as run_detail,
       r.scope as run_scope, r.source_url as run_source_url
@@ -387,39 +396,33 @@ export async function recipeRunsStamp(db: PipelineDb, ids?: readonly string[]): 
 
 /** Every thesis recipe with its last run and what it has stored, beside its audit entry. */
 async function recipeCoverage(db: PipelineDb, ctx: QueryContext): Promise<RecipeCoverage[]> {
-  const o = tables.recipeObservations
-  // A join on each recipe's max, not a correlated subquery per row: the
-  // subquery form re-scanned the recipe for every observation (n² per recipe).
-  const latest = db
-    .select({ recipe_id: o.recipe_id, at: max(o.fetched_at).as('latest_at') })
-    .from(o)
-    .groupBy(o.recipe_id)
-    .as('latest')
+  // Driven from the registry's ids, one index seek per recipe on
+  // (recipe_id, started_at) and (recipe_id, fetched_at). Driven from the
+  // tables, the newest run and newest observation each read every row the
+  // recipes have ever written.
+  const ids = JSON.stringify(RECIPES.map((r) => r.id))
   const [runs, counts, newest] = await Promise.all([
-    db
-      .select({
-        recipe_id: tables.recipeRuns.recipe_id,
-        status: tables.recipeRuns.status,
-        started_at: tables.recipeRuns.started_at,
-        detail: tables.recipeRuns.detail,
-        source_url: tables.recipeRuns.source_url,
-      })
-      .from(tables.recipeRuns)
-      .where(
-        sql`${tables.recipeRuns.started_at} = (select max(r2.started_at) from recipe_runs r2 where r2.recipe_id = ${tables.recipeRuns.recipe_id})`,
-      ),
+    db.all<{
+      recipe_id: string
+      status: string
+      started_at: string
+      detail: string | null
+      source_url: string
+    }>(sql`select r.recipe_id as recipe_id, r.status as status, r.started_at as started_at,
+        r.detail as detail, r.source_url as source_url
+      from json_each(${ids}) ids
+      join recipe_runs r on r.id = (select r1.id from recipe_runs r1
+        where r1.recipe_id = ids.value order by r1.started_at desc limit 1)`),
     db
       .select({ recipe_id: tables.recipeObservations.recipe_id, n: count() })
       .from(tables.recipeObservations)
       .groupBy(tables.recipeObservations.recipe_id),
-    db
-      .selectDistinct({
-        recipe_id: o.recipe_id,
-        source_url: o.source_url,
-        fetched_at: o.fetched_at,
-      })
-      .from(o)
-      .innerJoin(latest, and(eq(o.recipe_id, latest.recipe_id), eq(o.fetched_at, latest.at))),
+    db.all<{ recipe_id: string; source_url: string; fetched_at: string }>(
+      sql`select o.recipe_id as recipe_id, o.source_url as source_url, o.fetched_at as fetched_at
+      from json_each(${ids}) ids
+      join recipe_observations o on o.id = (select o1.id from recipe_observations o1
+        where o1.recipe_id = ids.value order by o1.fetched_at desc limit 1)`,
+    ),
   ])
   const runOf = new Map(runs.map((r) => [r.recipe_id, r]))
   const countOf = new Map(counts.map((r) => [r.recipe_id, r.n]))

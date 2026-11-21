@@ -4,7 +4,7 @@
 // the survey tick before the theses are evaluated, so readings see this
 // tick's data. One recipe failing never stops the others.
 
-import { and, desc, eq, lt, max, sql } from 'drizzle-orm'
+import { and, desc, eq, lt, max, min, sql } from 'drizzle-orm'
 
 import * as tables from '#server/db/schema'
 import { contentHash, contentHashOfText } from '../../pipeline/contracts'
@@ -17,7 +17,7 @@ import {
 import type { RawStore } from '../../pipeline/refresh'
 import { chunk, D1_MAX_BOUND_PARAMS, type PipelineDb } from '../../pipeline/store'
 import { recordOpsEvent } from '#server/utils/ops'
-import type { Recipe } from './contract'
+import type { Observation, Recipe } from './contract'
 import { RECIPES } from './registry'
 
 const OBSERVATION_COLUMNS = 11
@@ -128,15 +128,24 @@ async function runOne(
       hash: null,
     }
   }
-  await deps.raw.put(
-    raw_key,
-    fetched.text,
-    recipe.ext === 'json'
-      ? 'application/json'
-      : recipe.ext === 'xml'
-        ? 'application/xml'
-        : 'text/plain',
-  )
+  await deps.raw.put(raw_key, fetched.text, contentType(recipe))
+  const stored = await storeObservations(db, recipe, observations, { raw_key, url, fetched_at })
+  return { recipe_id: recipe.id, status: 'ok', detail: null, observations: stored, url, hash }
+}
+
+const contentType = (recipe: Recipe) =>
+  recipe.ext === 'json'
+    ? 'application/json'
+    : recipe.ext === 'xml'
+      ? 'application/xml'
+      : 'text/plain'
+
+async function storeObservations(
+  db: PipelineDb,
+  recipe: Recipe,
+  observations: readonly Observation[],
+  at: { raw_key: string; url: string; fetched_at: string; retrospective?: boolean },
+): Promise<number> {
   const rows = observations.map((o) => ({
     id: contentHash({ recipe: recipe.id, key: o.key, date: o.date }),
     recipe_id: recipe.id,
@@ -144,11 +153,11 @@ async function runOne(
     key: o.key,
     date: o.date,
     value: o.value,
-    payload: JSON.stringify(o.payload),
-    raw_key,
-    first_seen_at: fetched_at,
-    source_url: url,
-    fetched_at,
+    payload: JSON.stringify(at.retrospective ? { ...o.payload, retrospective: true } : o.payload),
+    raw_key: at.raw_key,
+    first_seen_at: at.fetched_at,
+    source_url: at.url,
+    fetched_at: at.fetched_at,
   }))
   for (const part of chunk(rows, Math.floor(D1_MAX_BOUND_PARAMS / OBSERVATION_COLUMNS))) {
     await db
@@ -166,7 +175,59 @@ async function runOne(
         setWhere: sql`excluded.value is not ${tables.recipeObservations.value} or excluded.payload != ${tables.recipeObservations.payload}`,
       })
   }
-  return { recipe_id: recipe.id, status: 'ok', detail: null, observations: rows.length, url, hash }
+  return rows.length
+}
+
+async function oldestDate(db: PipelineDb, recipeId: string): Promise<string | null> {
+  const [row] = await db
+    .select({ at: min(tables.recipeObservations.date) })
+    .from(tables.recipeObservations)
+    .where(eq(tables.recipeObservations.recipe_id, recipeId))
+  return row?.at ?? null
+}
+
+/**
+ * The past runs a recipe asks for, after its own run read its source. There
+ * is no hash check: two past days can return the same bytes (a zero count)
+ * and both are new. Nothing here writes a run row, so the next run's
+ * unchanged check still compares against the last live body. Rows are stored
+ * as of now, retrospective, and stop at the first failure.
+ */
+async function runBackfill(
+  db: PipelineDb,
+  recipe: Recipe,
+  deps: { raw: RawStore; fetcher: SourceFetcher; now: Date },
+): Promise<{ observations: number; failure: string | null; rateLimited: boolean }> {
+  let observations = 0
+  if (!recipe.backfill) return { observations, failure: null, rateLimited: false }
+  const fetched_at = deps.now.toISOString()
+  for (const run of recipe.backfill({ oldest: await oldestDate(db, recipe.id) })) {
+    // The run date, as the recipe's own run would have had it.
+    const stop = (why: string, rateLimited = false) => ({
+      observations,
+      failure: `backfill as of ${run.date}: ${why}`,
+      rateLimited,
+    })
+    const fetched = await deps.fetcher({ source_id: recipe.id, url: run.url, ext: recipe.ext })
+    if (!fetched.ok)
+      return stop(fetched.detail, isRateLimitRun({ status: 'failed', detail: fetched.detail }))
+    let found: Observation[]
+    try {
+      found = recipe.extract(fetched.text, { date: run.date })
+    } catch (error) {
+      return stop(`extract: ${String(error)}`)
+    }
+    if (found.length === 0) return stop('extract returned no observations')
+    const raw_key = `recipes/${recipe.id}/${contentHashOfText(fetched.text)}.${recipe.ext}`
+    await deps.raw.put(raw_key, fetched.text, contentType(recipe))
+    observations += await storeObservations(db, recipe, found, {
+      raw_key,
+      url: run.url,
+      fetched_at,
+      retrospective: true,
+    })
+  }
+  return { observations, failure: null, rateLimited: false }
 }
 
 // A 429 follows the sources' policy (pipeline/rate-limit.ts), with the streak
@@ -213,6 +274,27 @@ export async function runRecipes(
       url: '',
       hash: null,
     }))
+    // Only after the source answered its own run: a failed or unconfigured
+    // source would fail every past day the same way.
+    if (r.status === 'ok' || r.status === 'unchanged') {
+      const past = await runBackfill(db, recipe, { ...deps, now: started_at }).catch(
+        (error: unknown) => ({
+          observations: 0,
+          failure: `backfill: ${String(error)}`,
+          rateLimited: false,
+        }),
+      )
+      r.observations += past.observations
+      if (past.failure) {
+        r.detail = past.failure
+        // A 429 is retried by the next tick's walk; anything else is a fault.
+        if (!past.rateLimited)
+          await recordOpsEvent(db, {
+            kind: 'recipe_failed',
+            detail: `${recipe.id}: ${past.failure}`,
+          })
+      }
+    }
     await db.insert(tables.recipeRuns).values({
       id: crypto.randomUUID(),
       recipe_id: recipe.id,
