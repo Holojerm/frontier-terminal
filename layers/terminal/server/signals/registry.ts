@@ -36,6 +36,10 @@ export type SignalSource =
   | { kind: 'price_changes'; lab: LabId; direction: 'cut' | 'raise' }
   /** Each filed revenue period the press had reported first, signed by whether the filing beat the reports. */
   | { kind: 'revenue_vs_reported'; lab: LabId }
+  /** EIA-930 demand on one balancing authority (grid_load_days): each whole month's or week's average load against a year before. */
+  | { kind: 'grid_load'; ba: string; period: 'month' | 'week' }
+  /** ERCOT's large-load figures (ercot_large_load_facts), each month as the first report that states it put it. */
+  | { kind: 'ercot_large_loads'; metric: 'observed_peak_mw' | 'approved_to_energize_mw' }
 
 export interface SignalDef {
   /** Stable: results, exports and links key on it. Never reuse a retired id. */
@@ -224,6 +228,61 @@ const gpu = (
   history_from: '2026-11-07',
 })
 
+/**
+ * The listed companies tied to the lab sites in each balancing authority
+ * (power_site_ties, placed by /api/grid-load): utilities, generators, equipment
+ * makers and hosts. WMB and BE aren't here: Meta Prometheus's plant is behind
+ * the meter, and no page names a grid for Stargate New Mexico.
+ */
+export const GRID_TICKERS: Readonly<Record<string, readonly string[]>> = {
+  ERCO: ['GEV', 'CIFR'],
+  PJM: ['AEP'],
+  MISO: ['DTE', 'WEC', 'ETR'],
+  NYIS: ['WULF'],
+  AZPS: ['PNW'],
+}
+
+/**
+ * A grid's average load against the same month (or the week 52 weeks) before:
+ * the change itself, so seasons cancel. EIA posts each day's hours within a
+ * day or two.
+ */
+const gridLoad = (ba: string, short: string, period: 'month' | 'week'): SignalDef => ({
+  id: `grid-load-${ba.toLowerCase()}-${period === 'month' ? 'monthly' : 'weekly'}-yoy`,
+  label: `${short} grid load against a year before, ${period === 'month' ? 'monthly' : 'weekly'}`,
+  entity: { kind: 'grid', id: ba },
+  tickers: GRID_TICKERS[ba] ?? [],
+  source: { kind: 'grid_load', ba, period },
+  transform: 'change',
+  frequency: period === 'month' ? 'monthly' : 'weekly',
+  test: 'lead_lag',
+  aggregate: 'last',
+  available_after_days: 2,
+  // The first whole month with a year before it (the files start in 2018).
+  history_from: '2019-01-01',
+})
+
+/**
+ * ERCOT's large-load figures as first stated. ERCOT posts its Monthly
+ * Operational Overview with each Board meeting, 15 to 22 days after the month.
+ */
+const ercot = (
+  metric: 'observed_peak_mw' | 'approved_to_energize_mw',
+  label: string,
+): SignalDef => ({
+  id: metric === 'observed_peak_mw' ? 'ercot-large-load-observed' : 'ercot-large-load-approved',
+  label,
+  entity: { kind: 'grid', id: 'ERCO' },
+  tickers: GRID_TICKERS.ERCO!,
+  source: { kind: 'ercot_large_loads', metric },
+  transform: 'level',
+  frequency: 'monthly',
+  test: 'lead_lag',
+  aggregate: 'last',
+  available_after_days: 23,
+  history_from: '2025-04-01',
+})
+
 export const SIGNALS: readonly SignalDef[] = [
   npm('npm-anthropic-sdk', 'anthropic', '@anthropic-ai/sdk npm downloads'),
   npm('npm-claude-code', 'anthropic', 'Claude Code npm downloads'),
@@ -308,6 +367,18 @@ export const SIGNALS: readonly SignalDef[] = [
     available_after_days: 0,
     history_from: '2026-10-26',
   },
+  gridLoad('ERCO', 'ERCOT', 'month'),
+  gridLoad('PJM', 'PJM', 'month'),
+  gridLoad('MISO', 'MISO', 'month'),
+  gridLoad('NYIS', 'NYISO', 'month'),
+  gridLoad('AZPS', 'APS (Arizona)', 'month'),
+  gridLoad('ERCO', 'ERCOT', 'week'),
+  gridLoad('PJM', 'PJM', 'week'),
+  gridLoad('MISO', 'MISO', 'week'),
+  gridLoad('NYIS', 'NYISO', 'week'),
+  gridLoad('AZPS', 'APS (Arizona)', 'week'),
+  ercot('observed_peak_mw', 'ERCOT large load observed, sum of monthly peaks'),
+  ercot('approved_to_energize_mw', 'ERCOT large load approved to energize'),
 ]
 
 /** Where a series is read from, in the names /data and the exports use. */
@@ -331,5 +402,9 @@ export function sourceLabel(source: SignalSource): string {
       return 'changes: model input price'
     case 'revenue_vs_reported':
       return 'ground truth: filed revenue against reported'
+    case 'grid_load':
+      return `grid_load_days: ${source.ba}, ${source.period === 'month' ? 'monthly' : 'weekly'} against a year before`
+    case 'ercot_large_loads':
+      return `ercot_large_load_facts: ${source.metric}, first stated`
   }
 }

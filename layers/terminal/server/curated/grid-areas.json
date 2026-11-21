@@ -1,0 +1,33 @@
+{
+  "source_url": "https://www.eia.gov/electricity/data/eia861/zip/f8612025.zip",
+  "file": "Sales_Ult_Cust_2025.xlsx",
+  "columns": "Data Year, Utility Number, Utility Name, Part, Service Type, Data Type, State, Ownership, BA Code",
+  "fetched_at": "2026-11-21T05:52:00.000Z",
+  "utilities": [
+    {
+      "company": "Indiana Michigan Power",
+      "ba": "PJM",
+      "row": "2025, 9324, Indiana Michigan Power Co, A, Bundled, O, IN, Investor Owned, PJM"
+    },
+    {
+      "company": "DTE Electric",
+      "ba": "MISO",
+      "row": "2025, 5109, DTE Electric Company, A, Bundled, O, MI, Investor Owned, MISO"
+    },
+    {
+      "company": "We Energies",
+      "ba": "MISO",
+      "row": "2025, 20847, Wisconsin Electric Power Co, A, Bundled, O, WI, Investor Owned, MISO"
+    },
+    {
+      "company": "Arizona Public Service",
+      "ba": "AZPS",
+      "row": "2025, 803, Arizona Public Service Co, A, Bundled, O, AZ, Investor Owned, AZPS"
+    },
+    {
+      "company": "Entergy Louisiana",
+      "ba": "MISO",
+      "row": "2025, 11241, Entergy Louisiana LLC, A, Bundled, O, LA, Investor Owned, MISO"
+    }
+  ]
+}

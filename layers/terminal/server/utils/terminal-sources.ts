@@ -369,6 +369,18 @@ export function readPowerSiteSources(sourcesYaml: string): ArchiveSourceEntry[] 
   }))
 }
 
+/** sources.yaml `grid_load_sources`: EIA's and ERCOT's files behind /api/grid-load, under what terms. */
+export function readGridLoadSources(sourcesYaml: string): ArchiveSourceEntry[] {
+  return readBlock(sourcesYaml.split('\n'), 'grid_load_sources').map((block) => ({
+    id: block.id,
+    url: block.fields.url ?? null,
+    verdict: block.fields.verdict ?? '',
+    terms: block.fields.terms ?? null,
+    rights: rightsOf(block.id, block.fields.rights),
+    caveat: block.fields.caveats ?? null,
+  }))
+}
+
 /** Every include source and every deliberate cut, as sources.yaml states them. */
 export function readSourceRegistry(sourcesYaml: string): SourceRegistry {
   const lines = sourcesYaml.split('\n')

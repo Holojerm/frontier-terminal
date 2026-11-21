@@ -51,6 +51,7 @@ export const SURFACE_WAIVERS = {
     '/api/datacenters': 'not yet: recipe observations raise no alert',
     '/api/dependencies':
       'derived: joins filed exposure facts and prospectus commitments (sec, through /api/prospectus)',
+    '/api/grid-load': 'not yet: a load reading raises no alert',
     '/api/ground-truth':
       'derived: scores press reports against filings (revenue axis) and capex guidance against filed capex (exposure axis, guidance-floor)',
     '/api/identifiers': 'internal: reference data, read by hand',
@@ -94,6 +95,10 @@ export const SURFACE_WAIVERS = {
     gdelt_archive_files: 'internal: the read cursor for GKG files before GKG_FROM',
     gdelt_files: 'internal: the GKG read cursor',
     gkg_mentions: 'internal: third-party GDELT rows kept for matching, then dropped',
+    ercot_large_load_reports:
+      'internal: the ERCOT reader’s fetch log; each ercot_large_load_facts row names its report',
+    grid_load_files:
+      'internal: the EIA-930 reader’s fetch log; each grid_load_days row names its file',
     judge_runs: 'internal: the judge routine’s cursor',
     market_bars:
       'internal: Databento closes licensed for internal use only; signal_results exports what is derived from them',

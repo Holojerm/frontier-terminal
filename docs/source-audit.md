@@ -935,3 +935,33 @@ Totals on the local run: 380 copies read, 3 skipped, 52.5 MB. Distinct incidents
 **Gaps.** Stated in `STATUS_ARCHIVE_GAPS`, each with its reason: OpenAI 2025-02-19 → 02-26 (the move to incident.io) and 2026-06-17 → 09-09 (no copy); Anthropic before 2023-03-16 and 2024-05-04 → 06-21, with shorter stretches between copies listed per lab (`holes` on `/api/incidents`); DeepSeek before 2024-05-10 and from 2026-05-06 (the move to Flashduty); xAI before 2025-01-15; Google 2026-08-12 → 09-09. Mistral is not covered (`STATUS_ARCHIVE_NOT_COVERED`): no copies of any of its feeds.
 
 **Verdict.** Include, as a one-off backfill (never on a cron), `rights: not-cleared`. Archived incidents carry `basis: archived` and stay in `archived_incidents`. The live incident windows, the signal band, the alerts and the judge read `entities` only. `/incidents` charts the months the copies reach whole, `/api/incidents` and `get_incidents` return them as `archived`, and `/export/archived_incidents` has every row.
+
+## Addendum, 2026-11-21: grid load where the lab sites are
+
+Checked to see whether public grid data can show load growing where the labs build. Data buyers asked whether data-center utilization can be backed out of public data. It can't, and nothing here claims to: a balancing authority's demand moves with weather, the economy and every other customer. What the data can show is load on the grids that hold a lab site, and ERCOT's own count of large loads it has let energize.
+
+| Publisher | What | robots.txt | Terms (read 2026-11-21) | Rights |
+|---|---|---|---|---|
+| U.S. Energy Information Administration, EIA-930 six-month files (`eia.gov/electricity/gridmonitor/sixMonthFiles/`) | Hourly adjusted demand for eight authorities, 2018 on | Allows `/electricity/` | Public domain. EIA asks for "Source: U.S. Energy Information Administration" | `upstream` (public domain) |
+| U.S. Energy Information Administration, EIA-861 2025 (`f8612025.zip`) | The balancing authority of five utilities tied to a lab site | Same | Same | `upstream` (public domain) |
+| ERCOT, Monthly Operational Overview and ERCOT Monthly PDFs | Approved-to-energize and observed large load, the large-load queue | Allows `/committees/`, `/news/`, `/files/docs/` | Raw data "may be used, reproduced, and redistributed in compilations, charts, and analyses"; whole contents unmodified with notices | `ours` |
+
+The exact sentences are in `sources.yaml` under `grid_load_sources`.
+
+**How a site is placed.** A site sits in an authority when a page we already cite names its grid operator (a `grid` row of `power_site_ties`; Crusoe's page naming ERCOT for Abilene was added in this pass), or when a page ties it to a utility and EIA-861 lists that utility's BA Code. Nine of the thirteen sites with a power tie are placed this way, in ERCOT, PJM, MISO, NYISO and Arizona Public Service. Meta Prometheus isn't: its gas plant (Williams, WMB) is behind the meter and "will not be physically connected to the electric power grid", per the Ohio Power Siting Board. OpenAI's New Mexico site (Bloom Energy, BE) and CoreWeave's Denton site have no page naming a grid.
+
+**Left out, and why.**
+
+- **EIA's API v2.** It needs a key only the owner can register, and the six-month files carry the same hourly series. The code doesn't read `NUXT_EIA_API_KEY`.
+- **EIA's bulk ZIP (`EBA.zip`, 705 MB).** Too large for a Worker. The six-month files (30 to 47 MB) are read as a stream and only the tracked authorities' lines are kept.
+- **The Grid Monitor's own JSON endpoints.** Undocumented, so they can change without notice.
+- **ERCOT's queue breakdown.** It's a chart in the overview PDFs, not text. Only sentences are read.
+- **Overviews before April 2025.** January to March 2025 don't carry the large-load sentence. They're stored as read with no figure.
+
+**Limits.**
+
+- **ERCOT's observed figure is a sum of peaks.** "This is calculated as the sum of the maximum value for each individual load per month." It isn't the loads' combined draw at one time.
+- **A report's month isn't always its own.** The December 2025 overview states January 2026, and the January 2026 overview states January 2026 again with a different figure (3,349 MW, then 4,049 MW). Each report is a vintage. The panel shows a month from the newest report that states it.
+- **The PDF reader is ours.** No PDF library is installed, so `layers/terminal/server/power/pdf-text.ts` reads the text operators of Flate streams through each font's ToUnicode map. Spacing is collapsed, so a quote reads as the PDF's text, not its layout ("non -simultaneous").
+
+**Verdict: include `eia930-balance`, `eia861-utility-ba` and `ercot-large-loads` under `grid_load_sources`.** The owner approved the alpha program on 2026-11-20.
