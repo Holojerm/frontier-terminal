@@ -772,7 +772,6 @@ describe('a launch re-opens its lab’s empty cells (Gemini 4 Hydrogen, 2026-11-
 describe('a cell resting on a join page (Meta balanced, 2026-11-13)', () => {
   // Meta's balanced sentence is on Muse Spark's own page, which has no lane:
   // the models page's lane reads it as a side and checks the sentence there.
-  const META = fixtureText('fixtures/pricing/meta-models.md')
   const SPARK_PAGE = fixtureText('fixtures/pricing/meta-muse-spark.md')
   const SPARK_URL = 'https://dev.meta.ai/docs/muse-spark.md'
   const SEED = MODEL_CLASS_MAP.find((e) => e.provider === 'meta' && e.class === 'balanced')!

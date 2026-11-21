@@ -1,6 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { POLL_LOCK_KEY } from '#layers/core/server/utils/pipeline-lock'
 import { runPoll, type PollDeps } from '../../server/pipeline/poll'
 import { isSurveyInstant } from '../../server/pipeline/scopes'
 import { fixtureText, manifest, raw } from '#layers/core/test/pipeline/fixtures'
