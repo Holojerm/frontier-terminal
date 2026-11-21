@@ -42,6 +42,12 @@ export const PROBE_TABLES = {
           meaning:
             'The provider the stream says served the request. Null when the stream named none, as when it failed first.',
         },
+        served_by_pinned: {
+          type: 'boolean',
+          nullable: true,
+          meaning:
+            'Whether served_by is the provider the request was pinned to (pinned_provider). Null when the stream named none.',
+        },
         started_at: {
           type: 'timestamp',
           meaning: 'When we sent the request, in UTC.',
@@ -109,6 +115,17 @@ export const PROBE_TABLES = {
           meaning:
             'Where the request left from: cloudflare:<colo>, the Cloudflare data center that ran the probe, or local off the Worker.',
         },
+        placement: {
+          type: 'text',
+          meaning:
+            'Where the probe was meant to leave from: a Cloudflare location hint (enam, eastern North America) for a probe run from a fixed place, or unpinned for every probe before that, which left from whichever data center ran the hourly job. Compare a series within one placement only.',
+        },
+        rate_limit_headers: {
+          type: 'json',
+          nullable: true,
+          meaning:
+            'The rate-limit headers the response carried (x-ratelimit-*, ratelimit-*, retry-after) as a JSON object of name to value. Null when it sent none.',
+        },
         raw_key: {
           type: 'text',
           nullable: true,
@@ -135,11 +152,17 @@ export const PROBE_TABLES = {
   ),
   probe_days: plainTable(
     'probe_days',
-    'The daily strain reading behind /api/probes and the Incidents page: per lab and UTC day, how many probes were rate limited or failed, and median throughput and time to first token in the lab’s working hours against its night. A day that changed model is read from the newest model’s probes only. The strained share is (rate_limited + failed) / probes, and peak against off-peak is peak_tps / offpeak_tps.',
+    'The daily strain reading behind /api/probes and the Incidents page: per lab, UTC day and placement, how many probes were rate limited or failed, and median throughput and time to first token in the lab’s working hours against its night. A day that changed model is read from the newest model’s probes only. The strained share is (rate_limited + failed) / probes, and peak against off-peak is peak_tps / offpeak_tps.',
     tables.probeDays,
     {
       lab: { ...LAB, key: true },
       day: { type: 'date', key: true, meaning: 'The UTC day.' },
+      placement: {
+        type: 'text',
+        key: true,
+        meaning:
+          'Where the day’s probes left from, as in latency_probes.placement. A day is never read across placements, so the day placement began has a row for each.',
+      },
       model: {
         type: 'text',
         meaning: 'The day’s newest model, the only one the reading counts.',

@@ -241,6 +241,22 @@ max_batch_size = 10
 # dead-letter queue: a message is only its type, so a dropped one loses nothing.
 max_retries = 5
 
+# ─── Probe placement ─────────────────────────────────────────────────────────
+# The hourly latency probes run inside a Durable Object made with a location
+# hint, so every probe leaves from one place instead of whichever colo ran the
+# cron (layers/terminal/server/pipeline/probes/placement.ts). The class is
+# Nitro's own: the `cloudflare-durable` preset (nuxt.config.ts) exports
+# `$DurableObject`, which runs the app inside the object. A Worker's cron and
+# its fetch path can't be placed otherwise: `[placement]` moves only fetch
+# handlers, and would move every page view with them.
+[[durable_objects.bindings]]
+name = "PROBES"
+class_name = "$DurableObject"
+
+[[migrations]]
+tag = "v1"
+new_sqlite_classes = ["$DurableObject"]
+
 # ─── Owner email ─────────────────────────────────────────────────────────────
 # Outbound mail for the weekly thesis digest and the press brief
 # (layers/terminal/server/utils/owner-mail.ts). Alerts are not sent from here:

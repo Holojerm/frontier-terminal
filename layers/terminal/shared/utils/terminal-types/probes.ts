@@ -6,6 +6,8 @@ export interface ProbeDayView extends Prov {
   day: string
   /** False for the current UTC day, whose probes are still coming in. */
   complete: boolean
+  /** The location hint the day's probes ran from (enam), or unpinned. */
+  placement: string
   model: string
   /** Probes that say something about the lab: all but the ones our key, our request or the router failed. */
   probes: number
@@ -37,8 +39,14 @@ export interface ProbeLatestView extends Prov {
   tokens_per_second: number | null
   /** `cloudflare:<colo>`: where the request left from. */
   ran_from: string
+  /** The location hint of the Durable Object that sent it (enam), or unpinned. */
+  placement: string
   /** Who the router says served it. */
   served_by: string | null
+  /** Whether that was the provider the request was pinned to; null when the router named nobody. */
+  served_by_pinned: boolean | null
+  /** The rate-limit headers the response carried (x-ratelimit-*, retry-after); null with none. */
+  rate_limit_headers: Record<string, string> | null
 }
 
 /** The trailing window, from its complete days. */
@@ -52,6 +60,18 @@ export interface ProbeWindowView {
   peak_tps: number | null
   offpeak_tps: number | null
   peak_to_offpeak: number | null
+}
+
+/** One placement's readings for a lab, kept apart from every other placement's. */
+export interface ProbeSeriesView {
+  /** A location hint (enam), or unpinned: probes from before placement, sent from whichever colo ran the cron. */
+  placement: string
+  /** The place, in words. */
+  label: string
+  pinned: boolean
+  window: ProbeWindowView | null
+  /** Newest first, history_days back. */
+  days: ProbeDayView[]
 }
 
 export interface ProbeLabView {
@@ -71,9 +91,12 @@ export interface ProbeLabView {
   hours: string | null
   gap: string | null
   latest: ProbeLatestView | null
+  /** The trailing window over the pinned series (placement.hint). */
   window: ProbeWindowView | null
-  /** Newest first, history_days back. */
+  /** The pinned series (placement.hint), newest first, history_days back. */
   days: ProbeDayView[]
+  /** Every other placement's readings, unpinned history included, never mixed into days. */
+  other_series: ProbeSeriesView[]
 }
 
 export interface ProbesData extends Stamp {
@@ -81,6 +104,14 @@ export interface ProbesData extends Stamp {
   history_days: number
   /** The first day any probe ran: nothing before it exists or can be rebuilt. */
   since: string | null
+  /** Where the series in each lab's days was sent from. */
+  placement: {
+    /** The Durable Object location hint: enam. */
+    hint: string
+    label: string
+    /** The first day probed from there; null before the first pinned probe. */
+    since: string | null
+  }
   labs: ProbeLabView[]
   /** What every probe sends. */
   probe: {

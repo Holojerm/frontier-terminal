@@ -13,10 +13,12 @@ import type { RawReader } from '../judge/class-map'
 import type { RawStore } from '../refresh'
 import type { PipelineDb } from '../store'
 import { rollProbeDays } from './daily'
+import { PROBE_PLACEMENTS, type ProbePlacement } from './placement'
 import { loadProbeCatalog, resolveProbeTargets, type ProbeSkip } from './resolve'
 import { runProbe, type ProbeDeps, type ProbeFetch, type ProbeOutcome } from './stream'
 import {
   PROBE_ENDPOINT,
+  PROBE_MONTHLY_BUDGET_USD,
   PROBE_ROUTE,
   PROBE_TARGETS,
   probeRequestBody,
@@ -31,6 +33,8 @@ export interface ProbeRunDeps extends Omit<ProbeDeps, 'apiKey'> {
   readRaw: RawReader
   /** `cloudflare:<colo>` on the Worker (probeOrigin), `local` elsewhere. */
   ranFrom: string
+  /** The location hint of the Durable Object running this, or `unpinned` off one (a dev server). */
+  placement: ProbePlacement
   /** Settled targets to probe instead of resolving PROBE_TARGETS: tests only. */
   targets?: readonly ProbeTarget[]
 }
@@ -38,6 +42,8 @@ export interface ProbeRunDeps extends Omit<ProbeDeps, 'apiKey'> {
 export interface ProbeRunReport {
   /** Why nothing ran, when nothing did. */
   skipped?: string
+  placement?: ProbePlacement
+  ran_from?: string
   probes: { lab: string; model: string; outcome: ProbeOutcome; detail: string | null }[]
   /** Labs not probed this run, and why; each is spooled as an ops event. */
   unprobed: ProbeSkip[]
@@ -58,14 +64,22 @@ export async function runProbes(db: PipelineDb, deps: ProbeRunDeps): Promise<Pro
         PROBE_TARGETS,
         await effectiveClassMap(db),
         await loadProbeCatalog(db, deps.readRaw),
+        // Every placement runs the whole workload, so each gets an equal share of the month.
+        PROBE_MONTHLY_BUDGET_USD / PROBE_PLACEMENTS.length,
       )
   for (const skip of skipped) await recordOpsEvent(db, { kind: skip.kind, detail: skip.detail })
 
-  const report: ProbeRunReport = { probes: [], unprobed: skipped, days_rolled: 0 }
+  const report: ProbeRunReport = {
+    placement: deps.placement,
+    ran_from: deps.ranFrom,
+    probes: [],
+    unprobed: skipped,
+    days_rolled: 0,
+  }
   const days = new Set<string>()
   for (const target of targets) {
     const result = await runProbe(target, { ...deps, apiKey })
-    const { trace, ...row } = result
+    const { trace, response_headers, ...row } = result
     let raw_key: string | null = probeRawKey(target.lab, result.started_at)
     try {
       await deps.raw.put(
@@ -78,7 +92,9 @@ export async function runProbes(db: PipelineDb, deps: ProbeRunDeps): Promise<Pro
           chosen_from: target.chosen_from,
           started_at: result.started_at,
           ran_from: deps.ranFrom,
+          placement: deps.placement,
           http_status: result.http_status,
+          response_headers,
           // [ms after the request was sent, text read]
           reads: trace,
         }),
@@ -96,6 +112,7 @@ export async function runProbes(db: PipelineDb, deps: ProbeRunDeps): Promise<Pro
       provider: target.provider,
       ...row,
       ran_from: deps.ranFrom,
+      placement: deps.placement,
       raw_key,
       source_url: PROBE_ENDPOINT,
       fetched_at: result.started_at,
