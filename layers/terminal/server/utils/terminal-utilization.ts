@@ -9,13 +9,17 @@
 //   coreweave  revenue per megawatt of active power, from its filings;
 //   shape      OpenRouter's average day against its busiest day.
 //
+// Beside them, benchmark_rounds sets every stored MLPerf round side by side:
+// per chip and benchmark at one accelerator count, each round's fastest result
+// per accelerator. The implied read uses the newest round alone.
+//
 // Closed labs publish no throughput and public benchmarks span two orders of
 // magnitude by model size, so the implied read is a pair of bounds per
 // benchmark model, the way terminal-spend.ts prints implied spend, and never
 // one number. The spot read shows providers singly until SPOT_QUORUM of them
 // print a spot price for the same GPU (the owner's call, 2026-11-20).
 //
-// The pure half (spotRead, impliedRead, coreweaveRead, demandShape) has no
+// The pure half (spotRead, impliedRead, roundRows, coreweaveRead, demandShape) has no
 // clock and no database; layers/terminal/test/terminal-utilization.test.ts
 // drives it.
 
@@ -37,7 +41,12 @@ import { SEC_CRWV_ACTIVE_POWER, SEC_GOOGL_API_TOKENS } from '../theses/recipes/e
 import { EPOCH_CHIP_TYPES, EPOCH_CHIP_USERS } from '../theses/recipes/epoch-chip-users'
 import { EPOCH_DATA_CENTERS } from '../theses/recipes/epoch-data-centers'
 import { GPU_MODELS } from '../theses/recipes/gpu-prices'
-import { MLPERF_INFERENCE, mlperfFootnote } from '../theses/recipes/mlperf-inference'
+import {
+  MLPERF_INFERENCE,
+  MLPERF_ROUNDS,
+  mlperfFootnote,
+  mlperfRoundsFootnote,
+} from '../theses/recipes/mlperf-inference'
 import { GPU_RECIPES } from '../theses/recipes/registry'
 import { SEC_REVENUE_CRWV } from '../theses/recipes/sec-revenue'
 import { sourceReads, type QueryContext } from './terminal-db'
@@ -211,6 +220,112 @@ export function impliedRows(
     })
     .sort((a, b) => a.share.high - b.share.high || byString(a.model, b.model))
   return { models, unrated_results: unrated }
+}
+
+// ── Benchmark rounds side by side ───────────────────────────────────────────
+
+export const ROUNDS_METHOD =
+  'Each row is one chip on one benchmark, at the same accelerator count in every round, so a change is the same size of system running faster or slower. ' +
+  'A chip keeps the name MLPerf gives it, so the SXM and NVL versions of the H200 stay apart, and a system that mixes chips is left out. ' +
+  'Each round shows its fastest result for that chip, benchmark and system size, divided by the accelerator count.'
+
+/**
+ * The chip an MLPerf accelerator string names, as a matching key and a label,
+ * or null for a system that mixes chips. "[MAXSUN] MS-Intel Arc Pro B60" and
+ * "AMD Instinct MI355X 288GB HBM3e (x87)" name one chip each; "… (x32), AMD
+ * Instinct MI325X … (x16)" names two.
+ */
+export function mlperfChip(accelerator: string): { key: string; label: string } | null {
+  const label = accelerator
+    .replace(/^\[[^\]]*\]\s*/, '')
+    .replace(/\s*\(x\d+\)$/, '')
+    .trim()
+  if (/\(x\d+\)/.test(label)) return null
+  return { key: label.toLowerCase(), label }
+}
+
+export interface RoundResult extends BenchmarkResult {
+  round: string
+  /** The system's accelerator count. */
+  accelerators: number
+  submitter: string | null
+  system: string | null
+}
+
+/**
+ * Pure: per chip, benchmark and accelerator count, each round's fastest
+ * result, kept where two or more rounds have one. `rounds` is oldest first.
+ */
+export function roundRows(
+  results: readonly RoundResult[],
+  rounds: readonly string[],
+): Pick<
+  NonNullable<UtilizationData['benchmark_rounds']>,
+  'rows' | 'accelerators_left_out' | 'mixed_results'
+> {
+  const groups = new Map<string, { chip: string; best: Map<string, RoundResult> }>()
+  const chips = new Set<string>()
+  const labels = new Map<string, { round: number; label: string }>()
+  let mixed = 0
+  for (const r of results) {
+    const at = rounds.indexOf(r.round)
+    if (at < 0) continue
+    const chip = mlperfChip(r.accelerator)
+    if (!chip) {
+      mixed += 1
+      continue
+    }
+    chips.add(chip.key)
+    if ((labels.get(chip.key)?.round ?? -1) <= at)
+      labels.set(chip.key, { round: at, label: chip.label })
+    const key = `${chip.key}|${r.model}|${r.accelerators}`
+    const group = groups.get(key) ?? { chip: chip.key, best: new Map<string, RoundResult>() }
+    groups.set(key, group)
+    const held = group.best.get(r.round)
+    if (
+      !held ||
+      r.per_accelerator > held.per_accelerator ||
+      (r.per_accelerator === held.per_accelerator && r.result_id < held.result_id)
+    ) {
+      group.best.set(r.round, r)
+    }
+  }
+  const rows = [...groups.values()]
+    .filter((g) => g.best.size >= 2)
+    .map((g) => {
+      const any = g.best.values().next().value!
+      const present = rounds.flatMap((round) => (g.best.has(round) ? [g.best.get(round)!] : []))
+      const [before, newest] = present.slice(-2) as [RoundResult, RoundResult]
+      return {
+        accelerator: labels.get(g.chip)!.label,
+        model: any.model,
+        accelerators: any.accelerators,
+        results: rounds.map((round) => {
+          const r = g.best.get(round)
+          return r
+            ? {
+                per_accelerator: r.per_accelerator,
+                result_id: r.result_id,
+                submitter: r.submitter,
+                system: r.system,
+              }
+            : null
+        }),
+        change: newest.per_accelerator / before.per_accelerator - 1,
+      }
+    })
+    .sort(
+      (a, b) =>
+        byString(a.accelerator, b.accelerator) ||
+        byString(a.model, b.model) ||
+        a.accelerators - b.accelerators,
+    )
+  const shown = new Set(rows.map((r) => r.accelerator.toLowerCase()))
+  return {
+    rows,
+    accelerators_left_out: [...chips].filter((c) => !shown.has(c)).length,
+    mixed_results: mixed,
+  }
 }
 
 // ── CoreWeave: revenue per megawatt ─────────────────────────────────────────
@@ -420,6 +535,51 @@ export async function queryUtilization(
     }
   }
 
+  // Every stored round side by side; the implied read above keeps to the newest.
+  const roundRowsStored = of(MLPERF_INFERENCE.id).map((r) => ({
+    row: r,
+    payload: payloadOf(r) as {
+      result_id: string
+      round: string
+      model: string
+      accelerator: string
+      accelerators: number
+      submitter?: string | null
+      system?: string | null
+    },
+  }))
+  const stored = MLPERF_ROUNDS.map((r) => r.round).filter((round) =>
+    roundRowsStored.some((r) => r.payload.round === round),
+  )
+  let benchmark_rounds: UtilizationData['benchmark_rounds'] = null
+  if (stored.length >= 2) {
+    const newestOf = (round: string) =>
+      newestFetched(roundRowsStored.filter((r) => r.payload.round === round).map((r) => r.row))!
+    benchmark_rounds = {
+      rounds: stored,
+      ...roundRows(
+        roundRowsStored.map(({ row, payload: p }) => ({
+          round: p.round,
+          result_id: p.result_id,
+          model: p.model,
+          accelerator: p.accelerator,
+          accelerators: p.accelerators,
+          submitter: p.submitter ?? null,
+          system: p.system ?? null,
+          per_accelerator: row.value!,
+        })),
+        stored,
+      ),
+      footnote: mlperfRoundsFootnote(
+        stored.map((round) => ({ round, retrieved: newestOf(round).fetched_at.slice(0, 10) })),
+      ),
+      sources: stored.map((round) =>
+        cite(MLPERF_INFERENCE.id, `MLPerf Inference ${round} results`, newestOf(round)),
+      ),
+      method: ROUNDS_METHOD,
+    }
+  }
+
   // CoreWeave: filed revenue per quarter beside the active power its release states.
   const powerRows = of(SEC_CRWV_ACTIVE_POWER.id)
   const revenueRows = of(SEC_REVENUE_CRWV.id).filter((r) => r.key === 'revenue')
@@ -505,6 +665,7 @@ export async function queryUtilization(
       caveat: SPOT_CAVEAT,
     },
     implied,
+    benchmark_rounds,
     coreweave,
     demand_shape: shape
       ? { ...shape, source: meta.provenance, citation: meta.meta.citation, caveat: SHAPE_CAVEAT }

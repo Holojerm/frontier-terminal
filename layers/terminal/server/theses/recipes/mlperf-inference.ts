@@ -48,6 +48,9 @@ export function nextMlperfRound(newest: string | null): MlperfRound {
   return MLPERF_ROUNDS.find((r) => newest === null || r.published > newest) ?? MLPERF_ROUNDS.at(-1)!
 }
 
+const MLPERF_LEGEND =
+  'Result not verified by MLCommons Association. The MLPerf name and logo are registered and unregistered trademarks of MLCommons Association in the United States and other countries. All rights reserved. Unauthorized use strictly prohibited. See www.mlcommons.org for more information.'
+
 /**
  * What MLCommons requires beside any use of a result it has not verified in
  * this form: suite, round, division and scenario, where and when the results
@@ -55,7 +58,15 @@ export function nextMlperfRound(newest: string | null): MlperfRound {
  * result IDs are printed on each row.
  */
 export const mlperfFootnote = (round: string, retrieved: string): string =>
-  `MLPerf® Inference ${round}, Datacenter, Closed division, Server scenario. Retrieved from ${mlperfRepo(round)} on ${retrieved}. Tokens per second per accelerator is our division of each result by its accelerator count. Result not verified by MLCommons Association. The MLPerf name and logo are registered and unregistered trademarks of MLCommons Association in the United States and other countries. All rights reserved. Unauthorized use strictly prohibited. See www.mlcommons.org for more information.`
+  `MLPerf® Inference ${round}, Datacenter, Closed division, Server scenario. Retrieved from ${mlperfRepo(round)} on ${retrieved}. Tokens per second per accelerator is our division of each result by its accelerator count. ${MLPERF_LEGEND}`
+
+/**
+ * The same footnote for a comparison across rounds, which the guidelines
+ * allow between rounds MLCommons lists as compatible: each round's suite and
+ * retrieval, and the basis of the comparison, since the change is ours too.
+ */
+export const mlperfRoundsFootnote = (rounds: readonly { round: string; retrieved: string }[]) =>
+  `MLPerf® Inference ${rounds.map((r) => r.round).join(' and ')}, Datacenter, Closed division, Server scenario. Retrieved from ${rounds.map((r) => `${mlperfRepo(r.round)} on ${r.retrieved}`).join(' and ')}. Tokens per second per accelerator is our division of each result by its accelerator count, and the change between rounds is our comparison of those figures at the same accelerator count. The rounds compared are compatible for these benchmarks in the MLPerf Compatibility Table. ${MLPERF_LEGEND}`
 
 interface Result {
   ID?: string

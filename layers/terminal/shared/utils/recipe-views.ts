@@ -230,6 +230,27 @@ export interface ImpliedModelRow {
   share: Bounds
 }
 
+/** One round's fastest result for a chip, benchmark and accelerator count. Unverified by MLCommons. */
+export interface MlperfRoundResult {
+  /** Tokens per second per accelerator: our division, not an MLPerf metric. */
+  per_accelerator: number
+  result_id: string
+  submitter: string | null
+  system: string | null
+}
+
+export interface MlperfRoundsRow {
+  /** The chip as the newest round names it, without a system's "(x87)" count. */
+  accelerator: string
+  model: string
+  /** The system size every round's result shares. */
+  accelerators: number
+  /** One entry per round in `rounds`, oldest first; null where that round has no such result. */
+  results: (MlperfRoundResult | null)[]
+  /** The newest result over the one before it, less one: 0.25 is 25% more tokens per second. */
+  change: number
+}
+
 export interface UtilizationData {
   as_of: string | null
   spot: {
@@ -267,6 +288,19 @@ export interface UtilizationData {
     chip_ratings: RecipeCitation
     method: string
     caveat: string
+  } | null
+  /** Every stored MLPerf round side by side; null until two rounds are stored. */
+  benchmark_rounds: {
+    /** Oldest first. */
+    rounds: string[]
+    rows: MlperfRoundsRow[]
+    /** Chips in a stored round with no like-for-like result in another. */
+    accelerators_left_out: number
+    /** Results from systems that mix chips, which have no one chip to divide by. */
+    mixed_results: number
+    footnote: string
+    sources: RecipeCitation[]
+    method: string
   } | null
   coreweave: {
     quarters: {
