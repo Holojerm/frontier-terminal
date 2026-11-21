@@ -1,8 +1,7 @@
 #!/usr/bin/env bun
 // One-off backfill of OpenRouter's daily rankings from 2025-01-01 to the day
 // before the oldest one stored (layers/adoption/server/pipeline/rankings-history.ts).
-// Never on a cron: the owner runs it, and a re-run asks only for days still
-// missing.
+// The owner runs it, never a cron; a re-run asks only for days still missing.
 //
 //   bun run backfill:rankings -- --plan                 list the windows, fetch nothing
 //   op read "op://…" | bun run backfill:rankings        local dev DB (.data/db/sqlite.db)
@@ -11,11 +10,11 @@
 // The key is read from stdin, or NUXT_OPENROUTER_API_KEY when stdin is a
 // terminal. It is sent only to openrouter.ai and never printed.
 //
-// Rows are written as the first observation of a source is (refresh.ts ›
-// baseline): entities and their snapshot, with no change rows and no
-// source_runs row, so nothing is announced as new and the live source's
-// latest run is untouched. A stored row is never overwritten. The bytes go
-// to .data/blob/<raw_key>, and with --remote to the production bucket too.
+// Rows are written as a source's first observation is (refresh.ts › baseline):
+// entities and their snapshot, with no change rows and no source_runs row, so
+// nothing is announced as new and the live source's latest run is untouched. A
+// stored row is never overwritten. The bytes go to .data/blob/<raw_key>, and
+// with --remote to the production bucket too.
 
 import { Database } from 'bun:sqlite'
 import { existsSync, mkdirSync, writeFileSync } from 'node:fs'

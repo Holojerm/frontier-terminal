@@ -1,12 +1,12 @@
 import { z } from 'zod'
 
 // The alert half of the judge lane's contract (contract.ts adds the reviews
-// each domain registers in server/registries/judge.ts). The Worker owns the data and
-// every gate; the routine only reasons. What the routine may send back is derived entirely from the AlertRow contract:
-// it emits ONLY severity/headline/explanation/change_ids, and id, rule,
-// created_at and provenance are stamped here from the cited change rows, so
-// the model cannot smuggle them. strictObject everywhere: an extra key
-// anywhere rejects the whole body.
+// each domain registers in server/registries/judge.ts). The Worker owns the
+// data and every gate; the routine only reasons. It emits ONLY
+// severity/headline/explanation/change_ids, and id, rule, created_at and
+// provenance are stamped here from the cited change rows, so the model cannot
+// smuggle them. strictObject everywhere: an extra key anywhere rejects the
+// whole body.
 
 export const JudgeAlert = AlertRow.pick({ severity: true, headline: true, explanation: true })
   .extend({ change_ids: AlertRow.shape.id.array().min(1) })
@@ -14,14 +14,13 @@ export const JudgeAlert = AlertRow.pick({ severity: true, headline: true, explan
 export type JudgeAlert = z.infer<typeof JudgeAlert>
 
 // ---- Stamping: gated+grounded alerts -> AlertRow --------------------------
-// Everything the model did not emit is a pure function of the cited change
-// records:
-//   id          = contentHash(change_ids + headline) — the dedupe key
+// Everything the model did not emit is a pure function of the cited changes:
+//   id          = contentHash(change_ids + headline), the dedupe key
 //   rule        = 'agent-judge' (never model-supplied)
 //   created_at  = the newest fetched_at among the cited changes
 //   provenance  = source_url/fetched_at of that newest-fetched cited change
-//                 (ties keep the smallest change id — deterministic)
-// change_ids are stored sorted + deduped so the id never depends on the
+//                 (ties keep the smallest change id)
+// change_ids are stored sorted and deduped so the id never depends on the
 // model's emission order.
 export function buildAlertRows(
   accepted: readonly JudgeAlert[],

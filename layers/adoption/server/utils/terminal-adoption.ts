@@ -1,9 +1,6 @@
-// The adoption panels' read side: the Ramp AI Index, SDK and coding-agent
-// package downloads (raw, normalized and share), and coding-agent pull
-// requests, each turned from recipe_observations into the payload
-// (layers/adoption/shared/utils/adoption-views.ts). Every figure keeps the URL it
-// was read from and when; a recipe with no stored rows yet yields an empty
-// entry, never a guess.
+// The adoption panels' read side: recipe_observations turned into the payload
+// (layers/adoption/shared/utils/adoption-views.ts). Every figure keeps its source URL and
+// fetch time; a recipe with no stored rows yields an empty entry, never a guess.
 
 import { inArray } from 'drizzle-orm'
 

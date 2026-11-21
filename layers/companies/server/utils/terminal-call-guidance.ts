@@ -1,8 +1,6 @@
-// The call guidance as GET /api/call-guidance serves it: each figure a
-// company guided, from the call documents layers/companies/server/calls/ read,
-// with the filing that later settled it. The same figure stated in the
-// release and on the call is one row with both sources. As of T it counts
-// the statements and resolutions first seen by T.
+// The call guidance /api/call-guidance serves: each figure a company guided, with
+// the filing that later settled it. A figure in the release and on the call is one
+// row with both sources. As of T it counts what was first seen by T.
 
 import { and, inArray, lte, sql } from 'drizzle-orm'
 

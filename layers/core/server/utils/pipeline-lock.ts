@@ -1,28 +1,14 @@
 import type { Storage } from 'unstorage'
 
-// Poll mutex. Two crons share it: poll:edgar (*/30) and poll:survey (0 */6),
-// and 6h is a multiple of 30m, so both are due at the same instant every
-// sixth hour. The policy for that instant is decided before the lock is
-// touched, in layers/core/server/pipeline/poll.ts: edgar yields, because the survey
-// re-fetches EDGAR anyway, so the survey is the only tick that asks for the
-// lock at :00 of a sixth hour. Here the lock only has to handle the residue —
-// a survey that overruns into the next edgar tick, a stale key left by a
-// crashed tick, or KV's eventual consistency showing a holder that has
-// already gone. A caller may retry acquisition for those cases; the survey
-// does (a stale key has at most the TTL to live), edgar does not (its next
-// tick is thirty minutes away). The TTL is the crash guard: a tick that dies
-// holding the lock frees it within ten minutes.
+// Poll mutex shared by poll:edgar and poll:survey. poll.ts decides the shared :00 slot
+// (edgar yields), so this only handles overruns, stale keys and KV lag. The 10-minute
+// TTL frees a lock a crashed tick held.
 //
-// KV is eventually consistent, so this is a best-effort mutex, not a
-// guarantee — two ticks starting within the same second could both see no
-// lock. What makes that tolerable is the store: change and alert ids are
-// deterministic and inserted skip-existing (store.ts › applyDiff), so the
-// loser's change and alert writes are skipped rather than duplicated. Its
-// snapshot and run rows are its own (their ids carry the tick's clock).
+// KV is eventually consistent, so two ticks can both acquire. Deterministic change and
+// alert ids inserted skip-existing (store.ts › applyDiff) make the loser's writes no-ops.
 //
-// The value is the holder plus a token unique to this acquisition, and the
-// release deletes the key only while it still holds that token. Without it, a
-// tick that outran the TTL would delete the lock a later tick had since taken.
+// The value carries a per-acquisition token and release deletes only while it matches,
+// so a tick that outran the TTL can't delete a later holder's lock.
 
 export const POLL_LOCK_KEY = 'poll:lock'
 export const POLL_LOCK_TTL_SECONDS = 600
@@ -59,8 +45,8 @@ const sleep = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve,
 /**
  * Run `fn` if nobody holds the poll lock; otherwise report who does and skip.
  * With `retry`, a held lock is re-checked up to `retries` more times, `delayMs`
- * apart, before giving up. The lock is released when `fn` settles, success or
- * throw, so the next tick does not have to wait out the TTL.
+ * apart. The lock is released when `fn` settles, so the next tick doesn't wait
+ * out the TTL.
  */
 export async function withPollLock<T>(
   store: LockStore,

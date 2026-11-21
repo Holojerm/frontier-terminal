@@ -1,11 +1,9 @@
 <script setup lang="ts">
-// Each coding agent's public pull requests per ISO week, back to its launch.
-// One chart per agent on its own y-axis: each agent leaves a different trace,
-// so a shared axis would invite reading them as shares. The weeks walked back
-// after we began were counted later, from the PRs that still existed, so they
-// draw as their own named series (sources.yaml › github-prs-*). The daily series starts
-// at the last week counted later, so the line doesn't break at the handover,
-// and the later series' end dot marks where it happens.
+// Each coding agent's public PRs per ISO week, back to its launch, one chart per agent on
+// its own y-axis (a shared axis would read as shares). Weeks before we began were counted
+// later from the PRs that still existed, so they draw as their own series
+// (sources.yaml › github-prs-*). The daily series starts at the last week counted later, so
+// the line doesn't break at the handover.
 
 import type { AdoptionData } from '../../../shared/utils/adoption-views'
 

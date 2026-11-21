@@ -5,9 +5,8 @@
 
 const stamps = useStamps()
 
-// Inert for a dynamic route: the collecting hook skips paths with a
-// parameter, and the permalinks are kept out of the sitemap on purpose
-// (terminal-page-source.ts). Declared anyway — the seo gate's invariant is per-page.
+// Inert for a dynamic route (the collecting hook skips parameterized paths, and permalinks
+// stay out of the sitemap, terminal-page-source.ts), but the seo gate checks every page.
 definePageMeta({
   publicPage: {
     changefreq: 'yearly',
@@ -23,12 +22,10 @@ const id = String(route.params.id ?? '')
 const { data, error } = await useFetch<AlertDetailData>(`/api/alerts/${id}`)
 
 if (!data.value) {
-  // Answer with what happened upstream rather than calling everything a server
-  // fault. A 429 is the rate limiter working — reporting it as 503 told a
-  // crawler the site was down, and, because server/plugins/error-logger.ts
-  // spools every 5xx, mailed the owner an ops digest about a healthy limiter.
-  // Anything genuinely unexpected keeps its upstream status in the message, so
-  // the digest can tell a throttle from a database that has gone away.
+  // Answer with the upstream status rather than a blanket 503. A 429 is the rate limiter
+  // working; as a 503 it told crawlers the site was down and, since
+  // server/plugins/error-logger.ts spools every 5xx, raised an ops alert about a healthy
+  // limiter. Anything unexpected keeps its upstream status in the message.
   const upstream = error.value?.statusCode
   if (upstream === 404) {
     throw createError({ statusCode: 404, statusMessage: 'No such alert', fatal: true })
@@ -57,11 +54,9 @@ function snippet(text: string): string {
   return `${cut.slice(0, Math.max(cut.lastIndexOf(' '), 60))}…`
 }
 
-// The permalink already says `ogType: 'article'`; the graph now agrees. An
-// alert is the most quotable thing on this site — a dated claim resting on
-// named rows — and WebPage has nowhere to put an author, a publication date,
-// or the sources. `citation` carries the same source URLs the page renders
-// below, so a quote lands back on the primary documents rather than on us.
+// An alert is a dated claim resting on named rows, so the graph is an article (matching
+// `ogType: 'article'`) with author, dates and sources. `citation` carries the source URLs
+// the page renders, so a quote lands on the primary documents.
 const citation = [alert.source_url, ...alert.changes.map((change) => change.source_url)]
 
 useSeo({

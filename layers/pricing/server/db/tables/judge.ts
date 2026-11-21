@@ -4,12 +4,11 @@ import { provenance } from '../../../../core/server/db/tables/columns'
 // What the judge decides and reads about the price lists: the class map's
 // re-mappings and the price lists it read while their parser was failing.
 
-// Class-map decisions — append-only. One row per mapping the judge changed on
-// the like-for-like price matrix (layers/pricing/server/pipeline/judge/class-map.ts). The
-// hand-transcribed MODEL_CLASS_MAP (layers/pricing/server/utils/terminal-classes.ts) is the
-// seed; the newest row per (provider, class) overrides it. A row is written
-// only after the Worker proved the sentence is on the vendor page, so its
-// provenance is the snapshot that sentence was verified in, not the judge.
+// Class-map decisions, append-only: one row per mapping the judge changed on the like-for-like
+// price matrix (layers/pricing/server/pipeline/judge/class-map.ts). The hand-transcribed
+// MODEL_CLASS_MAP (layers/pricing/server/utils/terminal-classes.ts) is the seed; the newest row
+// per (provider, class) overrides it. A row is written only after the Worker proved the
+// sentence is on the vendor page, so its provenance is the snapshot it was verified in.
 export const classMapDecisions = sqliteTable(
   'class_map_decisions',
   {

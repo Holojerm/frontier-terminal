@@ -1,7 +1,5 @@
-// The raw payload store (R2 through NuxtHub's `blob`): every derived number
-// keeps its source bytes. The refresh writes a fetched body through RawStore;
-// a reader that needs the bytes again (the judge's readers, the drift check)
-// reads them through RawReader.
+// Raw payload store (R2 via NuxtHub's `blob`): every derived number keeps its
+// source bytes.
 
 /** Where raw payloads go. R2 in production (NuxtHub `blob`), the test binding in workerd. */
 export interface RawStore {

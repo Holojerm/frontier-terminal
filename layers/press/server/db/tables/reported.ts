@@ -5,9 +5,9 @@ import { provenance } from '../../../../core/server/db/tables/columns'
 // Reported figures: lab revenue, valuations and funding rounds as press
 // headlines state them (pipeline/reported/). Append-only, like the track record.
 
-// One row per GDELT article whose headline names a private lab, an amount and
-// a financial word, taken from the rows the press side keeps (gkg_mentions). Syndicated copies share a title_key; the judge reads each
-// headline once, whatever the number of outlets that carried it.
+// One row per GDELT article whose headline names a private lab, an amount and a
+// financial word, taken from the rows the press side keeps (gkg_mentions).
+// Syndicated copies share a title_key, so the judge reads each headline once.
 export const reportedArticles = sqliteTable(
   'reported_articles',
   {

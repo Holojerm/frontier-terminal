@@ -1,10 +1,7 @@
 <script setup lang="ts">
-// The long run: each lab's weekly share of OpenRouter tokens over the whole
-// stored history, one small chart per lab. Nine labs are too many lines for
-// one chart with one accent (DESIGN.md allows three series), so each lab gets
-// its own line on a y-axis shared across the grid, which keeps their heights
-// comparable. The table carries every week and `other`, so the charts never
-// gate a number.
+// Each lab's weekly share of OpenRouter tokens over the stored history, one small chart per
+// lab (nine lines are too many for one chart; DESIGN.md allows three) on a shared y-axis so
+// heights compare. The table carries every week and `other`.
 
 import type { RankingsData } from '../../../shared/types/rankings'
 

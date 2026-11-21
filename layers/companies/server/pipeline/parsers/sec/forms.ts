@@ -1,12 +1,11 @@
-// Which EDGAR forms the submissions parsers keep, and which of those the
-// two deterministic floor rules fire on. One list, so a form added here
-// reaches the store, the floors and the judge together.
+// Which EDGAR forms the submissions parsers keep, and which of those the two deterministic
+// floor rules fire on. One list, so a form added here reaches the store, the floors and
+// the judge together.
 //
-// A filer's submissions feed is mostly Form 4 (insider trades), 144 and
-// SC 13G notices — Microsoft's newest 150 filings hold nine tracked forms
-// among 141 of those. Keeping every row would hand the judge "an SEC
-// change" several times a day per filer, none of them about the business.
-// The FTS feed is not filtered: its query already names the form.
+// A filer's submissions feed is mostly Form 4 (insider trades), 144 and SC 13G notices
+// (Microsoft's newest 150 filings held nine tracked forms). Keeping every row would hand
+// the judge "an SEC change" several times a day per filer, none about the business. The
+// FTS feed is not filtered: its query already names the form.
 
 /** Root form (amendment suffix stripped): "S-1/A" -> "S-1". */
 export function rootForm(form: string): string {
@@ -24,9 +23,9 @@ export function isTrackedForm(form: string): boolean {
   return TRACKED_FORMS.includes(rootForm(form))
 }
 
-/** The S-1 family and the 424B4 — the s1-floor rule (layers/companies/server/pipeline/filing-floors.ts).
- * Deliberately NOT matched: DRS (confidential drafts are structurally
- * invisible until flipped public — non-goals), S-8, and every periodic form. */
+/** The S-1 family and the 424B4: the s1-floor rule (layers/companies/server/pipeline/filing-floors.ts).
+ * Not matched: DRS (confidential drafts are invisible until flipped public), S-8, and
+ * every periodic form. */
 export function isS1FloorForm(form: string): boolean {
   const root = rootForm(form)
   return root === 'S-1' || root === '424B4'
@@ -84,9 +83,9 @@ export function isRoutine8K(items: readonly string[]): boolean {
   return items.length > 0 && items.every((i) => ROUTINE_8K_ITEMS.has(i.split(' ')[0]!))
 }
 
-/** The periodic reports whose XBRL carries a revenue line (a 20-F's in RMB) —
- * the periodic-floor rule. An 8-K is tracked but left to the judge: it is a
- * material-event notice, and most of them are not about the business. */
+/** The periodic reports whose XBRL carries a revenue line (a 20-F's in RMB): the
+ * periodic-floor rule. An 8-K is tracked but left to the judge: it is a material-event
+ * notice, and most are not about the business. */
 export function isPeriodicForm(form: string): boolean {
   const root = rootForm(form)
   return root === '10-Q' || root === '10-K' || root === '20-F'

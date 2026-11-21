@@ -1,16 +1,15 @@
-// What the UI knows about each source beyond its rows: a label, a role, and
-// the caveat the audit attached to it.
+// What the UI knows about each source beyond its rows: a label, a role, and the
+// audit's caveat.
 //
-// Caveats are READ from sources.yaml, never retyped here. That file
-// transcribes docs/source-audit.md, and a caveat the UI paraphrased would be
-// a third copy that drifts from the other two. The only hand-kept part is
-// the label/role map below, and layers/core/test/terminal-sources.test.ts fails when
-// sources.yaml gains an include source this map has no entry for.
+// Caveats are read from sources.yaml (which transcribes docs/source-audit.md),
+// never retyped: a paraphrase would be a third copy that drifts. Only the
+// label/role map is hand-kept, and layers/core/test/terminal-sources.test.ts
+// fails when sources.yaml gains an include source the map lacks.
 //
-// Pure functions of the YAML text, so the same code runs in the Worker (with
-// a `raw:` import) and in the workerd suite (with a `?raw` import). The
-// reader is deliberately narrow — the same shape layers/core/server/utils/pipeline-sources.ts
-// uses — because a YAML dependency for one flat file is not worth carrying.
+// Pure functions of the YAML text, so the same code runs in the Worker (a `raw:`
+// import) and in the workerd suite (a `?raw` import). The reader is narrow, like
+// layers/core/server/utils/pipeline-sources.ts, since a YAML dependency for one
+// flat file isn't worth carrying.
 
 import {
   SOURCE_RIGHTS,
@@ -238,11 +237,11 @@ interface Block {
 }
 
 /**
- * Parse one top-level block (`sources:`, `cut:`, `recipe_sources:`) into its entries. Handles
- * the three value shapes the file uses: a scalar on the key's line, `null`,
- * and a `>-` folded block whose continuation lines are indented deeper than
- * the key. Folding joins lines with one space, which is what YAML does for
- * `>-` when there are no blank lines — and the file has none inside a caveat.
+ * Parse one top-level block (`sources:`, `cut:`, `recipe_sources:`) into its
+ * entries. Handles the file's three value shapes: a scalar on the key's line,
+ * `null`, and a `>-` folded block whose continuation lines are indented deeper
+ * than the key. Folding joins lines with one space, as YAML does for `>-` with
+ * no blank lines (the file has none inside a caveat).
  */
 function readBlock(lines: string[], name: string): Block[] {
   const start = lines.findIndex((l) => new RegExp(`^${name}:\\s*(#.*)?$`).test(l))
@@ -492,7 +491,6 @@ export function readSourceRegistry(sourcesYaml: string): SourceRegistry {
   return { sources, cuts, recipes, track_record }
 }
 
-/** Derived source ids (layers/companies/server/pipeline/derived.ts) are named by their template. */
 /** `anthropic-s-1-a-…` -> `S-1/A`: the form slug a registration key carries (parsers/sec/filing-index.ts). */
 const registrationForm = (key: string) =>
   (key.match(/^[a-z]+-(s-1-a|s-1|424b4)-/)?.[1] ?? '').toUpperCase().replace(/-A$/, '/A')

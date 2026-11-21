@@ -13,9 +13,8 @@ const keySchema = z
   .regex(/^model:[a-z]+:[^\s/]+$/)
 
 export default defineEventHandler(async (event) => {
-  // 120 did not clear the 378 SKU permalinks the sitemap lists, so two thirds
-  // of every crawl were answered with a throttle. PERMALINK_LIMIT is sized to
-  // the family.
+  // PERMALINK_LIMIT is sized to the family: 120 throttled two thirds of every crawl of the 378
+  // SKU permalinks the sitemap lists.
   await rateLimitTerminal(event, {
     name: 'price-history',
     limit: PERMALINK_LIMIT,

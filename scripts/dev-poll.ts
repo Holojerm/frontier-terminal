@@ -1,4 +1,4 @@
-// `bun run dev:poll` — fill the local store by running the poll tasks on the
+// `bun run dev:poll`: fill the local store by running the poll tasks on the
 // dev server you already have up (`bun dev` or `bun dev:app`).
 //
 //   bun run dev:poll              live: poll:survey, poll:careers and poll:filings, the
@@ -8,13 +8,13 @@
 //   --url <origin>                the dev server, when it is not one of the
 //                                 defaults below (a worktree's portless host)
 //
-// Through the server's own task endpoint (/_nitro/tasks, dev only) rather than
-// writing the file: the rows go through the running server's connection, so
-// there is nothing to restart (.claude/docs/gotchas.md › bun dev caches its DB
-// connection). The live poll needs NUXT_SEC_CONTACT_EMAIL in .env for the SEC
-// sources and NUXT_OPENROUTER_API_KEY for the rankings; without them those
-// sources record a failed or skipped run and every other page still fills.
-// Alerts come from the cloud judge, not a poll: `bun run dev:seed` copies them.
+// Through the server's own task endpoint (/_nitro/tasks, dev only), so the rows
+// go through the running server's connection and nothing needs a restart
+// (.claude/docs/gotchas.md › bun dev caches its DB connection). The live poll
+// needs NUXT_SEC_CONTACT_EMAIL in .env for the SEC sources and
+// NUXT_OPENROUTER_API_KEY for the rankings; without them those sources record a
+// failed or skipped run and every other page still fills. Alerts come from the
+// cloud judge, not a poll: `bun run dev:seed` copies them.
 
 import pkg from '../package.json' with { type: 'json' }
 

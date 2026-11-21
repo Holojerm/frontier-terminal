@@ -5,7 +5,7 @@ import { z } from 'zod'
 // is a claim, not data.
 export const provenanceFields = {
   source_url: z.url({ protocol: /^https?$/ }),
-  // ISO 8601 with timezone (Z or offset) — naive timestamps are ambiguous.
+  // ISO 8601 with timezone (Z or offset): naive timestamps are ambiguous.
   fetched_at: z
     .string()
     .regex(

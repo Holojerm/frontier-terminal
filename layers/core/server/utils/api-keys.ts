@@ -1,13 +1,7 @@
-// Who is asking: anonymous, a valid licensee key, or a key that must be refused.
-//
-// A request with no Authorization header is anonymous and is served exactly as
-// before. A request that presents one is either a live key or a 401: a wrong,
-// expired, or revoked key never falls back to anonymous, because a licensee
-// whose key lapsed should find out from the status code, not from a rate limit
-// or a licence field an hour later.
-//
-// Pure functions of the Drizzle client, so layers/core/test/api-keys.test.ts
-// drives them against the workerd D1.
+// Who is asking: anonymous (no Authorization header), a live licensee key, or
+// a 401. A wrong, expired or revoked key never falls back to anonymous, so a
+// lapsed licensee learns it from the status code. Pure functions of the
+// Drizzle client, tested against the workerd D1 (layers/core/test/api-keys.test.ts).
 
 import { and, count, eq, gt } from 'drizzle-orm'
 
@@ -50,7 +44,6 @@ const CACHE_MS = 60_000
 const CACHE_MAX = 1_000
 const cache = new Map<string, Stored>()
 
-/** Test-only. */
 export function clearApiKeyCacheForTest(): void {
   cache.clear()
 }

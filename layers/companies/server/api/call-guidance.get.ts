@@ -1,11 +1,9 @@
-// GET /api/call-guidance?ticker= — what management guided on each earnings
-// call of the listed companies, from the release, the company's own
-// transcript or remarks, or our transcript of its replay, each figure scored
-// against the 10-Q or 10-K that later filed it
-// (layers/companies/server/utils/terminal-call-guidance.ts). Without `ticker`
-// it lists the newest CALL_GUIDANCE_LIMIT statements and every company's
-// coverage; with one, all of that company's. `as_of` counts what was first
-// seen by then.
+// GET /api/call-guidance?ticker=: what management guided on each listed company's earnings
+// call (from the release, the company's transcript or remarks, or our transcript of its
+// replay), each figure scored against the 10-Q or 10-K that later filed it
+// (layers/companies/server/utils/terminal-call-guidance.ts). Without `ticker`, the newest
+// CALL_GUIDANCE_LIMIT statements and every company's coverage; with one, all of that
+// company's. `as_of` counts what was first seen by then.
 
 import { z } from 'zod'
 

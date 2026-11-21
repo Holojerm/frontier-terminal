@@ -1,19 +1,8 @@
-// The GPU median rule: when the equal-weight H100 or B200 rental median moves
-// 5% or more over seven days, one alert that states both medians, citing one
-// `gpu_price` change row that holds each provider's price on both reads. No
-// model in the loop: the median is arithmetic on stored recipe observations
-// (recipes/gpu-prices.ts, the same rows /api/gpu-prices serves).
-//
-// The two reads compare like with like. The provider set is held fixed (only
-// providers priced on both reads count), and so is each provider's set of
-// configurations (only keys it priced both times), so a new Azure region or a
-// relabelled SKU moves nothing. A read where any provider's newest run failed
-// is skipped whole: the median would shift with no price having moved. Under
-// MIN_PROVIDERS in common it is one or two providers' prices, which is the
-// single-provider case the judge will weigh (docs/alerts-expansion.md › 4).
-//
-// Runs after the recipes on every survey tick. The ids hash (gpu, UTC day), so
-// a day has one alert per GPU at most, and a move already alerted in the last
+// The GPU median rule: when the equal-weight H100 or B200 rental median moves 5%+
+// over seven days, one alert cites a `gpu_price` change row with each provider's
+// price on both reads. Like with like: only providers and keys priced on both reads
+// count, so a new region or relabelled SKU moves nothing; a read with a failed
+// provider is skipped whole. Ids hash (gpu, UTC day); a move alerted in the last
 // seven days alerts again only when it deepens to critical or turns around.
 
 import { and, eq, gte } from 'drizzle-orm'

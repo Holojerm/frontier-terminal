@@ -1,26 +1,22 @@
-// The capex-guidance rule (docs/alerts-expansion.md, candidate 2). Two alerts,
-// no model in the loop, each citing one change row written for it:
+// The capex-guidance rule (docs/alerts-expansion.md). Two alerts, no model in the loop,
+// each citing one change row written for it:
 //
-//   - a revision ('guidance'): a filer's earnings release prints a capex
-//     figure for a fiscal year, against the filer's previous figure for that
-//     year. A raised, cut, narrowed or widened range is critical; the same
-//     range restated is info; the first figure for a year is notable.
-//   - a check ('guidance_check'): a 10-Q or 10-K files the year-to-date capex
-//     of a year that has guidance, measured as GUIDANCE_MEASURES defines it.
-//     A 10-Q says what the rest of the year has to be to stay inside the
-//     range: notable when the pace so far lands the year outside it, info when
-//     inside. A 10-K's verdict (met, above or below) is notable. A filer we
-//     can't score (Amazon, Microsoft) gets the revision alert only.
+//   - a revision ('guidance'): a filer's earnings release prints a capex figure for a
+//     fiscal year, against its previous figure for that year. A raised, cut, narrowed or
+//     widened range is critical; the same range restated is info; a year's first figure
+//     is notable.
+//   - a check ('guidance_check'): a 10-Q or 10-K files the year-to-date capex of a guided
+//     year, measured as GUIDANCE_MEASURES defines it. A 10-Q is notable when the pace so
+//     far lands the year outside the range, info when inside. A 10-K's verdict (met, above
+//     or below) is notable. A filer we can't score (Amazon, Microsoft) gets revisions only.
 //
-// The guidance sentence is the release's own. Before a stored figure alerts,
-// the Worker reads the exhibit back from R2 and must find the sentence in it
-// verbatim, then re-read the figure from the sentence (the filing-review.ts
+// Before a stored figure alerts, the Worker reads the exhibit back from R2, must find the
+// release's sentence in it verbatim, and re-reads the figure from it (the filing-review.ts
 // pattern). A row that fails is silence and an ops event, never a repair.
 //
-// The baseline is filed-fact-floor's: only a release or filing filed in the
-// last FRESH_DAYS, and only one first read after the filer's first read, so
-// turning this on does not alert on old guidance. Ids hash the filer, the
-// year and the accessions, so a re-run writes nothing twice.
+// The baseline is filed-fact-floor's: only a release or filing from the last FRESH_DAYS,
+// and only one first read after the filer's first read. Ids hash the filer, year and
+// accessions, so a re-run writes nothing twice.
 
 import { inArray } from 'drizzle-orm'
 

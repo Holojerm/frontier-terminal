@@ -9,24 +9,21 @@ import { fixtureProvenance } from '#layers/core/server/utils/fixture-provenance'
 import { tableAfterHeading, usdAmount } from './md-table'
 
 // meta-pricing-md — https://dev.meta.ai/docs/pricing-rate-limits.md
-// Meta prices a model LINE, not a version: "### Muse Spark" carries one
-// table for every Muse Spark id, and the sentence above it says which ids
-// that is ("Models: `muse-spark-1.3`, … in Standard mode;
-// `muse-spark-1.3-contributor` … in Contributor mode."). Each named id gets
-// the column for its mode. Contributor mode is a distinct model id the
-// caller selects, so it is a row of its own (tier null), not a tier of the
-// Standard id — the same way OpenRouter lists it.
+// Meta prices a model LINE, not a version: "### Muse Spark" carries one table for every Muse
+// Spark id, and the sentence above it says which ids ("Models: `muse-spark-1.3`, … in Standard
+// mode; `muse-spark-1.3-contributor` … in Contributor mode."). Each named id gets its mode's
+// column. Contributor mode is a distinct model id the caller selects, so it is a row of its
+// own (tier null), not a tier of the Standard id, the same way OpenRouter lists it.
 //
-// Only the token-priced lines are parsed: a "### " section under
-// "## Model pricing" whose table header is the Standard/Contributor $/MTok
-// pair. The columns are found by name: on 2026-11-09 Meta swapped them to
-// Contributor-then-Standard with every price unchanged. Muse Image, Muse Voice Transcribe and SAM print per-image, per-hour
-// and per-frame tables with a different header and are skipped by that test.
+// Only the token-priced lines are parsed: a "### " section under "## Model pricing" whose
+// table header is the Standard/Contributor $/MTok pair. Columns are found by name, since Meta
+// has swapped their order with every price unchanged. Muse Image, Muse Voice Transcribe and
+// SAM print per-image, per-hour and per-frame tables with a different header and are skipped
+// by that test.
 //
-// Muse Ember (added 2026-11-09) is Standard mode only and prices by request
-// size instead: "Up to 200K input tokens" / "Over 200K input tokens" columns,
-// the larger rate billed on the whole request. The first column is the id's
-// row (tier null); the second is its own `long_context` row, the tier name
+// Muse Ember is Standard mode only and prices by request size: "Up to 200K input tokens" /
+// "Over 200K input tokens" columns, the larger rate billed on the whole request. The first
+// column is the id's row (tier null); the second is its own `long_context` row, the tier name
 // openai-pricing-md and anthropic-pricing-md give a long-context price.
 
 const PRICING_HEADING = '## Model pricing'
@@ -120,9 +117,7 @@ function idsByMode(text: string, heading: string): Map<Mode, string[]> {
   return out
 }
 
-// prov defaults to the fixture manifest's record (single-arg behavior is
-// byte-identical for the determinism gate); the refresh orchestrator passes
-// the live fetch's provenance instead.
+// One-argument calls read the fixture's provenance, keeping the determinism gate byte-identical.
 export function parseMetaPricingMd(
   text: string,
   prov: Provenance = fixtureProvenance('meta-pricing-md'),

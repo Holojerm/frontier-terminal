@@ -1,15 +1,12 @@
-// Dev-only task: fill the store from the committed fixtures instead of the
-// network. The same pipeline the crons run (the polls, the filed-facts
-// reader, the recipes, the theses: dev/fixture-fill.ts), with a fetcher that
-// answers each source from fixtures/ by URL, so every page renders
-// real-shaped rows offline and the same way every time.
+// Dev-only task: fill the store from the committed fixtures instead of the network. The
+// same pipeline the crons run (dev/fixture-fill.ts), with a fetcher that answers each
+// source from fixtures/ by URL, so every page renders real-shaped rows offline and the
+// same way every time.
 //
-// Called by `bun run dev:poll --fixtures` on a running dev server. The browser
-// suites run the same fill against the built Worker's store (test/server/fill.ts).
-//
-// Never scheduled, and a no-op outside `nuxt dev`: /_nitro/tasks is only served
-// in dev, and the body reads fixtures/ from the working directory, which a
-// Worker does not have.
+// Called by `bun run dev:poll --fixtures` on a running dev server; the browser suites run
+// the same fill against the built Worker's store (test/server/fill.ts). Never scheduled,
+// and a no-op outside `nuxt dev`: /_nitro/tasks is only served in dev, and the body reads
+// fixtures/ from the working directory, which a Worker does not have.
 
 import sourcesYaml from 'raw:~~/sources.yaml'
 

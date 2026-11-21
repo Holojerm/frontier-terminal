@@ -1,5 +1,5 @@
 // Capacity strain: published rate limits. Registered right after the reliability layer's
-// incidents and probes (server/registries/mcp-tools.ts), where the tool list has always had it.
+// incidents and probes (server/registries/mcp-tools.ts), which keeps the tool list's order.
 
 import { z } from 'zod'
 

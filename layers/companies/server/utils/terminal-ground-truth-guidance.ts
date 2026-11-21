@@ -1,17 +1,9 @@
-// The guidance half of the ground-truth payload: each capex figure an
-// earnings release printed for a fiscal year (exposure/guidance.ts), against
-// the capex the filer's 10-K later filed for that year.
-//
-// What a filer means by capital expenditures is its own definition, so each
-// filer has one entry in GUIDANCE_MEASURES: the filed lines its figure covers,
-// or the reason we can't score it. Meta's figure includes principal payments
-// on finance leases, so its year is the sum of the two lines it files. Amazon
-// guides a net figure we hold only the gross line for, so it is listed and
-// not scored. Microsoft's release prints none.
-//
-// A range is met when the filed figure is inside it. A single figure is met
-// within TOLERANCE_PCT. Anything else is above or below, by the distance from
-// the nearer end.
+// Capex guidance from earnings releases (exposure/guidance.ts) against the capex
+// the 10-K later filed. Each filer defines capex its own way, so GUIDANCE_MEASURES
+// says which filed lines its figure covers or why it isn't scored (Meta's includes
+// finance-lease principal; Amazon guides a net figure we hold only gross for). A
+// range is met when the filed figure is inside it, a single figure within
+// TOLERANCE_PCT; otherwise the miss is measured from the nearer end.
 
 import { and, eq, lt, lte } from 'drizzle-orm'
 
@@ -164,7 +156,6 @@ export function filedActual(
   }
 }
 
-/** A stored filed_guidance row. */
 export type StoredGuidance = typeof tables.filedGuidance.$inferSelect
 
 /** One guidance figure against the filed year. */

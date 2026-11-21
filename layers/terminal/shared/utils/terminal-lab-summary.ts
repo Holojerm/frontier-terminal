@@ -27,9 +27,9 @@ import type {
 import type { SpendData, SpendProviderView } from '../../../adoption/shared/types/spend'
 
 /**
- * The lab pages, in the shape `definePageMeta({ publicPage })` produces for a
- * static page. A dynamic route is one pattern, not four URLs, so the route
- * table cannot list these; sitemap.xml and llms.txt append them from here.
+ * The lab pages, in the shape `definePageMeta({ publicPage })` produces for a static page.
+ * A dynamic route is one pattern, not a URL per lab, so the route table cannot list these;
+ * sitemap.xml and llms.txt append them from here.
  */
 export const LAB_PAGES = LABS.map((lab) => ({
   lab,

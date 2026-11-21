@@ -1,4 +1,4 @@
-// The GDELT side of the track record — `bun run gdelt:search`, run every 30 minutes on the
+// The GDELT side of the track record: `bun run gdelt:search`, run every 30 minutes on the
 // owner's Mac mini by a launchd job outside this repo (~/agent-jobs/gdelt-search.sh), or by
 // hand from .github/workflows/gdelt-search.yml while the mini is down.
 //
@@ -13,23 +13,23 @@
 //                            to what the matcher reads
 //
 // and repeats until nothing is unread or --minutes have passed, so a backlog
-// (the first run starts at GKG_FROM, 2026-09-01) drains over a few runs. Once
-// nothing is unread, the run reads files from before reported figures existed
-// again (`figure_files`), posting only their figure headlines to
-// /api/gdelt/figures. A new file needs no such pass: the Worker finds its
-// figure headlines among the rows it keeps. Once those are read too, the run
-// reads the archive (`archive_files`): files from before GKG_FROM that the
-// Worker picks (layers/press/server/pipeline/reported/archive.ts), four
+// (the first run starts at GKG_FROM, 2026-09-01) drains over a few runs. Then
+// it rereads files from before reported figures existed (`figure_files`),
+// posting only their figure headlines to /api/gdelt/figures; a new file needs
+// no such pass, as the Worker finds its figure headlines among the rows it
+// keeps. Then the archive (`archive_files`): files from before GKG_FROM that
+// the Worker picks (layers/press/server/pipeline/reported/archive.ts), four
 // downloads at a time but posted in order, figure headlines only, to
-// /api/gdelt/archive. Every call to /api/gdelt/work puts live files first, so
-// the archive only ever fills idle time. The files are static, with no per-IP
-// limit, so no pacing is needed. A 404 means GDELT never published that quarter hour
-// and is recorded as missing; any other failure to fetch ends the run quietly
-// and the next run retries. The job exits non-zero only when our own routes
-// fail, so a red run means this site is broken, not GDELT.
+// /api/gdelt/archive. /api/gdelt/work always puts live files first, so the
+// archive only fills idle time.
 //
-// No alert is matched here. The Worker keeps the rows, and its cron matches
-// each alert against them once the alert's window has closed
+// The files are static, with no per-IP limit, so no pacing. A 404 means GDELT
+// never published that quarter hour and is recorded as missing; any other fetch
+// failure ends the run quietly and the next run retries. The job exits non-zero
+// only when our own routes fail, so a red run means this site is broken.
+//
+// No alert is matched here: the Worker's cron matches each alert against the
+// kept rows once the alert's window has closed
 // (layers/press/server/pipeline/track-record/search.ts › runTrackRecordSearch).
 //
 //   GDELT_TOKEN=… bun run gdelt:search                    # against production

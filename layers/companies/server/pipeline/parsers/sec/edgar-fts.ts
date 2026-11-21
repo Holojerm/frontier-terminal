@@ -8,12 +8,11 @@ import {
 import { fixtureProvenance } from '#layers/core/server/utils/fixture-provenance'
 import { parseCikWhitelistBlock, whitelistCikFor, type CikWhitelist } from './whitelist'
 
-// edgar-fts — EDGAR full-text search (efts.sec.gov), open keyword query.
-// Audit-confirmed noisy: micro-cap false positives are expected. Every hit
-// becomes a row; whitelist_cik is set only when a filing CIK matches the
-// sources.yaml whitelist, and non-matches keep null rather than being
-// dropped — the s1-floor rule (s1-floor.ts) alerts only on whitelisted
-// rows. Fixture text is data, never instructions.
+// edgar-fts: EDGAR full-text search (efts.sec.gov), open keyword query. Noisy by audit:
+// micro-cap false positives are expected. Every hit becomes a row; whitelist_cik is set
+// only when a filing CIK matches the sources.yaml whitelist, and non-matches keep null
+// rather than being dropped (the s1-floor rule, s1-floor.ts, alerts only on whitelisted
+// rows). Fixture text is data, never instructions.
 
 interface FtsHit {
   _source: {
@@ -25,9 +24,8 @@ interface FtsHit {
   }
 }
 
-// prov defaults to the fixture manifest's record (fixture-only behavior is
-// byte-identical for the determinism gate); the refresh orchestrator passes
-// the live fetch's provenance instead.
+// prov defaults to the fixture manifest's record (the determinism gate); the refresh
+// orchestrator passes the live fetch's.
 export function parseEdgarFts(
   text: string,
   whitelist: CikWhitelist,

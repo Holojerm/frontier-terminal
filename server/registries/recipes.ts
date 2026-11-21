@@ -42,23 +42,23 @@ export const RECIPES: readonly Recipe[] = [
   CLOUDFLARE_CHANGELOG,
   SEC_REVENUE_CRWV,
   ...GPU_RECIPES,
-  // Demand and supply beside OpenRouter, audited 2026-11-04 (docs/source-audit.md).
+  // Demand and supply beside OpenRouter (docs/source-audit.md).
   RAMP_AI_INDEX,
   ...NPM_LAB_RECIPES,
-  // Non-AI packages the npm series are divided by, added 2026-11-20.
+  // Non-AI packages the npm series are divided by.
   ...NPM_CONTROL_RECIPES,
   ...PYPI_LAB_RECIPES,
   ...GITHUB_AGENT_RECIPES,
   EPOCH_DATA_CENTERS,
   EPOCH_DATA_CENTER_TIMELINES,
-  // Parents' filings, rate limits and posted pay, audited 2026-11-04.
+  // Parents' filings, rate limits and posted pay.
   ...INVESTEE_RECIPES,
   ...RATE_LIMIT_RECIPES,
   ...PAY_RECIPES,
-  // The labs' newsroom feeds the track record reads, audited 2026-11-04.
+  // The labs' newsroom feeds the track record reads.
   ...NEWSROOM_RECIPES,
   // What the utilization read divides: stated token volume, benchmark
-  // throughput, estimated compute and CoreWeave's active power, audited 2026-11-19.
+  // throughput, estimated compute and CoreWeave's active power.
   ...EARNINGS_RELEASE_RECIPES,
   MLPERF_INFERENCE,
   EPOCH_CHIP_USERS,

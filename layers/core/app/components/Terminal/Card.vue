@@ -1,8 +1,7 @@
 <script setup lang="ts">
-// One lab, one filing, one claim: a bordered tile inside a panel (DESIGN.md ›
-// Terminal primitives). A title row with a meta slot on the right — a badge,
-// a count — then the body, then the sources. The heading is `h3` under a
-// panel and `h2` where the card sits directly under the page title.
+// A bordered tile inside a panel (DESIGN.md › Terminal primitives): title row with
+// a meta slot, body, sources. The heading is `h3` under a panel and `h2` directly
+// under the page title.
 
 import type { Citation } from '#layers/core/app/types/terminal-ui'
 

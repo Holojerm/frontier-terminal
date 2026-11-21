@@ -30,7 +30,8 @@ anything red go to the owner.
      pending means come back next run.
    - It has no merge conflict, and its base is the default branch.
 3. Queue it with `gh pr comment <n> --body "@mergifyio queue"`, at tier 2 only (`_shared.md` ›
-   Autonomy tiers); Mergify merges it once its checks pass on top of main. Without the grant, comment `ready to merge: all checks green, minor/patch only` and leave it.
+   Autonomy tiers); Mergify merges it once its checks pass on top of main. Without the grant,
+   comment `ready to merge: all checks green, minor/patch only` and leave it.
 4. **A red check.** Read the failing log. If the cause is unrelated to the update, re-run the
    check once with `gh run rerun --failed`. If it fails again, or the failure is caused by the
    update, comment the failing check's name and its first error line, label the PR

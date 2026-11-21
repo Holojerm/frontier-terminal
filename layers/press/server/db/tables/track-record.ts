@@ -11,8 +11,7 @@ import { provenance } from '../../../../core/server/db/tables/columns'
 
 // One row per search for an alert's candidates: a match against the kept GKG
 // rows, or a read of the stored newsroom posts. Written once per side, when
-// the window has closed. The 'failed' rows GDELT's search API left were
-// deleted by a one-off script on 2026-11-07.
+// the window has closed.
 export const trackRecordSearches = sqliteTable(
   'track_record_searches',
   {
@@ -38,8 +37,8 @@ export const trackRecordSearches = sqliteTable(
 
 // One row per GDELT GKG file the press side has read (pipeline/track-record/gkg.ts),
 // a contiguous run from GKG_FROM: a file is recorded only when it is the next
-// one. missing: GDELT never published that quarter hour. matched and raw_key
-// are from when the job matched rows as it read them; they are 0 and null since.
+// one. missing: GDELT never published that quarter hour. matched and raw_key are
+// legacy (the job no longer matches rows as it reads them): 0 and null on newer rows.
 export const gdeltFiles = sqliteTable(
   'gdelt_files',
   {

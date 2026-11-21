@@ -1,11 +1,11 @@
 // Measured signals: each turns data already in the store into dated readings
-// for one claim. No signal fetches anything — the pipeline did that — so a
-// reading's provenance is the stored rows it was computed from.
+// for one claim. No signal fetches anything, so a reading's provenance is the
+// stored rows it was computed from.
 //
-// Two of the three recompute their whole history from the store on every
-// run (rankings rows and the job change log are kept forever). The spend
-// premium cannot: it joins today's list prices, so it only ever reads the
-// newest window, and its older readings are the ones earlier runs wrote.
+// Signals over rankings rows and the job change log recompute their whole
+// history on every run (those rows are kept forever). The spend premium can't:
+// it joins today's list prices, so it reads only the newest window, and its
+// older readings are the ones earlier runs wrote.
 
 import { companyName, type CompanyId } from '#layers/core/shared/utils/companies'
 import type { HiringHistoryData } from '../../../talent/shared/types/hiring'
@@ -59,11 +59,10 @@ const newestProv = (rows: readonly RankingObservation[]) =>
   rows.reduce((a, b) => (b.fetched_at > a.fetched_at ? b : a))
 
 /**
- * Spend share ÷ token share per lab, newest 7-day window, today's list
- * prices. Both shares are over priced tokens: the spend share's denominator
- * is the priced labs' dollars, so dividing by a share of every lab's tokens
- * (unpriced labs included) understated each lab's token share and inflated
- * every ratio.
+ * Spend share ÷ token share per lab, newest 7-day window, today's list prices.
+ * Both shares are over priced tokens: the spend share's denominator is the
+ * priced labs' dollars, so a token share over every lab's tokens (unpriced
+ * labs included) would understate it and inflate every ratio.
  */
 async function spendPremium(
   db: PipelineDb,

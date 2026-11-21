@@ -1,12 +1,12 @@
 <script setup lang="ts">
-// Misalignment disclosure as one row per lab: reports and notices on the
-// lab's own index, and the median days from discovery to publication. A lab
-// with no index says so and gives the audit's reason: the count measures
-// disclosure, so a blank here is the finding, not a zero.
+// Misalignment disclosure as one row per lab: reports and notices on the lab's
+// own index, and the median days from discovery to publication. A lab with no
+// index shows the audit's reason: the count measures disclosure, so a blank here
+// is the finding, not a zero.
 //
-// Labs with the same gap share one line after the figures, each name with
-// its own reason behind an info control (TerminalTable `foldGaps`): where most
-// labs publish no index, eight gap rows were taller than the one row of figures.
+// Labs with the same gap share one line after the figures, each name with its
+// reason behind an info control (TerminalTable `foldGaps`), so gap rows don't
+// outgrow the one row of figures.
 
 import type { DisclosuresData } from '../../../shared/types/disclosures'
 

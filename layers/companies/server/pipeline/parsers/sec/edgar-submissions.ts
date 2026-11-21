@@ -9,15 +9,14 @@ import { fixtureProvenance } from '#layers/core/server/utils/fixture-provenance'
 import { eightKItems, isTrackedForm, rootForm } from './forms'
 import { parseCikWhitelistBlock, whitelistCikFor, type CikWhitelist } from './whitelist'
 
-// edgar-submissions-<ticker> — data.sec.gov/submissions/CIK{n}.json for one
-// filer. The payload is columnar (parallel arrays under filings.recent);
-// each index whose form is tracked (forms.ts) becomes a FilingRow keyed by
-// accession number. The filer's CIK is zero-padded to EDGAR's canonical 10
-// digits before whitelist matching — a format normalization, not a lookup.
+// edgar-submissions-<ticker>: data.sec.gov/submissions/CIK{n}.json for one filer. The
+// payload is columnar (parallel arrays under filings.recent); each index whose form is
+// tracked (forms.ts) becomes a FilingRow keyed by accession number. The CIK is zero-padded
+// to EDGAR's canonical 10 digits before whitelist matching.
 //
-// One parser, one registration per whitelisted filer: SPCX (xAI's parent),
-// BABA (Qwen's parent) and the hyperscalers. Each registration is its own source id
-// with its own fixture so the determinism gate runs every feed.
+// One parser, one registration per whitelisted filer (SPCX, xAI's parent; BABA, Qwen's
+// parent; the hyperscalers), each its own source id and fixture so the determinism gate
+// runs every feed.
 
 interface SubmissionsDoc {
   cik: string
@@ -104,9 +103,8 @@ export const SUBMISSIONS_SOURCES: Readonly<Record<string, string>> = {
   'edgar-submissions-baba': 'fixtures/sec/edgar-submissions-baba.json',
 }
 
-// prov defaults to the fixture manifest's record (fixture-only behavior is
-// byte-identical for the determinism gate); the refresh orchestrator passes
-// the live fetch's provenance instead.
+// prov defaults to the fixture manifest's record (the determinism gate); the refresh
+// orchestrator passes the live fetch's.
 export function parseEdgarSubmissionsSpcx(
   text: string,
   whitelist: CikWhitelist,

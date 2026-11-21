@@ -1,7 +1,6 @@
-// Reads of row_counts, the per-key row counters that triggers keep for the
-// tables the coverage panel, the overview and the fleet endpoint count
-// (layers/core/server/db/tables/pipeline.ts › rowCounts). In its own file so
-// the fleet plugin does not load the query layer to read four numbers.
+// Reads of row_counts, the per-key counters triggers keep
+// (layers/core/server/db/tables/pipeline.ts › rowCounts). Its own file so the
+// fleet plugin doesn't load the query layer to read four numbers.
 
 import { eq, sql } from 'drizzle-orm'
 

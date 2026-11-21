@@ -69,15 +69,12 @@ const newestFirst = (a: IncidentView, b: IncidentView) =>
       : -1
 
 /**
- * Incident counts are windows over `started_at` as the vendor posted it,
- * anchored to each lab's own feed — its last successful read — rather than
- * the reader's clock, the same reason the signal band anchors to the newest
- * detection. One anchor for every lab let a feed that stopped reading count
- * a window it never saw as quiet. Each provider ships its anchor
- * (window_to) so the claim is checkable, and reports where its held history
- * begins: a Statuspage feed is a rolling window, so the prior-30-day count
- * is partial until the pipeline has polled through it, and the UI says so
- * rather than printing a low number.
+ * Incident counts are windows over the vendor's `started_at`, anchored to each lab's own
+ * feed (its last successful read), not the reader's clock: with one shared anchor, a feed
+ * that stopped reading counted a window it never saw as quiet. Each provider ships its
+ * anchor (window_to) so the claim is checkable, and reports where its held history begins:
+ * a Statuspage feed is a rolling window, so the prior-30-day count is partial until the
+ * pipeline has polled through it, and the UI says so instead of printing a low number.
  */
 export async function queryIncidents(db: PipelineDb, ctx: QueryContext): Promise<IncidentsData> {
   const [entities, stamps, archived] = await Promise.all([
@@ -106,7 +103,7 @@ export async function queryIncidents(db: PipelineDb, ctx: QueryContext): Promise
   for (const provider of PROVIDER_ORDER) {
     const backing = INCIDENT_SOURCES[provider]
     if ('cut_id' in backing) {
-      // Honest cut — never a fabricated zero (sources.yaml `cut.<lab>-status`).
+      // An audited cut, never a fabricated zero (sources.yaml `cut.<lab>-status`).
       providers.push({
         provider,
         display: PROVIDER_DISPLAY[provider],

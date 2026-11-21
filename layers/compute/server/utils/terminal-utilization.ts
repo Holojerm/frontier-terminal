@@ -1,27 +1,10 @@
-// The Compute page's utilization reads: how full the data centers are, as
-// far as free public sources can say. Three reads here, none of them a
-// utilization figure:
-//
-//   spot       what a provider charges for interruptible capacity against its
-//              own on-demand price for the same instance, per provider;
-//   implied    Alphabet's stated tokens per minute against benchmark tokens
-//              per second, as a share of Epoch's estimate of Google's fleet;
-//   coreweave  revenue per megawatt of active power, from its filings.
-//
-// Beside them, benchmark_rounds sets every stored MLPerf round side by side:
-// per chip and benchmark at one accelerator count, each round's fastest result
-// per accelerator. The implied read uses the newest round alone.
-// GET /api/utilization reads them, with OpenRouter's demand shape, in
-// layers/terminal/server/utils/terminal-utilization-query.ts.
-//
-// Closed labs publish no throughput and public benchmarks span two orders of
-// magnitude by model size, so the implied read is a pair of bounds per
-// benchmark model, the way terminal-spend.ts prints implied spend, and never
-// one number. The spot read shows providers singly until SPOT_QUORUM of them
-// print a spot price for the same GPU (the owner's call, 2026-11-20).
-//
-// Pure: no clock and no database; layers/compute/test/terminal-utilization.test.ts
-// drives it.
+// The Compute page's utilization reads, none of them a utilization figure: spot
+// against on-demand per provider; implied load (Alphabet's stated tokens per minute
+// against benchmark throughput, as a share of Epoch's Google fleet); and CoreWeave's
+// revenue per megawatt. GET /api/utilization serves them
+// (layers/terminal/server/utils/terminal-utilization-query.ts). Benchmarks span two
+// orders of magnitude by model size, so implied load is a pair of bounds, never one
+// number. Pure; layers/compute/test/terminal-utilization.test.ts drives it.
 
 import { gpuProviderName } from '#layers/core/shared/utils/companies'
 import type {

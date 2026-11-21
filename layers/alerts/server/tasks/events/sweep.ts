@@ -1,9 +1,7 @@
-// Cron task: the hourly backstop for the EVENTS queue
-// (layers/core/server/utils/events.ts). It runs the same fan-out and both
-// drains a message would (event-work.ts › sweepEvents), so an alert whose
-// `alerts.new` was never sent (no binding, a queue error) or a drain chain
-// that broke is picked up within the hour. An unconfigured outbox is skipped
-// before touching D1.
+// Cron task: the hourly backstop for the EVENTS queue (layers/core/server/utils/events.ts).
+// It runs the same fan-out and drains a message would (event-work.ts › sweepEvents), so an
+// alert whose `alerts.new` was never sent, or a broken drain chain, is picked up within the
+// hour. An unconfigured outbox is skipped before touching D1.
 //
 // Imports are explicit for the reason layers/terminal/server/tasks/ops/watch.ts spells out.
 

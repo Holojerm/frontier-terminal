@@ -1,10 +1,7 @@
 <script setup lang="ts">
-// Every page's header and its one failure state (DESIGN.md › Terminal
-// primitives). The `h1` is one size on every page; the as-of stamp is the
-// payload's own, so a reader sees how fresh the screen is before reading it.
-// The error alert names what failed and never shows a stale number instead.
-// A data page (anything not `narrow` prose) ends with the data license, since
-// most of them show history older than its CC BY window.
+// Every page's header and its one failure state (DESIGN.md › Terminal primitives).
+// The as-of stamp is the payload's own; the error alert never shows a stale number.
+// A data page (not `narrow`) ends with the data license.
 
 const stamps = useStamps()
 

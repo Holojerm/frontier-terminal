@@ -1,15 +1,9 @@
 // SEC's fair-access policy caps a client at 10 requests a second
-// (sec.gov/os/accessing-edgar-data); past it SEC answers 429, and a client
-// that keeps going can have its egress blocked. A tick fetches its SEC
-// documents one after another through one paced fetcher, so the spacing counts
-// every SEC request the tick makes: the edgar tick's feeds and its filed facts
-// (layers/companies/server/exposure/ingest.ts) alike. Other hosts pass straight through.
-//
-// Spacing is start to start, so a slow response does not buy the next request
-// a burst, and each request reserves its slot before it waits, so two callers
-// in flight at once still queue. The pacer cannot see another Worker
-// invocation: that is why the filed facts stay off the survey instant
-// (filedFactsSkip in ingest.ts).
+// (sec.gov/os/accessing-edgar-data); past it SEC answers 429 and may block the
+// egress. Every SEC request in a tick goes through this one paced fetcher, start
+// to start, each reserving its slot before it waits so concurrent callers queue.
+// Other hosts pass through. It cannot see another invocation, so the filed facts
+// stay off the survey instant (filedFactsSkip in ingest.ts).
 
 /** 4 requests a second at most: under half of SEC's limit. */
 export const SEC_MIN_INTERVAL_MS = 250

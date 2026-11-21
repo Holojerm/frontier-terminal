@@ -1,13 +1,12 @@
 <script setup lang="ts">
-// Two labs on every axis, side by side: the readout rows, then each axis
-// panel handed a payload narrowed to the pair — the same components, queries
-// and cache the axis pages and lab pages read, so a number here is the number
-// there. The pair is a route parameter in LABS order; the reverse spelling
-// redirects to it, and anything else is a 404.
+// Two labs on every axis, side by side: the readout rows, then each axis panel handed a
+// payload narrowed to the pair. Same components, queries and cache as the axis pages and
+// lab pages, so a number here is the number there. The pair is a route parameter in LABS
+// order; the reverse spelling redirects to it, and anything else is a 404.
 
-// Inert for a dynamic route: sitemap.xml and llms.txt append the compare
-// pages from layers/terminal/shared/utils/terminal-compare.ts. Declared anyway — the seo
-// gate's invariant is per-page.
+// Inert for a dynamic route: sitemap.xml and llms.txt append the compare pages from
+// layers/terminal/shared/utils/terminal-compare.ts. Declared anyway: the seo gate's
+// invariant is per-page.
 definePageMeta({
   publicPage: {
     changefreq: 'daily',
@@ -64,10 +63,10 @@ const fundamentalsFetch = Promise.all([
   }),
 ])
 
-// Narrowed in `transform`, on the server, so the other labs' rows never reach
-// the hydration payload; the shapes are unchanged. The explicit per-pair key
-// is load-bearing for the reason labs/[lab]/index.vue gives: an automatic key is
-// per call site, so two compare pages would share one cache entry.
+// Narrowed in `transform`, on the server, so the other labs' rows never reach the
+// hydration payload; the shapes are unchanged. The explicit per-pair key is needed for the
+// reason labs/[lab]/index.vue gives: an automatic key is per call site, so two compare
+// pages would share one cache entry.
 const [prices, revenue, rankings, hiring, incidents, alerts] = await Promise.all([
   useFetch('/api/prices', {
     key: `compare-prices:${key}`,

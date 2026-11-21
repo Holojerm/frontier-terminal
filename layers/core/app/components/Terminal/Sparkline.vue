@@ -1,8 +1,7 @@
 <script setup lang="ts">
-// A 12-point-or-fewer trend beside a number: one series, the accent ink,
-// an end dot. Decorative by contract — the row's numbers and the SKU page
-// carry the values, so the SVG is hidden from assistive tech and the
-// observation count beside it is the accessible summary.
+// A trend of 12 points or fewer beside a number. Decorative: the row's numbers
+// carry the values, so the SVG is hidden from assistive tech and the observation
+// count beside it is the accessible summary.
 
 const props = defineProps<{ values: (number | null)[] }>()
 

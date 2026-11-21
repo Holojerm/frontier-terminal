@@ -1,16 +1,10 @@
 <script setup lang="ts">
-// Living style guide — every token and component state from DESIGN.md on one
-// page, in both color modes. This is the verification surface: after editing
-// DESIGN.md and running /design-sync, screenshot this route to confirm the
-// personality actually landed instead of assuming it did.
-//
-// Dev-only — stripped from production routes by the `pages:extend` hook in
-// nuxt.config.ts, so it never ships to users.
+// Living style guide: every token and component state from DESIGN.md, in both color modes.
+// After /design-sync, screenshot this route to confirm the change landed. Dev-only: the
+// `pages:extend` hook in nuxt.config.ts strips it from production.
 
-// Literal class strings: Tailwind scans source text, so `bg-iris-${n}` would
-// generate nothing. Direct ramp access is exactly what design:check forbids in
-// app code — this page is the one legitimate exception, since its job is to
-// display the raw ramp.
+// Literal class strings: Tailwind scans source text, so `bg-iris-${n}` would generate
+// nothing. design:check forbids direct ramp access in app code; this page is the exception.
 const ramp = [
   { shade: '50', class: 'bg-iris-50' }, // design-check-ignore
   { shade: '100', class: 'bg-iris-100' }, // design-check-ignore
@@ -59,9 +53,8 @@ const typeScale = [
   { token: 'text-xs', class: 'text-xs' },
 ]
 
-// DESIGN.md › Brand mark. 16px is the declared floor, so it leads.
-// markClass carries the color as well as the size — BrandLogo passes it through
-// rather than merging, so a caller that overrides it owns both.
+// DESIGN.md › Brand mark. 16px is the declared floor, so it leads. markClass carries the
+// color as well as the size (see BrandLogo).
 const markSizes = [
   { class: 'size-4 text-primary', label: '16px' },
   { class: 'size-6 text-primary', label: '24px' },
@@ -126,10 +119,8 @@ useSeo({
     </header>
 
     <!-- ── Brand mark ────────────────────────────────────────────────── -->
-    <!-- The pipeline's verification surface: the component on the left, the
-         files it generated on the right. If those two stop agreeing, this is
-         where you see it — `bun run brand:check` only knows they drifted, not
-         which one looks wrong. -->
+    <!-- The component on the left, the files it generated on the right: `bun run brand:check`
+         knows they drifted, not which one looks wrong. -->
     <section class="space-y-6">
       <h2 class="text-2xl text-highlighted">Brand mark</h2>
 

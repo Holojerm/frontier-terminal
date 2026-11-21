@@ -1,6 +1,6 @@
-// POST /api/relay/file?url=…&status=…&fetched_at=… — the bytes the Mac mini's
-// relay job got for one URL on a relayed host, as the request body. The
-// pipeline reads them in place of the network (core pipeline/relay.ts).
+// POST /api/relay/file?url=…&status=…&fetched_at=…: the bytes the Mac mini's relay job got
+// for one URL on a relayed host, as the request body. The pipeline reads them in place of
+// the network (core pipeline/relay.ts).
 
 import { z } from 'zod'
 

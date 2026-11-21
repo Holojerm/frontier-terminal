@@ -6,16 +6,15 @@ import {
 import { fixtureProvenance } from '../../../../core/server/utils/fixture-provenance'
 import { providerOfOpenRouterId } from '../../../../reliability/server/pipeline/parsers/openrouter'
 
-// OpenRouter daily usage rankings — the demand-share axis. For labs that are
-// still private, one aggregator's token traffic is the best public proxy for
-// relative demand; it is OpenRouter share, not market share, and every
-// surface that shows it says so (sources.yaml caveats).
+// OpenRouter daily usage rankings, the demand-share axis: one aggregator's token traffic is
+// the best public proxy for private labs' relative demand. It is OpenRouter share, not
+// market share, and every surface says so (sources.yaml caveats).
 //
 // Documented shape (openrouter.ai/docs/cookbook/administration/data-api):
 //   data[]: { date: "YYYY-MM-DD", model_permaslug, total_tokens: "<digits>" }
 //   meta:   { as_of, version, start_date, end_date }
-// Top 50 public models per UTC day plus one aggregated `other` row. Data is
-// CC BY 4.0; the required citation travels with meta.as_of.
+// Top 50 public models per UTC day plus one aggregated `other` row. CC BY 4.0; the
+// required citation travels with meta.as_of.
 
 const SOURCE_ID = 'openrouter-rankings-daily'
 

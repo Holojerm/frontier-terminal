@@ -1,7 +1,6 @@
 // Amounts of money in a line of text: "$30 billion", "€11.7bn", "USD 518
-// billion", "30 billion dollars". The press figures (layers/terminal/server/
-// pipeline/reported/figures.ts), the filing review and the supplier excerpts
-// all read them the same way.
+// billion", "30 billion dollars", read the same way by the press figures, the
+// filing review and the supplier excerpts.
 //
 // Dependency-free: scripts/gdelt-search.ts imports the figures reader, and so
 // this file, without `bun install`.

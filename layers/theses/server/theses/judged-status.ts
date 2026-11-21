@@ -1,4 +1,4 @@
-// A judged claim's status from its stored verdicts — pure, like status.ts, so
+// A judged claim's status from its stored verdicts. Pure, like status.ts, so
 // the evaluator and GET /api/theses read the same rules. The judge supplies
 // only the verdict; every count and window here is the Worker's.
 
@@ -24,11 +24,10 @@ export function confirmationOf(spec: JudgedSpec, subject: string): Confirmation 
 }
 
 /**
- * Verdicts as cut events: one per (provider, model, UTC day seen). A cut
- * printed by two sources was two change rows, and before candidates were
- * keyed by the cut (candidates.ts › cutSubject) each got its own verdict;
- * those rows are still stored, so the count is taken over events, never rows.
- * The deepest cut stands for its event.
+ * Verdicts as cut events: one per (provider, model, UTC day seen). Older stored
+ * verdicts were keyed by change row, so a cut printed by two sources can have
+ * two; the count is taken over events, never rows. The deepest cut stands for
+ * its event.
  */
 function cutEvents(verdicts: readonly StoredVerdict[]): StoredVerdict[] {
   const byEvent = new Map<string, StoredVerdict>()

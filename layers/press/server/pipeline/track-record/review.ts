@@ -1,14 +1,13 @@
 // The judge's half of the track record. GET /api/judge/pending offers each
 // alert's unrated candidates as a TRACK RECORD REVIEW block; POST
-// /api/judge/alerts sends back one same-event rating per candidate, and this
-// file gates them the way claim verdicts are gated (theses/verdicts.ts): the
-// candidate must exist, and the rationale must be grounded in the candidate's
-// title and snippet plus the alert's own change rows. Only then is a verdict
-// written, once per candidate.
+// /api/judge/alerts sends back one same-event rating per candidate, gated the way
+// claim verdicts are (theses/verdicts.ts): the candidate must exist, and the
+// rationale must be grounded in its title and snippet plus the alert's own change
+// rows. A verdict is written once per candidate.
 //
-// Candidates are offered earliest first, per alert and kind, and only up to
-// the first one rated the same event: the first report is the one the page
-// shows, so a later article never needs a rating.
+// Candidates are offered earliest first, per alert and kind, only up to the first
+// one rated the same event: the page shows the first report, so a later article
+// never needs a rating.
 
 import { asc, inArray } from 'drizzle-orm'
 import { z } from 'zod'

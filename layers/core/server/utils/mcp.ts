@@ -1,35 +1,20 @@
-// The MCP server: the terminal's read-only query layer, exposed to an agent
-// over Streamable HTTP at /mcp (layers/core/server/routes/mcp.ts).
+// The MCP server: the terminal's read-only query layer over Streamable HTTP at
+// /mcp (layers/core/server/routes/mcp.ts).
 //
-// It lives inside the one Worker rather than beside it, and that is the
-// decision worth recording. A second Worker calling the public JSON API
-// would funnel every MCP user through one egress IP — and straight into the
-// per-IP rate limit — and would be a second deploy to keep in step. In-process,
-// every tool calls the same query function as its JSON route, reads through
-// the same KV entry (terminalPayload), and is rate-limited per real client
-// IP by the same rateLimit() the routes use. No auth: the site has no
-// accounts, the data is public, and a credential would only be a thing to
-// leak.
+// It lives inside the one Worker: a second Worker calling the JSON API would
+// funnel every MCP user through one egress IP into the per-IP rate limit. Here
+// every tool calls its JSON route's query function, reads the same KV entry
+// (terminalPayload), and is rate-limited per client IP by the same rateLimit().
+// No auth: the data is public.
 //
-// Stateless and JSON on both protocol eras. Each request gets a fresh
-// McpServer — some forty registrations, cheap — so a Worker isolate holds no
-// session, and a client that reconnects to a different isolate notices
-// nothing. Legacy (2025-era) clients, which is every shipping client today,
-// are served through a per-request WebStandardStreamableHTTPServerTransport
-// with JSON responses; modern (2026-07-28) clients through createMcpHandler.
-// The split is the composition the SDK documents on isLegacyRequest().
+// Stateless and JSON on both protocol eras: a fresh McpServer per request, so no
+// isolate holds a session. Legacy (2025-era) clients go through a per-request
+// WebStandardStreamableHTTPServerTransport, modern (2026-07-28) ones through
+// createMcpHandler, the split the SDK documents on isLegacyRequest().
 //
-// Every payload is the JSON route's payload, verbatim: provenance
-// (source_url + fetched_at) is a field of the data, so it cannot be stripped
-// here without changing the type. Tool descriptions say what a number means
-// and what it does not, in the audit's terms, because the reader is an
-// agent that has never seen the site.
-//
-// ── Extension point ──────────────────────────────────────────────────────────
-// A new JSON route gets a tool in its domain's file under server/mcp/ (a new
-// domain is a new file, listed in server/registries/mcp-tools.ts), calling
-// the same query function through `deps.serve` with the route's cache name (and
-// the same variant, so both doors fill one KV entry). Never a second query.
+// A new JSON route gets a tool in its domain's file under server/mcp/ (listed in
+// server/registries/mcp-tools.ts) that calls the same query through `deps.serve`
+// with the route's cache name and variant, so both fill one KV entry.
 
 import {
   McpServer,
@@ -40,7 +25,7 @@ import {
 
 import { MCP_INSTRUCTIONS, MCP_TOOLS } from '#server/registries/mcp-tools'
 
-/** What the server needs from its host — the route supplies the real thing, the test a fixture. */
+/** What the server needs from its host: the route supplies the real thing, the test a fixture. */
 export interface McpDeps {
   db: PipelineDb
   /**
@@ -62,7 +47,7 @@ export interface McpDeps {
     variant?: string,
     asOf?: RebuiltAsOf,
   ): Promise<AsOfPayload<T>>
-  /** The site's llms.txt body — the same bytes GET /llms.txt serves. */
+  /** The site's llms.txt body: the same bytes GET /llms.txt serves. */
   llmsTxt: string
   /** Canonical origin, no trailing slash. */
   appUrl: string
@@ -127,7 +112,7 @@ export function createTerminalMcpHandler(deps: McpDeps): (request: Request) => P
       return new Response('Method not allowed.', { status: 405, headers: { Allow: 'POST' } })
     }
     // The stateless legacy idiom, with JSON rather than a one-event SSE
-    // stream — the one thing the SDK's built-in fallback does not offer.
+    // stream, which the SDK's built-in fallback does not offer.
     const transport = new WebStandardStreamableHTTPServerTransport({
       sessionIdGenerator: undefined,
       enableJsonResponse: true,

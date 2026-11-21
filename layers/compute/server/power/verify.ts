@@ -1,19 +1,8 @@
-// The weekly re-check of the power table's rows that cite a page off EDGAR: a
-// utility's release, a regulator's bulletin, a company's own page. Those stay
-// read by hand, since nothing finds the next such page for us, but a page can
-// be edited or taken down, so once a week (tasks/power/verify.ts) each one is
-// fetched again and each quote looked for on it:
-//
-//   - found: the row's fetched_at moves to now;
-//   - the page answered and the quote is not on it, or the page is gone (404,
-//     410): one ops event per row, and the row keeps its last stamp, so the
-//     table still says when the quote was last seen. A person decides whether
-//     the tie still holds;
-//   - the page could not be read (a PDF, a host refusing a declared bot, a
-//     timeout): the row keeps its last stamp and the run reports it.
-//
-// A row from an SEC filing is not re-read here: a filing never changes, and
-// the filer's next filing is read by the filings lane (ingest.ts).
+// The weekly re-check (tasks/power/verify.ts) of rows citing a page off EDGAR, which
+// can be edited or taken down. Found: fetched_at moves to now. Quote missing or page
+// gone (404, 410): one ops event per row, and the row keeps its last stamp for a
+// person to judge. Unreadable (a PDF, a refused bot, a timeout): the row keeps its
+// stamp and the run reports it. SEC rows are left to the filings lane (ingest.ts).
 
 import { inArray } from 'drizzle-orm'
 

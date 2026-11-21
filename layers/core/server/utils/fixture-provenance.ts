@@ -1,10 +1,10 @@
 import type { Provenance } from './contracts'
 import manifest from '~~/fixtures/manifest.json'
 
-// Provenance for committed fixtures comes from fixtures/manifest.json — the
-// one record of the scaffold-time fetches. Never fabricated, never hardcoded
-// in a parser. Imported as a module (no filesystem) so the same lookup works
-// inside a Worker and inside workerd tests.
+// Provenance for committed fixtures comes from fixtures/manifest.json, the one
+// record of the scaffold-time fetches. Never fabricated, never hardcoded in a
+// parser. Imported as a module (no filesystem) so the same lookup works inside
+// a Worker and inside workerd tests.
 
 export interface ManifestFixture {
   path: string

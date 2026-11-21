@@ -159,10 +159,10 @@ export function htmlTablesUnder(sections: readonly HtmlSection[], heading: strin
 }
 
 /**
- * A printed dollar amount scaled to per-million-tokens without floating-point
- * drift: "$0.0004" per 1K tokens -> 0.4. `perTokens` is the unit the page
- * prints (1_000 or 1_000_000). Throws on anything that is not literally a
- * leading dollar amount — the same rule as md-table.ts › usdAmount.
+ * A printed dollar amount scaled to per-million-tokens without floating-point drift:
+ * "$0.0004" per 1K tokens -> 0.4. `perTokens` is the unit the page prints (1_000 or
+ * 1_000_000). Throws on anything that is not literally a leading dollar amount (the same rule
+ * as md-table.ts › usdAmount).
  */
 export function usdPerMillion(cell: string, perTokens: 1_000 | 1_000_000): number {
   const m = cell.trim().match(/^\$(\d+)(?:\.(\d+))?/)

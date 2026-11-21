@@ -1,12 +1,11 @@
-// Press notes: when a registration filing parses (a prospectus-floor alert),
-// one note per reporter, composed here from the alert. The EVENTS queue's
-// alert fan-out (layers/alerts/server/utils/event-work.ts) sends each note
-// to its reporter through Resend within a minute or so, then mails the owner
-// a receipt of who got it. Without Resend configured it mails the owner a
-// brief of mailto: links instead, and a person sends them.
+// Press notes: when a registration filing parses (a prospectus-floor alert), one
+// note per reporter, composed here from the alert. The EVENTS queue's alert
+// fan-out (layers/alerts/server/utils/event-work.ts) sends each note through
+// Resend within a minute or so, then mails the owner a receipt. Without Resend
+// configured it mails the owner a brief of mailto: links to send by hand.
 //
-// The press list is a Worker secret (NUXT_PRESS_LIST, JSON), not in the repo:
-// it is a list of people, and this repository is public.
+// The press list is a Worker secret (NUXT_PRESS_LIST, JSON), not in the repo: it
+// is a list of people, and this repository is public.
 
 import { and, desc, eq, sql } from 'drizzle-orm'
 import { z } from 'zod'

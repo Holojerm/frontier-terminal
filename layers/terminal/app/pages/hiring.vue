@@ -1,8 +1,7 @@
 <script setup lang="ts">
-// The hiring axis over time: open roles per lab per day, reconstructed by
-// undoing the change log backwards from each board's current listing, and
-// the department mix now against the comparison instant. Google is a stated
-// cut and xAI's board carries its entity-blend caveat, both stated in the
+// The hiring axis over time: open roles per lab per day, reconstructed by undoing the
+// change log backwards from each board's current listing, and the department mix now
+// against the comparison instant. Stated cuts and xAI's entity-blend caveat are in the
 // by-lab table the overview leads with.
 
 const watchlist = useWatchlist()

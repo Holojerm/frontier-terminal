@@ -19,15 +19,9 @@ import { fixtureProvenance } from '#layers/core/server/utils/fixture-provenance'
 //                    "firstPosted": "YYYY-MM-DD", "lastUpdated": "YYYY-MM-DD"},
 //    "filters": {"type": ["reports"] | ["notices"], "category": […], …}}
 //
-// A notice's href is an absolute openai.com update link. The index no longer
-// prints a report's model or the context it was observed in; the report's own
-// page does (openai-misalignment-report.ts), so both are null here.
-//
-// The page has been redesigned four times: a `cb-meta` line until 2026-10-03,
-// `<details class="cb-entry">` until 2026-10-07, a `<tbody class="report-entry">`
-// table on alignment.openai.com until 2026-11-20, then this page on openai.com
-// (the old host answers 308 to it). Each time every entry failed to parse and
-// the source failed.
+// A notice's href is an absolute openai.com update link. The index doesn't print
+// a report's model or the context it was observed in; the report's own page does
+// (openai-misalignment-report.ts), so both are null here.
 //
 // Honesty rules:
 //   1. Every string a reader sees is the page's own text, verbatim.

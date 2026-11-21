@@ -22,6 +22,6 @@ export interface ReleasesData extends Stamp {
   rows: ReleaseView[]
   /** Added rows dropped because they came from a source's first snapshot. */
   excluded_baseline: number
-  /** Earliest snapshot in the store — before it, nothing could have been seen. */
+  /** Earliest snapshot in the store; nothing could have been seen before it. */
   log_from: string | null
 }

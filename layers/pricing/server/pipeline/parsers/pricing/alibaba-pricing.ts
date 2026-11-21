@@ -8,48 +8,39 @@ import { textOf } from '../../../../../core/server/pipeline/parsers/html-text'
 import { fixtureProvenance } from '../../../../../core/server/utils/fixture-provenance'
 
 // alibaba-pricing-html — www.alibabacloud.com/help/en/model-studio/model-pricing
-// Alibaba Cloud's international site. Server-rendered HTML, one <h3> per model
-// line and one <h4> tab per region under it, each a table priced in USD per
-// million tokens. Read, and nothing else:
+// Alibaba Cloud's international site: server-rendered HTML, one <h3> per model line and one
+// <h4> tab per region under it, each a table priced in USD per million tokens. Read only:
 //
-//   - the "Text generation - Qwen" section, lines Qwen-Max, Qwen-Plus and
-//     Qwen-Flash: the commercial text lines the class map draws from. The
-//     specialised lines (Omni, VL, OCR, Coder, Translation, …), the
-//     open-weight section and the "third-party models" section (DeepSeek,
-//     Kimi, GLM, MiniMax, which Alibaba resells) are not Alibaba's
-//     list price for a Qwen text model and are not parsed;
-//   - the Singapore tab and its "International" deployment rows: the
-//     international list price. Beijing, Hong Kong, Frankfurt, Virginia and
-//     Tokyo print other prices for the same ids and are not read.
+//   - the "Text generation - Qwen" section, lines Qwen-Max, Qwen-Plus and Qwen-Flash (the
+//     commercial text lines the class map draws from). The specialised lines (Omni, VL, OCR,
+//     Coder, Translation, …), the open-weight section and the "third-party models" section
+//     (DeepSeek, Kimi, GLM, MiniMax, which Alibaba resells) are not Alibaba's list price for
+//     a Qwen text model;
+//   - the Singapore tab's "International" deployment rows: the international list price.
+//     Beijing, Hong Kong, Frankfurt, Virginia and Tokyo print other prices for the same ids.
 //
-// Alibaba republishes this page as a fresh machine translation now and then
-// ("Text generation - Qwen" became "Text Generation - Qwen", "Input price"
-// became "Input unit price"; issue #427), so headings and column labels are
-// matched on their words, not their punctuation or casing. A heading or label
-// that matches nothing, or more than one thing, still fails the parse.
+// Alibaba republishes the page as a fresh machine translation now and then ("Input price"
+// became "Input unit price"; #427), so headings and column labels match on their words, not
+// their punctuation or casing. A heading or label that matches nothing, or more than one
+// thing, still fails the parse.
 //
-// A table's header is its <thead> or, as in the Qwen Flash Singapore table,
-// its first <tbody> row. That table also has a "Pattern" column that only some
-// rows fill: the others print their band where the header puts Pattern, so a
-// positional read would store the band's neighbour as the input price. A row
-// is read under the header only when its own cells fit it (an id in the model
-// cell, a band in the band cell). A row that instead fits the header without
-// Pattern, cell for cell, is read that way. Any other International row fails
-// the parse: a price is never stored from a guess, and this is a 'set' lane,
-// where a row left out would be recorded as the model being delisted.
+// A table's header is its <thead> or, as in the Qwen Flash Singapore table, its first <tbody>
+// row. That table's "Pattern" column is filled by only some rows; the others print their band
+// there, so a positional read would store the band's neighbour as the input price. A row is
+// read under the header only when its own cells fit it (an id in the model cell, a band in
+// the band cell), or under the header without Pattern when it fits that cell for cell. Any
+// other International row fails the parse: this is a 'set' lane, where a row left out would
+// be recorded as the model being delisted.
 //
-// A model is tiered by input tokens per request ("0<Token≤256K",
-// "256K<Token≤1M"). The first band is the standard row; each later band is
-// its own tier (`input_256k_1m`), as OpenAI's long-context rows are. Where a
-// table prices non-thinking and thinking output apart, the non-thinking price
-// is the output price and the thinking one is kept in notes. An "Original$X
-// (N% off for a limited time)" cell stores the original price X and notes the
-// promotion: the page states no end date, so no effective_until is set. Most
-// cache and batch discounts are percentages on other pages and are not read.
-// The exception is a model whose tab prints its own cache price table under a
-// "<slug> — Cache unit prices (per million tokens)" caption (qwen4-max, added
-// 2026-11-16, issue #405): its cache hit is the cached-input price and its 5m
-// and 1h cache creations go in notes, as Anthropic's are.
+// A model is tiered by input tokens per request ("0<Token≤256K", "256K<Token≤1M"): the first
+// band is the standard row, each later band its own tier (`input_256k_1m`), as OpenAI's
+// long-context rows are. Where a table prices non-thinking and thinking output apart, the
+// non-thinking price is the output price and the thinking one goes in notes. An "Original$X
+// (N% off for a limited time)" cell stores X and notes the promotion; the page states no end
+// date, so no effective_until is set. Most cache and batch discounts are percentages on other
+// pages and are not read. The exception is a tab that prints its own cache price table under a
+// "<slug> — Cache unit prices (per million tokens)" caption (qwen4-max, #405): its cache hit
+// is the cached-input price and its 5m and 1h cache creations go in notes, as Anthropic's are.
 
 const SECTION = 'Text generation - Qwen'
 const LINES = ['Qwen-Max', 'Qwen-Plus', 'Qwen-Flash'] as const
@@ -335,9 +326,7 @@ function cacheTable(table: string, before: string, line: string): CachePrice | n
   return { slug, write5m: write5m!, write1h: write1h!, read: read! }
 }
 
-// prov defaults to the fixture manifest's record (single-arg behavior is
-// byte-identical for the determinism gate); the refresh orchestrator passes
-// the live fetch's provenance instead.
+// One-argument calls read the fixture's provenance, keeping the determinism gate byte-identical.
 export function parseAlibabaPricingHtml(
   html: string,
   prov: Provenance = fixtureProvenance('alibaba-pricing-html'),

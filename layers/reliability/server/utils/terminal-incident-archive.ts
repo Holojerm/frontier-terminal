@@ -1,15 +1,13 @@
-// Reads of the archived status-page incidents (archived_incidents,
-// archive_captures axis status): the Internet Archive's copies of each lab's
-// own status feed, backfilled by scripts/wayback-backfill.ts --axis status.
-// Kept out of the live derivations on purpose: the incident windows, the
-// signal band, the alerts and the judge read entities only.
+// Reads of the archived status-page incidents (archived_incidents, archive_captures axis
+// status): the Internet Archive's copies of each lab's status feed, backfilled by
+// scripts/wayback-backfill.ts --axis status. Kept out of the live derivations: the incident
+// windows, the signal band, the alerts and the judge read entities only.
 //
-// What is shown is a count per lab per month, beside how much of the month
-// the copies reach. A feed lists only its newest entries, so a copy speaks
-// for the stretch from its oldest listed start to the moment the Archive took
-// it; a month between two copies that don't meet is counted only as far as
-// they reach. No uptime or duration figure is computed: those would need
-// every incident, and copies can't promise that.
+// Shown: a count per lab per month, beside how much of the month the copies reach. A feed
+// lists only its newest entries, so a copy covers its oldest listed start to the moment the
+// Archive took it; a month between two copies that don't meet is counted only as far as
+// they reach. No uptime or duration is computed: that needs every incident, and copies
+// can't promise it.
 
 import { eq } from 'drizzle-orm'
 
@@ -67,10 +65,10 @@ const overlap = (merged: readonly [number, number][], from: number, to: number) 
   merged.reduce((n, [a, b]) => n + Math.max(0, Math.min(b, to) - Math.max(a, from)), 0)
 
 /**
- * Pure: per lab, incidents per month and how much of each month the copies
- * reach. `incidents` are already filtered to those the live feed counts. Months run from the first month any lab's copies reach (not before
- * ARCHIVE_FROM) to the month before the latest live lane began; a lab's
- * months from its own live start on are null.
+ * Pure: per lab, incidents per month and how much of each month the copies reach.
+ * `incidents` are already filtered to those the live feed counts. Months run from the
+ * first month any lab's copies reach (not before ARCHIVE_FROM) to the month before the
+ * latest live lane began; a lab's months from its own live start on are null.
  */
 export function incidentArchiveSeries(
   incidents: readonly ArchivedIncidentStart[],

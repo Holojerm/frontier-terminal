@@ -1,9 +1,6 @@
-// Every public URL a crawler document names, and the /llms.txt input built
-// from them — in one place because three readers need the same answer:
-// sitemap.xml, /llms.txt, and the MCP `describe` tool, which hands an agent
-// the llms.txt body. The MCP copy once listed only the route-table pages, so
-// an agent asking what the site holds was never told the lab pages, the
-// theses, or the bulk tables existed.
+// Every public URL a crawler document names, and the /llms.txt input built from them. One
+// place because three readers need the same answer: sitemap.xml, /llms.txt, and the MCP
+// `describe` tool, which hands an agent the llms.txt body.
 
 import manifest from '~~/fleet.json'
 import { THESES } from '../../../theses/server/theses/registry'

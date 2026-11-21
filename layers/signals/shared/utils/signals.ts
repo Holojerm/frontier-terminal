@@ -15,8 +15,10 @@ export const MIN_SAMPLE = {
 /** The newest share of each series held out of sample. */
 export const HOLDOUT_FRACTION = 1 / 3
 
-/** grid: a balancing authority by its EIA-930 code (ERCO, PJM, MISO). */
-/** listed: a US symbol we price. supplier: a company listed only abroad (a Taiwan filer), by its hardware-prints id. */
+/**
+ * listed: a US symbol we price. supplier: a company listed only abroad (a Taiwan filer), by
+ * its hardware-prints id. grid: a balancing authority by its EIA-930 code (ERCO, PJM, MISO).
+ */
 export type SignalEntityKind = 'lab' | 'listed' | 'site' | 'grid' | 'supplier'
 export type SignalTransform = 'level' | 'change' | 'share' | 'normalized'
 export type SignalFrequency = 'daily' | 'weekly' | 'monthly' | 'event'

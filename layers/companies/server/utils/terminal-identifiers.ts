@@ -1,16 +1,9 @@
 // The identifiers a fund keys its security master on, one row per company the
-// terminal names: each lab, each SEC filer we read, and each comparison
-// company in a thesis. entity_id is the value of every `provider` and
-// `company` column in the exports, so this table is the join from our rows
-// to CIK, LEI, ticker, MIC and FIGI.
-//
-// Every value was read off a fetched response committed under
-// fixtures/identifiers/ (fixtures/manifest.json has each fetch), and carries
-// the URL and time it was read. layers/companies/test/terminal-identifiers.test.ts
-// fails when a value stops matching its fixture. An identifier we couldn't
-// verify is null, with the reason in its note. Which security carries a lab
-// (a parent, a disclosed investor) is entity_securities (terminal-entities.ts),
-// not this table.
+// terminal names; entity_id is every export's `provider`/`company` value, so this
+// joins our rows to CIK, LEI, ticker, MIC and FIGI. Every value was read off a
+// fixture under fixtures/identifiers/ and carries its URL and read time;
+// layers/companies/test/terminal-identifiers.test.ts fails on drift. An identifier
+// we couldn't verify is null, with the reason in its note.
 
 import { ENTITY_SECURITIES, type EntitySecurity } from './terminal-entities'
 

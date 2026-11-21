@@ -1,9 +1,8 @@
 // Reading stored payloads. A row's payload / before_json / after_json is JSON
-// text the parsers wrote; these helpers read one field out of it without ever
-// guessing a value — an absent or mistyped field is null, never a default.
-//
-// Shared by the queries (terminal-db.ts and its per-axis siblings) and terminal-history.ts (the pure
-// derivations over rows), so the two agree on what a field is.
+// text the parsers wrote; these helpers read one field without guessing: an
+// absent or mistyped field is null, never a default. Shared by the queries
+// (terminal-db.ts and its per-axis siblings) and terminal-history.ts, so both
+// agree on what a field is.
 
 import type { FieldDiff } from '../../shared/types/common'
 

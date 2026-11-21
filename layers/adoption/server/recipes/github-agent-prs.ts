@@ -1,15 +1,12 @@
-// Public pull requests a lab's coding agent opened on GitHub, counted per
-// UTC day through the search API. Each agent leaves a different trace, so
-// each is a trend of its own and never a share against the others:
-// Claude Code's PR footer is on by default and users can turn it off; Jules
-// opens PRs as its own app; Codex is only a `codex/` branch-name convention.
-// Public repositories only. The search API needs a token from a Worker (its
-// anonymous limit is per IP), so a deploy without NUXT_GITHUB_TOKEN records
-// these as not configured (docs/source-audit.md, 2026-11-04).
+// Public PRs a lab's coding agent opened on GitHub, per UTC day, via the search API. Each
+// agent leaves a different trace, so each is its own trend, never a share: Claude Code's PR
+// footer is on by default and can be turned off; Jules opens PRs as its own app; Codex is
+// only a `codex/` branch-name convention. Public repositories only. The search API needs a
+// token from a Worker (the anonymous limit is per IP), so a deploy without
+// NUXT_GITHUB_TOKEN records these as not configured (docs/source-audit.md).
 //
-// A search answers for any past day, so each run also walks back a few days
-// before the oldest one stored, down to the agent's public launch
-// (docs/source-audit.md, 2026-11-20). Those counts are taken today, from the
+// A search answers for any past day, so each run also walks back a few days before the
+// oldest stored, down to the agent's public launch. Those counts are taken today, from the
 // PRs that still exist, and the runner labels them retrospective.
 
 import type { CompanyId } from '#layers/core/shared/utils/companies'

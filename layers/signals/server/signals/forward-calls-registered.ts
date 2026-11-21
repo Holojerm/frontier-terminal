@@ -1,10 +1,9 @@
-// Forward calls registered in code: Anthropic's on 2026-11-20 (its first
-// quarter as a listed company), the rest on 2026-11-21 from what the terminal
-// held that day: the call guidance on /api/call-guidance and how far each
-// company's past guidance landed, the filed quarters (EDGAR company concepts),
-// the hyperscaler capex lines on /api/exposure and the Taiwan prints on
-// /api/prints. Never edited: forward-calls.lock.json pins each entry. A new
-// call is a new entry with its own id and date.
+// Forward calls registered in code: Anthropic's on 2026-11-20, the rest on 2026-11-21 from
+// what the terminal held that day (the call guidance on /api/call-guidance and how far each
+// company's past guidance landed, the filed quarters from EDGAR company concepts, the
+// hyperscaler capex lines on /api/exposure, the Taiwan prints on /api/prints). Never
+// edited: forward-calls.lock.json pins each entry. A new call is a new entry with its own
+// id and date.
 
 export const REGISTERED_CALLS: readonly ForwardCall[] = [
   {

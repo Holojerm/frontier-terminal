@@ -1,17 +1,14 @@
-// The eras of each lab's job board, as the Internet Archive holds them:
-// which board the lab posted its open roles on, over which window, and which
-// parser reads that shape. Unlike the pricing eras, two eras of one lab may
-// overlap: a board's API and its HTML page are two copies of one listing,
-// and each capture is an observation of it at its own instant. The count at
-// an instant is the newest parsed capture at or before it, whichever era it
-// came from. Every era ends at the day the live lane began reading the lab's
-// board (HIRING_ARCHIVE_UNTIL): from then on the live pipeline is the record.
+// The eras of each lab's job board as the Internet Archive holds them: which board the lab
+// posted on, over which window, and which parser reads that shape. Unlike the pricing eras,
+// two eras of one lab may overlap (a board's API and its HTML page are two copies of one
+// listing). The count at an instant is the newest parsed capture at or before it, from
+// whichever era. Every era ends the day the live lane began reading the lab's board
+// (HIRING_ARCHIVE_UNTIL).
 //
-// How each window was found: the CDX listing of each candidate URL, cut
-// where the lab moved its board (docs/source-audit.md › Internet Archive ›
-// Hiring). Stretches with no readable capture are stated with their reason:
-// the fixed ones in HIRING_ARCHIVE_GAPS, and any other stretch of more than
-// HIRING_GAP_DAYS between two read captures, computed on the read side
+// Windows come from the CDX listing of each candidate URL, cut where the lab moved its
+// board (docs/source-audit.md › Internet Archive › Hiring). Stretches with no readable
+// capture are stated with their reason: the fixed ones in HIRING_ARCHIVE_GAPS, and any
+// other stretch over HIRING_GAP_DAYS between two read captures, computed on the read side
 // (terminal-hiring-archive.ts › queryHiringReach).
 
 import {

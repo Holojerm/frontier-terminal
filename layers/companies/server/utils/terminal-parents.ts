@@ -1,8 +1,6 @@
-// Parents' filings: what Microsoft and Amazon file about OpenAI and Anthropic,
-// read from the investee recipes' rows (recipes/investee-facts.ts) into the
-// /api/parents payload (shared/utils/recipe-views.ts). Every figure keeps the
-// URL it was read from and when; a recipe with no stored rows yet yields no
-// entry, never a guess.
+// What Microsoft and Amazon file about OpenAI and Anthropic, from the investee
+// recipes (recipes/investee-facts.ts) into /api/parents. A recipe with no stored
+// rows yields no entry, never a guess.
 
 import { inArray } from 'drizzle-orm'
 

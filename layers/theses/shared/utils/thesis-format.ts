@@ -4,9 +4,7 @@
 //
 // A measured value prints in the `format` the server sends with its claim.
 // Context rows are read off the shape of the `detail` the signal recorded
-// beside it — `ratios`, `shares` and `rivals` per company, `by_department`,
-// `by_key` and `by_lab` breakdowns, a year-earlier base, a trailing window,
-// and the Compute thesis's flagship prices and GPU medians.
+// beside it.
 
 import { companyName, gpuProviderName } from '../../../core/shared/utils/companies'
 import { absoluteStamp, compactUsd, count, money } from '../../../core/shared/utils/terminal-format'
@@ -81,7 +79,7 @@ export function valueKind(detail: unknown, format: ValueFormat | null = null): V
   return 'plain'
 }
 
-/** '1.87×' / '26.4%' / '1,234' — and a share tick never ends in a trailing '.0'. */
+/** '1.87×' / '26.4%' / '1,234'. A share tick never ends in a trailing '.0'. */
 export function formatValue(kind: ValueKind, v: number): string {
   switch (kind) {
     case 'ratio':
@@ -473,9 +471,9 @@ export const thesisPages = (
 // ---- the index card -----------------------------------------------------------
 
 /**
- * What /theses draws per thesis: the card never reads a claim's text, readings or
- * verdicts, which were 110 kB of that page's hydration payload. They are on the
- * thesis page, one click away.
+ * What /theses draws per thesis. The card never reads a claim's text, readings
+ * or verdicts (they were 110 kB of that page's hydration payload); those are on
+ * the thesis page.
  */
 export type ThesisCardView = Pick<
   ThesisView,

@@ -1,19 +1,13 @@
-// The export schema's version and its history: what /export, the bulk feed,
-// and every /api envelope carry as `schema_version`, and what /data and
-// CHANGELOG-data.md list as the schema changelog.
-//
-// The promise to data users: adding a table or a column is a minor version.
-// Removing or renaming one is a major version, announced BREAKING_NOTICE_DAYS
-// ahead. Changing what a column holds without renaming it is a minor version
-// with a note. A release that changes no column is a patch.
+// The export schema's version (`schema_version` on /export, the bulk feed and
+// every /api envelope) and its changelog (/data, CHANGELOG-data.md). Adding a
+// table or column is minor; removing or renaming one is major, announced
+// BREAKING_NOTICE_DAYS ahead; changing what a column holds is minor with a note;
+// no column change is a patch.
 //
 // schema.lock.json holds the columns /export served at the last release.
-// layers/terminal/test/terminal-dictionary.test.ts fails when the exported
-// columns or SCHEMA_VERSION no longer match it, and `bun run schema:lock`
-// (scripts/schema-lock.ts) rewrites it only when the newest release here
-// says exactly what changed since (lockRefusal). So a column can't move
-// without a release, and the test also fails a release filed under too small
-// a bump.
+// layers/terminal/test/terminal-dictionary.test.ts fails when they drift or a
+// release's bump is too small, and `bun run schema:lock` rewrites the lock only
+// when the newest release says exactly what changed (lockRefusal).
 
 import type { SchemaChangelogEntry } from '../../shared/types/coverage'
 

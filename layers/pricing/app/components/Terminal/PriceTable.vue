@@ -1,14 +1,11 @@
 <script setup lang="ts">
-// The full catalog: everything the store holds, one row per SKU key, priced
-// rows first. Each row carries the delta against its previous revision (from
-// the change log), a sparkline once it has been observed more than once, a
-// link to its own page, and its provenance. Batch, long-context and promo
-// rows sit here, not in the matrix.
+// The full catalog: one row per SKU key, priced rows first, each with its delta against the
+// previous revision, a sparkline once observed more than once, a link to its own page, and its
+// provenance. Batch, long-context and promo rows sit here, not in the matrix.
 //
-// A column whose every filtered row would print a dash (no change on record,
-// no second observation, no dated window) is left out for that filter
-// instead of running a column of dashes. A context window read from another
-// page on the row's own host links that page by name, so the host prints once.
+// A column every filtered row would print as a dash is left out for that filter. A context
+// window read from another page on the row's own host links that page by name, so the host
+// prints once.
 
 import type { PricesData } from '../../../shared/types/prices'
 
@@ -98,8 +95,7 @@ function deltaText(row: PriceRowView): string | null {
       <span v-if="hidden > 0" class="text-xs text-muted">{{ hidden }} row(s) filtered out</span>
     </div>
 
-    <!-- Above the rows: under a catalog that runs with the page, nobody
-         reached it. -->
+    <!-- Above the rows: below a catalog that runs with the page, nobody reached it. -->
     <UAlert
       v-if="!bare && prices.cross_check"
       color="info"

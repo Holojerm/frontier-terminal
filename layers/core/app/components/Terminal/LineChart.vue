@@ -1,12 +1,8 @@
 <script setup lang="ts">
-// One line chart, drawn as inline SVG from the token layer — no chart
-// library, no raw color. Up to three series share one y axis (one unit,
-// one scale; two measures of different scale get two charts). Series
-// colors are the accent, the ink and the muted ink, never a second hue:
-// DESIGN.md allows one accent per viewport. A legend names every series
-// when there are two or more, and the hover readout lists all of them at
-// the nearest x. The chart never gates a value: every page that renders
-// one also renders the same numbers as a table.
+// One line chart as inline SVG from the token layer. Up to three series share one
+// y axis; series inks are the accent, the ink and the muted ink, never a second hue
+// (DESIGN.md allows one accent per viewport). Every page that renders a chart also
+// renders its numbers as a table.
 
 interface Series {
   id: string
@@ -25,7 +21,7 @@ const props = withDefaults(
     /** The y-axis tick text, when it should read shorter than a value (`format` otherwise). */
     tickFormat?: (v: number) => string
     xLabel: (x: string) => string
-    /** Accessible name — what is plotted, in one sentence. */
+    /** Accessible name: what is plotted, in one sentence. */
     title: string
     /** A dashed level across the plot, labelled: a claim's kill line. */
     rule?: { value: number; label: string }
@@ -39,17 +35,16 @@ const props = withDefaults(
   { step: false, height: 220 },
 )
 
-// The drawing width is the box's own width in CSS pixels, measured on mount,
-// so the chart fills its panel and its 12-unit labels stay 12px at any
-// width. A fixed viewBox scaled with the box instead: capped, it left half a
-// wide panel empty; uncapped, it set the labels at twice the body size.
+// The drawing width is the box's own width in CSS pixels, measured on mount, so
+// the chart fills its panel and its 12-unit labels stay 12px at any width; a
+// fixed viewBox either left wide panels half empty or doubled the label size.
 const W = useChartWidth('box')
 const H = computed(() => props.height)
 // 12px labels run about 7 units a character; 8 more is the gap to the line.
 const LABEL_CHAR = 7
 const END_ROOM = 84
-// Room on the right for direct end labels, only when they will be drawn: kept
-// for labels too long to fit, it left two-series charts 64px narrower than the card.
+// Room on the right for end labels only when they will be drawn; reserving it
+// otherwise left two-series charts 64px narrower than the card.
 const endFits = computed(
   () =>
     props.series.length > 1 &&

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-// A claim's status as a word, an icon and a color — never the color alone.
+// A claim's status as a word, an icon and a color, never the color alone.
 
 import type { ClaimStatus } from '../../../shared/utils/thesis-types'
 

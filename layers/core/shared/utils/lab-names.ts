@@ -16,7 +16,6 @@ export const LABS: readonly LabId[] = [
   'moonshot',
 ] as const
 
-/** A lab's own page. */
 export const labPath = (lab: LabId) => `/labs/${lab}`
 
 export function isLab(s: string): s is LabId {

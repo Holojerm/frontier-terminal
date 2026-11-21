@@ -64,12 +64,11 @@ const TIER_HEADING = /<h3\b[^>]*>(?:Standard|Batch|Flex|Priority)<\/h3>/
 const STUDIO_MODEL = /aistudio\.google\.com\/?\?model=([a-z0-9][a-z0-9.-]*)"/g
 
 /**
- * Until late 2025 the page printed no `<code>` model id under a heading; the
- * id it named was the model in its own "Try it in Google AI Studio" link
- * (`aistudio.google.com?model=gemini-2.0-flash`), the same id the page
- * printed in <code> from November 2025. Such a link is turned into the
- * <code> the live parser reads, and only when the section has exactly one:
- * a section with none or with several is left for the live parser to skip.
+ * Until November 2025 the page printed no `<code>` model id under a heading; the id was the
+ * model in its own "Try it in Google AI Studio" link
+ * (`aistudio.google.com?model=gemini-2.0-flash`), the same id later printed in <code>. Such a
+ * link becomes the <code> the live parser reads, only when the section has exactly one: a
+ * section with none or several is left for the live parser to skip.
  */
 function codesFromStudioLinks(html: string): string {
   const heads = [...html.matchAll(H2)]
@@ -91,15 +90,11 @@ function codesFromStudioLinks(html: string): string {
 }
 
 /**
- * The docs pricing page through the live parser. Two archived-only steps:
- * model ids from the AI Studio links (codesFromStudioLinks), and the tier of
- * a page that printed no tier headings at all. Until September 2025 every
- * model had one paid table and no "Standard" / "Batch" heading; that table
- * is the price the live page files under Standard; the live parser already
- * keys an untiered table `standard`, and these rows also say so in notes.
- * Sections the live parser skips for want of a model id are named on the
- * capture; image, video and music tables (per image / second / request) are
- * not token prices and are left out, as live.
+ * The docs pricing page through the live parser. Two archived-only steps: model ids from the
+ * AI Studio links (codesFromStudioLinks), and the tier of a page that printed no tier headings
+ * at all. Until September 2025 every model had one paid table and no "Standard" / "Batch"
+ * heading; the live parser already keys an untiered table `standard`, and these rows also say
+ * so in notes.
  */
 export function parseGoogleDocsPricingHtml(html: string, prov: Provenance) {
   const tiered = TIER_HEADING.test(stripInvisible(html))

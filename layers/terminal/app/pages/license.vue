@@ -1,11 +1,9 @@
 <script setup lang="ts">
-// What may be reused, and under what terms.
-//
-// The page exists because "open data" with no stated licence is not reusable:
-// a careful reuser has to assume the worst, and an answer engine has nothing
-// to cite terms from. The split it draws — code, our data by age, facts — is
-// the honest one (shared/utils/license.ts), and the per-source table below is
-// read from the coverage endpoint so this page and sources.yaml cannot disagree.
+// What may be reused, and under what terms. "Open data" with no stated licence is not
+// reusable: a careful reuser has to assume the worst, and an answer engine has nothing to
+// cite terms from. The split (code, our data by age, facts) is in shared/utils/license.ts,
+// and the per-source table is read from the coverage endpoint so this page and
+// sources.yaml cannot disagree.
 
 import manifest from '~~/fleet.json'
 
@@ -25,9 +23,8 @@ const appUrl = config.public.appUrl.replace(/\/+$/, '')
 const attribution = attributionLine(config.public.appName, appUrl)
 const historyAttribution = attributionLine(config.public.appName, appUrl, HISTORY_LICENSE)
 
-// Only the sources that state terms of their own — the rest would be a guess —
-// and only the fields the table prints: the whole coverage report was 200KB of
-// payload.
+// Only the sources that state terms of their own (the rest would be a guess), and only the
+// fields the table prints: the whole coverage report was 200KB of payload.
 const { data: coverage } = await useFetch('/api/coverage', {
   transform: (c: CoverageData) => ({
     as_of: c.as_of,

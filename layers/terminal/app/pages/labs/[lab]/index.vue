@@ -1,17 +1,17 @@
 <script setup lang="ts">
-// One lab across every axis: the readout as figures, the alerts that cite it, then
-// each axis panel filtered to the lab. The panels are the same components
-// the axis pages render, handed a payload narrowed to one provider, so a
-// number here is the same number there — same query, same cache, same
-// provenance. The lab is a route parameter; a name outside the tracked labs is a 404.
+// One lab across every axis: the readout as figures, the alerts that cite it, then each
+// axis panel filtered to the lab. The panels are the axis pages' components, handed a
+// payload narrowed to one provider, so a number here is the number there (same query,
+// cache and provenance). The lab is a route parameter; a name outside the tracked labs is
+// a 404.
 
 import { count } from '#layers/core/shared/utils/terminal-format'
 import type { ThesisView } from '../../../../../theses/shared/utils/thesis-types'
 import type { IncidentsData } from '../../../../../reliability/shared/types/incidents'
 import type { PricesData } from '../../../../../pricing/shared/types/prices'
-// Inert for a dynamic route: the collecting hook skips paths with a
-// parameter, and sitemap.xml / llms.txt append the lab pages from
-// layers/terminal/shared/utils/terminal-lab-summary.ts. Declared anyway — the seo gate's
+// Inert for a dynamic route: the collecting hook skips paths with a parameter, and
+// sitemap.xml / llms.txt append the lab pages from
+// layers/terminal/shared/utils/terminal-lab-summary.ts. Declared anyway: the seo gate's
 // invariant is per-page.
 definePageMeta({
   publicPage: {
@@ -30,21 +30,16 @@ if (!isLab(labParam)) {
 }
 const lab = labParam
 
-// Every panel on this page is one lab's slice of an all-lab payload, and the
-// filtering used to happen in the computeds below — after Nuxt had already
-// serialised the whole thing into the hydration payload. `transform` runs on
-// the server, before serialisation, so the other three labs' rows never reach
-// the HTML. The shapes are unchanged: these return the same types, with fewer
-// rows in them.
+// Every panel on this page is one lab's slice of an all-lab payload. `transform` narrows
+// it on the server, before serialisation, so the other labs' rows never reach the HTML;
+// the shapes are unchanged, with fewer rows. Where a panel shows only the first few rows,
+// the transform keeps only those and records how many there were, so the "All N" links
+// still count the full list.
 //
-// Where a panel shows only the first few rows, the transform keeps only those
-// and records how many there were, so the "All N" links still count the full
-// list.
-//
-// EXPLICIT `key` PER LAB, and it is load-bearing. Nuxt derives an automatic key
-// from the call site, not from what a transform closes over — so all the lab
-// pages would share one cache entry and a client-side navigation between them
-// would render the first lab's rows under the second lab's heading.
+// Every fetch needs an explicit `key` per lab. Nuxt derives an automatic key from the call
+// site, not from what a transform closes over, so all the lab pages would share one cache
+// entry and a client-side navigation would render the first lab's rows under the second
+// lab's heading.
 const ALERTS_SHOWN = 10
 const CATALOG_ROWS = 15
 const INCIDENTS_SHOWN = 10

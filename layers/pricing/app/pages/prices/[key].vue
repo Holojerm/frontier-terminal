@@ -1,9 +1,7 @@
 <script setup lang="ts">
-// One SKU's price over time: every observation the store holds for the
-// key — the Internet Archive's captures of the lab's page from before we
-// watched it, then the change rows, the current row, and the state as of the
-// source's first snapshot — as a step chart and as the point-by-point table
-// with the fetch each point was read from.
+// One SKU's price over time: the Internet Archive's captures from before we watched the page,
+// then the change rows, the current row and the state at the source's first snapshot, as a
+// step chart and a point-by-point table citing the fetch each point was read from.
 
 // A dynamic route is one pattern, not N pages, so the sitemap hook skips it,
 // and the SKU pages are kept out of the sitemap on purpose (terminal-page-source.ts).
@@ -28,10 +26,8 @@ const upstream = error.value?.statusCode
 if (upstream === 404 || upstream === 400) {
   throw createError({ statusCode: 404, statusMessage: 'SKU not found', fatal: true })
 }
-// A throttled fetch is not a SKU with no history. Falling through renders the
-// inline "could not be read" alert under a 200, which is the one answer a
-// crawler stores as content — the permalink would enter the index as an empty
-// page. Say 429 and it comes back instead.
+// A throttled fetch is not a SKU with no history. The inline "could not be read" alert under a
+// 200 is what a crawler would index, as an empty page; a 429 makes it come back.
 if (upstream === 429) {
   throw createError({ statusCode: 429, statusMessage: 'Too many requests', fatal: true })
 }
@@ -42,11 +38,8 @@ const name = computed(() => {
   return `${h.model_slug}${h.tier ? ` (${tierLabel(h.tier)})` : ''}`
 })
 
-// A price series with a source URL on every point is a Dataset, not a page
-// that happens to contain numbers, and "what does <model> cost" is the query
-// this site most wants to be the answer to. `temporalCoverage` is taken from
-// the observations themselves rather than stamped: the interval is only as
-// wide as what was actually watched.
+// A price series with a source URL on every point is a Dataset. `temporalCoverage` comes from
+// the observations, so the interval is only as wide as what was watched.
 const site = useSiteContext()
 const points = computed(() => history.value?.points ?? [])
 const coverage = computed(() => {

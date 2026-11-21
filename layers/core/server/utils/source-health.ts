@@ -4,13 +4,10 @@ import * as tables from '#server/db/schema'
 import type { SourceHealth, SourceRunStamp } from '../../shared/types/coverage'
 import type { PipelineDb } from './pipeline-store'
 
-// Whether a source is degraded, for the coverage panel. The last check's
-// badge says how one poll ended, which hides the two ways a source goes bad
-// in practice. mistral-status refused every poll from 06:00Z on 2026-11-16
-// with a 429 (issue #406): the badge read "failed", the same as a single
-// blip. OpenAI's docs pages returned a 403 on about one poll a day (issue
-// #402): each recovered by the next poll, so the badge read "unchanged" and
-// the panel showed nothing at all.
+// Whether a source is degraded, for the coverage panel. The last check's badge
+// hides the two common failures: a source refused on every poll reads "failed",
+// like a single blip, and one that fails about once a day and recovers by the
+// next poll reads "unchanged".
 //
 // So two facts per source, read from source_runs: when its current run of
 // failed checks began, and how many checks failed in the last week.
@@ -74,11 +71,11 @@ export async function failingStreaks(
 }
 
 /**
- * The sources that are failing at `asOf` (the newest check of any source),
- * with when each one's run of failed checks began. Every payload that cites
- * one says so (markFailing), so a number from a source we can no longer read
- * does not sit under a fresh "as of". source_stats holds each source's newest
- * check, so this reads one source_runs row per source.
+ * The sources failing at `asOf` (the newest check of any source), with when each
+ * one's run of failed checks began. markFailing stamps every payload that cites
+ * one, so a number from a source we can't read doesn't sit under a fresh
+ * "as of". source_stats holds each source's newest check, so this reads one
+ * source_runs row per source.
  */
 export async function failingSources(
   db: PipelineDb,
@@ -127,11 +124,10 @@ export function markFailing<T>(payload: T, failing: Readonly<Record<string, stri
 }
 
 /**
- * Failed checks per source in the window before `asOf`, and, for each source
- * whose last check failed, the first failed check after its last check that
- * did not fail. Every read goes through an index on source_runs: the failed
- * count through (status, source_id, started_at), and the streak walks one
- * source's runs back from the newest, which stops at its last good check.
+ * Failed checks per source in the window before `asOf`, and each failing
+ * source's streak start. Every read uses a source_runs index: the count through
+ * (status, source_id, started_at); the streak walks one source's runs back from
+ * the newest and stops at its last good check.
  */
 export async function sourceFailures(
   db: PipelineDb,

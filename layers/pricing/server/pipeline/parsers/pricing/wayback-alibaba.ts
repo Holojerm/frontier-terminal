@@ -16,16 +16,12 @@ import { htmlText } from './html-table'
 // non-thinking output as the output price, a "List price $X" cell read as X.
 //
 // Where the international price sat:
-//   until mid-2026, a region tab named "International" under each line (beside
-//   "Global", "US", "Mainland China"…), its tables with no Deployment scope
-//   column;
-//   from mid-2026, a "Singapore" tab whose rows carry a Deployment scope
-//   column, the rows scoped "International" being the ones read — the
-//   layout the live parser reads.
-// The earlier "International" tab is the same deployment scope the live
-// parser reads under Singapore (Alibaba runs its international deployment
-// from Singapore), so its rows land on the same keys, and each says which
-// tab it was printed under.
+//   until mid-2026, a region tab named "International" under each line (beside "Global",
+//   "US", "Mainland China"…), its tables with no Deployment scope column;
+//   from mid-2026, a "Singapore" tab whose rows carry a Deployment scope column, the rows
+//   scoped "International" being the ones read (the live layout).
+// Both are the international deployment (Alibaba runs it from Singapore), so their rows land
+// on the same keys, and each says which tab it was printed under.
 
 const SECTION = 'Text generation - Qwen'
 const LINES = ['Qwen-Max', 'Qwen-Plus', 'Qwen-Flash'] as const

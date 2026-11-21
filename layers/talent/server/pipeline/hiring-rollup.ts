@@ -3,19 +3,17 @@ import { and, asc, eq, gte, inArray, lt } from 'drizzle-orm'
 import * as tables from '#server/db/schema'
 import { boardMoves, describeReason, signed, type BoardMove } from './hiring-floor'
 
-// The hiring roll-up: one alert per lab per week saying what its board did
-// — net change, and the departments that moved most — citing every role
-// added or closed that week. No model in the loop.
+// The hiring roll-up: one alert per lab per week saying what its board did (net change,
+// and the departments that moved most), citing every role added or closed that week. No
+// model in the loop.
 //
-// The judge sees one poll's batch at a time, so a week of +2s never reaches
-// the alert tier on its own; the roll-up is where it adds up. It is
-// `notable` only when the week's moves clear the hiring materiality floor
-// (hiring-floor.ts), `info` otherwise, and never `critical`: social.ts posts
-// critical alerts only, so a roll-up is never posted on its own.
+// The judge sees one poll's batch at a time, so a week of +2s never reaches the alert
+// tier on its own; the roll-up is where it adds up. It is `notable` only when the week's
+// moves clear the hiring materiality floor (hiring-floor.ts), `info` otherwise, and never
+// `critical`, so social.ts (which posts critical alerts only) never posts a roll-up.
 //
-// Run once a week (alerts:hiring-rollup, Monday 13:00 UTC) over the last
-// complete ISO week. The id hashes (lab, week), so a re-run writes nothing,
-// and only that one week is ever rolled up: no back-fill of past weeks.
+// Runs weekly (alerts:hiring-rollup, Monday 13:00 UTC) over the last complete ISO week.
+// The id hashes (lab, week), so a re-run writes nothing; past weeks are never back-filled.
 
 export const HIRING_ROLLUP_RULE = 'hiring-rollup' as const
 

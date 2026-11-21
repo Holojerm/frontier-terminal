@@ -1,17 +1,12 @@
 <script setup lang="ts">
-// The long run of each package's downloads: complete ISO weeks over every
-// stored day, one small chart per package. The levels aren't comparable
-// across packages (DownloadsTable says why), so each chart has its own
-// y-axis. A partial week breaks the line instead of reading as a drop, and
-// the table has its total and how many days it rests on. Each registry's
-// history starts where its API's reach did, and the line under the charts
-// gives that week, so a short line isn't read as a young package.
+// Complete ISO weeks over every stored day, one chart per package on its own y-axis (levels
+// don't compare; see DownloadsTable). A partial week breaks the line instead of reading as
+// a drop. Each registry's history starts where its API reached, and the line under the
+// charts gives that week.
 //
-// `measure` picks the series: raw weekly totals, npm downloads divided by
-// the control basket (normalized), or each core SDK's share of its
-// registry's tracked SDKs. The derived two are ratios of sums, fair on a
-// week missing a day, so they break only under MIN_RATIO_DAYS. Shares share
-// one y-axis top, so their heights compare.
+// `measure`: raw weekly totals, npm ÷ the control basket (normalized), or each core SDK's
+// share of its registry's tracked SDKs. The ratios stay fair on a week missing a day, so
+// they break only under MIN_RATIO_DAYS. Shares share one y-axis top.
 
 import type { AdoptionData } from '../../../shared/utils/adoption-views'
 

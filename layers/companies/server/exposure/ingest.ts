@@ -1,34 +1,30 @@
-// One run of the filed-facts reader, after each edgar tick's poll (every 30
-// minutes, never at the survey instant: filedFactsSkip): for each hyperscaler
-// in sources.yaml `filed_fact_sources`,
+// One run of the filed-facts reader, after each edgar tick's poll (every 30 minutes, never
+// at the survey instant: filedFactsSkip), for each hyperscaler in sources.yaml
+// `filed_fact_sources`:
 //
 //   1. its submissions feed, for the 10-Q/10-K list (small, every run);
-//   2. its company facts, every six hours, or every run while a filing from
-//      the last two weeks has not reached them yet;
-//   3. for a filer with `instances: true`, each 10-Q/10-K instance since 2020
-//      not yet read, newest first, at most INSTANCES_PER_RUN a run across
-//      filers. The first runs back-fill the history; after that a run reads
-//      only what was just filed. An instance read once is never fetched
-//      again: a filing does not change after it is accepted;
-//   4. each earnings release (an 8-K with item 2.02) since GUIDANCE_SINCE not
-//      yet read, for the capex guidance it prints (guidance.ts): the filing's
-//      index page, then its exhibit 99.1, at most RELEASES_PER_RUN a run;
-//   5. for a filer in TEXT_FACT_FILERS, each 10-Q/10-K primary document in
-//      its window not yet read, for what it says about a lab in words before
-//      it tagged it (text-facts.ts), at most TEXTS_PER_RUN a run. The window
-//      is closed, so these reads end once its filings are read.
+//   2. its company facts, every six hours, or every run while a filing from the last two
+//      weeks has not reached them yet;
+//   3. for a filer with `instances: true`, each 10-Q/10-K instance since 2020 not yet
+//      read, newest first, at most INSTANCES_PER_RUN a run across filers. An instance read
+//      once is never fetched again (a filing does not change after it is accepted);
+//   4. each earnings release (an 8-K with item 2.02) since GUIDANCE_SINCE not yet read,
+//      for its capex guidance (guidance.ts): the index page, then exhibit 99.1, at most
+//      RELEASES_PER_RUN a run;
+//   5. for a filer in TEXT_FACT_FILERS, each 10-Q/10-K primary document in its closed
+//      window not yet read, for what it says about a lab in words before it tagged it
+//      (text-facts.ts), at most TEXTS_PER_RUN a run.
 //
-// Facts are append-only (filed_facts). The raw bytes of every document that
-// produced facts go to R2 first, so each row's raw_key resolves. Then the
-// filed-fact rule (alerts.ts) runs over each filer that gained facts, and the
-// guidance rule (guidance-alerts.ts) over each that gained facts or guidance.
+// Facts are append-only (filed_facts). Raw bytes of every document that produced facts go
+// to R2 first, so each row's raw_key resolves. Then the filed-fact rule (alerts.ts) runs
+// over each filer that gained facts, and the guidance rule (guidance-alerts.ts) over each
+// that gained facts or guidance.
 //
-// Every request goes to SEC, under its fair-access limit (layers/core/server/pipeline/sec-pace.ts).
-// When SEC answers 429 the run stops fetching: the rest of the run is deferred,
-// the 429 is stored as a failed read so the next runs sit out the cooldown
-// (pipeline/rate-limit.ts, a longer Retry-After extends it), and the tick
-// raises one summarised ops event rather than one per document. The 429'd
-// document is read again after the cooldown, not held back a day.
+// Every request stays under SEC's fair-access limit (layers/core/server/pipeline/sec-pace.ts).
+// On a 429 the run stops fetching: the rest is deferred, the 429 is stored as a failed
+// read so the next runs sit out the cooldown (pipeline/rate-limit.ts; a longer
+// Retry-After extends it), and the tick raises one summarized ops event. The 429'd
+// document is read again after the cooldown, not a day later.
 
 import { and, desc, eq, inArray, like, min } from 'drizzle-orm'
 
@@ -115,11 +111,10 @@ export interface FiledFactsReport {
 }
 
 /**
- * Why the edgar tick leaves the filed facts out, or null to run them. They run
- * only after a poll that ran: at the survey instant the poll yields, and the
- * survey is fetching every SEC feed in another invocation; a held lock means
- * another poll is fetching right now. A 429 from SEC earlier in the tick means
- * SEC wants less, not more. The next tick, thirty minutes on, picks them up.
+ * Why the edgar tick leaves the filed facts out, or null to run them. They run only after
+ * a poll that ran: at the survey instant the poll yields and the survey is fetching every
+ * SEC feed elsewhere; a held lock means another poll is fetching now; a 429 earlier in the
+ * tick means SEC wants less. The next tick, thirty minutes on, picks them up.
  */
 export function filedFactsSkip(poll: PollOutcome, secRateLimited: boolean): string | null {
   if (poll.status === 'yielded') return `poll yielded to the ${poll.to}`

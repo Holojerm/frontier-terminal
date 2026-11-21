@@ -1,8 +1,6 @@
 <script setup lang="ts">
-// The minor changes: info-tier rows, one line each. What moved, low stakes — so no
-// explanation inline and no expandable rows; the headline is the permalink
-// and the explanation and cited rows live there. Provenance still travels on
-// every line, because a minor-change line is a datum too.
+// The minor changes: info-tier rows, one line each, with no inline explanation; the
+// headline is the permalink. Provenance still travels on every line.
 
 import type { AlertView } from '../../../shared/types/alerts'
 

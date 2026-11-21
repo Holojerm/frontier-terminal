@@ -1,26 +1,23 @@
-// What may be reused here, and under what terms.
-//
-// Three different things get licensed on a site like this one, and collapsing
-// them into a single "license" line is the easy way to say something false:
+// What may be reused here, and under what terms. Three things are licensed
+// separately, and one "license" line for all of them would say something false:
 //
 //   * The code is MIT. That is the repo's license and nothing else's.
-//   * The compilation — which rows exist, keyed, timestamped, and joined — and
-//     the numbers we derive are this site's own work. They are split by age:
-//     the trailing LICENSE_WINDOW_DAYS are CC BY 4.0, older rows CC BY-NC 4.0.
+//   * The compilation (which rows exist, keyed, timestamped and joined) and
+//     the numbers we derive are this site's own work, split by age: the
+//     trailing LICENSE_WINDOW_DAYS are CC BY 4.0, older rows CC BY-NC 4.0.
 //   * The facts are not ours to license. A price on Anthropic's pricing page
 //     belongs to Anthropic; a filing belongs to EDGAR. Every row carries the
-//     URL it was read from precisely so a reader can go to the owner.
+//     URL it was read from so a reader can go to the owner.
 //
-// CC BY 4.0 on the recent window is a constrained choice rather than a taste.
-// One tracked source states a license of its own — the OpenRouter rankings
-// feed is CC BY 4.0 and requires a specific attribution string, which the
+// CC BY 4.0 on the recent window is constrained: the OpenRouter rankings feed
+// is CC BY 4.0 and requires a specific attribution string, which the
 // demand-share page prints verbatim from sources.yaml. Upstream data like that
 // keeps its own license in every window; the NC term covers only what is ours.
 //
 // The split took effect on LICENSE_SPLIT_EFFECTIVE (docs/thesis-engine.md ›
 // Revisions). A CC BY grant can't be withdrawn from what was already released
-// under it, so a row we first published before that day stays CC BY however
-// old it gets. rowLicense applies both rules.
+// under it, so a row first published before that day stays CC BY however old
+// it gets. rowLicense applies both rules.
 
 export interface LicenseRef {
   /** SPDX identifier where one exists. */
@@ -51,9 +48,8 @@ export const HISTORY_LICENSE: LicenseRef = {
 /**
  * What a licensee's API key labels the history with, in place of
  * HISTORY_LICENSE: the same rows, with commercial use permitted under the
- * licensee's signed terms. Not offered while commercial licensing is paused:
- * no page, llms.txt line or API message advertises it. Keys issued before the
- * pause keep this label until they expire.
+ * licensee's signed terms. Not advertised: no page, llms.txt line or API
+ * message offers it. Keys already issued keep this label until they expire.
  */
 export const PAID_LICENSE: LicenseRef = {
   id: 'LicenseRef-FrontierTerminal-Commercial',
@@ -158,13 +154,11 @@ export function withLicense<T>(payload: T, now: Date = new Date()): T {
 
 /**
  * The label on an `as_of` payload's data (point_in_time.license), as
- * rowLicense reads a row dated `at`: CC BY inside the window or when we
- * published the data before the split, CC BY-NC otherwise. `published`
- * defaults to `at`, right for a knowledge-time answer (what this store held
- * at `at` was published by then); an event-time answer (the Internet Archive
- * backfill, filed facts by filing date) passes when that data first appeared
- * here instead. The payload's `license` field says which rows the NC label
- * doesn't reach.
+ * rowLicense reads a row dated `at`. `published` defaults to `at`, right for a
+ * knowledge-time answer (what this store held at `at` was published by then);
+ * an event-time answer (the Internet Archive backfill, filed facts by filing
+ * date) passes when that data first appeared here instead. The payload's
+ * `license` field says which rows the NC label doesn't reach.
  */
 export function asOfLicense(
   at: string,

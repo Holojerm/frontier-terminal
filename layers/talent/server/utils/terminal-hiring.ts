@@ -133,7 +133,7 @@ export async function queryHiring(db: PipelineDb, ctx: QueryContext): Promise<Hi
   for (const provider of PROVIDER_ORDER) {
     const backing = HIRING_SOURCES[provider]
     if ('cut_id' in backing) {
-      // Honest cut — never a fabricated number (sources.yaml `cut.<lab>-hiring`).
+      // An audited cut, never a fabricated number (sources.yaml `cut.<lab>-hiring`).
       providers.push({
         provider,
         display: PROVIDER_DISPLAY[provider],
@@ -345,7 +345,7 @@ export async function queryHiringHistory(
   for (const provider of PROVIDER_ORDER) {
     const backing = HIRING_SOURCES[provider]
     if ('cut_id' in backing) {
-      // Honest cut — never a fabricated series (sources.yaml `cut.<lab>-hiring`).
+      // An audited cut, never a fabricated series (sources.yaml `cut.<lab>-hiring`).
       providers.push({
         provider,
         display: PROVIDER_DISPLAY[provider],

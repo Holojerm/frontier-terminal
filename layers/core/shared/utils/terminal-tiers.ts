@@ -1,14 +1,15 @@
 // Minor changes versus alerts: the one materiality split every surface agrees on.
 //
-// The severity enum (layers/core/server/utils/contracts/rows.ts › severityEnum) is the
-// stored datum; the tier is a reading of it. `info` is the minor-changes tier — what
-// moved, low stakes: a role added, a title reworded, a location shuffled.
-// It was called the ticker until 2026-11-04; a fund reads a `ticker` field as a
-// security symbol, so no public surface uses the word for it now, and the old
-// `ticker` value is accepted as an alias wherever a URL could carry it.
-// `notable` and `critical` are alerts — what an analyst should read: a price
-// move, a new SKU, a department-level hiring shift, a filing. One function so
-// the landing band, /alerts, the Atom feed and the sitemap cannot drift.
+// The severity enum (layers/core/server/utils/contracts/rows.ts › severityEnum) is
+// the stored datum; the tier is a reading of it. `info` is the minor-changes tier:
+// a role added, a title reworded, a location shuffled. `notable` and `critical`
+// are alerts, what an analyst should read: a price move, a new SKU, a
+// department-level hiring shift, a filing. One function, so the landing band,
+// /alerts, the Atom feed and the sitemap can't drift.
+//
+// No public surface calls the minor tier "ticker", since a fund reads a `ticker`
+// field as a security symbol; the old `ticker` value is accepted as an alias
+// wherever a URL could carry it.
 
 export type AlertSeverity = 'info' | 'notable' | 'critical'
 export type AlertTier = 'alert' | 'info'
@@ -46,8 +47,8 @@ export function alertPath(id: string): string {
 }
 
 /**
- * A tier filter as a request spells it: `ticker` is the pre-2026-11-04 name
- * of `info`, kept so a saved URL or a client built against it still works.
+ * A tier filter as a request spells it: `ticker` is the old name of `info`,
+ * kept so a saved URL or a client built against it still works.
  */
 export function tierFilterOf(value: unknown): unknown {
   return value === 'ticker' ? 'info' : value

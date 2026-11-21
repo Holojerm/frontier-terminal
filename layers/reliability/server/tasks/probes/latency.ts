@@ -1,16 +1,14 @@
-// Cron task: one latency probe per lab, hourly at :07, in an invocation of its
-// own so no other task's requests share its connections. The probes don't
-// run here: the cron fires from whichever colo Cloudflare picks, so it asks
-// each placement's Durable Object to run them from where it lives
+// Cron task: one latency probe per lab, hourly at :07, in its own invocation so no other
+// task's requests share its connections. The cron fires from whichever colo Cloudflare
+// picks, so it asks each placement's Durable Object to run the probes where it lives
 // (layers/reliability/server/utils/probe-runner.ts, pipeline/probes/placement.ts).
-// A probe that failed because of our key, credit or request is spooled for
-// the ops digest; a lab's own failures are the data. So is a lab skipped
-// because its flagship's model could not be settled or would break the
-// budget (pipeline/probes/resolve.ts).
+// Failures over our key, credit or request are spooled for the ops digest, as is a lab
+// skipped because its flagship's model could not be settled or would break the budget
+// (pipeline/probes/resolve.ts). A lab's own failures are the data.
 //
-// To run one locally: put NUXT_OPENROUTER_API_KEY in .env, start the dev server,
-// and open /_nitro/tasks/probes:latency. It probes in-process, stored as
-// `unpinned`, and spends real credit (about two cents).
+// Local run: put NUXT_OPENROUTER_API_KEY in .env, start the dev server, and open
+// /_nitro/tasks/probes:latency. It probes in-process, stored as `unpinned`, and spends real
+// credit (about two cents).
 
 import { UNPINNED } from '../../pipeline/probes/placement'
 import type { ProbeRunReport } from '../../pipeline/probes/run'

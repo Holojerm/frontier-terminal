@@ -1,9 +1,7 @@
 <script setup lang="ts">
-// MLPerf rounds side by side: per chip and benchmark at one accelerator
-// count, each round's fastest result per accelerator and the change since the
-// round before. A table, since each chip has a point per round and two rounds
-// are stored. Every figure carries its result ID, the word "unverified" the
-// Results Messaging Guidelines put beside each score, and the footnote.
+// MLPerf rounds side by side, per chip and benchmark at one accelerator count. Every
+// figure carries its result ID, the "unverified" the Results Messaging Guidelines
+// put beside each score, and the footnote.
 
 import type { UtilizationData } from '../../../shared/utils/compute-views'
 

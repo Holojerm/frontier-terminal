@@ -1,7 +1,5 @@
-// Compute around the labs: how much power each lab's sites draw, who powers them, the grid
-// load where they sit and the hardware prints. get_utilization is the shell's (server/mcp/utilization.ts
-// in the terminal layer). get_gpu_prices registers apart, between the adoption layer's
-// demand and adoption tools, where it has always been listed.
+// Compute MCP tools. get_utilization is the shell's (server/mcp/utilization.ts in the
+// terminal layer); get_gpu_prices registers beside the adoption layer's tools.
 
 import { z } from 'zod'
 import { gridLoadStamp, queryGridLoad } from '../power/grid-query'

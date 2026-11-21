@@ -1,23 +1,14 @@
-// CIK whitelist, read from the cik_whitelist block in sources.yaml. HONESTY
-// RULE: a null entry can NEVER match, and this module never substitutes a
-// number from memory — the gap stays visible until it is resolved from
-// data.sec.gov. AMZN and NVDA were null through the audit and the first live
-// runs; both were resolved from SEC on 2026-08-25 and verified against
-// data.sec.gov (see sources.yaml). The rule stands for whatever is added next.
-//
-// The whitelist is an explicit input to the SEC parsers: there is no
-// filesystem in a Worker, and a default baked into code would be exactly the
-// from-memory number the rule forbids.
+// CIK whitelist from sources.yaml's cik_whitelist block. HONESTY RULE: a null
+// entry never matches and no number comes from memory; the gap stays visible
+// until resolved from data.sec.gov. It is an explicit input because a Worker has
+// no filesystem and a default in code would be a from-memory number.
 
 /** Ticker -> zero-padded 10-digit CIK, or null where the audit recorded no number. */
 export type CikWhitelist = ReadonlyMap<string, string | null>
 
-/** Narrow block reader (flat `KEY: "digits" | null` lines only, no YAML
- * dependency). The block ends at the first dedented line (next top-level
- * key) — a clean stop. An INDENTED line inside the block that does not match
- * the entry pattern throws instead of silently ending the block: a
- * formatting drift after e.g. SPCX must not silently drop GOOGL and suppress
- * an s1-floor alert. */
+/** Flat `KEY: "digits" | null` lines; the block ends at the first dedented line.
+ * An indented line that doesn't match throws rather than ending the block, so a
+ * drift after SPCX can't drop GOOGL and suppress an s1-floor alert. */
 export function parseCikWhitelistBlock(yaml: string): Map<string, string | null> {
   const lines = yaml.split('\n')
   const start = lines.findIndex((l) => /^cik_whitelist:\s*(#.*)?$/.test(l))
@@ -40,10 +31,8 @@ export function parseCikWhitelistBlock(yaml: string): Map<string, string | null>
   return map
 }
 
-/** First CIK in the filing's own ciks array (source order) that matches a
- * non-null whitelist entry; null otherwise. Non-matches are NOT dropped by
- * callers — the open FTS query is known-noisy, and rows keep whitelist_cik
- * null instead of disappearing silently. */
+/** First CIK in the filing's ciks (source order) on a non-null whitelist entry, else
+ * null. Callers keep non-matches with whitelist_cik null rather than drop them. */
 export function whitelistCikFor(ciks: readonly string[], whitelist: CikWhitelist): string | null {
   const whitelisted = new Set<string>()
   for (const value of whitelist.values()) {

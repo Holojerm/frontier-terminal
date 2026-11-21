@@ -4,12 +4,9 @@ import { provenance } from '../../../../core/server/db/tables/columns'
 // ─────────────────────────────────────────────
 // Grid load where the lab sites are (layers/compute/server/power/grid-load*.ts, /api/grid-load)
 // ─────────────────────────────────────────────
-// One row per balancing authority and local day: the sum of EIA-930's hourly
-// demand (EIA's adjusted series, its cleaned copy of what the authority
-// reported) over the hours that carry a value. Read from EIA's six-month
-// Grid Monitor files; only the authorities that hold a tracked site are kept.
-// A day is restated in place when a later read of its file differs (EIA
-// revises), and `fetched_at` is the read it last came from.
+// One row per balancing authority and local day: EIA-930's adjusted hourly demand
+// summed over the hours that carry a value. A day is restated in place when EIA
+// revises it; `fetched_at` is the read it last came from.
 export const gridLoadDays = sqliteTable(
   'grid_load_days',
   {

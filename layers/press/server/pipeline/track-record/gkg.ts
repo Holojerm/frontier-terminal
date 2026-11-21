@@ -1,17 +1,16 @@
 // GDELT's Global Knowledge Graph files: one zipped TSV every 15 minutes at
 // data.gdeltproject.org/gdeltv2/<stamp>.gkg.csv.zip, one row per English news
-// article GDELT's crawler read in that quarter hour. They are static files,
-// not the DOC search API, so they carry no per-IP limit; the same crawl is
-// what the DOC API searched, so an article found here is one it would have
-// returned. Terms: sources.yaml › track_record_sources › gdelt-gkg.
+// article GDELT's crawler read in that quarter hour. They are static files, not
+// the DOC search API, so they carry no per-IP limit; the same crawl fed the DOC
+// API, so an article found here is one it would have returned. Terms:
+// sources.yaml › track_record_sources › gdelt-gkg.
 //
 // The press side reads every file once, in order, off the Worker
-// (scripts/gdelt-search.ts on GitHub Actions; a file is ~5 MB zipped
-// and ~15 MB unzipped). What a row carries that the track record uses: the
-// record id, DATE (the quarter hour GDELT read it, UTC), the outlet's domain,
-// the article URL, its <PAGE_TITLE>, and the names GDELT found in its text.
-// Rows naming a tracked lab, filer or model family are kept, compacted, for
-// matching (mentions.ts).
+// (scripts/gdelt-search.ts; a file is ~5 MB zipped and ~15 MB unzipped). What the
+// track record uses from a row: the record id, DATE (the quarter hour GDELT read
+// it, UTC), the outlet's domain, the article URL, its <PAGE_TITLE>, and the names
+// GDELT found in its text. Rows naming a tracked lab, filer or model family are
+// kept, compacted, for matching (mentions.ts).
 
 /** The first quarter hour read: the earliest track-record window (2026-09-08) starts 7 days before. */
 export const GKG_FROM = '2026-09-01T00:00:00.000Z'

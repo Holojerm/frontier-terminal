@@ -1,8 +1,8 @@
-// The thesis layer's status writer: after each survey tick (and after each
-// judge run, for the judged claims), store every measured claim's readings
-// and append a status-change row for any claim whose status moved. Readings are upserted (a recomputed day whose inputs were
-// revised is rewritten; an identical one is left alone, computed_at and
-// all); status changes are append-only.
+// The thesis layer's status writer: after each survey tick (and each judge run,
+// for the judged claims), store every measured claim's readings and append a
+// status-change row for any claim whose status moved. Readings are upserted (a
+// recomputed day with revised inputs is rewritten; an identical one is left
+// alone, computed_at included); status changes are append-only.
 
 import { and, desc, eq, gte, sql } from 'drizzle-orm'
 
@@ -164,7 +164,7 @@ async function writeReadings(
   return rows.length
 }
 
-/** The newest status-change row per claim — the claim's recorded status. */
+/** The claim's newest status-change row: its recorded status. */
 export async function latestStatusChange(db: PipelineDb, claimId: string) {
   const [row] = await db
     .select()

@@ -5,13 +5,9 @@ import { provenance } from './columns'
 // Archive captures (layers/core/server/pipeline/archive/)
 // ─────────────────────────────────────────────
 // History from before this site watched the labs, read from the Internet
-// Archive's captures of each source's own page. Kept apart from
-// snapshots/entities/changes on purpose: those say what this store saw and
-// when, and a capture we fetched in 2026 of a page as it stood in 2023 is
-// neither. Nothing archived moves the live floor (source_stats) or reaches the
-// judge, the alert rules, or the live catalog. Each axis's archived rows are
-// its domain's table (archived_prices, archived_hiring, archived_gpu_prices,
-// archived_incidents, archived_rate_limits); this is the log they share.
+// Archive's captures. Kept apart from snapshots/entities/changes, which record
+// what this store saw and when. Nothing archived moves the live floor
+// (source_stats) or reaches the judge, the alert rules or the live catalog.
 
 // One row per Wayback capture the backfill considered: parsed, or skipped
 // with the reason. The id is `<era>:<14-digit timestamp>`, so a re-run skips

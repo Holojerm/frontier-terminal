@@ -1,6 +1,6 @@
-// GET /digest — this week's thesis digest rendered as a page, so a reader can
-// see what the email is before subscribing. The subscriber copy without an
-// unsubscribe link. 404 with the rest of the feature until Resend is set up.
+// GET /digest: this week's thesis digest as a page, so a reader can see the
+// email before subscribing (the subscriber copy, without an unsubscribe link).
+// 404s with the rest of the feature until Resend is set up.
 
 import { buildThesisDigest } from '../theses/digest'
 

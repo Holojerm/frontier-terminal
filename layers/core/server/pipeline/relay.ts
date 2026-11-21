@@ -1,15 +1,9 @@
-// Sources whose CDN refuses Cloudflare Workers' egress but answers the owner's
-// Mac mini: the mini's relay job (scripts/relay-fetch.ts) fetches each URL the
-// pipeline asked for and posts the bytes back (/api/relay/*), and the
-// pipeline reads that copy instead of the network. Measured 2026-11-21:
-// status.mistral.ai answered every Worker poll with 429 for 37 hours and
-// www.ercot.com (Imperva) answered 403, while both answered 200 to the mini
-// with the same User-Agent.
-//
-// A copy older than RELAY_MAX_AGE_MS is a failure, not a stale success, so a
-// stopped mini shows on fleet as the source failing. Outside the Worker
-// (scripts, fixture captures) no store is registered and the fetch goes out
-// as usual.
+// Sources whose CDN refuses Workers' egress but answers the owner's Mac mini
+// (status.mistral.ai 429s, www.ercot.com's Imperva 403s, both 200 to the mini).
+// The mini's relay job (scripts/relay-fetch.ts) fetches each URL the pipeline
+// asks for and posts the bytes to /api/relay/*, and the pipeline reads that
+// copy. A copy older than RELAY_MAX_AGE_MS is a failure, so a stopped mini shows
+// on fleet. Outside the Worker no store is registered and fetches go out as usual.
 
 import { z } from 'zod'
 

@@ -2,15 +2,10 @@ import type { z } from 'zod'
 import { contentHash } from './keys'
 import type { ParserId } from './parsers'
 
-// Determinism harness. Every DETERMINISTIC parser registers here; the test
-// suite runs each one twice on its committed fixture and the output hashes
-// must match — the boundary table's promise made executable. Agent lanes
-// (Google pricing, repair path) never register: they are gated by
-// agent-gate.ts instead.
-//
-// No filesystem here: the harness runs inside workerd, and the parsers run
-// inside a Worker. Fixture text reaches a parser through a FixtureReader the
-// caller supplies (tests build one from raw imports).
+// Determinism harness: every DETERMINISTIC parser registers here and the tests
+// run it twice on its committed fixture, expecting equal hashes. Agent lanes
+// are gated by agent-gate.ts instead. No filesystem: parsers run in a Worker,
+// so fixture text comes through a caller-supplied FixtureReader.
 
 /** Returns the text of a committed file by repo-relative path; throws if unknown. */
 export type FixtureReader = (repoRelativePath: string) => string

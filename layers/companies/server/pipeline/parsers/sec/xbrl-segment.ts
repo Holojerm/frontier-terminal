@@ -10,20 +10,12 @@ import { REVENUE_TAGS } from './edgar-companyfacts'
 import { parseRevenueFilersBlock, type RevenueFilers } from './revenue-filers'
 import { parseCikWhitelistBlock, type CikWhitelist } from './whitelist'
 
-// xbrl-segment-<ticker>-<filed>-<accession> — one periodic filing's XBRL
-// instance (www.sec.gov/Archives/edgar/data/{cik}/{accession}/{prefix}-{period}_htm.xml),
-// derived per 10-Q/10-K from the filer's submissions feed (derived.ts).
-// Company facts carry non-dimensional facts only, so a segment's revenue is
-// readable nowhere else: this parser keeps the revenue tags (REVENUE_TAGS)
-// reported on a context whose ONLY dimension is the filer's tagged
-// StatementBusinessSegmentsAxis member. A context that also carries another
-// member (OperatingSegmentsMember beside it, a product axis) is a slice of
-// the segment, not the segment, and is skipped.
-//
-// The instance names the filing it belongs to (dei:EntityCentralIndexKey,
-// dei:DocumentType), and a mismatch with the filer it was derived for throws,
-// as does an instance with no revenue fact on the member: a renamed member
-// must fail the source, not quietly empty the panel.
+// xbrl-segment-<ticker>-<filed>-<accession>: one 10-Q/10-K's XBRL instance
+// (www.sec.gov/Archives/edgar/data/{cik}/{accession}/{prefix}-{period}_htm.xml).
+// Company facts drop dimensional facts, so a segment's revenue is only here. Kept:
+// REVENUE_TAGS on a context whose only dimension is the filer's
+// StatementBusinessSegmentsAxis member. A CIK or form mismatch throws, as does no
+// revenue fact on the member, so a renamed member fails the source.
 
 const SEGMENT_AXIS = 'us-gaap:StatementBusinessSegmentsAxis'
 
@@ -32,14 +24,13 @@ interface SegmentTarget {
   cik: string
   segment: string
   accession_no: string
-  /** The filing date — the instance does not carry it; the derived key does. */
+  /** The filing date, from the derived key (the instance does not carry it). */
   filed: string
 }
 
 /**
- * The last calendar quarter-end strictly before a filing date — the period a
- * calendar-year filer's 10-Q/10-K covers, and the date its instance is named
- * after. Pure; a filer on another fiscal calendar 404s on the derived URL.
+ * The last calendar quarter-end before a filing date: the period a calendar-year
+ * filer's 10-Q/10-K covers. A filer on another fiscal calendar 404s on the derived URL.
  */
 export function periodBefore(fileDate: string): string {
   const y = Number(fileDate.slice(0, 4))

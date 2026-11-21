@@ -1,9 +1,8 @@
-// Every listed company the site's company tables name, one row each
-// (GET /api/listed, the /dependencies page, the get_listed_companies MCP
-// tool): the filers on the dependency graph, the chip and compute suppliers,
-// the companies that power or host a lab's sites, and the hardware makers
-// whose monthly prints /compute reads. Nothing here is new
-// data. Each tie points back at the table that holds its figures and quotes.
+// Every listed company the site's company tables name, one row each (GET /api/listed, the
+// /dependencies page, the get_listed_companies MCP tool): the filers on the dependency
+// graph, the chip and compute suppliers, the companies that power or host a lab's sites,
+// and the hardware makers whose monthly prints /compute reads. Nothing here is new data:
+// each tie points back at the table that holds its figures and quotes.
 
 /** A filer on the graph: the lines its own XBRL draws to another company. */
 export interface ListedGraphTie {

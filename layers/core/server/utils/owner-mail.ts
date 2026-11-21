@@ -1,15 +1,10 @@
-// Mail to the owner's inbox: the weekly thesis digest and the press brief. Not
-// ops alerting — the app sends no alerts; the fleet dashboard is the only alert
-// sender (it reads the spool through GET /api/fleet).
-//
-// Delivery is Cloudflare's `send_email` binding (OWNER_EMAIL), pinned in
-// wrangler.toml to one verified destination address: free, no sending-domain
-// onboarding, and useless for mailing anyone else. The binding arrives as an
-// argument because Nitro's cloudflare-module handler passes a scheduled task
-// the same `env` a fetch handler gets; importing `cloudflare:workers` does not
-// resolve under Nuxt's generated server tsconfig.
+// Mail to the owner's inbox: the weekly thesis digest and the press brief,
+// never ops alerts (fleet sends those). Delivery is the `send_email` binding
+// (OWNER_EMAIL), pinned in wrangler.toml to one verified address. The binding
+// is passed in because Nitro hands a scheduled task the fetch handler's `env`,
+// and `cloudflare:workers` does not resolve under Nuxt's server tsconfig.
 
-/** The `send_email` binding's shape — only the call we make. */
+/** The `send_email` binding's shape: only the call we make. */
 interface SendEmailBinding {
   send(message: {
     to: string

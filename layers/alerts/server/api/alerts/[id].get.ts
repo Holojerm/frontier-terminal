@@ -8,10 +8,8 @@ import { z } from 'zod'
 const idSchema = z.string().regex(/^[0-9a-f]{64}$/)
 
 export default defineEventHandler(async (event) => {
-  // Its own bucket, not the list's. Sharing one meant a crawler walking the
-  // 184 alert permalinks in the sitemap spent /api/alerts' budget as it went,
-  // so a crawl took the alerts index down for the rest of that minute for the
-  // same IP — and the permalinks with it, from the 61st onwards.
+  // Its own bucket, not the list's: a crawler walking the sitemap's alert permalinks would
+  // otherwise spend /api/alerts' budget and take the index down for that IP.
   await rateLimitTerminal(event, {
     name: 'alert-detail',
     limit: PERMALINK_LIMIT,

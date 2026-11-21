@@ -1,10 +1,7 @@
 <script setup lang="ts">
-// The 30-day series as stacked columns, one per UTC day, segments per lab
-// with "other" on top. Inline SVG from DESIGN.md tokens: every fill is
-// currentColor under a semantic text class, one accent hue in opacity steps
-// (one accent per viewport), 2px surface gaps between segments, a legend
-// always, and a table view of the same numbers so nothing rests on the
-// picture alone.
+// The 30-day series as stacked columns, one per UTC day, segments per lab with "other" on
+// top. Inline SVG from DESIGN.md tokens (currentColor, one accent in opacity steps, 2px
+// gaps), with a legend and a table of the same numbers.
 
 import type { ProviderId } from '#layers/core/shared/types/common'
 import type { RankingDay } from '../../../shared/types/rankings'

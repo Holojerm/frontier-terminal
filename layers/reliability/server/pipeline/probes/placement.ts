@@ -1,17 +1,15 @@
-// Where the latency probes run. OpenRouter's edge runs near its caller, so a
-// probe's time to first token includes the distance from wherever it left.
-// Before placement that was whichever Cloudflare colo ran the cron (15 of
-// them in the first day). Now each placement is one Durable Object created
-// with a location hint, the cron asks it to run the probes, and every request
-// leaves from that object's colo.
+// Where the latency probes run. OpenRouter's edge runs near its caller, so a probe's time to
+// first token includes the distance from wherever it left; unpinned, that was whichever
+// Cloudflare colo ran the cron. Each placement is one Durable Object created with a location
+// hint, the cron asks it to run the probes, and every request leaves from that object's colo.
 //
-// A placement is configuration: add 'weur' or 'apac' to PROBE_PLACEMENTS and
-// the next run probes from there too, stored and rolled as a series of its
-// own. Each one is another full set of probes, and they share
-// PROBE_MONTHLY_BUDGET_USD (targets.ts), so raise the budget with it.
+// A placement is configuration: add 'weur' or 'apac' to PROBE_PLACEMENTS and the next run
+// probes from there too, stored and rolled as a series of its own. Each one is another full
+// set of probes, and they share PROBE_MONTHLY_BUDGET_USD (targets.ts), so raise the budget
+// with it.
 //
-// A location hint is honoured only when the object is first created, and is
-// best effort; every row records `ran_from`, the colo it actually left from.
+// A location hint is honoured only when the object is first created, and is best effort;
+// every row records `ran_from`, the colo it actually left from.
 
 /** Cloudflare's Durable Object location hints (developers.cloudflare.com/durable-objects/reference/data-location/). */
 export const PROBE_LOCATIONS = {
@@ -34,9 +32,9 @@ export const UNPINNED = 'unpinned'
 export type ProbePlacement = ProbeLocationHint | typeof UNPINNED
 
 /**
- * Where the probes run, owner's decision 2026-11-20: eastern North America
- * only, until a few weeks of clean data say whether Europe or Asia add
- * anything. The first entry is the series /api/probes and the theses read.
+ * Where the probes run: eastern North America only, until a few weeks of clean data say
+ * whether Europe or Asia add anything. The first entry is the series /api/probes and the
+ * theses read.
  */
 export const PROBE_PLACEMENTS: readonly [ProbeLocationHint, ...ProbeLocationHint[]] = ['enam']
 

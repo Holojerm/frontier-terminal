@@ -1,11 +1,9 @@
-// The Atom feed of alerts (RFC 4287), as a pure function of plain data so
-// layers/alerts/test/terminal-feed.test.ts can assert on the document without booting a
-// Worker. layers/alerts/server/routes/alerts.xml.get.ts is the thin wrapper.
+// The Atom feed of alerts (RFC 4287), a pure function of plain data so
+// layers/alerts/test/terminal-feed.test.ts can assert on it without a Worker.
+// layers/alerts/server/routes/alerts.xml.get.ts is the thin wrapper.
 //
-// Why Atom and not RSS: Atom requires a timestamp with a timezone on every
-// entry and an id that is a URI — both are things this project already
-// insists on for every datum, so the format's strictness costs nothing and
-// buys a feed reader that cannot misfile an alert.
+// Atom over RSS: it requires a timezone on every entry's timestamp and a URI id, which this
+// project already insists on for every datum.
 
 /** `alert` is the default feed; `all` adds the minor changes; `critical` keeps only critical alerts. */
 export type FeedTier = 'alert' | 'critical' | 'all'

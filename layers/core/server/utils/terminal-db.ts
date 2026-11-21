@@ -1,24 +1,19 @@
-// Read-only query layer over the pipeline tables — what every terminal page
-// renders. The UI never writes: layers/core/server/utils/pipeline-store.ts › insertRows() is
-// the only write path.
+// Read-only query layer over the pipeline tables: what every terminal page
+// renders. The only write path is layers/core/server/utils/pipeline-store.ts › insertRows().
 //
-// Drizzle/D1 queries over those tables, shaped by one structural fact the
-// store forces: `entities` here IS the current set
-// (one row per source and key, rewritten in place, deleted on removal), so
-// "the newest revision per SKU" is the entity row and the previous revision
-// is the newest `changes` row for that key. Jobs are a set — a role missing
-// from the board is closed — so open roles are counted straight from
-// `entities`. Prices are a series, so a delisted SKU stays visible, struck
-// through, from its removal change.
+// `entities` is the current set (one row per source and key, rewritten in place,
+// deleted on removal), so the newest revision per SKU is the entity row and the
+// previous one is the newest `changes` row for that key. Jobs are a set (a role
+// missing from the board is closed), so open roles are counted from `entities`.
+// Prices are a series, so a delisted SKU stays visible, struck through, from its
+// removal change.
 //
-// This file holds what every axis shares: the query context, source reads,
-// table counts, baselines, freshness and coverage. The axes have their own
-// modules: terminal-alerts.ts, terminal-prices.ts, terminal-hiring.ts and
-// terminal-incidents.ts.
+// This file holds what every axis shares: the query context, source reads, table
+// counts, baselines, freshness and coverage. Each axis has its own module:
+// terminal-alerts.ts, terminal-prices.ts, terminal-hiring.ts and terminal-incidents.ts.
 //
-// Every function takes the Drizzle client explicitly (the shape
-// server/utils/fleet-status.ts uses) so layers/terminal/test/terminal-db.test.ts drives them
-// against the workerd D1.
+// Functions take the Drizzle client explicitly so
+// layers/terminal/test/terminal-db.test.ts drives them against the workerd D1.
 
 import { and, eq, inArray, max, min, sql } from 'drizzle-orm'
 import { isSetLane } from '#server/registries/set-lanes'
@@ -67,7 +62,7 @@ import {
  */
 export interface QueryContext extends QueryContextBlocks {
   registry: SourceRegistry
-  /** Newest source_runs.started_at, already read for the cache key — at or before `at` when one is set. */
+  /** Newest source_runs.started_at, already read for the cache key; at or before `at` when one is set. */
   as_of: string | null
   now: () => Date
   /**
@@ -172,18 +167,17 @@ export interface SourceReads {
 
 /**
  * The newest snapshot, newest successful read and newest run of every source,
- * as of `at` or now, in one round trip. Driven from source_stats, one row per
- * source, so each correlated subquery is an index seek on
- * (source_id, fetched_at) or (source_id, started_at) rather than a scan of
- * tables that grow by a row per source per tick. Two rows in the same instant:
- * the larger id wins. The newest read seeks source_runs_read_idx, which holds
- * only the runs that read their page, so a source that keeps failing does not
- * cost a walk back through every failed run.
+ * as of `at` or now, in one round trip. Driven from source_stats (one row per
+ * source), so each correlated subquery is an index seek on (source_id,
+ * fetched_at) or (source_id, started_at) rather than a scan of tables that grow
+ * every tick. Two rows in the same instant: the larger id wins. The newest read
+ * seeks source_runs_read_idx, which holds only runs that read their page, so a
+ * source that keeps failing doesn't cost a walk through every failed run.
  *
  * Every subquery names its index. D1 keeps no planner statistics, and left to
  * choose, SQLite took the (fetched_at, id) and (started_at, id) indexes for
- * their ORDER BY: a tick starts every source in the same instant, so each
- * source's seek read the whole tick (13k rows a call in production, 3k named).
+ * their ORDER BY: a tick starts every source in the same instant, so each seek
+ * read the whole tick (13k rows a call in production).
  */
 export async function sourceReads(db: PipelineDb, at: string | null = null): Promise<SourceReads> {
   const newestSnapshot = at
@@ -313,13 +307,12 @@ export async function tableCounts(db: PipelineDb): Promise<TableCounts> {
 }
 
 /**
- * The (source_url, fetched_at) pairs of every baseline fetch: the first
- * snapshot each source ever produced, plus any snapshot a source_runs row
- * marks 'baseline'. This Worker's baseline writes entities and no change
- * rows (layers/core/server/pipeline/refresh.ts), so the first form is what matters for
- * the history imported at the 2026-09-08 cutover — that build logged its
- * first Google parse as an `added` row per SKU, and those are first
- * sightings of a watcher, not of a model.
+ * The (source_url, fetched_at) pairs of every baseline fetch: each source's
+ * first snapshot, plus any snapshot a source_runs row marks 'baseline'. This
+ * Worker's baseline writes entities and no change rows
+ * (layers/core/server/pipeline/refresh.ts), so the first form is for the history
+ * imported at the 2026-09-08 cutover, whose first Google parse logged an `added`
+ * row per SKU: first sightings of a watcher, not of a model.
  */
 export function baselineInstants(
   snapshots: readonly Pick<
@@ -413,10 +406,9 @@ export async function recipeRunsStamp(db: PipelineDb, ids?: readonly string[]): 
 
 /** Every thesis recipe with its last run and what it has stored, beside its audit entry. */
 async function recipeCoverage(db: PipelineDb, ctx: QueryContext): Promise<RecipeCoverage[]> {
-  // Driven from the registry's ids, one index seek per recipe on
-  // (recipe_id, started_at) and (recipe_id, fetched_at). Driven from the
-  // tables, the newest run and newest observation each read every row the
-  // recipes have ever written.
+  // Driven from the registry's ids: one index seek per recipe on
+  // (recipe_id, started_at) and (recipe_id, fetched_at). Driven from the tables,
+  // each would read every row the recipes have written.
   const ids = JSON.stringify(RECIPES.map((r) => r.id))
   const [runs, counts, newest] = await Promise.all([
     db.all<{
@@ -498,15 +490,13 @@ export async function queryCoverage(db: PipelineDb, ctx: QueryContext): Promise<
       derived_from: null,
     }
   })
-  // Sources the store derived for itself (layers/companies/server/pipeline/derived.ts) have no
-  // registry entry; they are listed after the audited ones, named by their
-  // template, so nothing that was fetched is invisible here.
+  // Sources the store derived for itself (layers/companies/server/pipeline/derived.ts)
+  // have no registry entry; they are listed after the audited ones, named by their
+  // template, so nothing fetched is invisible here.
   //
-  // Enumerated over the runs as well as the snapshots, not the snapshots
-  // alone. A derived url that 404s is fetched every tick and snapshots
-  // nothing, so keying on snapshots hid exactly the sources with something to
-  // say: five priced OpenAI SKUs whose model page does not exist were missing
-  // from this panel entirely while the ops digest mailed about them.
+  // Enumerated over runs as well as snapshots: a derived url that 404s is fetched
+  // every tick and snapshots nothing, so keying on snapshots alone hid exactly the
+  // sources the ops digest was mailing about.
   const registered = new Set(sources.map((s) => s.source_id))
   const derivedIds = [...new Set([...stamps.keys(), ...runs.keys()])].sort(byString)
   for (const source_id of derivedIds) {
@@ -537,8 +527,8 @@ export async function queryCoverage(db: PipelineDb, ctx: QueryContext): Promise<
       license: null,
       terms: parent?.terms ?? null,
       rights: parent?.rights ?? null,
-      // The newest snapshot's url, or — when there is no snapshot because the
-      // fetch 404s — the url the last run went to.
+      // The newest snapshot's url, or the url the last run went to when the
+      // fetch 404s and there is no snapshot.
       url: stamp?.newest.source_url ?? runs.get(source_id)?.source_url ?? '',
       newest_snapshot: stamp?.newest ?? null,
       snapshot_count: stamp?.snapshot_count ?? 0,

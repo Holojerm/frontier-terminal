@@ -3,10 +3,10 @@
 // (layers/core/server/pipeline/lanes.ts › ParseContext) types itself from.
 //
 // LaneBlocks are the sources.yaml blocks the refresh builds once per tick
-// (loadLaneBlocks); a lane names the ones it reads in Lane.reads, and they go
-// into its context fingerprint. TICK_INPUTS are values a domain loads once per tick for its
-// lanes; the refresh loads each, hands it to every parse, and hashes the part
-// a source's parse reads into that parse's input.
+// (loadLaneBlocks); a lane names those it reads in Lane.reads, and they go into
+// its context fingerprint. TICK_INPUTS are values a domain loads once per tick
+// for its lanes: the refresh hands each to every parse and hashes the part a
+// source's parse reads into that parse's input.
 
 import type { TickInput } from '#layers/core/server/pipeline/lanes'
 import type { Provider } from '#layers/core/server/utils/contracts'
@@ -19,9 +19,9 @@ import { loadFilerBlocks } from '#layers/companies/server/pipeline/lane-blocks'
 
 export interface LaneBlocks {
   whitelist: CikWhitelist
-  /** sources.yaml revenue_filers — which lab a company-facts filer belongs to. */
+  /** sources.yaml revenue_filers: which lab a company-facts filer belongs to. */
   revenueFilers: RevenueFilers
-  /** sources.yaml pending_filers — the labs whose CIK an S-1 hit may resolve. */
+  /** sources.yaml pending_filers: the labs whose CIK an S-1 hit may resolve. */
   pendingFilers: PendingFilers
   /** Labs already resolved (or tagged in the audited file): the resolver leaves them alone. */
   resolvedProviders: ReadonlySet<Provider>

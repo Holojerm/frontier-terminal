@@ -1,20 +1,12 @@
-// Keeps the KV payload cache warm, so a reader never pays for a recompute.
-//
-// The payload keys carry the build and the poll stamp (terminal-handler.ts ›
+// Keeps the KV payload cache warm, so a reader never pays for a recompute. The
+// payload keys carry the build and the poll stamp (terminal-handler.ts ›
 // cacheName, terminal-cache.ts › terminalCacheKey), so every deploy and every
-// poll that writes a source_runs row orphans all of them. On a site this
-// quiet, the next reader after that is nearly always a stranger: their page
-// fans out to a dozen API routes, each recomputing from D1 (up to ~700ms for
-// /api/theses), measured with Server-Timing on 2026-11-04.
-//
-// The cron renders every enumerable page in-process right after the key
-// moves, which runs the exact API calls (and query variants) the pages make,
-// so the reader that follows reads KV. One marker per (build, stamp) keeps a
-// quiet tick to one D1 read and one KV read.
-//
-// What this cannot warm: the HTML edge cache is per data centre, so the
-// renders here fill only the cron's own; /prices/<sku> pages are not
-// enumerated (hundreds of them, each its own payload) and stay on demand.
+// poll that writes a source_runs row orphans them, and the next reader's page
+// would recompute a dozen routes from D1 (up to ~700ms for /api/theses). The
+// cron renders every enumerable page in-process right after the key moves; one
+// marker per (build, stamp) keeps a quiet tick to one D1 and one KV read.
+// /prices/<sku> pages are not enumerated, and the HTML edge cache, being per
+// data centre, is warmed only in the cron's own.
 
 /** Garbage collection only, like the payload TTL: a new stamp or build makes a new marker. */
 export const WARM_MARKER_TTL_SECONDS = 2400
@@ -27,15 +19,12 @@ export function warmMarkerKey(build: string, stamp: string | null): string {
 }
 
 /**
- * Claims a (build, stamp) warm across isolates. Each cron expression is its own
- * scheduled event, so at 12:00 the five-minute tick's cache:warm, and the warm
- * each poll asks for when it finishes, can land in different isolates, where
- * runTask's de-duplication cannot see each other. Without the claim they all
- * rendered every page at once, on top of the survey's writes, and D1 refused
- * reads for "too many resources consumed within a 10 second window"
- * (2026-11-07). Not released on finish: the marker answers success, and after
- * a failure the claim lapses before the next five-minute tick retries. KV's
- * floor is 60s.
+ * Claims a (build, stamp) warm across isolates. The five-minute tick's
+ * cache:warm and each poll's warm can land in different isolates, which
+ * runTask's de-duplication cannot see across; unclaimed, they rendered every
+ * page at once and D1 refused reads ("too many resources consumed within a 10
+ * second window"). Not released: the marker answers success, and after a
+ * failure the claim lapses before the next tick. KV's TTL floor is 60s.
  */
 export const WARM_LEASE_TTL_SECONDS = 120
 
@@ -66,14 +55,10 @@ export type WarmResult =
 export const WARM_MAX_PASSES = 3
 
 /**
- * Render `paths` once per (build, stamp). The marker is written only when every
- * page answered 200, so a transient failure is retried on the next tick rather
- * than leaving a cold key until the next poll.
- *
- * A poll can land mid-warm (the five-minute tick runs the tripwire alongside
- * this), and a poll task that asks for a warm while one is running is handed
- * the running one (Nitro's runTask). So each pass re-reads the stamp at the
- * end and goes again if it moved.
+ * Render `paths` once per (build, stamp). The marker is written only when
+ * every page answered 200, so a failure retries next tick. A poll can land
+ * mid-warm, and a poll's warm request joins the running one (Nitro's runTask),
+ * so each pass re-reads the stamp and goes again if it moved.
  */
 export async function warmCaches(deps: WarmDeps, paths: readonly string[]): Promise<WarmResult> {
   let result = await warmOnce(deps, paths)

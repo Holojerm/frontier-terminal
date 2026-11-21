@@ -1,19 +1,18 @@
-// Post-deploy smoke test — `bun run smoke`, run by .github/workflows/post-deploy-smoke.yml
+// Post-deploy smoke test: `bun run smoke`, run by .github/workflows/post-deploy-smoke.yml
 // on every push to main.
 //
-// CI proves the code builds; this proves production is serving it. It waits
-// for /api/status to report the commit being checked (Workers Builds deploys
-// main in ~3 minutes), then checks that the build is healthy and that a few
-// key pages and routes answer 200. A deploy that never lands fails it too: on
-// 2026-11-04 #169 passed CI, failed Cloudflare's deploy validation (error
-// 10021), and production kept serving the previous commit with every check
-// green.
+// CI proves the code builds; this proves production serves it. It waits for
+// /api/status to report the commit being checked (Workers Builds deploys main
+// in ~3 minutes), then checks that the build is healthy and that a few key
+// pages and routes answer 200. A deploy that never lands fails it too: #169
+// passed CI, failed Cloudflare's deploy validation (error 10021), and
+// production kept serving the previous commit with every check green.
 //
 //   bun run smoke                                  # this checkout's HEAD against production
 //   bun run smoke -- --sha <sha> --url <origin> --wait 0
 //
 // The wait is the only slow part; a failure after it means production is
-// broken now, not that it is still deploying.
+// broken now, not still deploying.
 
 import { execSync } from 'node:child_process'
 import { readFileSync } from 'node:fs'

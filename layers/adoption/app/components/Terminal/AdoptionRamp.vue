@@ -1,9 +1,7 @@
 <script setup lang="ts">
-// Ramp's monthly enterprise adoption: the share of US businesses on Ramp
-// paying each vendor. The chart draws any-AI, Anthropic and OpenAI (three
-// series at most, DESIGN.md › charts); the table carries every vendor Ramp
-// reports, so the chart never gates a number. `labs` narrows both to one lab
-// beside the any-AI line, for the lab pages.
+// Ramp's monthly enterprise adoption: the share of US businesses on Ramp paying each
+// vendor. The chart draws any-AI, Anthropic and OpenAI (three series at most, DESIGN.md ›
+// charts); the table carries every vendor. `labs` narrows both to one lab beside any-AI.
 
 import type { AdoptionData } from '../../../shared/utils/adoption-views'
 import type { LabId } from '#layers/core/shared/types/common'

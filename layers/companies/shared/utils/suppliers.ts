@@ -1,8 +1,6 @@
-// The chip, hardware and compute-rental companies whose own filings tie them
-// to a lab or a cloud (GET /api/suppliers, the /dependencies and /hardware pages, the
-// get_suppliers MCP tool). Every row is one passage of one SEC document, read
-// by hand (layers/companies/server/curated/suppliers.json) or by the judge from
-// a filing the filings lane stored (layers/companies/server/suppliers/).
+// Companies whose own filings tie them to a lab or a cloud (GET /api/suppliers,
+// /dependencies, /hardware, get_suppliers). Each row is one passage of one SEC
+// document, read by hand (layers/companies/server/curated/suppliers.json) or by the judge.
 
 import { z } from 'zod'
 
@@ -126,7 +124,6 @@ export interface SupplierShare {
   /** The name, or the filing's label for a customer it doesn't name. */
   counterparty: string
   meaning: string
-  /** The filing date of the document it is from. */
   filed: string
   /** The share is for several customers together. */
   combined: boolean
@@ -147,7 +144,6 @@ export interface SupplierCompany {
    * only a share for several customers together, that share and its label.
    */
   top_unnamed_share: SupplierShare | null
-  /** How many rows are its. */
   rows: number
 }
 

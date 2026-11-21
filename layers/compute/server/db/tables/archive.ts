@@ -6,12 +6,9 @@ import { provenance } from '../../../../core/server/db/tables/columns'
 // ─────────────────────────────────────────────
 // Each row names its capture in archive_captures (layers/core/server/db/tables/archive.ts).
 
-// One row per (capture, priced row): what an archived GPU rental price page
-// listed, in the shape the live gpu-* recipes store (recipe_observations).
-// key and payload are the live recipe's (gpu-prices.ts › gpuObservations),
-// so one function renders both; value is the on-demand USD per GPU-hour.
-// Never a live row: basis is always 'archived', and nothing here reaches the
-// GPU median floor, the Compute thesis, the judge or the alerts.
+// One row per (capture, priced row) of an archived GPU price page, keyed like the
+// live recipe (gpu-prices.ts › gpuObservations). basis is always 'archived': nothing
+// here reaches the GPU median floor, the Compute thesis, the judge or the alerts.
 export const archivedGpuPrices = sqliteTable(
   'archived_gpu_prices',
   {

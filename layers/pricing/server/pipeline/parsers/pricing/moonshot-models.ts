@@ -8,19 +8,16 @@ import { fixtureProvenance } from '#layers/core/server/utils/fixture-provenance'
 import { tableAfterHeading } from './md-table'
 
 // moonshot-models-md — https://platform.kimi.ai/docs/models.md
-// Catalog only. Moonshot's price tables (platform.kimi.ai/docs/pricing/chat)
-// are drawn in the browser: the served .md and HTML both carry an empty
-// <table>, so no price is read and every price field stays null — the cut
-// `moonshot-pricing` says why. Only the "Multi-modal Model" table (the models
-// open to new users) is a catalog; the "Deprecated Models" table under it is
-// not read. The page prints no context column, so context_window stays null.
+// Catalog only. Moonshot's price tables (platform.kimi.ai/docs/pricing/chat) are drawn in the
+// browser: the served .md and HTML both carry an empty <table>, so every price field stays
+// null (the cut `moonshot-pricing` says why). Only the "Multi-modal Model" table (the models
+// open to new users) is a catalog; the "Deprecated Models" table under it is not read. The
+// page prints no context column, so context_window stays null.
 
 const HEADING = '## Multi-modal Model'
 const HEADER = ['Model Name', 'Description']
 
-// prov defaults to the fixture manifest's record (single-arg behavior is
-// byte-identical for the determinism gate); the refresh orchestrator passes
-// the live fetch's provenance instead.
+// One-argument calls read the fixture's provenance, keeping the determinism gate byte-identical.
 export function parseMoonshotModelsMd(
   text: string,
   prov: Provenance = fixtureProvenance('moonshot-models-md'),

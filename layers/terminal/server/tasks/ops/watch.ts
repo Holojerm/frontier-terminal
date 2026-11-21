@@ -1,10 +1,11 @@
-// Cron task: run the watchdogs that spool their own ops events, then prune the
-// spool and the finished rate-limit windows, every 30 minutes. This app sends no ops mail: the fleet dashboard reads
-// the spool through GET /api/fleet (`ops.kinds`) and is the only alert sender.
+// Cron task, every 30 minutes: run the watchdogs that spool their own ops events, then
+// prune the spool and the finished rate-limit windows. This app sends no ops mail: the
+// fleet dashboard reads the spool through GET /api/fleet (`ops.kinds`) and is the only
+// alert sender.
 //
-// Each watchdog reads D1 and KV, and the deploy check calls GitHub, which is not
-// worth doing more often. The prunes live here because this app has no purge
-// task; without them the spool and the rate_limits table would grow without bound.
+// Each watchdog reads D1 and KV, and the deploy check calls GitHub, which is not worth
+// doing more often. The prunes live here because this app has no purge task; without them
+// the spool and the rate_limits table would grow without bound.
 
 import rawManifest from '../../../../../fleet.json'
 import { fetchMainHead } from '../../../../reliability/server/pipeline/deploy-watch'

@@ -1,13 +1,12 @@
 <script setup lang="ts">
-// One cell of the like-for-like matrix, on one line: the model the vendor's
-// own words put in this class, its in/out price and move — or, with nothing
-// to price, the stated gap. The info control quotes the vendor sentence
-// behind the placement (layers/pricing/app/utils/price-display.ts).
+// One cell of the like-for-like matrix, on one line: the model the vendor's own words put in
+// this class with its in/out price and move, or the stated gap when there is nothing to price.
+// The info control quotes the vendor sentence behind the placement
+// (layers/pricing/app/utils/price-display.ts).
 //
-// The model name is the citation: it links to the pricing page the price was
-// read from, with the host and the exact read in its tooltip and a
-// screen-reader <time>. The matrix's foot prints each page with its age, so a
-// cell trades a third line for a row that is one line tall.
+// The model name is the citation: it links to the pricing page the price was read from, with
+// the host and the exact read in its tooltip and a screen-reader <time>. The matrix's foot
+// prints each page with its age, which keeps the row one line tall.
 
 import type { MatrixCell } from '../../../shared/types/prices'
 

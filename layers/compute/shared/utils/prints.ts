@@ -1,9 +1,6 @@
-// The hardware layer's monthly prints (GET /api/prints, the /hardware page, the
-// get_hardware_prints MCP tool): Taiwan's monthly revenue for the foundry, the
-// server builders and the power and networking makers, and Korea's chip
-// exports (Korea Customs Service's headline, and UN Comtrade's HS 8542). Each figure is stored as we first saw it, and a later different
-// figure for the same month is a new row, never an overwrite
-// (layers/compute/server/prints/).
+// The hardware layer's monthly prints (GET /api/prints, /hardware,
+// get_hardware_prints). Each figure is stored as first seen; a different later
+// figure for the month is a new row (layers/compute/server/prints/).
 
 import { z } from 'zod'
 

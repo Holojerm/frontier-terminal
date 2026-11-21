@@ -1,4 +1,4 @@
-// The relay — `bun run relay:fetch`, run every 30 minutes on the owner's Mac mini by a
+// The relay: `bun run relay:fetch`, run every 30 minutes on the owner's Mac mini by a
 // launchd job outside this repo (~/agent-jobs/relay-fetch.sh). Some sources' CDNs refuse
 // Cloudflare Workers' egress but answer the mini (layers/core/server/pipeline/relay.ts):
 //

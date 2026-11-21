@@ -34,19 +34,15 @@ const refusesAsOf = computed(() =>
 const pageUrl = usePageUrl()
 const site = useSiteContext()
 
-// This page is the site's data catalog, so it says so in the graph: one
-// DataCatalog node and one Dataset per exportable table, each with the CSV and
-// JSON downloads as real DataDownload URLs.
+// This page is the site's data catalog, so it says so in the graph: one DataCatalog node
+// and one Dataset per exportable table, each with its CSV and JSON downloads as
+// DataDownload URLs. Dataset has a search index of its own, and it is the type this site
+// is. The nodes are built from the same `coverage.exports` the table below renders, so a
+// table that stops being listed stops being described and the graph never claims a
+// download that 404s.
 //
-// Dataset is the only schema.org type with a search index of its own rather
-// than a rich-result treatment, and it is the type this site actually is. The
-// nodes are built from the same `coverage.exports` the table below renders —
-// if a table stops being listed it stops being described, which is the only
-// way to keep the graph from claiming a download that 404s.
-//
-// isBasedOn credits the upstream sources a table is read from, by axis; the
-// tables that span every source (snapshots, changes, alerts) credit none
-// rather than all forty.
+// isBasedOn credits the upstream sources a table is read from, by axis; the tables that
+// span every source (snapshots, changes, alerts) credit none rather than all forty.
 const TABLE_AXES: Record<string, readonly SourceAxis[]> = {
   prices_latest: ['pricing-catalog', 'pricing-cross-check'],
   jobs_open: ['hiring'],
@@ -123,9 +119,9 @@ const EXPORT_COLUMNS: TableColumn[] = [
   { key: 'download', label: 'Download' },
 ]
 
-// Three questions: how to take the data, where it comes from and how well we
-// read it, and what a reader may do with it. Downloads come first because the
-// coverage table runs to every source and used to push them out of view.
+// Three questions: how to take the data, where it comes from and how well we read it, and
+// what a reader may do with it. Downloads come first: the coverage table runs to every
+// source and would push them out of view.
 const tabs = [
   { value: 'downloads', label: 'Downloads' },
   { value: 'sources', label: 'Sources' },

@@ -1,6 +1,5 @@
-// Resend over fetch: the one provider that can mail arbitrary addresses (the
-// OWNER_EMAIL binding only reaches one verified inbox). No SDK, so no new
-// dependency. Single sends use POST /emails, groups POST /emails/batch.
+// Resend over fetch: the provider that can mail arbitrary addresses (the
+// OWNER_EMAIL binding reaches one verified inbox). No SDK, so no new dependency.
 
 export interface MailMessage {
   to: string

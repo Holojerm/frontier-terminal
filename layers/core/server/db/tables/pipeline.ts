@@ -25,20 +25,11 @@ export const snapshots = sqliteTable(
   ],
 )
 
-// Entities — the CURRENT row per (source, entity_key). Rows are inserted when
-// an entity appears, rewritten when its content hash changes, and deleted
-// when a set-typed source (a job board, a pricing page) stops listing them.
-// History lives in `changes`, never in duplicate entity rows.
-//
-// Storing every entity for every snapshot is the obvious alternative, and was
-// measured at 130k rows in two weeks — almost all of them byte-identical
-// repeats of the row before. The current set plus the
-// change log carries the same information: any past state is the current
-// state with the changes after that instant undone.
-//
-// snapshot_id is the snapshot whose parse produced the row's current
-// content. An 'unchanged' fetch (same content hash) does not touch entities,
-// so a source's freshness is read from its newest snapshot, not from here.
+// Entities: the CURRENT row per (source, entity_key), inserted, rewritten on a
+// content-hash change, deleted when a set-typed source stops listing it. History
+// lives in `changes` (a row per snapshot measured 130k rows in two weeks, nearly
+// all repeats). snapshot_id is the parse that produced the current content; an
+// 'unchanged' fetch does not touch entities, so freshness comes from snapshots.
 export const entities = sqliteTable(
   'entities',
   {
@@ -68,11 +59,11 @@ export const entities = sqliteTable(
   ],
 )
 
-// Changes — append-only. id is contentHash(entity_key + before/after hashes)
+// Changes: append-only. id is contentHash(entity_key + before/after hashes)
 // as layers/core/server/pipeline/diff.ts computes it, so the same two snapshots always
 // yield the same ids and an overlapping tick cannot log a change twice. An
 // entity that makes the same transition again later (a role reposted and
-// closed again) gets an id that also hashes detected_at — diff.ts › repeatChangeId.
+// closed again) gets an id that also hashes detected_at (diff.ts › repeatChangeId).
 export const changes = sqliteTable(
   'changes',
   {
@@ -110,11 +101,10 @@ export const alerts = sqliteTable(
     rule: text('rule').notNull(),
     created_at: text('created_at').notNull(),
     ...provenance,
-    // When the row was written. created_at is the evidence's fetch time, which
-    // for a judged alert is up to an hour or more earlier; a hold measured
-    // from it was mostly spent before the alert existed. Stamped by the
-    // alerts_recorded_at trigger (migration), so no writer has to set it;
-    // rows from before the column read created_at.
+    // When the row was written. created_at is the evidence's fetch time, up to an
+    // hour or more earlier for a judged alert, so a hold measured from it was
+    // mostly spent before the alert existed. Stamped by the alerts_recorded_at
+    // trigger (migration); NULL on older rows, which read created_at.
     recorded_at: text('recorded_at'),
   },
   (t) => [
@@ -124,11 +114,11 @@ export const alerts = sqliteTable(
   ],
 )
 
-// Source runs — one row per (tick, source): what each poll attempted and how
-// it ended. Powers the coverage panel and the failure alerts, and is what
-// refresh reads to find a source's last GOOD snapshot — a run row is written
-// after the entity writes, so a tick that died halfway leaves no run row and
-// the next tick re-parses instead of trusting a half-applied snapshot.
+// Source runs: one row per (tick, source), what each poll attempted and how it
+// ended. Feeds the coverage panel and the failure alerts, and refresh reads it
+// for a source's last GOOD snapshot. The run row is written after the entity
+// writes, so a tick that died halfway leaves none and the next tick re-parses
+// instead of trusting a half-applied snapshot.
 export const sourceRuns = sqliteTable(
   'source_runs',
   {
@@ -157,24 +147,22 @@ export const sourceRuns = sqliteTable(
     // without scanning the rest.
     index('source_runs_status_source_idx').on(t.status, t.source_id, t.started_at),
     // The newest run of a source that read its page. Walking
-    // source_runs_source_started_idx for it passes every failed and absent run
-    // on the way: a source that is absent on every poll, or has been failing
-    // for a week, cost its whole history on each call (10.6k rows a call,
-    // 6.9k calls a day). SQLite uses a partial index only when the query
-    // repeats its WHERE, so both sides spell it with READ_RUN_STATUSES, and
-    // the query names this index (INDEXED BY): with no statistics the planner
-    // takes source_runs_source_started_idx instead.
+    // source_runs_source_started_idx passes every failed and absent run on the
+    // way, so a source absent or failing for a week cost its whole history per
+    // call (10.6k rows a call, 6.9k calls a day). SQLite uses a partial index
+    // only when the query repeats its WHERE, so both sides spell it with
+    // READ_RUN_STATUSES, and the query names this index (INDEXED BY) because
+    // with no statistics the planner takes source_runs_source_started_idx.
     index('source_runs_read_idx')
       .on(t.source_id, t.started_at, t.snapshot_id)
       .where(sql`status in ${sql.raw(READ_RUN_STATUSES)}`),
   ],
 )
 
-// Source stats — one row per source: how many snapshots and runs it has, and
-// the first and newest of each. snapshots and source_runs grow by a row per
-// source per tick forever, so any per-source aggregate over them reads every
-// row ever written; this table answers the same questions in one row per
-// source. insertRows() keeps it in step, in the same batch as the row it
+// Source stats: one row per source with its snapshot and run counts and the
+// first and newest of each. snapshots and source_runs grow by a row per source
+// per tick forever, so any per-source aggregate over them reads every row ever
+// written. insertRows() keeps this in step in the same batch as the row it
 // counts, so nothing else writes snapshots or runs without it.
 export const sourceStats = sqliteTable('source_stats', {
   source_id: text('source_id').primaryKey(),
@@ -185,16 +173,10 @@ export const sourceStats = sqliteTable('source_stats', {
   last_run_at: text('last_run_at'),
 })
 
-// Alert citations — which lab and entity type each alert's cited changes
-// carry, one row per distinct (alert, provider, entity_type). The lab and
-// topic filters on /alerts read it. Without it they opened every alert's
-// change_ids array and looked up each cited change (9.5k rows a call for 911
-// alerts).
-//
-// Written by the alerts_cites trigger (migration 0060) on every insert into
-// alerts, so no alert writer has to know about it. Alerts and changes are
-// append-only and a change is always stored before the alert citing it, so
-// the rows never go stale.
+// Alert citations: one row per distinct (alert, provider, entity_type), for the
+// lab and topic filters on /alerts (without it they read 9.5k rows a call).
+// Written by the alerts_cites trigger (migration 0060); alerts and changes are
+// append-only and a change precedes the alert citing it, so rows never go stale.
 export const alertCites = sqliteTable(
   'alert_cites',
   {
@@ -209,18 +191,13 @@ export const alertCites = sqliteTable(
   ],
 )
 
-// Row counts — how many rows a table holds per key: entities per source_id,
-// changes per entity_type, recipe_observations per recipe_id, alerts under ''.
-// SQLite answers count(*) by reading every row, and the coverage panel, the
-// overview and the fleet endpoint each asked several times a tick (24M rows a
-// day). A total is the sum over a table's keys.
-//
-// Kept by insert and delete triggers on each counted table (migration 0060),
-// so a writer cannot forget it. The key columns are identity columns that no
-// writer updates; a new writer that did would need an update trigger too.
-// Never INSERT OR REPLACE into a counted table: SQLite replaces the old row
-// without firing its delete trigger, so the row is counted twice. Upsert with
-// ON CONFLICT, as every writer does.
+// Row counts per key (entities per source_id, changes per entity_type,
+// recipe_observations per recipe_id, alerts under ''), because SQLite's count(*)
+// reads every row (24M rows a day across the panels). A total is the sum of keys.
+// Kept by insert and delete triggers (migration 0060). Key columns are never
+// updated; a writer that did would need an update trigger. Never INSERT OR
+// REPLACE into a counted table: the replace skips the delete trigger and counts
+// the row twice. Upsert with ON CONFLICT.
 export const rowCounts = sqliteTable(
   'row_counts',
   {

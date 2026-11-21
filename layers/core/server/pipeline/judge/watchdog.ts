@@ -11,14 +11,10 @@ import {
 import { JUDGE_OPS_PATH } from './submit'
 
 // The judge's freshness check (layers/core/server/utils/freshness.ts). The
-// routine runs on the owner's claude.ai account, so the Worker cannot see
-// whether it is enabled, out of budget, or failing before it reaches the API —
-// the only evidence is the absence of judge_runs rows. The routine runs hourly,
-// so three hours of owed changes with no run is three missed runs: an outage,
-// and a critical line in the ops digest (judge_silent,
-// layers/core/server/utils/terminal-ops-severity.ts). The run itself reports
-// success while blocked (a 403 from its environment's proxy ends the run
-// cleanly), so this is the only check that sees it.
+// routine runs on the owner's claude.ai account, out of the Worker's sight,
+// and a blocked run (a 403 from its proxy) still reports success, so missing
+// judge_runs rows are the only evidence. Three hours of owed changes with no
+// run is an outage (judge_silent, layers/core/server/utils/terminal-ops-severity.ts).
 
 const HOUR_MS = 60 * 60 * 1000
 const JUDGE_SILENCE_MS = 3 * HOUR_MS
@@ -38,11 +34,9 @@ export const judgeFreshnessCheck: FreshnessCheck = {
 
 /**
  * The detected_at of the oldest change older than `cutoff` that the judge
- * owes, or null. Oldest first, bounded: the question is "is anything old still
- * waiting", and the first row the pending route would actually offer answers
- * it. Both of that route's filters are applied here for that reason — a
- * backlog made of rows the judge is never handed is not a backlog the judge
- * owes, and reporting one would be a lie in the direction that wakes somebody.
+ * owes, or null. It applies both of the pending route's filters: a backlog of
+ * rows the judge is never handed is not owed, and reporting one would wake
+ * somebody for nothing.
  */
 async function oldestOwedBefore(db: PipelineDb, cutoff: string): Promise<string | null> {
   const since = await judgedThrough(db)

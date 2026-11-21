@@ -1,21 +1,10 @@
-// The judge's reading of a supplier's new SEC document. GET /api/judge/pending
-// offers each document the reader stored and found a counterparty in
-// (ingest.ts) as a SUPPLIER REVIEW entry: excerpts of its text, and the rows
-// the table already holds for that company. The judge sends back, per
-// document, the passages that tie the company to a lab, a cloud or an unnamed
-// customer, or none.
-//
-// The model only finds the passage and says what it states. The Worker
-// decides, against the document as R2 holds it:
-//   1. the document was offered and is not settled yet;
-//   2. the quote is in the document verbatim (see contains);
-//   3. the counterparty is named in the quote, or by a term the alias quote
-//      defines; a concentration row's label ("Customer A") is in the quote;
-//   4. every figure is written in the quote, in the unit it claims;
-//   5. ticker, company, layer, form, filing date, period, the counterparty's
-//      ticker and lab, and provenance are set here, never by the model.
-// A passage that fails is dropped, with an ops event. Once a document is
-// answered it is settled: rows of its form it no longer repeats have ended.
+// The judge's reading of a supplier's new SEC document, offered on
+// /api/judge/pending as a SUPPLIER REVIEW entry (excerpts and the company's current
+// rows). The model only finds a passage; the Worker checks it against the R2 copy:
+// offered and unsettled, quoted verbatim (see contains), counterparty named in the
+// quote or by a defined alias, every figure written in its unit. Ticker, company,
+// form, dates, counterparty ticker and lab, and provenance are set here, never by
+// the model. A failing passage is dropped with an ops event.
 
 import { z } from 'zod'
 

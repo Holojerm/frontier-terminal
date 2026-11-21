@@ -8,13 +8,12 @@ import {
 } from '#layers/core/server/utils/contracts'
 import { isPeriodicForm, isS1FloorForm } from './parsers/sec/s1-floor'
 
-// The synchronous SEC floors (boundary table, judge row): a NEW row of the
-// right shape always alerts, no model in the loop. Only 'added' changes
-// qualify — a baseline records no changes, so the historical filings in a
-// filer's recent window never fire on first sight.
+// The synchronous SEC floors (boundary table, judge row): a NEW row of the right shape
+// always alerts, no model in the loop. Only 'added' changes qualify; a baseline records no
+// changes, so the historical filings in a filer's recent window never fire on first sight.
 //
-// Grounding: every value in the headline and explanation is read back out of
-// the change row's after_json, re-validated against the row's own contract.
+// Grounding: every value in the headline and explanation is read back out of the change
+// row's after_json, re-validated against the row's own contract.
 
 interface FloorSpec<R> {
   rule: Extract<AlertRow['rule'], 's1-floor' | 'periodic-floor' | 'cik-resolved'>

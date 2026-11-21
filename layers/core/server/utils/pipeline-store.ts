@@ -16,22 +16,19 @@ import {
 import { emitEvent } from './events'
 import { RATE_LIMITED_DETAIL } from './pipeline-fetch'
 
-// The write chokepoint. Every pipeline row reaches D1 through insertRows(),
-// which validates it against its zod contract first — so a row missing
-// source_url or fetched_at cannot be stored, whatever produced it. The NOT
-// NULL columns in server/db/schema.ts are the second layer, not the first.
+// The write chokepoint: insertRows() validates every row against its zod
+// contract, so a row missing source_url or fetched_at can't be stored. The NOT
+// NULL columns in server/db/schema.ts are the second layer.
 //
-// Every function takes the Drizzle client explicitly so the workerd suite
-// can drive it against a real D1 binding (the same shape server/utils/ops.ts
-// uses).
+// Functions take the Drizzle client explicitly so the workerd suite can drive
+// them against a real D1 binding.
 
 export type PipelineDb = ReturnType<typeof drizzle<typeof tables>>
 
 /**
  * D1 rejects a statement with more than 100 bound parameters, so a multi-row
- * INSERT is chunked by rows × columns, not by rows. Miniflare does not
- * enforce the limit, which is why this is a named constant with its own test
- * rather than something the suite would catch.
+ * INSERT is chunked by rows × columns. Miniflare doesn't enforce the limit, so
+ * it has its own test.
  * https://developers.cloudflare.com/d1/platform/limits/
  */
 export const D1_MAX_BOUND_PARAMS = 100
@@ -120,8 +117,8 @@ function insertStatements<T extends TableName>(
     const insert = db.insert(target).values(group as unknown as (typeof target)['$inferInsert'][])
     return skipExisting ? insert.onConflictDoNothing() : insert
   })
-  // A skipped duplicate must not be counted, and this cannot tell which rows
-  // were skipped — so skipExisting is for tables source_stats does not count.
+  // skipExisting can't tell which rows it skipped, so it is only for tables
+  // source_stats does not count.
   if (skipExisting) return inserts
   return [...inserts, ...statsStatements(db, table, validated)]
 }
@@ -177,10 +174,10 @@ function statsStatements(db: PipelineDb, table: TableName, rows: readonly unknow
 }
 
 /**
- * Validate, then insert. Returns the number of rows written. Plain INSERT on
- * purpose — a primary-key collision fails loudly and becomes a 'failed'
- * source run. Change and alert rows, whose ids two ticks or two sources can
- * share, go through applyDiff instead, which skips an id already stored.
+ * Validate, then insert; returns the rows written. Plain INSERT, so a
+ * primary-key collision fails loudly as a 'failed' source run. Change and alert
+ * rows, whose ids two ticks or two sources can share, go through applyDiff,
+ * which skips an id already stored.
  */
 export async function insertRows<T extends TableName>(
   db: PipelineDb,
@@ -192,13 +189,12 @@ export async function insertRows<T extends TableName>(
   return statements.length === 0 ? 0 : rows.length
 }
 
-/** The current entity set for one source, as contract rows (store-only
- * columns dropped) so it can go straight into diff(). */
 /**
- * A source's stored entities, or only those under `keys`. An append-only
- * source never removes a row, so its diff needs only the keys the new parse
- * holds: the OpenRouter rankings keep every day since 2025-01-01, and a tick
- * re-reads 30 of them. The keys go in as one JSON parameter, past D1's cap.
+ * A source's stored entities as contract rows (store-only columns dropped),
+ * ready for diff(); or only those under `keys`. An append-only source never
+ * removes a row, so its diff needs only the keys the new parse holds (the
+ * OpenRouter rankings keep every day since 2025-01-01; a tick re-reads 30).
+ * The keys go in as one JSON parameter, past D1's cap.
  */
 export async function currentEntities(
   db: PipelineDb,
@@ -233,10 +229,9 @@ const ENTITY_UPSERT_SET = Object.fromEntries(
 )
 
 /**
- * Write entities whatever the source already holds: insert a new key, rewrite
- * an existing one. One path for added, modified and in-place rows alike, and
- * idempotent, so a write that a killed tick left half-done is finished by the
- * next one rather than colliding with its own rows.
+ * Insert a new key or rewrite an existing one. Idempotent, so the next tick
+ * finishes a write a killed tick left half-done instead of colliding with its
+ * own rows.
  */
 function upsertEntityStatements(db: PipelineDb, rows: readonly unknown[]): Statement[] {
   const validated = validateRows('entities', rows)
@@ -270,10 +265,10 @@ function deleteEntityStatements(
 }
 
 /**
- * The alerts whose id is not stored yet. A deterministic rule keys its alert
- * on the event (an accession, a slug), and two sources can see one event in
- * the same tick; the second to parse must not count or re-insert it. applyDiff
- * also skips a conflicting id, for the race this read cannot see.
+ * The alerts whose id isn't stored yet. A deterministic rule keys its alert on
+ * the event (an accession, a slug), and two sources can see one event in the
+ * same tick. applyDiff also skips a conflicting id, for the race this read
+ * can't see.
  */
 export async function unstoredAlerts<T extends { id: string }>(
   db: PipelineDb,
@@ -304,29 +299,25 @@ export interface DiffWrites {
 }
 
 /**
- * One parse's writes. With change rows they go as a single db.batch(), which
- * D1 runs as one transaction: the entity set and the change log must move
- * together, since entities written without their change rows make the next
- * tick diff to nothing and the change (and any alert on it) is lost for good.
- * All or nothing means a failed write is retried whole by the next tick.
+ * One parse's writes. With change rows they go as one db.batch() (one D1
+ * transaction): entities written without their change rows make the next tick
+ * diff to nothing, and the change and any alert on it are lost. A failed write
+ * is retried whole by the next tick.
  *
  * Without change rows (a baseline, a quiet re-read) nothing can be lost that
- * way, so a large set is chunked rather than sent as one oversized batch; the
- * upserts make a retry finish whatever a killed write left.
+ * way, so a large set is chunked; the upserts let a retry finish a killed write.
  */
 export async function applyDiff(db: PipelineDb, sourceId: string, writes: DiffWrites) {
   const statements = [
     ...insertStatements(db, 'snapshots', writes.snapshot ? [writes.snapshot] : []),
     ...upsertEntityStatements(db, writes.upserts),
     ...deleteEntityStatements(db, sourceId, writes.removed),
-    // A change id is a hash of (entity, before, after) with no source in it, so
-    // two sources that see the same filing produce the same id. The row is
-    // already logged; a conflict here used to roll back the whole tick and
-    // wedge the second source forever (edgar-fts-openai, 2026-10-09).
+    // A change id hashes (entity, before, after) with no source in it, so two
+    // sources that see one filing produce the same id. A conflict here would roll
+    // back the whole tick and wedge the second source.
     ...insertStatements(db, 'changes', writes.changes, { skipExisting: true }),
-    // Same for alerts: unstoredAlerts filters ids already stored, but two
-    // sources parsing one filing concurrently both pass that read before
-    // either writes (edgar-fts-openai, 2026-11-02).
+    // Same for alerts: two sources parsing one filing concurrently both pass
+    // unstoredAlerts before either writes.
     ...insertStatements(db, 'alerts', writes.alerts, { skipExisting: true }),
   ]
   if (statements.length === 0) return
@@ -340,9 +331,8 @@ export async function applyDiff(db: PipelineDb, sourceId: string, writes: DiffWr
 }
 
 /**
- * A source's run row, plus its fetch's snapshot when no earlier write carried
- * it (store.ts › applyDiff), in one batch: the snapshot never lands without
- * the run that read it, nor the run without its snapshot.
+ * A source's run row, plus its fetch's snapshot when applyDiff didn't already
+ * write it, in one batch, so neither lands without the other.
  */
 export async function recordRun(db: PipelineDb, run: unknown, snapshot: unknown) {
   await runStatements(db, [
@@ -352,14 +342,14 @@ export async function recordRun(db: PipelineDb, run: unknown, snapshot: unknown)
 }
 
 /**
- * The ids among `changes` that name a transition already logged from the
- * same source_url which the entity has since moved on from — a repeat, to be
- * re-keyed with diff.ts › repeatChangeId so the store does not skip it.
+ * The ids among `changes` that repeat a transition already logged from the same
+ * source_url after the entity moved on, to be re-keyed with
+ * diff.ts › repeatChangeId so the store doesn't skip them.
  *
- * A stored id from another source_url is two sources seeing one event (an
- * FTS hit and the filer's own feed): that stays one row. A stored id whose
- * entity's newest change from this source_url is the same transition is an
- * overlapping tick re-diffing the same snapshots: that stays one row too.
+ * A stored id from another source_url is two sources seeing one event (an FTS
+ * hit and the filer's own feed) and stays one row. So does a stored id whose
+ * entity's newest change from this source_url is the same transition (an
+ * overlapping tick re-diffing the same snapshots).
  */
 export async function repeatedChangeIds(
   db: PipelineDb,
@@ -412,10 +402,8 @@ export async function repeatedChangeIds(
 }
 
 /**
- * When this source was last recorded 'skipped', or null. The refresh uses it
- * to say "not configured" in the ops digest once a day rather than once a
- * tick: the digest is for things that changed, and an unset secret does not
- * change four times a day.
+ * When this source was last recorded 'skipped', or null. The refresh uses it to
+ * report "not configured" in the ops digest once a day rather than every tick.
  */
 export async function lastSkippedRunAt(db: PipelineDb, sourceId: string): Promise<string | null> {
   const [row] = await db
@@ -428,13 +416,10 @@ export async function lastSkippedRunAt(db: PipelineDb, sourceId: string): Promis
 }
 
 /**
- * The status of this source's most recent run, or null before its first.
- *
- * The refresh uses it to raise `source_absent` on the transition only. Five
- * OpenAI SKUs are priced with no model page behind them and never will be;
- * a digest that repeats that every survey tick is training its reader to
- * archive the mail unopened, which costs the tick where a page that did
- * exist stops existing.
+ * The status of this source's most recent run, or null before its first. The
+ * refresh raises `source_absent` only on the transition: five OpenAI SKUs have
+ * no model page and never will, and a digest that repeats that every tick gets
+ * archived unread.
  */
 export async function lastRunStatus(db: PipelineDb, sourceId: string): Promise<string | null> {
   const [row] = await db
@@ -466,7 +451,6 @@ export async function lastRunWithHash(
   return row ?? null
 }
 
-/** The newest `limit` runs for a source, newest first. */
 export async function recentRuns(
   db: PipelineDb,
   sourceId: string,
@@ -544,16 +528,14 @@ export async function sourcesWithGoodRun(
 }
 
 /**
- * The snapshot behind each source's newest non-failed run, by source id, in
- * one query for the tick. Read through source_runs rather than snapshots
- * directly because the run row is written last: a tick that stored a
- * snapshot and then died before its run row has no run row, so the next tick
- * sees a different "latest" hash and parses again instead of skipping a
- * half-applied payload as 'unchanged'.
+ * The snapshot behind each source's newest non-failed run, by source id, in one
+ * query. Read through source_runs because the run row is written last: a tick
+ * that died after storing a snapshot has no run row, so the next tick sees a
+ * different latest hash and re-parses instead of skipping a half-applied
+ * payload as 'unchanged'.
  *
- * The ids go in as one JSON parameter, so the list is not bound by D1's
- * parameter cap, and each source costs one index probe for its newest good
- * run rather than a read of its whole run history.
+ * The ids go in as one JSON parameter (past D1's parameter cap), and each
+ * source costs one index probe for its newest good run.
  */
 export async function latestGoodSnapshots(
   db: PipelineDb,

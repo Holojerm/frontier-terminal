@@ -1,14 +1,12 @@
-// What Amazon's 10-Qs and 10-Ks said about Anthropic in words before it
-// tagged amzn:AnthropicMember (its 10-Q for the quarter to 2026-03-31, filed
-// 2026-04-30). From the 10-Q for the quarter to 2023-09-30 the notes to the
-// statements state each convertible note Amazon bought, what it committed to
-// buy, the notes' fair value, and later the gains and upward marks Anthropic
-// brought. Read from the filing's primary document, a sentence at a time,
-// against fixed wordings; a sentence that matches none is not read.
+// What Amazon's 10-Qs and 10-Ks said about Anthropic in words before it tagged
+// amzn:AnthropicMember (its 10-Q for the quarter to 2026-03-31, filed 2026-04-30). From
+// the 10-Q for the quarter to 2023-09-30 the notes state each convertible note Amazon
+// bought, what it committed to buy, the notes' fair value, and later the gains and upward
+// marks Anthropic brought. Read from the primary document a sentence at a time against
+// fixed wordings; a sentence that matches none is not read.
 //
-// Amazon's numbers, not Anthropic's. Where Amazon says a figure is
-// "primarily" from Anthropic (its private-company marks, its gains on
-// converted notes), the row says so: the figure includes other companies.
+// Amazon's numbers, not Anthropic's. Where Amazon says a figure is "primarily" from
+// Anthropic (its private-company marks, its gains on converted notes), the row says so.
 
 import { decodeEntities } from '#layers/core/server/pipeline/parsers/html-text'
 

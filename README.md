@@ -33,9 +33,10 @@ bun run ci         # the merge gate: format (writes), lint, every gate, typechec
 bun run ci:fast    # while iterating: cheap gates + typecheck + tests touched since origin/main
 ```
 
-Workers Builds runs `bun run ci` on every pull-request branch (production builds run typecheck + build only). The browser suites (axe over every public route
-in both color modes, and the Content-Security-Policy spec) run in GitHub Actions instead
-(`.github/workflows/browser-suites.yml`), because the Workers Builds image can't launch Chromium.
+Workers Builds runs `bun run ci` on every pull-request branch. Production builds run only
+typecheck and build. The browser suites (axe over every public route in both color modes, and
+the Content-Security-Policy spec) run in GitHub Actions (`.github/workflows/browser-suites.yml`),
+because the Workers Builds image can't launch Chromium.
 
 ## Layout
 
@@ -46,10 +47,10 @@ in both color modes, and the Content-Security-Policy spec) run in GitHub Actions
 | `sources.yaml` | The source registry. One entry per candidate source with its axis, its diff mechanism, and an include or exclude verdict. Transcribed from `docs/source-audit.md`, never re-derived. |
 | `layers/*/app/pages/` | The pages, each in the layer that owns its data: `prices/` in pricing, `releases.vue` and `disclosures.vue` in models, `rankings.vue` in adoption, `exposure.vue` and `filings/` in companies, `compute.vue`, `power.vue` and `hardware.vue` in compute, `ground-truth.vue` in press, `alerts/` in alerts, `theses/` and `signals.vue` in theirs. The shell holds `labs/` (one page and tear sheet per lab), `compare/`, `revenue.vue`, `dependencies.vue`, `hiring.vue`, `incidents.vue`, `data.vue`, `about.vue`, `license.vue` and `contact.vue`. The overview, `app/pages/index.vue`, stays in the app. Every page calls `useSeo()` once and declares `publicPage`. |
 | `layers/core/server/pipeline/` | Fetch → normalize → diff → store, `scopes.ts` (which sources a given run covers) and `judge/`, the one writer that promotes changes to alerts. Each domain's parsers, lanes and judge review are in its own `server/pipeline/`. |
-| `layers/*/server/api/` | The read-only JSON API, each route in the layer that owns its data. Plus `health`, `status` and `fleet` (the ops contract) in the app, and core's `judge/`, bearer-gated, the only route that writes. |
+| `layers/*/server/api/` | The read-only JSON API, each route in the layer that owns its data. Plus `health`, `status` and `fleet` (the ops contract) in the app. The only routes that write are bearer-gated: core's `judge/`, press's `gdelt/` and the shell's `relay/`. |
 | `server/routes/` and `layers/*/server/routes/` | `robots.txt`, `sitemap.xml`, `llms.txt`, `manifest.webmanifest`, all derived from the route table. The alerts layer's `alerts.xml`, the Atom feed. `layers/core/server/routes/export/[file].get.ts`, the table downloads (CSV and JSON), and `layers/core/server/routes/mcp.ts`, the MCP endpoint. |
 | `layers/*/server/db/schema.ts` | Each layer's tables, all re-exported by `server/db/schema.ts`. Core's are the store: `snapshots` (one row per fetch, the provenance spine), `entities` (current state per source), `changes` and `alerts` (both append-only), `source_runs`, `judge_runs`, `recipe_observations`, `recipe_runs` and `archive_captures`. Each domain holds its own, beside the template's `instance_secrets` and `ops_events`. |
-| `layers/*/server/tasks/` | `layers/companies/server/tasks/poll/edgar.ts` runs every 30 minutes over the SEC feeds and the model catalogs, so a launch shows within half an hour. `layers/terminal/server/tasks/poll/survey.ts` runs every 6 hours over every included source. `layers/terminal/server/tasks/ops/watch.ts` runs every 30 minutes: the freshness checks, then the prune of the `ops_events` spool the fleet dashboard alerts from. |
+| `layers/*/server/tasks/` | `layers/companies/server/tasks/poll/edgar.ts` runs every 30 minutes over the SEC feeds and the model catalogs, so a launch shows within half an hour. `layers/terminal/server/tasks/poll/survey.ts` runs every 6 hours over every included source but the careers and filings lanes, which run in their own invocations for memory. `layers/terminal/server/tasks/ops/watch.ts` runs every 30 minutes: the freshness checks, then the prune of the `ops_events` spool the fleet dashboard alerts from. |
 | `fixtures/` | A captured copy of every source, with fetch timestamps and trim notes in `fixtures/manifest.json`, so the parsers are tested against the real bytes without the network. |
 | `scripts/check-*.ts` | The gates in `bun run ci`: design tokens, brand assets, references, SEO, fleet manifest, cron parity. |
 | `layers/theses/server/theses/` | The thesis layer: each thesis's claims and kill conditions (`anthropic.ts`), the Cloudflare changelog recipe (`layers/theses/server/recipes/`), the measured signals that read the store, the judged claims' candidates and verdict gate, the pure status rules, the evaluator the survey cron runs after each run, and the weekly digest (`theses:digest`, Mondays 13:00 UTC). |
@@ -59,7 +60,8 @@ in both color modes, and the Content-Security-Policy spec) run in GitHub Actions
 
 Pushing to `main` builds and deploys through Workers Builds. Its deploy command,
 `bun run deploy:ci`, applies pending D1 migrations first, so a migration that fails stops the
-deploy; it then runs `deploy:smoke`, which fails the build if `/` or `/api/health` is not serving. A manual `bun run deploy` skips them, so run `bun run db:migrate:remote` after one.
+deploy. It then runs `deploy:smoke`, which fails the build if `/` or `/api/health` isn't
+serving. A manual `bun run deploy` skips both, so run `bun run db:migrate:remote` after one.
 `GET /api/status` reports `migrations.pending`, so you can see the gap from outside.
 
 Bindings live in `wrangler.toml` (one environment, no preview). `fleet.json` must match it, or
@@ -79,8 +81,8 @@ https://frontierterm.com/export/changes.csv?history=full
 ```
 
 The data license depends on age. Our compilation and the numbers we derive from the last 90 days
-are CC BY 4.0. Older ones are CC BY-NC 4.0, free for non-commercial use. Anything we published before 2026-11-04 stays CC BY 4.0. A full-history
-download labels each row in a `license` column. Upstream data keeps its own license, and the
+are CC BY 4.0. Older ones are CC BY-NC 4.0, free for non-commercial use. Anything we published
+before 2026-11-04 stays CC BY 4.0. A full-history download labels each row in a `license` column. Upstream data keeps its own license, and the
 underlying facts belong to their publishers. The code is MIT. Details are on `/license`.
 
 The `/data` page lists every table with its columns and current row counts. Every row carries

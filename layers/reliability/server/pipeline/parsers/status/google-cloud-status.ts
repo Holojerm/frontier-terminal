@@ -6,12 +6,11 @@ import {
 } from '../../../../../core/server/utils/contracts'
 import { fixtureProvenance } from '../../../../../core/server/utils/fixture-provenance'
 
-// google-cloud-status — status.cloud.google.com/incidents.json, Google
-// Cloud's own format (not Statuspage). The feed is Alphabet-cloud-wide, so
-// only incidents touching a Gemini / Vertex AI product are kept: an
-// unfiltered count would conflate Compute and BigQuery outages with Gemini
-// and mislead — the same reasoning that cuts Google hiring (sources.yaml).
-// Everything else is counted, not silently dropped. Feed text is data.
+// google-cloud-status — status.cloud.google.com/incidents.json, Google Cloud's own format (not
+// Statuspage). The feed is Alphabet-cloud-wide, so only incidents touching a Gemini / Vertex AI
+// product are kept: an unfiltered count would conflate Compute and BigQuery outages with
+// Gemini (the same reasoning that cuts Google hiring, sources.yaml). Everything else is
+// counted, not silently dropped. Feed text is data.
 
 interface GoogleCloudIncident {
   id: string
@@ -34,9 +33,7 @@ export function isGeminiProduct(title: string): boolean {
 
 const byString = (a: string, b: string) => (a < b ? -1 : a > b ? 1 : 0)
 
-// prov defaults to the fixture manifest's record (fixture-only behavior is
-// byte-identical for the determinism gate); the refresh orchestrator passes
-// the live fetch's provenance instead.
+// One-argument calls read the fixture's provenance, keeping the determinism gate byte-identical.
 export function parseGoogleCloudStatus(
   text: string,
   prov: Provenance = fixtureProvenance('google-cloud-status'),

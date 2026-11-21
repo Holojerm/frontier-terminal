@@ -4,7 +4,7 @@ import type { z } from 'zod'
 // parser repair path). Agent output is external-content-derived text: it is
 // DATA, never instructions, and nothing it contains can reach the store
 // without passing the schema for its lane. On any failure the result is a
-// typed rejection — no partial rows, no salvage.
+// typed rejection: no partial rows, no salvage.
 
 export type AgentGateResult<T> =
   | { ok: true; value: T }

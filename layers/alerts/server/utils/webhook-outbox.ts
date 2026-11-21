@@ -1,23 +1,19 @@
-// The webhook outbox: one delivery per (alert, webhook), queued and sent by
-// the EVENTS queue's fan-out and drain messages (layers/alerts/server/utils/event-work.ts),
-// with the hourly events:sweep as backstop. "A run" below is any of those.
+// The webhook outbox: one delivery per (alert, webhook), queued and sent by the EVENTS
+// queue's fan-out and drain messages (layers/alerts/server/utils/event-work.ts), with the
+// hourly events:sweep as backstop. "A run" below is any of those.
 //
-// Two promises shape it:
-//   - A licensee never gets an alert before the public site shows it. A
-//     delivery waits until the poll stamp, which keys every cached page and
-//     payload (terminal-cache.ts, html-cache.ts), is later than the moment
-//     the alert was written (alerts.recorded_at). Anything rendered under that
-//     stamp was rendered after the alert was stored, so it lists it.
+//   - A licensee never gets an alert before the public site shows it. A delivery waits
+//     until the poll stamp, which keys every cached page and payload (terminal-cache.ts,
+//     html-cache.ts), is later than alerts.recorded_at, so anything rendered under that
+//     stamp lists the alert.
 //   - A judged alert waits out the same one-hour hold as its social post
-//     (layers/alerts/server/pipeline/social.ts › heldUntil), from the same instant: when
-//     the alert was written. Suppressing
-//     the post inside the hold suppresses the webhook too; so does deleting
-//     the alert row. Deterministic alerts don't wait.
+//     (layers/alerts/server/pipeline/social.ts › heldUntil). Suppressing the post inside
+//     the hold, or deleting the alert row, suppresses the webhook too. Deterministic alerts
+//     don't wait.
 //
-// Delivery is at least once: a send whose outcome is lost (a timeout, a
-// killed invocation) is retried with the same X-Frontier-Delivery id, and the
-// receiver dedupes on it. Takes the Drizzle client explicitly so
-// layers/alerts/test/webhooks.test.ts drives it against workerd's D1.
+// Delivery is at least once: a send whose outcome is lost is retried with the same
+// X-Frontier-Delivery id, and the receiver dedupes on it. Takes the Drizzle client
+// explicitly so layers/alerts/test/webhooks.test.ts drives it against workerd's D1.
 
 import { and, asc, eq, inArray, lt, lte, ne, sql } from 'drizzle-orm'
 

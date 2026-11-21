@@ -1,22 +1,21 @@
-// This app's freshness checks (the rule is in freshness.ts). ops:watch builds
-// them with freshnessChecks() each tick and runs them with checkFreshness().
+// This app's freshness checks (the rule is in freshness.ts). ops:watch builds them with
+// freshnessChecks() each tick and runs them with checkFreshness().
 //
-// Every scheduled task gets its heartbeat check, unless TASK_CHECK_OVERRIDES
-// gives it one of its own with the reason. Then one check per producer that
-// runs off the Worker, read from the rows that producer writes:
+// Every scheduled task gets its heartbeat check, unless TASK_CHECK_OVERRIDES gives it one
+// of its own with the reason. Then one check per producer that runs off the Worker, read
+// from the rows that producer writes:
 //
-//   judge         the judge routine (claude.ai), judge_runs — critical
-//   gdelt-search  the GDELT job on the Mac mini (scripts/gdelt-search.ts),
-//                 gdelt_files
-//   social-outbox the social outbox, social_posts — its sender is in the
-//                 vendored layer and records no heartbeat
+//   judge          the judge routine (claude.ai), judge_runs (critical)
+//   gdelt-search   the GDELT job on the Mac mini (scripts/gdelt-search.ts), gdelt_files
+//   social-outbox  the social outbox, social_posts; its sender is in the vendored layer
+//                  and records no heartbeat
 //   listing-status the hand-checked "registered" rows, against a stored 424B4
-//   deploy        Workers Builds: main's head on GitHub against this build's
-//                 sha (pipeline/deploy-watch.ts)
+//   deploy         Workers Builds: main's head on GitHub against this build's sha
+//                  (pipeline/deploy-watch.ts)
 //
-// A new producer gets a check here and its kind a tier in
-// terminal-ops-severity.ts; freshness.test.ts fails the build on a kind with
-// no tier and on a scheduled task with no heartbeat and no override.
+// A new producer gets a check here and its kind a tier in terminal-ops-severity.ts;
+// freshness.test.ts fails the build on a kind with no tier and on a scheduled task with
+// no heartbeat and no override.
 
 import { and, asc, desc, eq, inArray, lte, max, sql } from 'drizzle-orm'
 
@@ -30,11 +29,9 @@ import { oldestUnread } from '../../../press/server/pipeline/track-record/search
 const HOUR_MS = 60 * 60 * 1000
 
 /**
- * The GDELT job runs every 30 minutes from launchd on the Mac mini, and a run
- * reads the new files before any archive pass (up to 40 minutes), so a healthy
- * job records a file at least hourly. Two hours means the mini or the job has
- * stopped. It was nine while GitHub's scheduler ran the job and left gaps of
- * up to 10h49m (issues #301, #323).
+ * The GDELT job runs every 30 minutes from launchd on the Mac mini, and a run reads the
+ * new files before any archive pass (up to 40 minutes), so a healthy job records a file
+ * at least hourly. Two hours means the mini or the job has stopped.
  */
 export const GDELT_SILENCE_MS = 2 * HOUR_MS
 
@@ -144,9 +141,8 @@ export const listingStatusCheckOf = (
 export const listingStatusCheck = listingStatusCheckOf(ENTITY_IDENTIFIERS)
 
 /**
- * Scheduled tasks whose freshness is checked from their own rows instead of
- * a heartbeat, each with the reason. Empty since social:post left the
- * schedule; kept so a task that cannot carry withHeartbeat() has a place.
+ * Scheduled tasks whose freshness is checked from their own rows instead of a heartbeat,
+ * each with the reason: the place for a task that cannot carry withHeartbeat().
  */
 export const TASK_CHECK_OVERRIDES: Record<
   string,

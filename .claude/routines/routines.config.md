@@ -41,8 +41,7 @@ Frontier Terminal is a free, public, read-only terminal of fundamentals on the f
 labs (OpenAI, Anthropic, Google, xAI, Meta, Mistral, DeepSeek, Alibaba (Qwen), Moonshot AI
 (Kimi)) and the public companies around them. Per lab it tracks API prices, hiring, SEC
 filings, disclosed revenue, status-page incidents, misalignment disclosures and OpenRouter
-demand share.
-The three below carry most of the judge's signal. **Pricing**: each lab's published
+demand share. The three below carry most of the judge's signal. **Pricing**: each lab's published
 API price list, parsed into one row per model and tier (input, cached input, output per
 million tokens; context window; promo windows as their own rows). **Hiring**: the labs' own
 job boards (Ashby for OpenAI, Greenhouse for Anthropic and xAI), one row per posting with
@@ -53,7 +52,7 @@ hits alerted by a deterministic floor rule. A scheduled Worker fetches every sou
 the raw bytes, diffs the parsed rows against the last set, and writes a change log; there are
 no accounts and nothing is for sale. Not investment advice.
 
-The provenance rule is the product. Every stored row — snapshot, entity, change, alert —
+The provenance rule is the product. Every stored row (snapshot, entity, change, alert)
 carries the URL it was read from and the timestamp it was fetched at, and the store refuses a
 row without them. An alert may cite only values present in the change rows it references: no
 outside figures, no market data from memory, no derived percentages. A judge that cannot
@@ -63,7 +62,7 @@ digest rather than on the site.
 
 The reader is an equity analyst covering the AI-infrastructure complex into the IPO wave.
 What they want flagged: price moves on flagship models (and asymmetric input/output changes),
-hiring-mix shifts — go-to-market and sales surges, datacenter buildout, large removals — and
+hiring-mix shifts (go-to-market and sales surges, datacenter buildout, large removals), and
 cross-axis combinations, such as a price cut landing beside a sales-hiring surge. Routine
 churn (a re-stamped posting, a reworded location) is not signal. Severity is `info` for a
 line in a daily brief, `notable` when it changes the picture for the covered thesis, and

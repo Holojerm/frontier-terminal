@@ -1,9 +1,5 @@
-// The payload behind the parents' panel, read from the investee recipes audited
-// on 2026-11-04 (layers/companies/server/utils/terminal-parents.ts): parents'
-// filing facts (adoption is the adoption layer's shared/utils/adoption-views.ts,
-// rate limits the pricing layer's shared/utils/limits.ts, posted pay the
-// talent layer's shared/utils/pay.ts). Every figure carries the URL it was
-// read from and when, like the lab panels.
+// The payload behind the parents' panel, read from the investee recipes
+// (layers/companies/server/utils/terminal-parents.ts).
 
 export interface ParentFact {
   key: string

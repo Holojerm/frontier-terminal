@@ -6,15 +6,11 @@ import {
 import { fixtureProvenance } from '#layers/core/server/utils/fixture-provenance'
 import { parseStatuspageAtom } from './statuspage-atom'
 
-// anthropic-status — status.claude.com's Atom incident history. Its
-// robots.txt disallows /api/, so the JSON API this source read until
-// 2026-11-04 is off limits; the Atom feed carries no impact and, today, no
-// component names (sources.yaml caveat). status.anthropic.com 301-redirects
-// to this host.
+// anthropic-status — status.claude.com's Atom incident history. Its robots.txt disallows
+// /api/, so the JSON API is off limits; the Atom feed carries no impact and, today, no
+// component names (sources.yaml caveat). status.anthropic.com 301-redirects to this host.
 
-// prov defaults to the fixture manifest's record (fixture-only behavior is
-// byte-identical for the determinism gate); the refresh orchestrator passes
-// the live fetch's provenance instead.
+// One-argument calls read the fixture's provenance, keeping the determinism gate byte-identical.
 export function parseAnthropicStatus(
   text: string,
   prov: Provenance = fixtureProvenance('anthropic-status'),

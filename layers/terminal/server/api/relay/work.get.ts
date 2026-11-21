@@ -1,6 +1,6 @@
-// GET /api/relay/work — the URLs on relayed hosts (core pipeline/relay.ts) the
-// pipeline asked for lately, each with the User-Agent to send, for the Mac
-// mini's relay job (scripts/relay-fetch.ts). Bearer-gated with the mini's token.
+// GET /api/relay/work: the URLs on relayed hosts (core pipeline/relay.ts) the pipeline
+// asked for lately, each with the User-Agent to send, for the Mac mini's relay job
+// (scripts/relay-fetch.ts). Bearer-gated with the mini's token.
 
 import { wantedUrls } from '#layers/core/server/pipeline/relay'
 

@@ -1,21 +1,18 @@
-// Daily closes from Databento's historical API, for the signals harness only.
-// The bars are licensed for internal use: they go into market_bars and never
-// leave it, except as the statistics the harness derives
-// (layers/signals/test/signals-private.test.ts).
+// Daily closes from Databento's historical API, for the signals harness only. The bars
+// are licensed for internal use: they go into market_bars and leave it only as the
+// statistics the harness derives (layers/signals/test/signals-private.test.ts).
 //
 // Two datasets, joined at EQUS_FROM:
-// - EQUS.SUMMARY ohlcv-1d, the consolidated official close, from 2024-07-01
-//   (where the dataset begins). Pulled daily, the last few sessions again each
-//   time in case a late print revises one.
-// - XNAS.ITCH ohlcv-1h before that, back to 2018-05-01: the close of the 15:00
-//   ET bar, the last Nasdaq trade before the closing cross. Its daily bars run
-//   to midnight UTC, so their close is an after-hours trade. Checked against
-//   EQUS.SUMMARY: AVGO's 15:00 ET bar on 2024-06-28 closes at the official
-//   1605.53. Backfilled once per symbol.
+// - EQUS.SUMMARY ohlcv-1d, the consolidated official close, from 2024-07-01 (where the
+//   dataset begins). Pulled daily, with the last few sessions again for late revisions.
+// - XNAS.ITCH ohlcv-1h before that, back to 2018-05-01: the close of the 15:00 ET bar, the
+//   last Nasdaq trade before the closing cross (its daily bars run to midnight UTC, so
+//   their close is an after-hours trade). Checked against EQUS.SUMMARY: AVGO's 15:00 ET
+//   bar on 2024-06-28 closes at the official 1605.53. Backfilled once per symbol.
 //
-// Prices are split-adjusted from KNOWN_SPLITS at read time. Dividends are not
-// added back: Databento's adjustment factors need a subscription this account
-// doesn't have, so returns are price returns.
+// Prices are split-adjusted from KNOWN_SPLITS at read time. Dividends are not added back
+// (Databento's adjustment factors need a subscription this account doesn't have), so
+// returns are price returns.
 
 import { sql } from 'drizzle-orm'
 
@@ -220,9 +217,8 @@ async function eachLine(res: Response, onLine: (line: string) => void): Promise<
 const RETRY_DELAYS_MS = [2_000, 8_000] as const
 
 /**
- * A request retried on 429 and 5xx. Databento's edge answers a slow query with
- * a bare 504 that a second try usually clears (2026-11-21: the first run's one
- * pull failed that way, and the same query from the mini took 3.5 s).
+ * A request retried on 429 and 5xx. Databento's edge answers a slow query with a bare 504
+ * that a second try usually clears.
  */
 async function withRetry(
   deps: Pick<MarketDeps, 'sleep'>,

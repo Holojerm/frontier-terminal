@@ -1,15 +1,14 @@
-// The Ramp AI Index: the share of US businesses on Ramp paying for AI each
-// month, overall and by vendor, from card and bill-pay spend. It is the one
-// enterprise demand series beside OpenRouter's developer traffic. No file or
-// API carries it: the numbers are the props object the page streams to its
-// charts (Next.js `self.__next_f.push` chunks), read here without a browser.
+// The Ramp AI Index: the share of US businesses on Ramp paying for AI each month, overall
+// and by vendor, from card and bill-pay spend; the one enterprise demand series beside
+// OpenRouter's developer traffic. No file or API carries it: the numbers are the props
+// object the page streams to its charts (Next.js `self.__next_f.push` chunks), read here
+// without a browser.
 //
-// Ramp restates past months between releases (October 2025's Anthropic rate
-// went from 14.3% as published to 16.65%), so each release is stored twice:
-// the current series under the vendor's key, and the whole release under
-// `<key>@<date first seen>`, which no later release overwrites. The page
-// states no license, so only these monthly rates are kept, never the
-// industry, size or state tables (docs/source-audit.md, 2026-11-04).
+// Ramp restates past months between releases (October 2025's Anthropic rate went from
+// 14.3% as published to 16.65%), so each release is stored twice: the current series under
+// the vendor's key, and the whole release under `<key>@<date first seen>`, never
+// overwritten. The page states no license, so only these monthly rates are kept, never the
+// industry, size or state tables (docs/source-audit.md).
 
 import type { Observation, Recipe } from '#layers/core/server/recipes/contract'
 

@@ -44,9 +44,7 @@ function row(table: string[][], ...labels: string[]): string[] {
   return hits[0]!
 }
 
-// prov defaults to the fixture manifest's record (single-arg behavior is
-// byte-identical for the determinism gate); the refresh orchestrator passes
-// the live fetch's provenance instead.
+// One-argument calls read the fixture's provenance, keeping the determinism gate byte-identical.
 export function parseDeepseekPricingMd(
   text: string,
   prov: Provenance = fixtureProvenance('deepseek-pricing-md'),

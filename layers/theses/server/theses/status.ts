@@ -1,14 +1,13 @@
-// A claim's status from its stored readings — pure, no clock, no database, so
-// the evaluator (writes status changes) and GET /api/theses (shows them) cannot
-// disagree, and layers/theses/test/theses-status.test.ts drives every rule on typed rows.
+// A claim's status from its stored readings. Pure (no clock, no database), so
+// the evaluator and GET /api/theses can't disagree, and
+// layers/theses/test/theses-status.test.ts drives every rule on typed rows.
 //
-// Every rule reads weekly checkpoints rather than every daily reading: a
-// kill condition says "for 4 straight weeks", and seven overlapping trailing
-// windows a week are one observation, not seven. "Weakening" is the first
-// step toward the kill condition: a run rule (N straight weeks or periods)
-// weakens at the first breached checkpoint, a margin or drop rule at half the
-// margin or half the drop. It warns before it breaks without needing a
-// threshold of its own.
+// Every rule reads weekly checkpoints, not every daily reading: a kill
+// condition says "for 4 straight weeks", and seven overlapping trailing
+// windows a week are one observation. "Weakening" is the first step toward the
+// kill condition: a run rule (N straight weeks or periods) weakens at the first
+// breached checkpoint, a margin or drop rule at half the margin or drop, so it
+// warns before it breaks without a threshold of its own.
 
 import type {
   ClaimDef,
@@ -36,10 +35,10 @@ export interface StoredReading {
 
 /**
  * A median over labs steps when a lab enters or leaves the set, and that step
- * is the registry's, not the market's. So a rule compares only readings taken
- * over the newest reading's lab set: the series restarts at the last change.
- * Readings stored before lab_set was recorded carry none and are kept. The
- * page still charts the whole series; only the rule reads from the restart.
+ * is the registry's, not the market's. So a rule compares only readings over
+ * the newest reading's lab set: the series restarts at the last change.
+ * Readings stored without a lab_set are kept. The page still charts the whole
+ * series.
  */
 export function sinceLabSetChange<T extends { lab_set?: string | null }>(
   readings: readonly T[],
@@ -326,8 +325,8 @@ export function evaluateClaim(
 
 /**
  * How old a measured signal's newest reading may get before its claim stops
- * standing on it. Past this the signal has stopped producing readings — a
- * source moved, a recipe broke — and the last status would otherwise stand
+ * standing on it. Past this the signal has stopped producing readings (a
+ * source moved, a recipe broke), and the last status would otherwise stand
  * forever. Each is the signal's normal gap between readings plus its source's
  * publication lag, with room for a missed week.
  */

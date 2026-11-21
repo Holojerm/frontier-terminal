@@ -7,7 +7,7 @@ import type { McpServer } from '@modelcontextprotocol/server'
 
 export const MCP_SERVER_NAME = 'frontier-terminal'
 
-/** The JSON API's alert cap — how far back get_alerts searches and get_alert looks. */
+/** The JSON API's alert cap: how far back get_alerts searches and get_alert looks. */
 export const ALERT_SEARCH_DEPTH = 500
 
 export const ProviderSchema = z
@@ -16,7 +16,7 @@ export const ProviderSchema = z
     'One of the nine tracked labs: openai, anthropic, google, xai, meta, mistral, deepseek, alibaba, moonshot.',
   )
 
-// modelKey() output: `model:<provider>:<slug>[:<tier>]` (layers/core/server/utils/contracts/keys.ts) —
+// modelKey() output: `model:<provider>:<slug>[:<tier>]` (layers/core/server/utils/contracts/keys.ts),
 // the same shape GET /api/prices/<key> accepts.
 export const SkuKeySchema = z
   .string()
@@ -26,10 +26,10 @@ export const SkuKeySchema = z
   .describe('A SKU key as get_prices lists it in entity_key, e.g. model:xai:grok-4.6:standard.')
 
 /**
- * The SDK's tool-result shape, with the payload sent twice on purpose: the
- * text block is what a client that ignores structuredContent (most of them,
- * today) shows the model, and structuredContent is what a client that
- * reads it gets without re-parsing. The spec recommends exactly this.
+ * The SDK's tool-result shape, with the payload sent twice: the text block is
+ * what a client that ignores structuredContent (most of them) shows the model,
+ * and structuredContent is what a client that reads it gets without
+ * re-parsing. The spec recommends exactly this.
  */
 export function json<T extends object>(payload: T): CallToolResult {
   return {

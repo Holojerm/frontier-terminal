@@ -1,8 +1,6 @@
-// The dependency graph payload (GET /api/dependencies, the /dependencies page,
-// the get_dependencies MCP tool) and the layout the page draws it with. A node
-// is a company, sized by a figure from its own filing. A line is a figure one
-// company's filing puts on another. Shared so the page and the server agree
-// on one shape, and so the layout is tested without a browser.
+// The dependency graph payload (GET /api/dependencies, /dependencies,
+// get_dependencies) and its layout, shared so page and server agree on one shape
+// and the layout is tested without a browser.
 
 import type { ExposureTicker } from './terminal-exposure'
 import type { Prov } from '../../../core/shared/types/common'

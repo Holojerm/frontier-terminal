@@ -1,4 +1,5 @@
-// SEC filers, filed revenue, and the parts of registration filings. Part of EXPORT_TABLES (server/registries/export-tables.ts), which fixes the order.
+// SEC filers, filed revenue and the parts of registration filings. Part of EXPORT_TABLES
+// (server/registries/export-tables.ts), which fixes the order.
 
 import { riskFactorChanges } from '../pipeline/parsers/sec/prospectus-risk-factors'
 import {

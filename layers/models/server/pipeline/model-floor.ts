@@ -12,24 +12,18 @@ import {
 import type { PipelineDb } from '#layers/core/server/utils/pipeline-store'
 import { MODEL_FLOOR_RULE } from '#layers/core/server/utils/terminal-asof'
 
-// The model-floor rule: a model slug no vendor catalog in the store has
-// listed before always alerts, with no model in the loop.
+// The model-floor rule: a model slug no vendor catalog in the store has listed
+// before always alerts, with no model in the loop, so a frontier launch shows on
+// the day without waiting on the hourly judge. The judge still sees these changes
+// and may add context.
 //
-// A frontier launch is the event this terminal most needs to show on the day,
-// and until this rule it depended on the hourly judge writing an alert. On
-// the Opus 5.5 launch day the rows landed at 18:01 and five judge runs later
-// no alert had been written. The judge still sees these changes and may add
-// context, but the launch no longer waits on it.
-//
-// "New to the store" and not "added to this source". A pricing page that
-// starts listing an old model, or a new tier of a known one, is the judge's
-// to weigh. Only a slug the store did not list before this tick qualifies. A
-// slug two catalogs add in the same tick alerts once: the first to parse
-// writes the alert, and the second finds the first's rows already stored. The id hashes
-// (provider, slug) alone, so a slug that is delisted and relisted never
-// alerts twice either. A delisted slug also leaves the catalog rows, so the
-// change log is read too: without it a model listed before this rule existed
-// would be announced as new when it came back.
+// "New to the store", not "added to this source": a page that starts listing an
+// old model, or a new tier of a known one, is the judge's to weigh. A slug two
+// catalogs add in one tick alerts once: the second to parse finds the first's
+// rows already stored. The id hashes (provider, slug) alone, so a delisted and
+// relisted slug never alerts twice. A delisted slug also leaves the catalog rows,
+// so the change log is read too; otherwise a model listed before this rule
+// existed would be announced as new when it came back.
 
 /** A slug as vendors write them. Anything else is a parser reading a table
  * cell as a name; the judge still sees the row, but no launch is announced. */
@@ -128,12 +122,10 @@ async function everAdded(
 
 const usd = (n: number) => `$${n.toFixed(2)}`
 
-// The headline's price is the list price: the standard tier, as the price
-// matrix reads it (terminal-prices.ts › isStandardTier, scheduledAfter). Until
-// 2026-11-11 this took the untiered row or else the first row parsed, and
-// Google's parser names its list tier 'standard', so five Google launches were
-// announced at their batch price (gemini-4-carbon at $1.00 / $5.00 against a
-// $2.00 / $10.00 list price). Migration 0050 corrects those five.
+// The headline's price is the list price: the standard tier, as the price matrix
+// reads it (terminal-prices.ts › isStandardTier, scheduledAfter). Google's parser
+// names its list tier 'standard', so taking the untiered or first-parsed row
+// announced Google launches at their batch price.
 const isStandard = (r: PriceRow) => r.tier === null || r.tier === 'standard'
 const startsAfter = (r: PriceRow, at: string) =>
   r.effective_from !== null && Date.parse(r.effective_from) > Date.parse(at)

@@ -3,10 +3,9 @@
 // the figures it states, labeled. A label is kept only when its amount is one
 // the headline writes, its lab is one the headline names, any period's year
 // is in the headline, and a deal's other company is named there as written.
-// A headline is read once: syndicated copies share its title_key, and the
-// earliest copy stands for all of them. One read before deal sizes were
-// labeled and that uses a deal word is offered a second time, and only the
-// deals of that second reading are kept.
+// A headline is read once (syndicated copies share its title_key, and the
+// earliest copy stands for all). One read before deal sizes were labeled that
+// uses a deal word is offered once more, and only that reading's deals are kept.
 
 import { and, asc, eq, inArray, isNull } from 'drizzle-orm'
 import { z } from 'zod'

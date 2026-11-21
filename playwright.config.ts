@@ -1,63 +1,51 @@
-// Playwright config — the suites that need a real browser. Application logic is
-// tested by Vitest in the `workerd` pool (see vitest.config.ts); those two
-// runners don't overlap, which is why the specs here are named *.spec.ts while
-// Vitest owns *.test.ts (its `include` globs only `*.test.ts`).
+// Playwright: the suites that need a real browser. Application logic is tested
+// by Vitest in the `workerd` pool (see vitest.config.ts), so specs here are
+// *.spec.ts while Vitest owns *.test.ts.
 //
-// Two suites live here, and both are here for the same reason — the thing they
-// check does not exist until a browser renders the page:
+//   test/a11y/  axe. The rules that matter most (color contrast above all) need
+//               resolved styles and layout; jsdom reports them as "incomplete".
+//   test/csp/   the Content-Security-Policy in nuxt.config.ts, which only exists
+//               as browser behaviour.
 //
-//   test/a11y/  axe. The rules that matter most — color-contrast above all —
-//               are computed from resolved styles and actual layout, and jsdom
-//               reports them as "incomplete" rather than pass or fail.
-//   test/csp/   the Content-Security-Policy in nuxt.config.ts. A CSP only
-//               exists as browser behaviour; nothing short of a real engine can
-//               tell you whether the policy you shipped blocks your own app.
-//
-// They are separate `projects` rather than one directory so each keeps its own
-// scope and shows up under its own name in the report — but they deliberately
-// share the single `webServer` below, because building and filling the server
-// twice is the slowest part of a run.
+// Separate `projects` so each reports under its own name, sharing the one
+// `webServer` below because building and filling the server is the slowest part
+// of a run.
 
 import { defineConfig, devices } from '@playwright/test'
 
 import { playwrightPort } from './scripts/worktree-port'
 
-// Derived from the checkout path rather than fixed at 3000, so parallel git
-// worktrees each get their own server. See scripts/worktree-port.ts for why a
-// hash beats both a fixed port and a free-port scan. Override with A11Y_PORT.
+// Derived from the checkout path, so parallel git worktrees each get their own
+// server (scripts/worktree-port.ts says why a hash). Override with A11Y_PORT.
 const PORT = playwrightPort()
 const HOST = `http://localhost:${PORT}`
 
-// Printed because the port is derived rather than known: without this the only
-// way to open the app while a run is in flight is to recompute the hash.
-// Playwright re-imports this config in every worker process, so print only from
-// the runner — otherwise the line repeats once per worker in the CI log.
+// Printed because the port is derived. Playwright re-imports this config in
+// every worker process, so only the runner prints it.
 if (process.env.TEST_WORKER_INDEX === undefined) console.info(`browser suites → ${HOST}`)
 
 export default defineConfig({
   testDir: './test',
   testMatch: '**/*.spec.ts',
-  // A failing contrast ratio is deterministic, so a real failure fails twice. One
-  // CI retry is for the harness: the suite runs on a merge-queue batch of up to
-  // three PRs, and one harness hiccup should not eject all three. A test that
-  // passes on retry is reported as flaky in the list output, with its
-  // retry's trace kept, so flake stays visible.
+  // A failing contrast ratio fails twice. One CI retry covers the harness: the
+  // suite runs on a merge-queue batch of up to three PRs, and one hiccup
+  // shouldn't eject all three. A pass on retry is reported as flaky, with its
+  // trace kept.
   retries: process.env.CI ? 1 : 0,
-  // The 30s default. The server is a build, so no first visit waits on a compile,
-  // and a bigger budget would only make a genuine hang cost more in every test.
+  // The 30s default timeout: the server is a build, so no visit waits on a
+  // compile, and a bigger budget only makes a hang cost more.
   fullyParallel: true,
-  // One worker on CI: the merge-queue VM has 3 CPUs and 5 GB. Two workers OOM'd the
-  // old `nuxt dev` server there (2026-11-07). The built server leaves the room, but one
-  // worker already fits the job's budget and the axe pass on /prices is the peak.
+  // One worker on CI: the merge-queue VM has 3 CPUs and 5 GB, one worker fits the
+  // job's budget, and the axe pass on /prices is the peak.
   workers: process.env.CI ? 1 : undefined,
   forbidOnly: !!process.env.CI,
   reporter: process.env.CI ? [['list'], ['html', { open: 'never' }]] : 'list',
 
   use: {
     baseURL: HOST,
-    // Recorded on the CI retry only. `retain-on-failure` records every test and
-    // throws the trace away on a pass, holding DOM snapshots of 1.7 MB pages in
-    // the worker. Locally, rerun a failure with `--trace on`.
+    // Recorded on the CI retry only: `retain-on-failure` records every test,
+    // holding DOM snapshots of 1.7 MB pages in the worker. Locally, rerun a
+    // failure with `--trace on`.
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
   },
@@ -73,13 +61,9 @@ export default defineConfig({
     // headers that ship, frame-src 'none' included.
     command: 'bun run test/server/start.ts',
     url: HOST,
-    // Never reuse: a server already on this port was not started from this
-    // build and this store, so its results would describe something else.
-    //
-    // This is also why the port above is per-checkout. `false` means a second
-    // worktree running the suite does not share the first one's server, it
-    // fails to boot — correct, and fatal for parallel agents until each
-    // checkout got a port of its own.
+    // Never reuse: a server already on this port wasn't started from this build
+    // and store. With `false`, a second worktree on the same port fails to boot,
+    // hence the per-checkout port above.
     reuseExistingServer: false,
     // The build runs inside this budget: ~10s on the Mac mini, longer on the
     // 3-CPU VM, plus the fill and wrangler's boot.

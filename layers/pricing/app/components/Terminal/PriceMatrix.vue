@@ -1,13 +1,11 @@
 <script setup lang="ts">
-// Like-for-like: one row per provider, one column per question an analyst
-// actually asks ("what does their flagship cost?"). The class mapping is
-// editorial and labelled as such; every cell carries the vendor sentence
-// behind it, and a cell with nothing to show explains itself rather than
-// printing a dash.
+// Like-for-like: one row per provider, one column per question an analyst asks ("what does
+// their flagship cost?"). The class mapping is editorial and labelled as such; every cell
+// carries the vendor sentence behind it, and an empty cell states its gap instead of a dash.
 //
-// It runs with the page (`flow`): nine labs at two lines each were taller
-// than a 70svh box, which hid the last four. Each cell is one line, and the
-// panel's foot lists every pricing page the cells cite, with its age.
+// It runs with the page (`flow`): nine labs at two lines each overflowed a 70svh box and hid
+// the last four, so each cell is one line and the panel's foot lists every cited pricing page
+// with its age.
 
 import type { LabId } from '#layers/core/shared/types/common'
 import type { PriceMatrix } from '../../../shared/types/prices'
@@ -42,10 +40,9 @@ const rows = computed(() =>
 )
 
 /**
- * Every host the drawn cells cite, once, at its latest read: each cell links
- * to its own pricing page by the model name, and this line shows the host
- * and the age a one-line cell has no room for. A host with two pages (a
- * pricing page and a models page) lists both URLs in its tooltip.
+ * Every host the drawn cells cite, once, at its latest read: the host and age a one-line cell
+ * has no room for. A host with two pages (a pricing page and a models page) lists both URLs in
+ * its tooltip.
  */
 const sources = computed(() => {
   const byHost = new Map<string, { url: string; urls: Set<string>; at: string; checked: boolean }>()

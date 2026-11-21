@@ -1,9 +1,8 @@
 // One archived capture's own row: the archive_captures row every axis writes (parsed, or
 // skipped with the reason), the R2 key its bytes go under, and the checks every axis applies
-// before its parser runs. Each axis turns a capture into its rows in its own layer (the
-// pricing, talent, compute and reliability layers' server/pipeline/archive/rows.ts). Pure:
-// the bytes, the capture and the fetch time in, rows out. scripts/wayback-backfill.ts does the
-// fetching and the writing.
+// before its parser runs. Each axis turns a capture into rows in its own layer (the pricing,
+// talent, compute and reliability layers' server/pipeline/archive/rows.ts). Pure: the
+// fetching and writing is scripts/wayback-backfill.ts.
 
 import type * as tables from '#server/db/schema'
 import { contentHashOfText } from '../../utils/contracts'
