@@ -55,11 +55,6 @@ const columns: TableColumn[] = [
       :title="`${f.provider_name} left out today`"
       :reason="f.detail"
     />
-    <TerminalSources
-      :caveats="[
-        { text: gpu.method, label: 'method' },
-        { text: gpu.caveat, label: 'list prices' },
-      ]"
-    />
+    <TerminalSources :caveats="[{ text: gpu.caveat, label: 'list prices' }]" />
   </div>
 </template>

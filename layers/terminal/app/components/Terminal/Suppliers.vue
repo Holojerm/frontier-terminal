@@ -145,7 +145,6 @@ const rows = computed(() =>
       </TerminalTable>
 
       <TerminalGap v-for="g in data.gaps" :key="g.id" inline :title="g.title" :reason="g.reason" />
-      <p class="text-xs text-muted">{{ data.rule }}</p>
     </div>
   </TerminalPanel>
 </template>

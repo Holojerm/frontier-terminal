@@ -35,8 +35,7 @@ const rows = computed(() =>
       <span class="font-mono text-highlighted">
         {{ sharePct(coreweave.floor.share.low) }}–{{ sharePct(coreweave.floor.share.high) }}
       </span>
-      of what its active power would bill at CoreWeave’s on-demand list prices. Treat it as a floor
-      on how much of that capacity was sold.
+      of what its active power would bill at CoreWeave’s on-demand list prices.
     </p>
     <TerminalGap
       v-if="!coreweave.quarters.length"
@@ -53,10 +52,7 @@ const rows = computed(() =>
     />
     <TerminalSources
       :sources="coreweave.sources"
-      :caveats="[
-        { text: coreweave.method, label: 'method' },
-        { text: coreweave.caveat, label: 'why it’s a floor' },
-      ]"
+      :caveats="[{ text: coreweave.caveat, label: 'why it’s a floor' }]"
     />
   </div>
 </template>

@@ -94,36 +94,6 @@ useSeo({
           title="Registration-statement detail could not be read"
           description="The prospectus endpoint failed to respond. Revenue above is unaffected."
         />
-
-        <TerminalPanel
-          id="how"
-          title="How a lab gets a number here"
-          note="What happens the day a lab files for itself."
-        >
-          <div class="max-w-2xl space-y-3 text-sm text-default">
-            <p>
-              We check EDGAR every 30 minutes. That covers the full-text search for new S-1s, the
-              filings of each company we track (S-1, 424B4, 10-Q, 10-K, 20-F, and 8-K), and the XBRL
-              company facts of each company whose total revenue we show. A new S-1, 424B4, 10-Q,
-              10-K, or 20-F from a company we track always raises an alert.
-            </p>
-            <p>
-              When a lab files for itself, nobody has to do anything. Two full-text searches look
-              for S-1s that mention Anthropic or OpenAI. When one comes from a company whose name
-              matches the lab, we read its CIK (the SEC’s company ID) from the filing and raise a
-              critical alert. From the next check on, we track that company’s filings and XBRL data.
-              Its revenue then shows up above as an <em>issuer</em> filing, linked to the filing
-              that identified it. A public parent that consolidates a lab is marked
-              <em>parent</em> instead, and its numbers are labeled as the parent’s everywhere they
-              appear.
-            </p>
-            <p>
-              Some parents report the lab’s business inside one segment (Google inside Alphabet’s
-              Google Cloud). There the numbers are that segment’s, read from the XBRL in each 10-Q
-              and 10-K on our 6-hour check, and labeled as the segment instead of the lab.
-            </p>
-          </div>
-        </TerminalPanel>
       </template>
 
       <template #press>

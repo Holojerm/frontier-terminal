@@ -71,7 +71,7 @@ const TIMELINE_GAP: Record<Exclude<DisclosureView['timeline_status'], 'ok'>, str
 <template>
   <TerminalPage
     title="Disclosures"
-    lede="Reports and notices the labs publish about misalignment in their own models, in each lab’s words and linked to the source page. This shows what each lab discloses, not how often misalignment happens. A lab with no index shows no entries because it publishes none."
+    lede="Reports and notices the labs publish about misalignment in their own models, in each lab’s words. It shows what each lab discloses, not how often misalignment happens."
     :as-of="disclosures?.as_of"
     :error="Boolean(error)"
     error-title="Disclosures didn’t load"
@@ -155,11 +155,7 @@ const TIMELINE_GAP: Record<Exclude<DisclosureView['timeline_status'], 'ok'>, str
               {{ TIMELINE_GAP[r.timeline_status as keyof typeof TIMELINE_GAP] }}
             </template>
           </TerminalTable>
-          <template #foot>
-            Days run from the discovery date to the publication date, both as printed on the report
-            page. The occurrence line (sample, incident date) is shown as printed. We don’t read it
-            as a date.
-          </template>
+          <template #foot> Dates as printed on each report page. </template>
         </TerminalPanel>
 
         <TerminalPanel

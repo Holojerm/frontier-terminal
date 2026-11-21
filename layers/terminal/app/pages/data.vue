@@ -165,7 +165,7 @@ const stamps = useStamps()
         <TerminalPanel
           id="tables"
           title="Tables"
-          :note="`Tables that grow over time download the last ${LICENSE_WINDOW_DAYS} days. Full history has every row, each with its license. Every row has its source URL and fetch time.`"
+          :note="`Tables that grow over time download the last ${LICENSE_WINDOW_DAYS} days. Full history has every row, each with its license.`"
           flush
         >
           <!-- Everything below the coverage table hydrates when scrolled into view.
@@ -242,21 +242,12 @@ const stamps = useStamps()
               <time :datetime="coverage.as_of">{{
                 stamps.absolute(coverage.as_of)
               }}</time></template
-            ><span v-else> (none has run yet)</span>. Exports are live. The counts above are from
-            that check, and count every row, not just the last {{ LICENSE_WINDOW_DAYS }} days. Each
-            sample is 50 rows of the default download: the newest rows of a table that grows over
-            time, and the first rows of the rest, at
-            <span class="font-mono">/export/sample/&lt;table&gt;.csv</span> or
-            <span class="font-mono">.json</span>.
-            <span class="font-mono">entity_identifiers</span> has each company’s CIK, LEI, ticker,
-            and FIGI, and <span class="font-mono">entity_securities</span> maps each lab to the
-            securities that carry it. We don’t export <span class="font-mono">rankings_daily</span>.
-            OpenRouter licenses its rankings CC BY 4.0 but says they aren’t to be re-served as a
-            competing free API. So the per-lab shares stay on
+            ><span v-else> (none has run yet)</span>. Counts include every row. A sample is 50 rows.
+            OpenRouter’s terms don’t allow re-serving its rankings as a free API, so
+            <span class="font-mono">rankings_daily</span> isn’t exported. The per-lab shares are on
             <NuxtLink to="/rankings" class="text-primary underline underline-offset-2"
               >/rankings</NuxtLink
-            >
-            and the raw rows stay with OpenRouter.
+            >.
           </template>
         </TerminalPanel>
 
@@ -295,7 +286,7 @@ const stamps = useStamps()
         <TerminalPanel
           id="dictionary"
           title="Data dictionary"
-          note="Each table’s grain, update cadence, time columns, history, join columns, and commercial use. Every exported column’s type, unit, whether it can be null, whether it is a key, and what it holds."
+          note="Each table’s grain, cadence, history, and columns."
         >
           <LazyTerminalDictionary
             v-if="dictionary"
@@ -440,20 +431,18 @@ const stamps = useStamps()
         <TerminalPanel
           id="coverage"
           title="Coverage"
-          note="Each source with its newest snapshot, last check, snapshot count, rows, the audit’s caveat, and the terms and robots.txt we read it under."
+          note="Each source, its last check, and the terms we read it under."
           flush
         >
           <TerminalCoveragePanel v-if="coverage" :coverage="coverage" />
-          <template #foot>
-            Each label links to the URL we fetched. Hover over an age for the full UTC timestamp.
-          </template>
+          <template #foot> Each label links to the URL we fetched. </template>
         </TerminalPanel>
 
         <TerminalPanel
           v-if="prices?.reach?.length"
           id="price-history"
           title="How far price history goes back"
-          note="Before we started checking, we read the Internet Archive’s copies of each lab’s own pricing page."
+          note="From the Internet Archive’s copies of each lab’s pricing page."
           flush
         >
           <!-- Not lazy: its scroll box gets a keyboard tab stop only once mounted,
@@ -465,8 +454,7 @@ const stamps = useStamps()
             <span class="font-mono">archived_prices</span> table under
             <NuxtLink to="#tables" class="text-primary underline underline-offset-2"
               >Downloads</NuxtLink
-            >. Their source link is the copy. We skip a copy we can’t read with confidence. Archived
-            rows are older than the license window, so they’re {{ HISTORY_LICENSE.short }}.
+            >, under {{ HISTORY_LICENSE.short }}.
           </template>
         </TerminalPanel>
 
@@ -474,7 +462,7 @@ const stamps = useStamps()
           v-if="hiring?.reach?.length"
           id="hiring-history"
           title="How far hiring history goes back"
-          note="Before we started reading the boards, we read the Internet Archive’s copies of each lab’s own job board."
+          note="From the Internet Archive’s copies of each lab’s job board."
           flush
         >
           <!-- Not lazy, like the price-reach table above. -->
@@ -490,8 +478,7 @@ const stamps = useStamps()
             >
             and in
             <span class="font-mono">/api/hiring/history</span> (each lab’s
-            <span class="font-mono">archived</span> points). Their source link is the copy. We skip
-            a copy we can’t read with confidence. Archived rows are {{ HISTORY_LICENSE.short }}.
+            <span class="font-mono">archived</span> points), under {{ HISTORY_LICENSE.short }}.
           </template>
         </TerminalPanel>
 

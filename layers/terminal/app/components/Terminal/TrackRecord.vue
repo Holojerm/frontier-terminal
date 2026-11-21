@@ -173,50 +173,22 @@ const columns: TableColumn[] = [
     <TerminalPanel id="method" title="How we time it">
       <div class="max-w-2xl space-y-3 text-sm text-default">
         <p>
-          “We saw it” is when we fetched the page that showed the change. When an alert cites
-          several changes, we use the earliest. A removal counts from the check that found it gone.
-          The alert itself can be written up to an hour later.
+          “We saw it” is when we fetched the page that showed the change. The press time is the
+          quarter hour GDELT read the article. Mistral stamps its posts near noon UTC, so read those
+          times as dates. Times are in {{ stamps.zone.value }}.
         </p>
-        <p>
-          Once {{ record.window_days }} days have passed, we search
+        <p class="text-muted">
+          Press data from the
           <a
             href="https://www.gdeltproject.org/"
             target="_blank"
             rel="noopener noreferrer"
             class="text-primary underline underline-offset-2"
-            >GDELT</a
-          >
-          (a public index of news sites) and the lab’s own newsroom feed for
-          {{ record.window_days }} days either side. The search terms come from the changes
-          themselves: the model name, the department, the filer and form. A model reads every
-          headline and says whether it reports the same event. We show the earliest one it says
-          does. Until every earlier candidate is rated, the row says “Not yet rated”.
-        </p>
-        <p>
-          The press time is the quarter hour GDELT read the article, not when the outlet published
-          it. GDELT doesn’t read every outlet, and paywalled wires and newsletters are thin in it.
-          It gives us headlines but no article text, so an article counts only when the event is in
-          its headline or web address, and each match is judged on its headline. We never fetch the
-          articles.
-        </p>
-        <p>
-          A report from more than {{ record.window_days }} days before we saw it isn’t searched, so
-          an old story can’t show as a lag here. Anthropic and xAI publish no newsroom feed, so
-          their rows show no newsroom time, and we don’t read DeepSeek’s, Alibaba’s or Moonshot AI’s
-          newsrooms yet. Meta’s feed holds only its newest 10 posts. Mistral stamps its posts near
-          noon UTC, so read those times as dates.
-        </p>
-        <p>
-          Times are in {{ stamps.zone.value }}. Leads are rounded to a tenth of an hour. A lead
-          isn’t a trading signal, and this isn’t investment advice. It says when a public page
-          changed against when someone wrote about it.
-        </p>
-        <p class="text-muted">
-          Press data from the GDELT Project (gdeltproject.org). Every candidate and rating is in the
+            >GDELT Project</a
+          >. Every candidate and rating is in the
           <NuxtLink to="/data" class="text-primary underline underline-offset-2"
             >bulk exports</NuxtLink
-          >
-          as track_record_candidates and track_record_verdicts.
+          >. A lead isn’t a trading signal, and this isn’t investment advice.
         </p>
       </div>
     </TerminalPanel>

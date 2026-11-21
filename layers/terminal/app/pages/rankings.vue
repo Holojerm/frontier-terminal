@@ -61,7 +61,7 @@ const tabs = computed(() => [
 <template>
   <TerminalPage
     title="Demand"
-    lede="Tokens routed through OpenRouter per lab, then enterprise adoption, SDK downloads, and coding-agent activity. Each shows a different slice of demand. None of them is market share."
+    lede="OpenRouter tokens per lab, enterprise adoption, SDK downloads, and coding-agent activity. None of them is market share."
     :as-of="rankings?.as_of"
     :error="Boolean(error)"
     error-title="Rankings didn’t load"
@@ -74,7 +74,7 @@ const tabs = computed(() => [
             <TerminalPanel
               id="share"
               title="7-day share"
-              :note="`${rankings.meta.coverage.days} day${rankings.meta.coverage.days === 1 ? '' : 's'} on record. Share of all OpenRouter tokens, counting its daily top 50 and its “other” row.`"
+              note="Share of all OpenRouter tokens, last 7 days."
             >
               <TerminalDemandShare :rankings="rankings" />
             </TerminalPanel>
@@ -83,7 +83,7 @@ const tabs = computed(() => [
               v-if="spend"
               id="spend"
               title="Implied spend share"
-              note="The same tokens at each vendor’s list price, as a low–high range. Shares are of the tracked labs’ total (not all OpenRouter traffic), so each token share here is larger than the one beside it."
+              note="The same tokens at list price, as a low–high range."
             >
               <TerminalSpendShare :spend="spend" />
             </TerminalPanel>
@@ -102,7 +102,7 @@ const tabs = computed(() => [
             v-if="rankings.status === 'ok'"
             id="weekly"
             title="Weekly share"
-            note="Each lab’s share of all OpenRouter tokens per week (Monday to Sunday, UTC), counting the daily top 50 and the “other” row. The charts share one y-axis, so their heights compare."
+            note="Share of all OpenRouter tokens per week. The charts share one y-axis."
           >
             <TerminalRankingsWeekly :rankings="rankings" />
           </TerminalPanel>
@@ -123,7 +123,7 @@ const tabs = computed(() => [
           <TerminalPanel
             id="enterprise"
             title="Enterprise adoption"
-            note="Share of US businesses on Ramp paying each vendor, monthly, from card and bill-pay spend. It covers the enterprise side that OpenRouter doesn’t see."
+            note="Share of US businesses on Ramp paying each vendor, monthly."
           >
             <TerminalAdoptionRamp :ramp="adoption.ramp" :caveat="adoption.caveats.ramp" />
           </TerminalPanel>
@@ -167,7 +167,7 @@ const tabs = computed(() => [
           <TerminalPanel
             id="sdk-weekly"
             title="SDK downloads by week"
-            note="Each SDK’s downloads per week over everything we have stored. Each chart has its own scale, so read each package’s trend on its own."
+            note="Downloads per week. Each chart has its own scale."
             class="mt-6"
           >
             <TerminalDownloadsWeekly
@@ -180,7 +180,7 @@ const tabs = computed(() => [
           <TerminalPanel
             id="agents-weekly"
             title="Coding agents by week"
-            note="Each coding agent’s npm downloads and public GitHub pull requests per week, back as far as we have them. Each chart has its own scale."
+            note="npm downloads and public GitHub pull requests per week. Each chart has its own scale."
             class="mt-6"
           >
             <div class="space-y-6">

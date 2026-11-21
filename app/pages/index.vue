@@ -190,12 +190,7 @@ const openIncidents = computed(() =>
     :as-of="overview.data.value?.as_of"
     :error="failed"
   >
-    <TerminalPanel
-      id="readout"
-      title="Readout"
-      note="Each lab at a glance. Every figure links to the lab’s page, which cites its source."
-      flush
-    >
+    <TerminalPanel id="readout" title="Readout" note="Each lab at a glance." flush>
       <TerminalReadoutStrip :labs="LABS" :data="readout" />
     </TerminalPanel>
 
@@ -203,7 +198,7 @@ const openIncidents = computed(() =>
       v-if="fundamentalFigures.length"
       id="fundamentals"
       title="Around the labs"
-      note="Press reports against filings, the listed companies tied to the labs, compute, and the theses. Each figure links to the page with every source."
+      note="Press reports against filings, the listed companies tied to the labs, compute, and the theses."
     >
       <dl class="grid grid-cols-2 gap-x-6 gap-y-4 sm:grid-cols-3 lg:grid-cols-5">
         <TerminalFigure
@@ -277,17 +272,17 @@ const openIncidents = computed(() =>
           id="demand"
           :level="3"
           title="Demand share"
-          note="Share of OpenRouter tokens over the last 7 days. It’s one aggregator’s traffic, so treat it as a rough read on demand."
+          note="Share of OpenRouter tokens, last 7 days."
           :more="{ label: '30-day series and top models', to: '/rankings' }"
         >
-          <TerminalDemandShare v-if="rankings.data.value" :rankings="rankings.data.value" compact />
+          <TerminalDemandShare v-if="rankings.data.value" :rankings="rankings.data.value" />
           <TerminalGap v-else :title="NOT_LOADED" />
         </TerminalPanel>
         <TerminalPanel
           id="spend"
           :level="3"
           title="Implied spend share"
-          note="The tracked labs’ tokens at list price, as a share of those labs’ total (not all OpenRouter traffic). It’s a range because some SKUs have no published price."
+          note="The tracked labs’ tokens at list price, as a low–high range. Share of the tracked labs’ total."
           :more="{ label: 'Per-model join', to: '/rankings#spend' }"
         >
           <TerminalSpendShare v-if="spend.data.value" :spend="spend.data.value" compact />
@@ -347,7 +342,7 @@ const openIncidents = computed(() =>
           :level="3"
           class="lg:col-span-2"
           title="Disclosures"
-          note="Misalignment reports each lab publishes about its own models. A count shows what a lab chose to disclose, so it can’t tell you how often models misbehave."
+          note="Misalignment reports each lab publishes about its own models. A count is what a lab discloses, not how often models misbehave."
           :more="{ label: 'Every report and notice', to: '/disclosures' }"
           flush
         >

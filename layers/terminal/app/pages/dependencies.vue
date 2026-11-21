@@ -35,7 +35,7 @@ useSeo({
 <template>
   <TerminalPage
     title="Dependencies"
-    lede="Who the labs buy compute from and who funds them, drawn as a graph. Each circle is a company sized by its own filed figure. Each line is a number one company’s SEC filing puts on another."
+    lede="Who the labs buy compute from and who funds them, from each company’s SEC filings."
     :as-of="data?.as_of"
     :error="Boolean(error)"
     error-title="Dependencies didn’t load"

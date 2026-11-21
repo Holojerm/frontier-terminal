@@ -4,8 +4,8 @@
 // across packages (DownloadsTable says why), so each chart has its own
 // y-axis. A partial week breaks the line instead of reading as a drop, and
 // the table has its total and how many days it rests on. Each registry's
-// history starts where its API's reach did, which the text under the charts
-// states, so a short line isn't read as a young package.
+// history starts where its API's reach did, and the line under the charts
+// gives that week, so a short line isn't read as a young package.
 
 import { newestFullWeek, weekColumns, weekValues } from '../../../shared/utils/adoption-weeks'
 import { compactCount, count } from '../../../shared/utils/terminal-format'
@@ -139,16 +139,13 @@ const sources = computed(() =>
         </section>
       </div>
       <p class="text-xs text-muted">
-        Monday to Sunday, UTC. The newest figure is the last full week. A week missing a day breaks
-        the line, and the table shows its total.
-        <template v-if="starts.npm">
-          npm’s API gave us 540 days on our first read, so npm lines start the week of
-          {{ stamps.date(starts.npm) }}.
-        </template>
+        Weeks run Monday to Sunday, UTC.
+        <template v-if="starts.npm"
+          >npm history starts the week of {{ stamps.date(starts.npm) }}.</template
+        >
         <template v-if="starts.pypi">
-          pypistats keeps 180 days, so PyPI lines start the week of
-          {{ stamps.date(starts.pypi) }}. Nothing older is on record.
-        </template>
+          PyPI history starts the week of {{ stamps.date(starts.pypi) }}.</template
+        >
       </p>
     </template>
 
@@ -173,8 +170,6 @@ const sources = computed(() =>
     <TerminalSources
       :sources="sources"
       :caveats="[{ text: caveat, label: 'downloads, not users' }]"
-    >
-      <span>Each package links to the download data we read.</span>
-    </TerminalSources>
+    />
   </div>
 </template>

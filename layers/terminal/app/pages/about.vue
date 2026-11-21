@@ -120,8 +120,7 @@ useSeo({
           When a source publishes no figure, the page says so. OpenAI’s catalog page doesn’t list
           prices. Meta has no public hiring feed. OpenRouter’s price list is a third party’s copy of
           vendor prices, so we only use it as a cross-check. Its usage rankings are one aggregator’s
-          traffic, so we don’t treat them as market share. Timestamps under a day old show as
-          relative times. The full timestamp is in the hover text and the page markup.
+          traffic, so we don’t treat them as market share.
         </p>
       </div>
     </TerminalPanel>

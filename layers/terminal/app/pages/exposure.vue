@@ -104,7 +104,7 @@ const filerLine = computed(() =>
       <TerminalPanel
         id="capex"
         title="Capex per quarter"
-        note="The cash each company spent on property and equipment. A quarter the filing tags only year to date is that figure less the one a quarter shorter, marked derived."
+        note="Cash spent on property and equipment. Quarters worked out from year-to-date figures are marked derived."
       >
         <div class="grid gap-3 lg:grid-cols-2">
           <TerminalExposureCard
@@ -178,39 +178,21 @@ const filerLine = computed(() =>
         />
       </TerminalPanel>
 
-      <TerminalPanel
-        id="how"
-        title="How we read these"
-        note="Where each number comes from, and what it isn’t."
-      >
+      <TerminalPanel id="how" title="Filers and downloads">
         <div class="max-w-2xl space-y-3 text-sm text-default">
+          <p>{{ filerLine }}.</p>
           <p>
-            We read {{ filerLine }}. EDGAR’s company facts list each company-wide figure with the
-            filing that reported it, back past 2020. A figure tagged on a segment, a customer, or an
-            investee is only in each 10-Q and 10-K’s own XBRL file, so we read that file once per
-            filing.
-          </p>
-          <p>
-            Each period shows the newest filing’s value. When a later filing restates a value, the
-            old one stays in the table as restated. Every row links to its filing.
-          </p>
-          <p>
-            A new 10-Q or 10-K that moves a series raises an alert that states the number. The data
-            is at
+            Download
             <NuxtLink to="/export/exposure_quarters.csv" external class="text-primary underline"
               >exposure_quarters</NuxtLink
             >
             and
             <NuxtLink to="/export/filed_facts.csv" external class="text-primary underline"
               >filed_facts</NuxtLink
-            >. Add <code>?as_of=</code> to see only what was filed before a date.
-          </p>
-          <p>
-            Those downloads give you the last 90 days of periods. Add
-            <code>?history=full</code> for the series back to 2020. That history is CC BY-NC 4.0 for
-            data we publish from 2026-11-04 on, so it’s for
-            <NuxtLink to="/license" class="text-primary underline">non-commercial use</NuxtLink>.
-            This page shows all of it, free to read.
+            >. Add <code>?as_of=</code> for what was filed before a date, and
+            <code>?history=full</code> for the series back to 2020, which is
+            <NuxtLink to="/license" class="text-primary underline">CC BY-NC 4.0</NuxtLink> from
+            2026-11-04 on.
           </p>
         </div>
       </TerminalPanel>
