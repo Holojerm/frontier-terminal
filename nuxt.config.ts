@@ -161,7 +161,7 @@ const securityHeaders = {
 //
 //   */30       — ops:watch, layers/terminal/server/tasks/ops/watch.ts: the freshness and
 //                launch-coverage checks (they spool ops events) and the 7-day prune of the spool.
-//              — EDGAR tick, layers/terminal/server/tasks/poll/edgar.ts: the SEC feeds and the
+//              — EDGAR tick, layers/companies/server/tasks/poll/edgar.ts: the SEC feeds and the
 //                model catalogs, the two axes where latency is worth polling for.
 //   0 */6      — full survey, layers/terminal/server/tasks/poll/survey.ts: every include
 //                source but the careers and filings lanes'. Scope policy:
@@ -208,7 +208,7 @@ const securityHeaders = {
 //                alone in its invocation for the long downloads.
 //   23 * * * * — calls:read, the earnings-call reader: EDGAR exhibits, company
 //                transcripts and AssemblyAI replays, and the XBRL that scores them
-//                (layers/terminal/server/calls/ingest.ts).
+//                (layers/companies/server/calls/ingest.ts).
 const SCHEDULED_TASKS: Record<string, string[]> = {
   '*/30 * * * *': ['ops:watch', 'poll:edgar'],
   '0 */6 * * *': ['poll:survey'],
@@ -578,7 +578,7 @@ export default defineNuxtConfig({
     // `op read "op://…" | bunx wrangler secret put NUXT_OPENROUTER_API_KEY`.
     openrouterApiKey: '',
     // AssemblyAI key for the earnings calls a company posts only as audio
-    // (layers/terminal/server/calls/assemblyai.ts), sent as the Authorization header to
+    // (layers/companies/server/calls/assemblyai.ts), sent as the Authorization header to
     // api.assemblyai.com only. Empty = replays are neither submitted nor collected; the
     // text documents are still read. A Worker secret:
     // `op read "op://Agents/assemblyai/credential" | bunx wrangler secret put NUXT_ASSEMBLYAI_API_KEY`.

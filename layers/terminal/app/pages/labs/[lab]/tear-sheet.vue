@@ -20,9 +20,10 @@ import {
 import { readableEdgarNames } from '#layers/core/shared/utils/terminal-format'
 import { LAB_SITE } from '#layers/core/shared/utils/lab-names'
 import { isLab } from '#layers/core/shared/utils/lab-names'
-import { labPath, tearSheetPath } from '../../../../shared/utils/terminal-lab-summary'
+import { labPath } from '../../../../../core/shared/utils/lab-names'
+import { tearSheetPath } from '../../../../shared/utils/terminal-lab-summary'
 import { alertPath } from '../../../../shared/utils/terminal-tiers'
-import type { ExposureData } from '../../../../shared/utils/terminal-exposure'
+import type { ExposureData } from '../../../../../companies/shared/utils/terminal-exposure'
 import type { ListedData } from '../../../../shared/utils/listed'
 import type {
   AlertsData,

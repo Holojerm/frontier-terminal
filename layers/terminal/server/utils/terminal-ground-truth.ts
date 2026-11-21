@@ -37,7 +37,7 @@ import * as tables from '#server/db/schema'
 import { DEAL_WORDS } from '../pipeline/reported/figures'
 import type { PipelineDb } from '#layers/core/server/pipeline/store'
 import type { QueryContext } from '#layers/core/server/utils/terminal-db'
-import { EXPOSURE_METHOD, filedFactsAt } from './terminal-exposure'
+import { EXPOSURE_METHOD, filedFactsAt } from '../../../companies/server/utils/terminal-exposure'
 import {
   DEAL_LIMIT,
   dealMeasures,
@@ -45,15 +45,15 @@ import {
   scoreDeals,
   type FiledAggregate,
 } from './terminal-ground-truth-deals'
-import { TOLERANCE_PCT, queryGuidance } from './terminal-ground-truth-guidance'
-import { queryProspectus } from './terminal-prospectus'
-import { middle, storedHeadlines, type StoredHeadline } from './terminal-reported'
-import { queryRevenue } from './terminal-revenue'
+import {
+  TOLERANCE_PCT,
+  queryGuidance,
+} from '../../../companies/server/utils/terminal-ground-truth-guidance'
+import { queryProspectus } from '../../../companies/server/utils/terminal-prospectus'
+import { middle } from '../../../core/server/utils/terminal-median'
+import { storedHeadlines, type StoredHeadline } from './terminal-reported'
+import { queryRevenue } from '../../../companies/server/utils/terminal-revenue'
 import { queryTrackRecord } from './terminal-track-record'
-
-// Defined beside the guidance score, so the guidance rule
-// (exposure/guidance-alerts.ts) reads it without loading this module.
-export { TOLERANCE_PCT }
 
 /** Open reports listed. */
 export const OPEN_LIMIT = 50

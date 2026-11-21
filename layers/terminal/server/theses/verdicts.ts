@@ -23,6 +23,7 @@ import { D1_MAX_BOUND_PARAMS, chunk, type PipelineDb } from '#layers/core/server
 import { daysBefore } from '#layers/adoption/server/utils/terminal-rankings'
 import { claimCandidates, recipeCandidates, type Candidate, type FlagshipMap } from './candidates'
 import { THESES } from './registry'
+import { judgeReview } from '#layers/core/server/pipeline/judge/review'
 
 /** Unrated recipe items offered per claim per run; the rest wait an hour. */
 export const RECIPE_CANDIDATE_LIMIT = 20
@@ -248,3 +249,17 @@ export async function applyClaimVerdicts(
   }
   return report
 }
+
+/** The claim review (server/registries/judge.ts): verdicts on judged thesis claims. */
+export const CLAIM_REVIEW = judgeReview({
+  key: 'claims',
+  reading: JudgeClaimVerdict,
+  max: 200,
+  empty: { accepted: 0, inserted: 0, rejected: [] } as VerdictReport,
+  apply: ({ db, now }, readings) => applyClaimVerdicts(db, readings, now),
+  rejected: { noun: 'claim verdict(s)', subject: 'claim_id' },
+  offer: {
+    key: 'claim_review',
+    read: async ({ db, changes }) => claimReview(db, changes, await flagshipMap(db)),
+  },
+})

@@ -778,7 +778,7 @@ sources:
     caveats: >-
       Same UA + rate rules as edgar-fts. The parser keeps only the tracked
       forms (S-1, 424B4, 10-Q, 10-K, 8-K and their amendments —
-      layers/terminal/server/pipeline/parsers/sec/forms.ts); Form 4, 144, 3, 13G and D rows
+      layers/companies/server/pipeline/parsers/sec/forms.ts); Form 4, 144, 3, 13G and D rows
       are dropped at parse so insider trades and notices never reach the
       judge as "an SEC change". SPCX is xAI's parent since the 2025 merger:
       its periodic filings are where any xAI segment disclosure would land.
@@ -1256,7 +1256,7 @@ revenue_filers:
 # An S-1-family hit on either edgar-fts query whose FILER name (EDGAR's
 # display_names, never the query term) matches `name_pattern` as a
 # case-insensitive regex, and matches none of `exclude`, resolves the lab's
-# CIK from that filing (layers/terminal/server/pipeline/parsers/sec/pending-filers.ts). The
+# CIK from that filing (layers/companies/server/pipeline/parsers/sec/pending-filers.ts). The
 # resolution is stored as a `filer` row with the filing it came from, fires
 # the cik-resolved alert, joins the CIK whitelist for every later tick, and
 # derives the lab's submissions and company-facts feeds (derived_sources).
@@ -2687,7 +2687,7 @@ archive_sources:
       events keep their capture windows.
 
 # Where entity_identifiers and entity_securities get their identifiers
-# (layers/terminal/server/utils/terminal-identifiers.ts). Read by hand when the
+# (layers/companies/server/utils/terminal-identifiers.ts). Read by hand when the
 # registry changes, never on a schedule. Every response is committed under
 # fixtures/identifiers/ and the tests check each value against it.
 identifier_sources:
@@ -2751,12 +2751,12 @@ identifier_sources:
 # name contains one of `terms` as a whole word (case-insensitive) and none of
 # `exclude`. The matched departments ship beside every cluster count so a
 # reader can see exactly which labels were summed. The judge prompt
-# (layers/terminal/server/pipeline/judge/judge-explain.prompt.md) names the same terms;
+# (layers/core/server/pipeline/judge/judge-explain.prompt.md) names the same terms;
 # layers/talent/test/terminal-clusters.test.ts fails when the two drift.
 
 # Hyperscaler filings read for their filed XBRL facts: capex, remaining
 # performance obligations, and what Microsoft and Amazon tag on OpenAI and
-# Anthropic (layers/terminal/server/exposure/, the /exposure page). Every
+# Anthropic (layers/companies/server/exposure/, the /exposure page). Every
 # filer's CIK comes from cik_whitelist; each url must name it. Company facts
 # carry every non-dimensional fact with its accession since the filer began
 # tagging. With `instances: true` each 10-Q/10-K instance since 2020 is read
@@ -2839,7 +2839,7 @@ filed_fact_sources:
       read once more as text (each filing's primary document, a few a run):
       the notes bought and committed, their fair value, and the gains and
       upward marks, each with its sentence (filed_text_facts,
-      layers/terminal/server/exposure/text-facts.ts). Where Amazon says a
+      layers/companies/server/exposure/text-facts.ts). Where Amazon says a
       figure is "primarily" Anthropic's, the row says so. Read 2026-11-21.
   filed-facts-meta:
     ticker: META
@@ -2871,12 +2871,12 @@ filed_fact_sources:
       expenditures (PaymentsToAcquirePropertyPlantAndEquipment). Oracle tags
       only its total remaining performance obligations, not a cloud figure.
 # The suppliers table (/api/suppliers) is not listed source by source: its
-# filers are the companies in layers/terminal/server/suppliers/filers.ts, read
+# filers are the companies in layers/companies/server/suppliers/filers.ts, read
 # from www.sec.gov under the fair-access terms recorded under sec-msft-openai.
 # The filings lane reads each one's submissions feed (data.sec.gov) and the
 # primary document of each new 10-Q, 10-K, 8-K, 20-F or 6-K, at most six
 # documents a run; the judge reads the passages and the Worker checks each
-# quote against the stored document (layers/terminal/server/suppliers/).
+# quote against the stored document (layers/companies/server/suppliers/).
 # rights: ours, as for every SEC filing here.
 #
 # The pages behind /api/power-sites and the "Who powers the lab sites" panel on

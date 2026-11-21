@@ -4,14 +4,10 @@ import { beforeEach, describe, expect, it } from 'vitest'
 
 import * as schema from '~~/server/db/schema'
 import type { FilingRow } from '#layers/core/server/pipeline/contracts'
-import {
-  deriveSources,
-  derivedSourceId,
-  googlePricedSlugs,
-  openAiPricedSlugs,
-  parseDerivedSourcesBlock,
-  resolvedFilers,
-} from '../../server/pipeline/derived'
+import { resolvedFilers } from '../../../companies/server/pipeline/derived'
+import { derivedSourceId, parseDerivedSourcesBlock } from '#layers/core/server/pipeline/derived'
+import { googlePricedSlugs, openAiPricedSlugs } from '../../../pricing/server/pipeline/derived'
+import { DERIVED_FROM, deriveSources } from '#server/registries/derived'
 import type { FetchOutcome, SourceFetcher } from '#layers/core/server/pipeline/fetch'
 import { derivedKeyOf, laneFor } from '#server/registries/lanes'
 import { parseGoogleModelPage } from '../../../pricing/server/pipeline/parsers/pricing/google-model-page'
@@ -20,7 +16,7 @@ import {
   filerNameOf,
   parsePendingFilersBlock,
   resolveFilers,
-} from '../../server/pipeline/parsers/sec/pending-filers'
+} from '../../../companies/server/pipeline/parsers/sec/pending-filers'
 import { runRefresh } from '../../../core/server/pipeline/refresh'
 import type { RawStore } from '#layers/core/server/pipeline/raw'
 import { sourceIdsForScope } from '../../../core/server/pipeline/scopes'
@@ -29,7 +25,7 @@ import { includeSources } from '#layers/core/server/pipeline/sources'
 import { terminalStamps } from '#layers/core/server/utils/terminal-cache'
 import { queryContext, queryCoverage } from '#layers/core/server/utils/terminal-db'
 import { queryPrices } from '../../../pricing/server/utils/terminal-prices'
-import { queryRevenue } from '../../server/utils/terminal-revenue'
+import { queryRevenue } from '../../../companies/server/utils/terminal-revenue'
 import { labelOf } from '#layers/core/server/utils/terminal-sources'
 import { fixtureText, manifest } from '#layers/core/test/pipeline/fixtures'
 
@@ -112,7 +108,7 @@ describe('pending_filers', () => {
 
 describe('derived_sources', () => {
   it('reads the eight templates with their caveat', () => {
-    const templates = parseDerivedSourcesBlock(sourcesYaml)
+    const templates = parseDerivedSourcesBlock(sourcesYaml, DERIVED_FROM)
     expect(templates.map((t) => [t.id, t.from])).toEqual([
       ['edgar-submissions', 'filer'],
       ['edgar-companyfacts', 'filer'],

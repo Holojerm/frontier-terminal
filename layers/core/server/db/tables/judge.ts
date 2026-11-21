@@ -26,7 +26,7 @@ export const judgeRuns = sqliteTable(
 
 // One row per part of a registration filing the parser could not read and
 // the judge did, from a sentence the Worker found verbatim in the stored
-// document (layers/terminal/server/pipeline/judge/filing-review.ts). `values`
+// document (layers/companies/server/pipeline/judge/filing-review.ts). `values`
 // is what the Worker re-read from that sentence, not what the model said.
 export const filingReadings = sqliteTable(
   'filing_readings',

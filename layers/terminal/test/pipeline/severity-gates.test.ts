@@ -7,14 +7,14 @@ import { ChangeRow, contentHash } from '#layers/core/server/pipeline/contracts'
 import { requotedKey } from '../../../pricing/server/pipeline/judge/class-map'
 import { incidentCounts } from '#layers/core/server/pipeline/judge/pending'
 import { clampRoutineAlerts } from '../../server/pipeline/judge/severity-gates'
-import { submitJudgeRun } from '../../server/pipeline/judge/submit'
+import { submitJudgeRun } from '../../../core/server/pipeline/judge/submit'
 import { modelFloorAlerts } from '../../../models/server/pipeline/model-floor'
 import {
   EIGHT_K_ITEMS_FROM,
   parseEdgarSubmissions,
-} from '../../server/pipeline/parsers/sec/edgar-submissions'
-import { eightKItems, isRoutine8K } from '../../server/pipeline/parsers/sec/forms'
-import { parseCikWhitelistBlock } from '../../server/pipeline/parsers/sec/whitelist'
+} from '../../../companies/server/pipeline/parsers/sec/edgar-submissions'
+import { eightKItems, isRoutine8K } from '../../../companies/server/pipeline/parsers/sec/forms'
+import { parseCikWhitelistBlock } from '../../../companies/server/pipeline/parsers/sec/whitelist'
 import { insertRows } from '#layers/core/server/pipeline/store'
 import { fixtureText } from '#layers/core/test/pipeline/fixtures'
 

@@ -8,7 +8,7 @@ import { PointInTimeError } from '#layers/core/server/utils/terminal-asof'
 import { contentHash, contentHashOfText } from '#layers/core/server/pipeline/contracts'
 import { insertRows } from '#layers/core/server/pipeline/store'
 import { seedHandTies } from '#layers/compute/server/power/store'
-import { seedHandPassages } from '../server/suppliers/store'
+import { seedHandPassages } from '../../companies/server/suppliers/store'
 import { EXPORT_PAGE_SIZE, exportFilter } from '#layers/core/server/utils/terminal-export-views'
 import { EXPORT_TABLES, exportTable, WITHDRAWN_EXPORTS } from '#server/registries/export-tables'
 import {

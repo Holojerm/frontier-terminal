@@ -20,6 +20,7 @@ import { MODEL_FLOOR_RULE } from '#layers/core/server/utils/terminal-asof'
 import { basisOnPage, flattenMdLinks } from '../recommendations'
 import { cardDescriptions, cardOwners, type CardDescriptions } from './page-cards'
 import type { PipelineDb } from '#layers/core/server/pipeline/store'
+import { judgeReview } from '#layers/core/server/pipeline/judge/review'
 
 // The judge's second job: re-mapping a like-for-like matrix cell whose vendor
 // sentence has left the page. The rule is the one terminal-classes.ts states
@@ -482,3 +483,16 @@ export async function applyClassMappings(
   }
   return { accepted, rejected, requoted }
 }
+
+/**
+ * The class-map review (server/registries/judge.ts): the routine's re-mappings
+ * of matrix cells under review. The shell's alert screen applies them, before
+ * the alerts are stored (layers/terminal/server/pipeline/judge/screen.ts).
+ */
+export const CLASS_MAP_REVIEW = judgeReview({
+  key: 'class_map',
+  reading: JudgeClassMapping,
+  max: 9,
+  empty: { accepted: 0, rejected: [] },
+  offer: { key: 'class_map_review', read: ({ db, readRaw }) => classMapReview(db, readRaw) },
+})

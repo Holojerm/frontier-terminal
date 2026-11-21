@@ -10,7 +10,7 @@ import {
 import { diff } from '#layers/core/server/pipeline/diff'
 import { normalizePrices, priceTier } from '../../../pricing/server/pipeline/normalize'
 import { normalizeJobs, type JobRow } from '../../../talent/server/pipeline/normalize'
-import { normalizeFilings, stableStringify } from '../../server/pipeline/normalize'
+import { normalizeFilings, stableStringify } from '../../../companies/server/pipeline/normalize'
 import { fixtureText, provenanceOf } from '#layers/core/test/pipeline/fixtures'
 
 // Normalize + diff golden tests. Done-bar: diff of two entity sets produces

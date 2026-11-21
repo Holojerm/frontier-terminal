@@ -5,8 +5,8 @@ import k2024 from '~~/fixtures/filed-facts/text/amzn-2025-02-07-10-K.htm?raw'
 import q2025 from '~~/fixtures/filed-facts/text/amzn-2025-10-31-10-Q.htm?raw'
 import k2025 from '~~/fixtures/filed-facts/text/amzn-2026-02-06-10-K.htm?raw'
 
-import { textSeries, type StoredTextFact } from '../server/exposure/series'
-import { TEXT_FACT_FILERS, extractTextFacts } from '../server/exposure/text-facts'
+import { textSeries, type StoredTextFact } from '../../companies/server/exposure/series'
+import { TEXT_FACT_FILERS, extractTextFacts } from '../../companies/server/exposure/text-facts'
 import { firstFiledQuarters, quarterlyGrowth } from '../server/signals/sources'
 
 const name = TEXT_FACT_FILERS.AMZN!.name

@@ -6,7 +6,7 @@ import * as schema from '~~/server/db/schema'
 import { AlertRow, ChangeRow, contentHash } from '#layers/core/server/pipeline/contracts'
 import { diff } from '#layers/core/server/pipeline/diff'
 import { buildAlertRows } from '#layers/core/server/pipeline/judge/alerts'
-import { gateJudgeSubmission } from '../../server/pipeline/judge/contract'
+import { gateJudgeSubmission } from '../../../core/server/pipeline/judge/contract'
 import { groundAlerts, groundingFailure } from '#layers/core/server/pipeline/judge/grounding'
 import {
   isTimestampOnlyChange,
@@ -15,8 +15,8 @@ import {
   offerCount,
   pendingChanges,
 } from '#layers/core/server/pipeline/judge/pending'
-import { submitJudgeRun } from '../../server/pipeline/judge/submit'
-import { judgeFreshnessCheck } from '../../server/pipeline/judge/watchdog'
+import { submitJudgeRun } from '../../../core/server/pipeline/judge/submit'
+import { judgeFreshnessCheck } from '../../../core/server/pipeline/judge/watchdog'
 import { checkFreshness, freshnessMarkerKey } from '#layers/core/server/utils/freshness'
 import type { LockStore } from '#layers/core/server/pipeline/lock'
 import { normalizePrices } from '../../../pricing/server/pipeline/normalize'

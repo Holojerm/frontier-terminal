@@ -4,7 +4,7 @@ import { drizzle } from 'drizzle-orm/d1'
 import { beforeEach, describe, expect, it } from 'vitest'
 
 import * as schema from '~~/server/db/schema'
-import { extractGuidance } from '../server/exposure/guidance'
+import { extractGuidance } from '../../companies/server/exposure/guidance'
 import {
   checkAlert,
   filedYearToDate,
@@ -14,12 +14,12 @@ import {
   revisionAlert,
   revisionOf,
   unverified,
-} from '../server/exposure/guidance-alerts'
-import { runFiledFacts } from '../server/exposure/ingest'
-import type { StoredFact } from '../server/exposure/series'
+} from '../../companies/server/exposure/guidance-alerts'
+import { runFiledFacts } from '../../companies/server/exposure/ingest'
+import type { StoredFact } from '../../companies/server/exposure/series'
 import type { FetchOutcome, FetchSource } from '#layers/core/server/pipeline/fetch'
 import { alertTerms } from '../server/pipeline/track-record/terms'
-import type { StoredGuidance } from '../server/utils/terminal-ground-truth-guidance'
+import type { StoredGuidance } from '../../companies/server/utils/terminal-ground-truth-guidance'
 import { fixtureText, provenanceOf } from '#layers/core/test/pipeline/fixtures'
 
 // The capex-guidance rule (exposure/guidance-alerts.ts): a revision against

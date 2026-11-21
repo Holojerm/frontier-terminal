@@ -14,7 +14,7 @@ import {
 } from '../../../pricing/server/pipeline/judge/class-map'
 import type { RawReader, RawStore } from '#layers/core/server/pipeline/raw'
 import { cardDescriptions, cardOwners } from '../../../pricing/server/pipeline/judge/page-cards'
-import { submitJudgeRun } from '../../server/pipeline/judge/submit'
+import { submitJudgeRun } from '../../../core/server/pipeline/judge/submit'
 import { recommendationRows } from '../../../pricing/server/pipeline/recommendations'
 import { runRefresh } from '../../../core/server/pipeline/refresh'
 import { terminalStamps } from '#layers/core/server/utils/terminal-cache'

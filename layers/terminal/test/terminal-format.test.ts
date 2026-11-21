@@ -33,7 +33,7 @@ import {
   zoneName,
 } from '#layers/core/shared/utils/terminal-format'
 import { formatTick, formatValue } from '../shared/utils/thesis-format'
-import { millions, statementValue } from '../shared/utils/terminal-prospectus'
+import { millions, statementValue } from '../../companies/shared/utils/terminal-prospectus'
 import { DEFAULTS, labsFirst, parsePrefs } from '../../core/shared/utils/reader-prefs'
 
 // How a stored value reads. The rule is relative inside a day, absolute

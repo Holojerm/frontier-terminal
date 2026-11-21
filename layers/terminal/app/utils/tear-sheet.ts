@@ -12,7 +12,7 @@ import type {
   ExposureData,
   ExposurePoint,
   ExposureSeries,
-} from '../../shared/utils/terminal-exposure'
+} from '../../../companies/shared/utils/terminal-exposure'
 import {
   UTC_STYLE,
   compactUsd,

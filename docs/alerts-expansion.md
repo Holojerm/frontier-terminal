@@ -8,7 +8,7 @@ The lab commitment and claim series alert, `critical` on a series' first point o
 in a commitment or stake. A point for a period an earlier filing already reported, or a
 balance that didn't move, writes nothing. Capex against guidance
 (step 3, candidate 2) is the `guidance-floor` rule
-(`layers/terminal/server/exposure/guidance-alerts.ts`). Step 5's median half is built too, as
+(`layers/companies/server/exposure/guidance-alerts.ts`). Step 5's median half is built too, as
 the GPU median rule (`gpu-median-floor`) on a new `compute` axis. Single-provider moves still
 wait for the judge block.
 
@@ -18,10 +18,10 @@ An alert cites one or more change rows. A change row is a diff between two reads
 with the source URL and fetch time of the read that found it. Alerts come from two places.
 
 - **Rules.** Code in the Worker writes the alert with no model in the loop:
-  `s1-floor`, `periodic-floor` and `cik-resolved` (`layers/terminal/server/pipeline/filing-floors.ts`),
+  `s1-floor`, `periodic-floor` and `cik-resolved` (`layers/companies/server/pipeline/filing-floors.ts`),
   `model-floor`, `prospectus-floor`, `hiring-rollup` and `filed-fact-floor`
-  (`layers/terminal/server/exposure/alerts.ts`), and `guidance-floor`
-  (`layers/terminal/server/exposure/guidance-alerts.ts`). A rule's headline and explanation are built
+  (`layers/companies/server/exposure/alerts.ts`), and `guidance-floor`
+  (`layers/companies/server/exposure/guidance-alerts.ts`). A rule's headline and explanation are built
   only from the row it cites.
 - **The judge.** The hourly routine reads `GET /api/judge/pending` (change rows since its last
   run) and sends back severity, headline and explanation. The Worker gates every field
@@ -106,10 +106,10 @@ why it has none.
   guidance, and says what the rest of the year has to be to stay inside it. Both would be new
   entity types (`guidance`, `guidance_check`), written only as the change an alert cites, like
   `filed_fact`.
-- **Rule or judge.** A rule. The guidance reader (`layers/terminal/server/exposure/guidance.ts`)
+- **Rule or judge.** A rule. The guidance reader (`layers/companies/server/exposure/guidance.ts`)
   keeps the release's own sentence, so the headline can quote it. The comparison uses the same
   `GUIDANCE_MEASURES` the ground-truth page uses
-  (`layers/terminal/server/utils/terminal-ground-truth-guidance.ts`). A filer we can't score
+  (`layers/companies/server/utils/terminal-ground-truth-guidance.ts`). A filer we can't score
   there (Amazon guides a net figure we don't hold) gets the revision alert and no comparison
   alert.
 - **Tier.** A raised or cut range is `critical`. It moves the AI capex story on the day.
@@ -208,7 +208,7 @@ why it has none.
 ### 6. A new supplier passage
 
 - **Change row.** None exists yet. Since 2026-11-20 the filings lane reads each supplier's new
-  filings and the judge reads the passages from them (`layers/terminal/server/suppliers/`),
+  filings and the judge reads the passages from them (`layers/companies/server/suppliers/`),
   checked against the stored document; the table started from 110 passages read by hand. What
   is left is the alert. The two options as first written:
   - Alert on deploy, with a `supplier_passage` change row per new curated row, dated by its

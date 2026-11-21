@@ -8,7 +8,7 @@ import type { PollScope } from '#layers/core/server/pipeline/contracts'
 import type { ScopeEntry } from '#layers/core/server/pipeline/scopes'
 import { LAUNCH_SCOPE } from '#layers/pricing/server/pipeline/scopes'
 import { CAREERS_SCOPE } from '#layers/talent/server/pipeline/scopes'
-import { EDGAR_SCOPE, FILINGS_SCOPE } from '#layers/terminal/server/pipeline/scopes'
+import { EDGAR_SCOPE, FILINGS_SCOPE } from '#layers/companies/server/pipeline/scopes'
 
 export const SCOPE_ENTRIES: Partial<Record<PollScope, readonly ScopeEntry[]>> = {
   edgar: [EDGAR_SCOPE, LAUNCH_SCOPE],

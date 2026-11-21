@@ -26,6 +26,7 @@ import { GKG_FROM } from '../pipeline/track-record/gkg'
 import { earliestPerHeadline, isDealMetric } from '../pipeline/reported/review'
 import { D1_MAX_BOUND_PARAMS, chunk, type PipelineDb } from '#layers/core/server/pipeline/store'
 import type { QueryContext } from '#layers/core/server/utils/terminal-db'
+import { middle } from '#layers/core/server/utils/terminal-median'
 
 /** Headlines listed under "recent". */
 export const RECENT_LIMIT = 30
@@ -46,13 +47,6 @@ export async function reportedStamp(db: PipelineDb): Promise<string> {
 /** 2026-11-02T18:15:00Z -> 2026-Q4 */
 export function quarterOf(iso: string): string {
   return `${iso.slice(0, 4)}-Q${Math.floor((Number(iso.slice(5, 7)) - 1) / 3) + 1}`
-}
-
-/** The middle value; the mean of the middle two for an even count. */
-export function middle(values: readonly number[]): number {
-  const sorted = [...values].sort((a, b) => a - b)
-  const mid = Math.floor(sorted.length / 2)
-  return sorted.length % 2 ? sorted[mid]! : (sorted[mid - 1]! + sorted[mid]!) / 2
 }
 
 /** One series per lab, metric and currency from `reported` figures, newest report first. */

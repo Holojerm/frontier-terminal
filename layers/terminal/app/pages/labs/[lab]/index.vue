@@ -31,7 +31,7 @@ import type {
 import type { LimitsData } from '#layers/pricing/shared/utils/limits'
 import type { PayData } from '../../../../../talent/shared/utils/pay'
 import type { AdoptionData } from '#layers/adoption/shared/utils/adoption-views'
-import type { ParentsData } from '../../../../shared/utils/recipe-views'
+import type { ParentsData } from '../../../../../companies/shared/utils/recipe-views'
 // Inert for a dynamic route: the collecting hook skips paths with a
 // parameter, and sitemap.xml / llms.txt append the lab pages from
 // layers/terminal/shared/utils/terminal-lab-summary.ts. Declared anyway — the seo gate's

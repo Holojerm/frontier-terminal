@@ -4,15 +4,10 @@
 // agent-output gate instead.
 // Hiring (the talent layer's own manifest)
 import '#layers/talent/server/pipeline/parsers.manifest'
-// Vendor-md pricing/catalog (the pricing layer's own manifest) + EDGAR
+// Vendor-md pricing/catalog (the pricing layer's own manifest)
 import '#layers/pricing/server/pipeline/parsers.manifest'
-import './parsers/sec/edgar-fts'
-import './parsers/sec/edgar-submissions'
-import './parsers/sec/edgar-companyfacts'
-import './parsers/sec/xbrl-segment'
-import './parsers/sec/filing-index'
-import './parsers/sec/prospectus-revenue'
-import './parsers/sec/prospectus'
+// EDGAR (the companies layer's own manifest)
+import '#layers/companies/server/pipeline/parsers.manifest'
 // Status pages and the OpenRouter model catalog (the reliability layer's own manifest)
 import '#layers/reliability/server/pipeline/parsers.manifest'
 // Misalignment disclosures (the models layer's own manifest)

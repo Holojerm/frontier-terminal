@@ -24,7 +24,7 @@ import {
   LICENSE_SPLIT_EFFECTIVE,
   LICENSE_WINDOW_DAYS,
 } from '#shared/utils/license'
-import { parseCikWhitelistBlock } from '../pipeline/parsers/sec/whitelist'
+import { parseCikWhitelistBlock } from '../../../companies/server/pipeline/parsers/sec/whitelist'
 import { SCHEMA_VERSION, schemaChangelog } from '#layers/core/server/utils/data-schema'
 import { ALERTS_METHOD } from '#layers/core/server/utils/terminal-asof'
 import {
@@ -36,7 +36,7 @@ import {
 import { EXPORT_TABLES } from '#server/registries/export-tables'
 import { LICENSE_COLUMN, historyRule } from '#layers/core/server/utils/terminal-export-history'
 import { csvLine } from '#layers/core/server/utils/terminal-export-format'
-import { JOINING_NOTE } from './terminal-identifiers'
+import { JOINING_NOTE } from '../../../companies/server/utils/terminal-identifiers'
 import {
   readArchiveSources,
   readFiledFactSources,

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import judgePrompt from '../../terminal/server/pipeline/judge/judge-explain.prompt.md?raw'
+import judgePrompt from '../../core/server/pipeline/judge/judge-explain.prompt.md?raw'
 import {
   clusterSeries,
   inCluster,

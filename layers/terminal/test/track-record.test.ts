@@ -10,7 +10,7 @@ import mistralFeed from '~~/fixtures/recipes/newsroom-mistral.xml?raw'
 import openaiFeed from '~~/fixtures/recipes/newsroom-openai.xml?raw'
 import * as schema from '~~/server/db/schema'
 import { contentHash, type ChangeRow } from '#layers/core/server/pipeline/contracts'
-import { submitJudgeRun } from '../server/pipeline/judge/submit'
+import { submitJudgeRun } from '../../core/server/pipeline/judge/submit'
 import { insertRows } from '#layers/core/server/pipeline/store'
 import {
   GKG_FROM,

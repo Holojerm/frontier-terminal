@@ -13,7 +13,7 @@ import {
 import type { ListedData } from '../shared/utils/listed'
 import { cellDelta, priceCitation } from '../../pricing/app/utils/price-display'
 import { PROVIDER_ORDER } from '#layers/core/server/utils/terminal-sources'
-import type { ExposureData } from '../shared/utils/terminal-exposure'
+import type { ExposureData } from '../../companies/shared/utils/terminal-exposure'
 import { LABS } from '../../core/shared/utils/lab-names'
 import { TEAR_SHEET_PAGES } from '../shared/utils/terminal-lab-summary'
 import type {

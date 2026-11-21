@@ -8,15 +8,45 @@ import type { LayerTable } from './scripts/lib/domains'
 
 export const DOMAIN_LAYERS = {
   core: { uses: [] },
-  compute: {
+  companies: {
     uses: ['core'],
+    public: [
+      // Its queries (revenue, the prospectus, exposure, dependencies, suppliers, identifiers,
+      // parents, the guidance score), which the lab page, the tear sheet, the listed table,
+      // the ground truth, the utilization query, the theses and the signals read.
+      'server/utils/',
+      // Its recipes (the SEC revenue and investee facts), which the utilization query, the
+      // theses and the signals read.
+      'server/recipes/',
+      // The filed-facts series, which the ground truth, the theses and the signals read, and
+      // the reader the offline fixture fill runs.
+      'server/exposure/series.ts',
+      'server/exposure/ingest.ts',
+      // The call reader's companies, periods and actuals, which the forward calls settle
+      // against, and the reader they run.
+      'server/calls/',
+      // The suppliers' stamp and reader, which the listed table, the filings tick and the
+      // fixture fill call.
+      'server/suppliers/store.ts',
+      'server/suppliers/ingest.ts',
+      // The SEC forms the shell's severity gates read, and the whitelist its dictionary reads.
+      'server/pipeline/parsers/sec/forms.ts',
+      'server/pipeline/parsers/sec/whitelist.ts',
+      // Its parser manifest, which the shell's manifest imports.
+      'server/pipeline/parsers.manifest.ts',
+      // The prospectus floor's rule name, which the shell's press notes read.
+      'server/pipeline/prospectus-floor.ts',
+    ],
+  },
+  compute: {
+    // Its /hardware page lists the hardware suppliers (companies' suppliers table).
+    uses: ['core', 'companies'],
     public: [
       // Its queries and its recipes, which the utilization query, the theses and the signals read.
       'server/utils/',
       'server/recipes/',
-      // What the shell's ticks, judge and backfill still call by name until they read registries.
+      // What the shell's ticks and backfill still call by name until they read registries.
       'server/power/ingest.ts',
-      'server/power/review.ts',
       'server/power/stamp.ts',
       'server/prints/ingest.ts',
       'server/prints/parse.ts',
@@ -33,9 +63,8 @@ export const DOMAIN_LAYERS = {
       // The class map in effect, which the probes, the tripwire, the launch watch, the social
       // posts, the theses and the judge runner read.
       'server/pipeline/class-map.ts',
-      // The judge contracts the shell's judge runner calls until it reads a registry.
+      // The class-map re-mappings the shell's judge alert screen applies and gates on.
       'server/pipeline/judge/class-map.ts',
-      'server/pipeline/judge/price-review.ts',
       // The archive eras and price and limit events the shell's backfill rows and signals read.
       'server/pipeline/archive/',
       // The price normalizer the shell's archive rows reuse, and its parser manifest.
@@ -104,6 +133,15 @@ export const DOMAIN_LAYERS = {
     ],
   },
   terminal: {
-    uses: ['core', 'compute', 'pricing', 'talent', 'reliability', 'adoption', 'models'],
+    uses: [
+      'core',
+      'companies',
+      'compute',
+      'pricing',
+      'talent',
+      'reliability',
+      'adoption',
+      'models',
+    ],
   },
 } satisfies LayerTable

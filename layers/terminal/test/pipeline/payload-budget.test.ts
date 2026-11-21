@@ -3,11 +3,12 @@ import { describe, expect, test } from 'vitest'
 import manifestJson from '~~/fixtures/manifest.json'
 import sourcesYaml from '~~/sources.yaml?raw'
 
-import { parseDerivedSourcesBlock } from '../../server/pipeline/derived'
+import { parseDerivedSourcesBlock } from '#layers/core/server/pipeline/derived'
+import { DERIVED_FROM } from '#server/registries/derived'
 import { MAX_BODY_BYTES } from '#layers/core/server/pipeline/fetch'
 import { sourceIdsForScope } from '../../../core/server/pipeline/scopes'
 import { CAREERS_SOURCES } from '../../../talent/server/pipeline/scopes'
-import { isRegistrationSource } from '../../server/pipeline/scopes'
+import { isRegistrationSource } from '../../../companies/server/pipeline/scopes'
 import { includeSources, type FetchSource } from '#layers/core/server/pipeline/sources'
 import { TRIPWIRE_REFRESH } from '../../../models/server/pipeline/tripwire'
 import { RECIPES } from '#server/registries/recipes'
@@ -43,7 +44,7 @@ import { PARQUET_ROW_GROUP_BYTES } from '#layers/core/server/utils/terminal-parq
 // dash-separated id segments (npm-openai by npm-claude-code); one with no such
 // sibling fails the gate. Upstream growth is invisible here until a fixture is
 // recaptured. Out of scope: the hyperscaler filed facts that follow the edgar
-// poll (layers/terminal/server/exposure/ingest.ts), bounded in code by
+// poll (layers/companies/server/exposure/ingest.ts), bounded in code by
 // INSTANCES_PER_RUN rather than by this table; each is still held to
 // SOURCE_BUDGET.
 
@@ -189,7 +190,7 @@ const sizeOf = sizer(recorded)
 
 const statics = includeSources(sourcesYaml, manifestJson.fixtures)
 const staticIds = new Set(statics.map((s) => s.source_id))
-const families = parseDerivedSourcesBlock(sourcesYaml).map((t) => t.id)
+const families = parseDerivedSourcesBlock(sourcesYaml, DERIVED_FROM).map((t) => t.id)
 const familyOf = (id: string) => families.find((f) => id.startsWith(`${f}-`))
 const derivedFixtures: FetchSource[] = manifestJson.fixtures
   .filter((f) => !staticIds.has(f.source_id) && familyOf(f.source_id))

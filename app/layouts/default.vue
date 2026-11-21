@@ -11,8 +11,7 @@
 
 import type { DropdownMenuItem, NavigationMenuItem } from '@nuxt/ui'
 
-import { LABS, isLab } from '#layers/core/shared/utils/lab-names'
-import { labPath } from '#layers/terminal/shared/utils/terminal-lab-summary'
+import { LABS, isLab, labPath } from '#layers/core/shared/utils/lab-names'
 import { LAB_DISPLAY } from '#layers/core/shared/utils/lab-names'
 import manifest from '~~/fleet.json'
 

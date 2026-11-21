@@ -26,7 +26,7 @@ import { queryHiring, queryHiringHistory } from '../../talent/server/utils/termi
 import { queryPriceHistory, queryPrices } from '../../pricing/server/utils/terminal-prices'
 import { collect, csvChunks, jsonChunks } from '#layers/core/server/utils/terminal-export-format'
 import { exportTable } from '#server/registries/export-tables'
-import { queryRevenue } from '../server/utils/terminal-revenue'
+import { queryRevenue } from '../../companies/server/utils/terminal-revenue'
 import { fixtureText, manifest } from '#layers/core/test/pipeline/fixtures'
 
 // Point-in-time reads. The golden property: a query asked `as_of` an instant
