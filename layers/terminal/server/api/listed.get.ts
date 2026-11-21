@@ -10,7 +10,8 @@ import { powerSitesStamp } from '#layers/compute/server/power/stamp'
 import { suppliersStamp } from '../suppliers/store'
 import { rateLimitTerminal } from '#layers/core/server/utils/api-access'
 import { serveTerminal, terminalDb } from '#layers/core/server/utils/terminal-handler'
-import { labQuerySchema, listedForLab } from '../utils/terminal-lab-cuts'
+import { labQuerySchema } from '#layers/core/server/utils/lab-query'
+import { listedForLab } from '../utils/terminal-lab-cuts'
 import { queryListed } from '../utils/terminal-listed'
 
 export default defineEventHandler(async (event) => {

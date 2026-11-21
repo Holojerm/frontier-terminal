@@ -13,13 +13,13 @@ import {
 } from '#layers/core/server/pipeline/fetch'
 import { pendingChanges } from '#layers/core/server/pipeline/judge/pending'
 import { asOfFromDetail } from '../../server/pipeline/as-of'
-import { providerOfOpenRouterId } from '../../server/pipeline/parsers/openrouter'
+import { providerOfOpenRouterId } from '../../../reliability/server/pipeline/parsers/openrouter'
 import { parseOpenRouterRankings } from '../../server/pipeline/parsers/openrouter-rankings'
 import {
   SKIPPED_EVENT_INTERVAL_MS,
   runRefresh,
   type RefreshDeps,
-} from '../../server/pipeline/refresh'
+} from '../../../core/server/pipeline/refresh'
 import type { RawStore } from '#layers/core/server/pipeline/raw'
 import { includeSources } from '#layers/core/server/pipeline/sources'
 import { queryMovement } from '../../server/utils/terminal-alerts'

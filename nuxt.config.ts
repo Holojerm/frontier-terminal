@@ -165,8 +165,8 @@ const securityHeaders = {
 //                model catalogs, the two axes where latency is worth polling for.
 //   0 */6      — full survey, layers/terminal/server/tasks/poll/survey.ts: every include
 //                source but the careers and filings lanes'. Scope policy:
-//                layers/terminal/server/pipeline/scopes.ts.
-//   17 */6     — careers lane, layers/terminal/server/tasks/poll/careers.ts: the ~20 MB
+//                layers/core/server/pipeline/scopes.ts.
+//   17 */6     — careers lane, layers/talent/server/tasks/poll/careers.ts: the ~20 MB
 //                Google careers feed in an invocation of its own, so its memory
 //                never shares the survey's 128 MB.
 //   47 */6     — filings lane, layers/terminal/server/tasks/poll/filings.ts: the S-1
@@ -187,12 +187,12 @@ const securityHeaders = {
 //                catches any message that was lost.
 //              — bulk:build, and reliability:record, which rolls up source runs
 //                and records filing detections for /data#reliability
-//                (layers/terminal/server/pipeline/reliability/), and
+//                (layers/reliability/server/pipeline/reliability/), and
 //                reliability:deploys, which reads its deploy smoke results
 //                from GitHub.
 //              — prints:read, the Taiwan monthly revenue feeds, TSMC's revenue 6-Ks and
 //                Korea Customs Service's export releases (layers/compute/server/prints/ingest.ts).
-//   7 * * * *  — probes:latency, layers/terminal/server/tasks/probes/latency.ts: one
+//   7 * * * *  — probes:latency, layers/reliability/server/tasks/probes/latency.ts: one
 //                timed streaming request per lab, alone in its invocation so no
 //                other task's requests queue in front of a probe.
 //   0 4 * * *  — seo:indexnow submits the sitemap URLs changed since its last
@@ -573,7 +573,7 @@ export default defineNuxtConfig({
     // layers/core/server/pipeline/fetch.ts). Sent as a bearer to openrouter.ai/api/v1/datasets/*
     // only. Empty = that source is recorded 'skipped' every tick and the panel
     // says "not configured"; nothing is fetched anonymously. The hourly latency
-    // probes (layers/terminal/server/pipeline/probes/) spend this key's credit on
+    // probes (layers/reliability/server/pipeline/probes/) spend this key's credit on
     // openrouter.ai/api/v1/chat/completions; empty = no probe runs. A Worker secret:
     // `op read "op://…" | bunx wrangler secret put NUXT_OPENROUTER_API_KEY`.
     openrouterApiKey: '',

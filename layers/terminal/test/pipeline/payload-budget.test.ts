@@ -5,11 +5,9 @@ import sourcesYaml from '~~/sources.yaml?raw'
 
 import { parseDerivedSourcesBlock } from '../../server/pipeline/derived'
 import { MAX_BODY_BYTES } from '#layers/core/server/pipeline/fetch'
-import {
-  CAREERS_SOURCES,
-  isRegistrationSource,
-  sourceIdsForScope,
-} from '../../server/pipeline/scopes'
+import { sourceIdsForScope } from '../../../core/server/pipeline/scopes'
+import { CAREERS_SOURCES } from '../../../talent/server/pipeline/scopes'
+import { isRegistrationSource } from '../../server/pipeline/scopes'
 import { includeSources, type FetchSource } from '#layers/core/server/pipeline/sources'
 import { TRIPWIRE_REFRESH } from '../../server/pipeline/tripwire'
 import { RECIPES } from '#server/registries/recipes'
@@ -122,8 +120,9 @@ const mib = (bytes: number) => `${(bytes / MiB).toFixed(1)} MiB`
 
 const OWN_LANE_FIX =
   'Give it an invocation of its own, as #164 did for google-careers: a scope in ' +
-  'layers/terminal/server/pipeline/scopes.ts like CAREERS_SOURCES, a task under ' +
-  'layers/terminal/server/tasks/poll/, and one cron string on a minute no other trigger uses, in ' +
+  "its domain's server/pipeline/scopes.ts like CAREERS_SOURCES, registered in " +
+  'server/registries/scopes.ts and named in OWN_TICK (layers/core/server/pipeline/scopes.ts), a task under ' +
+  'its server/tasks/poll/, and one cron string on a minute no other trigger uses, in ' +
   'both SCHEDULED_TASKS (nuxt.config.ts) and [triggers] crons (wrangler.toml). A recipe moves out ' +
   'of RECIPES (server/registries/recipes.ts) into a task of its own the same way.'
 
@@ -224,7 +223,7 @@ function edgarWorstNow(): Date {
   return newest ? new Date(Date.parse(`${newest}T00:00:00Z`) + 86_400_000) : new Date()
 }
 
-const SCOPES = 'layers/terminal/server/pipeline/scopes.ts'
+const SCOPES = 'server/registries/scopes.ts'
 const productionLanes: readonly Lane[] = [
   {
     name: 'edgar',

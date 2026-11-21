@@ -303,7 +303,7 @@ websocket keeps `networkidle` from ever firing.
 
 CI/CD runs on Cloudflare Workers Builds (repo connected in the dashboard under Worker → Settings → Build). The Worker's name in the dashboard must exactly match `name` in the root `wrangler.toml`, or every build fails before it starts. Build settings live in the dashboard, not in the repo: build command `bun run ci`, deploy command `bun run deploy:ci` (migrates production D1, then deploys; needs D1 Edit on the build token, see above).
 
-**A build that fails to start is not retried.** "Build failed to initialize and was timed out" means the build environment never came up, and Workers Builds leaves production on the previous commit. The ops digest reports it as `deploy_drift` (`layers/terminal/server/pipeline/deploy-watch.ts`) once main has been ahead of `/api/status` → `build.sha` for one tick. To retry without an empty commit, start a build on the `main` trigger with the **full** sha. A short sha fails at clone with "error occurred while fetching repository":
+**A build that fails to start is not retried.** "Build failed to initialize and was timed out" means the build environment never came up, and Workers Builds leaves production on the previous commit. The ops digest reports it as `deploy_drift` (`layers/reliability/server/pipeline/deploy-watch.ts`) once main has been ahead of `/api/status` → `build.sha` for one tick. To retry without an empty commit, start a build on the `main` trigger with the **full** sha. A short sha fails at clone with "error occurred while fetching repository":
 
 ```bash
 cf builds triggers list --external-script-id "$(cf workers scripts search --name frontier-terminal | jq -r '.[0].id')"

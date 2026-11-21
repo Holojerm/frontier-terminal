@@ -7,7 +7,6 @@ import {
   normalizeDocuments,
   normalizeFilers,
   normalizeFilings,
-  normalizeIncidents,
   normalizeOfferings,
   normalizeProspectusDetails,
   normalizeRankings,
@@ -30,18 +29,12 @@ import {
 } from './parsers/sec/revenue-filers'
 import { parseXbrlSegment, segmentTarget } from './parsers/sec/xbrl-segment'
 import type { CikWhitelist } from './parsers/sec/whitelist'
-import { parseAnthropicStatus } from './parsers/status/anthropic-status'
-import { DEEPSEEK_ATOM, parseDeepseekStatus } from './parsers/status/deepseek-status'
-import { parseGoogleCloudStatus } from './parsers/status/google-cloud-status'
-import { parseMistralStatus } from './parsers/status/mistral-status'
-import { parseOpenaiStatus } from './parsers/status/openai-status'
-import { parseXaiStatus } from './parsers/status/xai-status'
 import { asOfFromDetail } from './as-of'
 
 // Every lane of the domains still in the shell: SEC filings and revenue,
-// status pages, disclosures and the OpenRouter rankings. The lane contract is
-// core's (layers/core/server/pipeline/lanes.ts); pricing's and talent's lanes
-// are in their layers' server/pipeline/lanes.ts, and server/registries/lanes.ts
+// disclosures and the OpenRouter rankings. The lane contract is core's
+// (layers/core/server/pipeline/lanes.ts); pricing's, talent's and reliability's
+// lanes are in their layers' server/pipeline/lanes.ts, and server/registries/lanes.ts
 // assembles them. The OpenRouter rankings feed has a lane: it is the source of
 // record for the demand-share axis, held out as one aggregator's traffic
 // rather than the market's.
@@ -244,64 +237,6 @@ export const LANES: Readonly<Record<string, Lane>> = {
   ...ftsLanes(),
   ...submissionsLanes(),
   ...companyfactsLanes(),
-  // Status feeds are rolling windows (Statuspage caps at 50; OpenAI's page
-  // holds about a month), so an incident scrolling out was not un-posted.
-  // An incident that resolves diffs as 'modified' (resolved_at null → set).
-  'openai-status': {
-    sides: [],
-    removals: 'append-only',
-    parse: (text, { prov, snapshotId }) => ({
-      entities: normalizeIncidents(parseOpenaiStatus(text, prov).rows, snapshotId),
-    }),
-  },
-  'anthropic-status': {
-    sides: [],
-    removals: 'append-only',
-    parse: (text, { prov, snapshotId }) => {
-      const { rows, maintenances } = parseAnthropicStatus(text, prov)
-      return {
-        entities: normalizeIncidents(rows, snapshotId),
-        note: maintenances ? `${maintenances} scheduled maintenances skipped` : undefined,
-      }
-    },
-  },
-  'mistral-status': {
-    sides: [],
-    removals: 'append-only',
-    parse: (text, { prov, snapshotId }) => ({
-      entities: normalizeIncidents(parseMistralStatus(text, prov).rows, snapshotId),
-    }),
-  },
-  // The RSS feed gives each incident's start; its Atom twin, fetched in the
-  // same tick, gives a resolved incident's end.
-  'deepseek-status': {
-    sides: [DEEPSEEK_ATOM],
-    removals: 'append-only',
-    parse: (text, { prov, snapshotId, side }) => ({
-      entities: normalizeIncidents(
-        parseDeepseekStatus(text, side(DEEPSEEK_ATOM), prov).rows,
-        snapshotId,
-      ),
-    }),
-  },
-  'xai-status': {
-    sides: [],
-    removals: 'append-only',
-    parse: (text, { prov, snapshotId }) => ({
-      entities: normalizeIncidents(parseXaiStatus(text, prov).rows, snapshotId),
-    }),
-  },
-  'google-cloud-status': {
-    sides: [],
-    removals: 'append-only',
-    parse: (text, { prov, snapshotId }) => {
-      const { rows, skipped } = parseGoogleCloudStatus(text, prov)
-      return {
-        entities: normalizeIncidents(rows, snapshotId),
-        note: skipped ? `${skipped} incidents skipped: no Gemini / Vertex AI product` : undefined,
-      }
-    },
-  },
   // The disclosure index IS the current set: a report taken down is a
   // 'removed' change the judge should see, not a window scrolling on. Its
   // printed date is in each row but never wakes the judge on its own

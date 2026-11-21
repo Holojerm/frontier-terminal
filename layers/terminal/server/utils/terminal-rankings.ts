@@ -28,7 +28,7 @@ import type {
 import * as tables from '#server/db/schema'
 import { asOfFromDetail } from '../pipeline/as-of'
 import { manifestFixtures } from '#layers/core/server/pipeline/parsers/fixture-provenance'
-import { providerOfOpenRouterId } from '../pipeline/parsers/openrouter'
+import { providerOfOpenRouterId } from '../../../reliability/server/pipeline/parsers/openrouter'
 import type { PipelineDb } from '#layers/core/server/pipeline/store'
 import {
   sourceReads,

@@ -33,7 +33,7 @@
 // drive them against the workerd D1 and read the bytes back.
 
 import { LIVE_TABLES } from '#layers/core/server/export-tables/live'
-import { PROBE_TABLES } from '#layers/terminal/server/export-tables/probes'
+import { PROBE_TABLES } from '#layers/reliability/server/export-tables/probes'
 import { PRINT_TABLES } from '#layers/compute/server/export-tables/prints'
 import { FILING_TABLES } from '#layers/terminal/server/export-tables/filings'
 import { HISTORY_TABLES } from '#layers/core/server/export-tables/history'

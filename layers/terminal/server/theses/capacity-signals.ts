@@ -14,7 +14,7 @@ import type { SignalSpec } from '../../shared/utils/thesis-types'
 import * as tables from '#server/db/schema'
 import type { ProbeDayRow } from '#server/db/schema'
 import { FILER_NAMES, type StoredFact } from '../exposure/series'
-import { PRIMARY_PLACEMENT } from '../pipeline/probes/placement'
+import { PRIMARY_PLACEMENT } from '../../../reliability/server/pipeline/probes/placement'
 import type { PipelineDb } from '#layers/core/server/pipeline/store'
 import { filedFactsAt } from '../utils/terminal-exposure'
 import {

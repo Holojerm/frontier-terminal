@@ -16,7 +16,7 @@ import {
   liveDepartment,
   type HiringEra,
 } from '../../../../talent/server/pipeline/archive/hiring-eras'
-import type { StatusEra } from './status-eras'
+import type { StatusEra } from '../../../../reliability/server/pipeline/archive/status-eras'
 import { captureInstant, captureUrl, type CdxCapture } from './wayback'
 import type { ArchiveAxis } from '../../../../core/server/utils/archive-floor'
 

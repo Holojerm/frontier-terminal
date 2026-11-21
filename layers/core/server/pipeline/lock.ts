@@ -3,7 +3,7 @@ import type { Storage } from 'unstorage'
 // Poll mutex. Two crons share it: poll:edgar (*/30) and poll:survey (0 */6),
 // and 6h is a multiple of 30m, so both are due at the same instant every
 // sixth hour. The policy for that instant is decided before the lock is
-// touched, in layers/terminal/server/pipeline/poll.ts: edgar yields, because the survey
+// touched, in layers/core/server/pipeline/poll.ts: edgar yields, because the survey
 // re-fetches EDGAR anyway, so the survey is the only tick that asks for the
 // lock at :00 of a sixth hour. Here the lock only has to handle the residue —
 // a survey that overruns into the next edgar tick, a stale key left by a

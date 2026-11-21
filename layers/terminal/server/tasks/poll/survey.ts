@@ -1,4 +1,4 @@
-// Cron task: poll every include source every six hours (layers/terminal/server/pipeline/scopes.ts).
+// Cron task: poll every include source every six hours (layers/core/server/pipeline/scopes.ts).
 // Same wiring and the same reasons as poll/edgar.ts.
 
 import { blob } from '@nuxthub/blob'
@@ -9,7 +9,7 @@ import sourcesYaml from 'raw:~~/sources.yaml'
 
 import { createFetcher } from '#layers/core/server/pipeline/fetch'
 import { unstorageLockStore } from '#layers/core/server/pipeline/lock'
-import { runPoll } from '../../pipeline/poll'
+import { runPoll } from '#layers/core/server/pipeline/poll'
 import { blobRawStore } from '#layers/core/server/pipeline/raw'
 import { writeGpuMedianAlerts } from '#layers/compute/server/pipeline/gpu-median-floor'
 import { paceSec } from '#layers/core/server/pipeline/sec-pace'

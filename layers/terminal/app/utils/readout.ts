@@ -17,7 +17,7 @@ import type { DataCentersData } from '#layers/compute/shared/utils/compute-views
 import type { LabId, Prov, RevenueProviderView } from '../../shared/utils/terminal-types'
 import type { GapRef } from '#layers/core/app/types/terminal-ui'
 
-import { feedGap } from './feed-gap'
+import { feedGap } from '#layers/core/app/utils/feed-gap'
 import { priceCitation } from '#layers/pricing/app/utils/price-display'
 
 /** Whose revenue a figure is when it is not the lab's own: a parent's segment, or the whole parent. */
