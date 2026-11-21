@@ -1,9 +1,5 @@
-import { env } from 'cloudflare:test'
-import { drizzle } from 'drizzle-orm/d1'
 import { beforeEach, describe, expect, it } from 'vitest'
 
-import * as schema from '~~/server/db/schema'
-import type { ProspectusOutput } from '#layers/core/server/pipeline/contracts'
 import { diff } from '#layers/core/server/pipeline/diff'
 import {
   normalizeOfferings,
@@ -20,13 +16,7 @@ import { docLines, docText, figure } from '../../server/pipeline/parsers/sec/pro
 import { riskFactorChanges } from '../../server/pipeline/parsers/sec/prospectus-risk-factors'
 import { parseProspectusShares } from '../../server/pipeline/parsers/sec/prospectus-shares'
 import { prospectusFloorAlerts } from '../../server/pipeline/prospectus-floor'
-import { insertRows } from '#layers/core/server/pipeline/store'
-import { terminalStamps } from '#layers/core/server/utils/terminal-cache'
-import { queryContext } from '#layers/core/server/utils/terminal-db'
 import { EXPORT_TABLES } from '#server/registries/export-tables'
-import { collect, csvChunks } from '#layers/core/server/utils/terminal-export-format'
-import { queryProspectus } from '../../server/utils/terminal-prospectus'
-import { statementValue } from '../../shared/utils/terminal-prospectus'
 import { fixtureText, provenanceOf } from '#layers/core/test/pipeline/fixtures'
 
 // What a lab's registration filings print beyond revenue, read off the real
@@ -34,7 +24,6 @@ import { fixtureText, provenanceOf } from '#layers/core/test/pipeline/fixtures'
 // customer concentration, share counts and risk-factor headings — then the
 // lane, the alert, the query layer and the exports over them.
 
-const db = drizzle(env.DB, { schema })
 const CIK = '0002130357'
 const S1 = registrationTarget(REGISTRATION_FIXTURE.key)
 const S1A = registrationTarget(PROSPECTUS_FIXTURE.key)

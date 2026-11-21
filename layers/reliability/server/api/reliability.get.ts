@@ -8,9 +8,6 @@
 import manifest from '~~/fleet.json'
 
 import { repoSlug, workflowRunsUrl } from '../pipeline/reliability/deploys'
-import { queryReliability, reliabilityStamp } from '../utils/terminal-reliability'
-import { serveTerminal, terminalDb } from '#layers/core/server/utils/terminal-handler'
-import { rateLimitTerminal } from '#layers/core/server/utils/api-access'
 
 export default defineEventHandler(async (event) => {
   await rateLimitTerminal(event, { name: 'reliability', limit: 60, windowSeconds: 60 })

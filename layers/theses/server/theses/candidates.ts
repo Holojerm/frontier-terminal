@@ -3,11 +3,7 @@
 // so a verdict can only land on a change the Worker itself would have offered,
 // and the judge is never the source of a cut's size or an outage's length.
 
-import type { CompanyId } from '#layers/core/shared/utils/companies'
-import type { ClaimDef, JudgedSpec, ThesisDef } from '../../shared/utils/thesis-types'
-
 import type { RecipeObservation } from '#server/db/schema'
-import type { ChangeRow } from '#layers/core/server/pipeline/contracts'
 import { corpusOf } from '#layers/core/server/pipeline/judge/grounding'
 
 /** The record a candidate rests on: a change row, or a recipe observation. */

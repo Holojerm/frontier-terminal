@@ -9,13 +9,6 @@
 // (layers/core/server/utils/owner-mail.ts says why that beats `cloudflare:workers`). Without
 // the binding the build still runs and keeps the `full` files in the blob store.
 
-import { blob } from '@nuxthub/blob'
-import { db } from '@nuxthub/db'
-
-import { recordOpsEvent } from '#server/utils/ops'
-import { licensedStoreOf, runBulkBuild } from '#layers/core/server/utils/terminal-bulk'
-import { withHeartbeat } from '#layers/core/server/utils/task-heartbeat'
-
 const task = defineTask({
   meta: {
     name: 'bulk:build',

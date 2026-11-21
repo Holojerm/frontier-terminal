@@ -4,18 +4,6 @@
 // caller's (the theses:digest task builds the thesis digest); this file only
 // addresses it.
 
-import { renderEmail } from '#server/utils/render-email'
-import type { ExtensionDb } from '#server/utils/extensions'
-
-import { BATCH_SIZE, sendMail, type MailMessage } from '../../../core/server/utils/resend'
-import type { SubscribeConfig } from '../../../core/server/utils/subscribe-config'
-import {
-  markDigestSent,
-  selectDigestRecipients,
-  unsubscribeToken,
-  type DigestRecipient,
-} from './subscribers'
-
 /** Recipients one Monday run will mail. Beyond it the rest wait for the next run. */
 export const MAX_RECIPIENTS_PER_RUN = 2500
 

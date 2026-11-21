@@ -8,12 +8,16 @@ import { and, desc, eq, gte, sql } from 'drizzle-orm'
 
 import type { ClaimDef, ClaimStatus, ThesisDef } from '../../shared/utils/thesis-types'
 import type { CompanyId } from '#layers/core/shared/utils/companies'
-import type { HiringHistoryData } from '../../../talent/shared/utils/terminal-types/hiring'
+import type { HiringHistoryData } from '../../../talent/shared/types/hiring'
 
 import * as tables from '#server/db/schema'
-import { contentHash } from '#layers/core/server/pipeline/contracts'
+import { contentHash } from '#layers/core/server/utils/contracts'
 import { judgedThrough } from '#layers/core/server/pipeline/judge/pending'
-import { chunk, D1_MAX_BOUND_PARAMS, type PipelineDb } from '#layers/core/server/pipeline/store'
+import {
+  chunk,
+  D1_MAX_BOUND_PARAMS,
+  type PipelineDb,
+} from '#layers/core/server/utils/pipeline-store'
 import { daysBefore } from '#layers/adoption/server/utils/terminal-rankings'
 import { hiringHistoryFor } from './compute-signals'
 import { evaluateJudgedClaim, type StoredVerdict } from './judged-status'

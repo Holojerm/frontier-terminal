@@ -7,8 +7,8 @@ import type { SQLiteColumn, SQLiteTable } from 'drizzle-orm/sqlite-core'
 
 import * as tables from '#server/db/schema'
 import { HISTORY_PARAM } from '#shared/utils/license'
-import type { DictionaryType } from '../../shared/utils/terminal-types/coverage'
-import type { PipelineDb } from '../pipeline/store'
+import type { DictionaryType } from '../../shared/types/coverage'
+import type { PipelineDb } from './pipeline-store'
 import { AS_OF_PARAM, PointInTimeError, rewindEntities } from './terminal-asof'
 import { byString } from './terminal-json'
 
@@ -152,7 +152,7 @@ export const entityKey = (shape: string, more = ''): ColumnDoc => ({
   meaning: `The row’s key across polls, ${shape}. With source_id it identifies the row.${more}`,
 })
 
-export const filingKey = (shape: string): ColumnDoc => ({
+export const filingKeyDoc = (shape: string): ColumnDoc => ({
   type: 'text',
   key: true,
   meaning: `The filing’s entity, ${shape}. With source_id and part it identifies the row.`,

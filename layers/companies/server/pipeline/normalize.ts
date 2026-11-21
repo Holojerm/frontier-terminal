@@ -18,7 +18,7 @@ import {
   type Provider,
   type RegistrationDocumentRow,
   type RevenueRow,
-} from '../../../core/server/pipeline/contracts'
+} from '../../../core/server/utils/contracts'
 import { collapse, toEntity } from '../../../core/server/pipeline/normalize'
 
 // Normalize: validated parser-output rows -> EntityRow (boundary table,

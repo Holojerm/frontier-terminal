@@ -7,10 +7,7 @@
 // printed in an S-1 that tags none. Every value links to the filing that
 // reported it, and to its page here.
 
-import { filingPath } from '../../../shared/utils/terminal-filings'
-import { count, periodLabel } from '#layers/core/shared/utils/terminal-format'
-import type { RevenueData, RevenueProviderView } from '../../../shared/utils/terminal-types/revenue'
-import type { TableColumn } from '#layers/core/app/types/terminal-ui'
+import type { RevenueData } from '../../../shared/types/revenue'
 
 const watchlist = useWatchlist()
 

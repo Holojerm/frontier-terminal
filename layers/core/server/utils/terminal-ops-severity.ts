@@ -16,9 +16,6 @@
 // seen before anyone decides it can be quiet. Add a kind here when you add its
 // recordOpsEvent call.
 
-import type { OpsKindPolicy } from '#server/utils/ops-severity'
-import { registerOpsSeverity } from '#server/utils/ops-severity'
-
 export const TERMINAL_OPS_SEVERITY: Record<string, OpsKindPolicy> = {
   // ── critical ────────────────────────────────────────────────────────────
   judge_silent: {

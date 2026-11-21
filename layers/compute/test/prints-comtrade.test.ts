@@ -1,10 +1,6 @@
-import { env } from 'cloudflare:test'
 import { eq } from 'drizzle-orm'
-import { drizzle } from 'drizzle-orm/d1'
 import { beforeEach, describe, expect, it } from 'vitest'
 
-import * as schema from '~~/server/db/schema'
-import type { FetchOutcome, SourceFetcher } from '#layers/core/server/pipeline/fetch'
 import {
   COMTRADE,
   comtradeAvailabilityUrl,
@@ -16,9 +12,6 @@ import { readComtrade } from '../server/prints/ingest'
 import { storeObservations } from '../server/prints/store'
 import { SIGNALS } from '#layers/signals/server/signals/registry'
 import { createLoader } from '#layers/signals/server/signals/sources'
-import { queryContext } from '#layers/core/server/utils/terminal-db'
-import { readPrintSources } from '#layers/core/server/utils/terminal-sources'
-import { queryPrints } from '../server/utils/terminal-prints'
 import { fixtureText } from '#layers/core/test/pipeline/fixtures'
 
 // UN Comtrade's Korea HS 8542 months on the committed bytes: getDA (four of
@@ -26,7 +19,6 @@ import { fixtureText } from '#layers/core/test/pipeline/fixtures'
 // fetcher, re-releases as vintages, the route's separate series, and the
 // year-on-year change the signals loader derives point in time.
 
-const db = drizzle(env.DB, { schema })
 const f = (name: string) => fixtureText(`fixtures/prints/${name}`)
 const DA = f('comtrade-getda-410.json')
 const PERIODS = ['2013-01', '2014-01', '2024-12', '2025-12'] as const

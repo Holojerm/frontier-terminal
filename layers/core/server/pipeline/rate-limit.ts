@@ -1,4 +1,4 @@
-import { RATE_LIMITED_DETAIL } from './fetch'
+import { RATE_LIMITED_DETAIL } from '../utils/pipeline-fetch'
 
 // Backing off a source that answers 429. The fetcher no longer retries a 429
 // in-tick (fetch.ts); this file decides what the refresh does instead:

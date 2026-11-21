@@ -3,13 +3,8 @@
 // the same types the server computes.
 
 import type { CompanyId } from '../../../core/shared/utils/companies'
-import type { LabId, Stamp } from '../../../core/shared/utils/terminal-types/common'
-import type { PressEarlyRead } from '../../../press/shared/utils/terminal-types/ground-truth'
-
-export type {
-  PressEarlyPeriod,
-  PressEarlyRead,
-} from '../../../press/shared/utils/terminal-types/ground-truth'
+import type { LabId, Stamp } from '../../../core/shared/types/common'
+import type { PressEarlyRead } from '../../../press/shared/types/ground-truth'
 
 export type ClaimStatus = 'holding' | 'weakening' | 'broken' | 'unresolved'
 

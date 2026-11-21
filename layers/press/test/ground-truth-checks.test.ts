@@ -1,9 +1,6 @@
-import { env } from 'cloudflare:test'
 import { eq } from 'drizzle-orm'
-import { drizzle } from 'drizzle-orm/d1'
 import { beforeEach, describe, expect, it } from 'vitest'
 
-import * as schema from '~~/server/db/schema'
 import { extractCompanyfacts } from '../../companies/server/exposure/facts'
 import {
   GUIDANCE_SINCE,
@@ -14,7 +11,7 @@ import {
 } from '../../companies/server/exposure/guidance'
 import { runFiledFacts } from '../../companies/server/exposure/ingest'
 import type { StoredFact } from '../../companies/server/exposure/series'
-import type { FetchOutcome, FetchSource } from '#layers/core/server/pipeline/fetch'
+import type { FetchSource } from '#layers/core/server/utils/pipeline-fetch'
 import { figureHeadline } from '../server/pipeline/reported/figures'
 import {
   applyFigureReadings,
@@ -23,24 +20,6 @@ import {
   reviewId,
   type JudgeFigure,
 } from '../server/pipeline/reported/review'
-import { queryContext } from '#layers/core/server/utils/terminal-db'
-import { queryGroundTruth } from '../server/utils/terminal-ground-truth'
-import {
-  dealTally,
-  filerOf,
-  scoreDeal,
-  scoreDeals,
-  type FiledAggregate,
-} from '../server/utils/terminal-ground-truth-deals'
-import {
-  filedActual,
-  fiscalYear,
-  guidanceFilers,
-  guidanceTally,
-  scoreGuidance,
-  type StoredGuidance,
-} from '../../companies/server/utils/terminal-ground-truth-guidance'
-import type { StoredDeal } from '../server/utils/terminal-reported'
 import { fixtureText, provenanceOf } from '#layers/core/test/pipeline/fixtures'
 
 // The two ground-truth checks beside revenue. Guidance: the parser on trimmed
@@ -51,7 +30,6 @@ import { fixtureText, provenanceOf } from '#layers/core/test/pipeline/fixtures'
 // that day, so every label here is the one the judge's instructions ask for,
 // written by hand. A test says so where it made a headline up.
 
-const db = drizzle(env.DB, { schema })
 const TOLERANCE = 5
 
 const META = '0001326801'

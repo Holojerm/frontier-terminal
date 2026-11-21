@@ -14,7 +14,7 @@
 
 import { sql } from 'drizzle-orm'
 
-import type { PipelineDb } from '../pipeline/store'
+import type { PipelineDb } from './pipeline-store'
 import { timed, type ServerTimings } from './server-timing'
 
 /** The slice of unstorage's Storage the cache uses — lets tests pass a Map-backed fake. */

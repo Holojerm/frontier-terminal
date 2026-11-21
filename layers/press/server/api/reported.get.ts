@@ -5,10 +5,6 @@
 // filed revenue (/api/revenue). `as_of` returns what the store held then:
 // every table behind it is append-only.
 
-import { queryReported, reportedStamp } from '../utils/terminal-reported'
-import { serveTerminal, terminalDb } from '#layers/core/server/utils/terminal-handler'
-import { rateLimitTerminal } from '#layers/core/server/utils/api-access'
-
 export default defineEventHandler(async (event) => {
   await rateLimitTerminal(event, { name: 'reported', limit: 60, windowSeconds: 60 })
   // Articles and readings land between polls, so they key the cache too.

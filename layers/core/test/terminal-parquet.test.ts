@@ -2,26 +2,7 @@ import { parquetMetadata, parquetReadObjects } from 'hyparquet'
 import { gunzipSync } from 'node:zlib'
 import { describe, expect, it } from 'vitest'
 
-import {
-  GRANT_ID_SHAPE,
-  R2_BUCKET_ITEM_READ,
-  expiresOn,
-  generateGrantId,
-  grantPolicies,
-  r2Endpoint,
-  s3SecretOf,
-  staleGrants,
-} from '#layers/core/server/utils/bulk-grant'
 import { EXPORT_TABLES } from '#server/registries/export-tables'
-import { licensedColumns } from '#layers/core/server/utils/terminal-export-history'
-import { type ExportTable } from '#layers/core/server/utils/terminal-export-views'
-import {
-  PARQUET_CODEC,
-  parquetBuilder,
-  parquetSchema,
-  parquetValue,
-  timestampMicros,
-} from '#layers/core/server/utils/terminal-parquet'
 
 // The Parquet half of the bulk feed, without D1: every exported column has a
 // Parquet type, values convert or fail loudly, and a file split into row

@@ -3,7 +3,7 @@
 // and writes (the capture row and its checks: layers/core/server/pipeline/archive/captures.ts).
 
 import type * as tables from '#server/db/schema'
-import { contentHash } from '../../../../core/server/pipeline/contracts'
+import { contentHash } from '../../../../core/server/utils/contracts'
 import {
   captureInstant,
   captureUrl,

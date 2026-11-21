@@ -4,10 +4,7 @@
 // behind each. The change is against the cell's previous reading, the only
 // comparison the caveat allows.
 
-import { count, pctChange, pctLabel } from '#layers/core/shared/utils/terminal-format'
-import { LAB_DISPLAY } from '#layers/core/shared/utils/lab-names'
 import type { PayData } from '../../../shared/utils/pay'
-import type { TableColumn } from '#layers/core/app/types/terminal-ui'
 
 const stamps = useStamps()
 

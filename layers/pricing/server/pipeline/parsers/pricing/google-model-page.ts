@@ -3,8 +3,8 @@ import {
   registerParser,
   type PriceRow,
   type Provenance,
-} from '#layers/core/server/pipeline/contracts'
-import { fixtureProvenance } from '#layers/core/server/pipeline/parsers/fixture-provenance'
+} from '#layers/core/server/utils/contracts'
+import { fixtureProvenance } from '#layers/core/server/utils/fixture-provenance'
 
 // google-model-md-<slug> — https://aistudio.google.com/docs/models/<slug>.md
 // One page per priced Standard-tier SKU, derived from google-pricing-html

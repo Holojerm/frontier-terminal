@@ -4,10 +4,7 @@
 // and the fetch it was read from. The model links to the SKU's own page,
 // where later reprices live.
 
-import { tierLabel } from '#layers/core/shared/utils/terminal-format'
-import { labName } from '#layers/core/shared/utils/lab-names'
-import type { ReleaseView } from '../../../shared/utils/terminal-types/releases'
-import type { TableColumn } from '#layers/core/app/types/terminal-ui'
+import type { ReleaseView } from '../../../shared/types/releases'
 
 defineProps<{
   rows: ReleaseView[]

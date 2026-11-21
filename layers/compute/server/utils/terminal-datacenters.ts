@@ -6,23 +6,7 @@
 
 import { inArray } from 'drizzle-orm'
 
-import { LAB_OF_NAME } from '#layers/core/shared/utils/lab-names'
-import type { LabId, RecipeCitation } from '#layers/core/shared/utils/terminal-types/common'
-import type { DataCentersData } from '../../shared/utils/compute-views'
-
 import * as tables from '#server/db/schema'
-import type { PipelineDb } from '#layers/core/server/pipeline/store'
-import type {
-  PowerBasis,
-  PowerGrid,
-  PowerLink,
-  PowerRole,
-  PowerSite,
-  PowerSiteGap,
-  PowerSitesData,
-  PowerTicker,
-  PowerUncovered,
-} from '../../shared/utils/power-sites'
 import { pendingDocuments as pendingPowerDocuments } from '../power/ingest'
 import { attributedLabs } from '../power/sites'
 import { currentTies, type StoredTie } from '../power/store'

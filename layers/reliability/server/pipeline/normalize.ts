@@ -1,8 +1,4 @@
-import {
-  incidentKey,
-  type EntityRow,
-  type IncidentRow,
-} from '../../../core/server/pipeline/contracts'
+import { incidentKey, type EntityRow, type IncidentRow } from '../../../core/server/utils/contracts'
 import { collapse, toEntity } from '../../../core/server/pipeline/normalize'
 
 // Normalize the status feeds: validated incident rows -> EntityRow (boundary

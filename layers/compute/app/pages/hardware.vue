@@ -6,9 +6,6 @@
 // own filings tie them to a lab or a cloud. The compute-rental and hosting
 // suppliers stay on /dependencies beside the graph.
 
-import type { PrintsData } from '#layers/compute/shared/utils/prints'
-import { HARDWARE_LAYERS, type SuppliersData } from '../../../companies/shared/utils/suppliers'
-
 definePageMeta({
   publicPage: {
     changefreq: 'daily',

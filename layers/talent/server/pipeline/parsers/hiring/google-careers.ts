@@ -2,9 +2,9 @@ import {
   CareersFeedJobsOutput,
   registerParser,
   type Provenance,
-} from '#layers/core/server/pipeline/contracts'
+} from '#layers/core/server/utils/contracts'
 import { decodeEntities } from '#layers/core/server/pipeline/parsers/html-text'
-import { fixtureProvenance } from '#layers/core/server/pipeline/parsers/fixture-provenance'
+import { fixtureProvenance } from '#layers/core/server/utils/fixture-provenance'
 import { compareByJobId } from './common'
 
 // google-careers — the job feed Google's careers site publishes for

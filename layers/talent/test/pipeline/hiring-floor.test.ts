@@ -1,9 +1,5 @@
-import { env } from 'cloudflare:test'
-import { drizzle } from 'drizzle-orm/d1'
 import { beforeEach, describe, expect, it } from 'vitest'
 
-import * as schema from '~~/server/db/schema'
-import { ChangeRow, contentHash } from '#layers/core/server/pipeline/contracts'
 import {
   boardMoves,
   describeReason,
@@ -18,16 +14,12 @@ import {
 } from '../../server/pipeline/hiring-rollup'
 import { submitJudgeRun } from '../../../core/server/pipeline/judge/submit'
 import { enqueueCriticalAlerts } from '../../../alerts/server/pipeline/social'
-import { insertRows } from '#layers/core/server/pipeline/store'
-import { parseDepartmentClusters } from '../../server/utils/terminal-clusters'
-import { NO_DEPARTMENT } from '../../server/utils/terminal-hiring-history'
 import { fixtureText } from '#layers/core/test/pipeline/fixtures'
 
 // The hiring materiality floor: scored relative to the board and department,
 // enforced at the judge's submit gate (only ever lowering a severity), and
 // reused by the weekly roll-up, which is never critical and so never posted.
 
-const db = drizzle(env.DB, { schema })
 const clusters = parseDepartmentClusters(fixtureText('sources.yaml'))
 const URL_XAI = 'https://boards-api.greenhouse.io/v1/boards/xai/jobs'
 

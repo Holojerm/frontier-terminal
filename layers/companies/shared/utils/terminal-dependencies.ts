@@ -5,7 +5,7 @@
 // on one shape, and so the layout is tested without a browser.
 
 import type { ExposureTicker } from './terminal-exposure'
-import type { Prov } from '../../../core/shared/utils/terminal-types/common'
+import type { Prov } from '../../../core/shared/types/common'
 
 /** buys: the customer owes the supplier. funds: the investor backs the lab. */
 export type DependencyKind = 'buys' | 'funds'

@@ -3,7 +3,7 @@ import {
   modelKey,
   type PriceRow,
   type Provenance,
-} from '../../../../../core/server/pipeline/contracts'
+} from '../../../../../core/server/utils/contracts'
 import { htmlGridTables, htmlText, stripInvisible } from './html-table'
 
 // DeepSeek's own pricing page as the Internet Archive captured it

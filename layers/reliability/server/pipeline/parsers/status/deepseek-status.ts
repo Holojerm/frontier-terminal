@@ -3,9 +3,9 @@ import {
   registerParser,
   type IncidentRow,
   type Provenance,
-} from '#layers/core/server/pipeline/contracts'
+} from '#layers/core/server/utils/contracts'
 import { decodeEntities, textOf } from '#layers/core/server/pipeline/parsers/html-text'
-import { fixtureProvenance } from '#layers/core/server/pipeline/parsers/fixture-provenance'
+import { fixtureProvenance } from '#layers/core/server/utils/fixture-provenance'
 
 // deepseek-status — status.deepseek.com/history.rss, the RSS history of
 // DeepSeek's status page (hosted on Flashduty), joined to its Atom twin

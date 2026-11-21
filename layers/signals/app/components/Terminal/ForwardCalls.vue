@@ -3,9 +3,7 @@
 // method, each scored once the filing prints the actual. The inputs as they
 // stood sit one click away.
 
-import type { ForwardCallView, ForwardInput } from '../../../shared/utils/signals'
-import { grouped, signedPercent, trimmed } from '#layers/core/shared/utils/terminal-format'
-import type { TableColumn } from '#layers/core/app/types/terminal-ui'
+import type { ForwardCallView } from '../../../shared/utils/signals'
 
 const props = defineProps<{ calls: ForwardCallView[] }>()
 

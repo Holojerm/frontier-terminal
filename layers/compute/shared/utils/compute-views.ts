@@ -3,7 +3,7 @@
 // (/api/utilization: spot against on-demand, implied load, MLPerf rounds,
 // revenue per megawatt). Every figure carries the URL it was read from and when.
 
-import type { LabId, Prov, RecipeCitation } from '../../../core/shared/utils/terminal-types/common'
+import type { LabId, Prov, RecipeCitation } from '../../../core/shared/types/common'
 
 export interface DataCentersData {
   as_of: string | null

@@ -5,11 +5,6 @@ import epochTimelines from '~~/fixtures/recipes/epoch-data-center-timelines.csv?
 import githubCount from '~~/fixtures/recipes/github-prs-copilot.json?raw'
 import npmClaudeCode from '~~/fixtures/recipes/npm-claude-code.json?raw'
 import pypiAnthropic from '~~/fixtures/recipes/pypi-anthropic.json?raw'
-import {
-  GITHUB_TOKEN_UNSET,
-  createFetcher,
-  needsGithubToken,
-} from '#layers/core/server/pipeline/fetch'
 import { parseCsv } from '#layers/core/server/recipes/csv'
 import { extractSites, extractTimelines } from '#layers/compute/server/recipes/epoch-data-centers'
 import {

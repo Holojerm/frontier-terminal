@@ -15,10 +15,6 @@
 
 import { z } from 'zod'
 
-import { CACHE_STATUS, isCacheableDocument } from '#layers/core/server/utils/html-cache'
-import { rateLimitTerminal } from '#layers/core/server/utils/api-access'
-import { refuseAsOf } from '#layers/core/server/utils/terminal-handler'
-
 const PAYLOAD_RE = /<script[^>]*\bid="__NUXT_DATA__"[^>]*>([\s\S]*?)<\/script>/
 
 const querySchema = z.object({

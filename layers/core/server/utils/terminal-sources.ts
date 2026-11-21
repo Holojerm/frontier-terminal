@@ -9,7 +9,7 @@
 //
 // Pure functions of the YAML text, so the same code runs in the Worker (with
 // a `raw:` import) and in the workerd suite (with a `?raw` import). The
-// reader is deliberately narrow — the same shape layers/core/server/pipeline/sources.ts
+// reader is deliberately narrow — the same shape layers/core/server/utils/pipeline-sources.ts
 // uses — because a YAML dependency for one flat file is not worth carrying.
 
 import {
@@ -19,7 +19,7 @@ import {
   type SourceAxis,
   type SourceRights,
   type SourceRole,
-} from '../../shared/utils/terminal-types/common'
+} from '../../shared/types/common'
 
 export interface SourceLabel {
   label: string
@@ -224,7 +224,7 @@ export interface SourceRegistry {
 }
 
 // sources.yaml keys whose fixture id (the id every table row carries) is spelt
-// differently. Joined on the fixture path in layers/core/server/pipeline/sources.ts; here
+// differently. Joined on the fixture path in layers/core/server/utils/pipeline-sources.ts; here
 // the fixture filename is enough to recover it.
 function sourceIdOf(yamlId: string, fixture: string | null): string {
   const stem = fixture?.match(/\/([^/]+)\.[^./]+$/)?.[1]

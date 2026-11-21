@@ -1,7 +1,6 @@
 // The two primitives every token and IP hash in the app leans on.
 
 import { describe, expect, it } from 'vitest'
-import { saltedHash, timingSafeEqual } from '../server/utils/hash'
 
 describe('timingSafeEqual', () => {
   it('is true for equal strings', () => {

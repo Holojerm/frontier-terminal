@@ -4,12 +4,8 @@
 // model the class map names, while they are news; and a weekly thread built
 // from counts and headlines alone.
 
-import { env } from 'cloudflare:test'
-import { drizzle } from 'drizzle-orm/d1'
 import { beforeEach, describe, expect, it } from 'vitest'
 
-import * as schema from '~~/server/db/schema'
-import { socialLength } from '#layers/social/server/utils/social-text'
 import {
   composeWeeklyDigest,
   enqueueCriticalAlerts,
@@ -20,8 +16,6 @@ import {
   LAUNCH_POST_WINDOW_MS,
   SOCIAL_EPOCH,
 } from '../server/pipeline/social'
-
-const db = drizzle(env.DB, { schema })
 
 const ORIGIN = 'https://frontierterm.com'
 const CHANNELS = { x: 'chan-x' }

@@ -9,11 +9,8 @@
 // than a 70svh box, which hid the last four. Each cell is one line, and the
 // panel's foot lists every pricing page the cells cite, with its age.
 
-import { exactStamp, hostOf } from '#layers/core/shared/utils/terminal-format'
-import { LAB_DISPLAY } from '#layers/core/shared/utils/lab-names'
-import type { LabId } from '#layers/core/shared/utils/terminal-types/common'
-import type { MatrixCell, PriceMatrix } from '../../../shared/utils/terminal-types/prices'
-import type { TableColumn } from '#layers/core/app/types/terminal-ui'
+import type { LabId } from '#layers/core/shared/types/common'
+import type { PriceMatrix } from '../../../shared/types/prices'
 
 const watchlist = useWatchlist()
 const stamps = useStamps()

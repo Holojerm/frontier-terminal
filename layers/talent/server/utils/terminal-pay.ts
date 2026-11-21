@@ -6,11 +6,7 @@
 import { inArray } from 'drizzle-orm'
 
 import * as tables from '#server/db/schema'
-import { companyName, type CompanyId } from '#layers/core/shared/utils/companies'
-import type { LabId, RecipeCitation } from '#layers/core/shared/utils/terminal-types/common'
-import type { PipelineDb } from '#layers/core/server/pipeline/store'
 import { PROVIDER_ORDER } from '#layers/core/server/utils/terminal-sources'
-import type { PayCell, PayData } from '../../shared/utils/pay'
 import { PAY_RECIPES } from '../recipes/pay-bands'
 
 type Row = typeof tables.recipeObservations.$inferSelect

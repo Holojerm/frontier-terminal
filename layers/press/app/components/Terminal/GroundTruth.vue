@@ -8,24 +8,8 @@
 // and the panels about every lab (capex guidance, alerts, the method) are left
 // to /ground-truth.
 
-import {
-  percent,
-  preciseUsd,
-  signedPercent,
-  trimmed,
-} from '#layers/core/shared/utils/terminal-format'
-import { LAB_DISPLAY } from '#layers/core/shared/utils/lab-names'
-import type {
-  GroundTruthData,
-  GroundTruthFiled,
-  GroundTruthReport,
-  GroundTruthResolution,
-  GroundTruthWaiting,
-} from '../../../shared/utils/terminal-types/ground-truth'
-import type { LabId } from '../../../../core/shared/utils/terminal-types/common'
-import type { ReportedMetric } from '../../../shared/utils/terminal-types/reported'
-import type { TrackRecordTally } from '../../../shared/utils/terminal-types/track-record'
-import type { TableColumn } from '#layers/core/app/types/terminal-ui'
+import type { GroundTruthData } from '../../../shared/types/ground-truth'
+import type { LabId } from '../../../../core/shared/types/common'
 
 const props = defineProps<{ truth: GroundTruthData; lab?: LabId }>()
 

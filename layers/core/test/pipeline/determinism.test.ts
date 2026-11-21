@@ -1,11 +1,5 @@
 import { describe, expect, test } from 'vitest'
 
-import {
-  assertDeterministic,
-  parserOutputSchemas,
-  registeredParsers,
-  type ParserId,
-} from '#layers/core/server/pipeline/contracts'
 import '../../../../server/registries/parsers'
 import { fixtureText, manifest } from '#layers/core/test/pipeline/fixtures'
 

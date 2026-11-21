@@ -26,7 +26,7 @@ import { and, desc, eq, gt, gte, lt, lte, min, ne, or, type SQL } from 'drizzle-
 import { z } from 'zod'
 
 import * as tables from '#server/db/schema'
-import type { PipelineDb } from '../pipeline/store'
+import type { PipelineDb } from './pipeline-store'
 import { byString } from './terminal-json'
 
 type Entity = typeof tables.entities.$inferSelect

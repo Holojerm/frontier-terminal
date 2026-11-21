@@ -4,7 +4,7 @@
 // terminal-prices.ts fetches the rows; nothing here touches D1, so the history
 // tests drive every rule with a handful of fixture rows. No clock is read.
 
-import type { PricePoint } from '../../shared/utils/terminal-types/prices'
+import type { PricePoint } from '../../shared/types/prices'
 
 import type * as tables from '#server/db/schema'
 import { byString, fieldDiff, num, parseJson } from '#layers/core/server/utils/terminal-json'

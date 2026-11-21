@@ -1,42 +1,11 @@
-import { env } from 'cloudflare:test'
-import { drizzle } from 'drizzle-orm/d1'
 import { eq } from 'drizzle-orm'
 import { beforeEach, describe, expect, it } from 'vitest'
 
 import sourcesYaml from '~~/sources.yaml?raw'
-import * as schema from '~~/server/db/schema'
-import { HISTORY_LICENSE, PAID_LICENSE, licenseSplit } from '~~/shared/utils/license'
-import {
-  API_KEY_PREFIX,
-  expiryAfter,
-  generateApiKey,
-  generateApiKeyId,
-  hashApiKey,
-  isApiKeyShape,
-  keyRefusal,
-} from '../server/utils/api-key-token'
-import {
-  USAGE_FLUSH_MS,
-  USAGE_PREFIX,
-  createUsageCounter,
-  usageOn,
-  type UsageStore,
-} from '../server/utils/api-key-usage'
-import {
-  KEY_REFUSALS,
-  clearApiKeyCacheForTest,
-  collectApiKeyCounters,
-  verifyApiKey,
-} from '../server/utils/api-keys'
-import { paidLicensed, withSchemaVersion } from '../server/utils/terminal-envelope'
-import { payloadRefusal, sourceRights, isSnapshotId } from '../server/utils/terminal-payloads'
-import { readSourceRegistry } from '../server/utils/terminal-sources'
-import { SCHEMA_VERSION } from '../server/utils/data-schema'
 
 // Licensee keys: the token, the lookup and its four refusals, the usage
 // counter, and what a key may and may not change.
 
-const db = drizzle(env.DB, { schema })
 const NOW = new Date('2026-11-04T12:00:00.000Z')
 
 async function issue(tier: 'research' | 'systematic', overrides: Partial<schema.ApiKeyRow> = {}) {

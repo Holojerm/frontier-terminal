@@ -2,7 +2,6 @@
 // Each throws on a payload it does not recognise, so a changed API is a
 // failed read, never a board that seems to have emptied.
 
-import { classifyRole, type BoardPlatform, type RoleClass } from '../../shared/utils/listed-hiring'
 import { all, field, locationOf } from '../pipeline/parsers/hiring/google-careers'
 import { decodeEntities } from '#layers/core/server/pipeline/parsers/html-text'
 

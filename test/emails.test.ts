@@ -10,7 +10,6 @@ import { describe, expect, it } from 'vitest'
 
 import { SAMPLES } from '../emails/samples'
 import { EMAILS } from '../server/emails/generated'
-import { renderEmail, type EmailName } from '../server/utils/render-email'
 
 const NAMES = Object.keys(EMAILS) as EmailName[]
 

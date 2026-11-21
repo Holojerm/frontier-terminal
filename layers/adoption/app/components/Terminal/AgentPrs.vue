@@ -3,10 +3,7 @@
 // GitHub's search API. One row per agent and never a share: each agent
 // leaves a different trace, so the counts are trends, not a market.
 
-import { count } from '#layers/core/shared/utils/terminal-format'
-import { LAB_DISPLAY } from '#layers/core/shared/utils/lab-names'
 import type { AdoptionData } from '../../../shared/utils/adoption-views'
-import type { TableColumn } from '#layers/core/app/types/terminal-ui'
 
 const stamps = useStamps()
 

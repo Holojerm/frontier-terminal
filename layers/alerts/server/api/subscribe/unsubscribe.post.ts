@@ -4,15 +4,6 @@
 // the token as `?u=`. Both are POSTs because Workers drop DELETE bodies and a
 // GET must never change state.
 
-import { db } from '@nuxthub/db'
-
-import { getIdentitySalt } from '#server/utils/identity'
-import { rateLimit } from '#server/utils/rate-limit'
-
-import { tokenBody } from '../../../shared/utils/subscribe'
-import { requireSubscribe } from '../../../../core/server/utils/subscribe-config'
-import { unsubscribe } from '../../utils/subscribers'
-
 export default defineEventHandler(async (event) => {
   requireSubscribe(event)
   // Mail providers fan one-click POSTs out across colos: 60 per 2 minutes is

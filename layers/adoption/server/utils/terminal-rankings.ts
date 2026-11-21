@@ -12,7 +12,7 @@
 
 import { and, desc, eq, like, max, sql } from 'drizzle-orm'
 
-import type { LabId, Prov, ProviderId } from '#layers/core/shared/utils/terminal-types/common'
+import type { LabId, Prov, ProviderId } from '#layers/core/shared/types/common'
 import type {
   DateWindow,
   ProviderShare,
@@ -21,13 +21,13 @@ import type {
   RankingWeek,
   RankingsCoverage,
   RankingsData,
-} from '../../shared/utils/terminal-types/rankings'
+} from '../../shared/types/rankings'
 
 import * as tables from '#server/db/schema'
 import { asOfFromDetail } from '../pipeline/as-of'
-import { manifestFixtures } from '#layers/core/server/pipeline/parsers/fixture-provenance'
+import { manifestFixtures } from '#layers/core/server/utils/fixture-provenance'
 import { providerOfOpenRouterId } from '#layers/reliability/server/pipeline/parsers/openrouter'
-import type { PipelineDb } from '#layers/core/server/pipeline/store'
+import type { PipelineDb } from '#layers/core/server/utils/pipeline-store'
 import {
   sourceReads,
   type QueryContext,

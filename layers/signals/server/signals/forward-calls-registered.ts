@@ -6,8 +6,6 @@
 // /api/prints. Never edited: forward-calls.lock.json pins each entry. A new
 // call is a new entry with its own id and date.
 
-import type { ForwardCall } from '../../shared/utils/signals'
-
 export const REGISTERED_CALLS: readonly ForwardCall[] = [
   {
     id: 'ant-revenue-2026q4',

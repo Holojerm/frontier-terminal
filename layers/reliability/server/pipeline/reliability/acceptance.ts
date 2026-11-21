@@ -9,9 +9,7 @@
 import { and, eq, gte, inArray, like, max, or } from 'drizzle-orm'
 
 import * as tables from '#server/db/schema'
-import { DETECTION_RULES, EDGAR_RELEASE_HOUR_ET } from '../../../shared/utils/terminal-reliability'
 import { textOf } from '#layers/core/server/pipeline/parsers/html-text'
-import { D1_MAX_BOUND_PARAMS, chunk, type PipelineDb } from '#layers/core/server/pipeline/store'
 
 const ACCESSION = /^\d{10}-\d{2}-\d{6}$/
 const HOUR_MS = 3_600_000

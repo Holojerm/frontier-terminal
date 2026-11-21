@@ -4,8 +4,8 @@ import {
   type ParserId,
   type Provenance,
   type RevenueRow,
-} from '#layers/core/server/pipeline/contracts'
-import { fixtureProvenance } from '#layers/core/server/pipeline/parsers/fixture-provenance'
+} from '#layers/core/server/utils/contracts'
+import { fixtureProvenance } from '#layers/core/server/utils/fixture-provenance'
 import { parseCikWhitelistBlock, whitelistCikFor, type CikWhitelist } from './whitelist'
 
 // edgar-companyfacts-<ticker> — data.sec.gov/api/xbrl/companyfacts/CIK{n}.json:

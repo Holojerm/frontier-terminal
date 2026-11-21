@@ -4,16 +4,6 @@
 // company's own page for the call. Below it, what each company posts and why
 // some of its calls can't be read.
 
-import {
-  CALL_METRIC_LABEL,
-  CALL_SOURCE_LABEL,
-  type CallCoverage,
-  type CallGuidanceData,
-  type CallStatement,
-} from '../../../shared/utils/call-guidance'
-import { grouped, roundBillions } from '#layers/core/shared/utils/terminal-format'
-import type { TableColumn } from '#layers/core/app/types/terminal-ui'
-
 const ALL = 'All companies'
 const ticker = ref<string>(ALL)
 const query = computed(() => (ticker.value === ALL ? {} : { ticker: ticker.value }))

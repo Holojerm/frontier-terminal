@@ -1,6 +1,5 @@
 import { describe, expect, it } from 'vitest'
 
-import { createFetcher } from '../../server/pipeline/fetch'
 import {
   RELAY_MAX_AGE_MS,
   RELAY_PENDING,

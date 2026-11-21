@@ -5,11 +5,6 @@
 
 import { z } from 'zod'
 
-import { PERMALINK_LIMIT } from '#layers/core/server/utils/rate-limits'
-import { queryAlert } from '../../utils/terminal-alerts'
-import { serveTerminal, terminalDb } from '#layers/core/server/utils/terminal-handler'
-import { rateLimitTerminal } from '#layers/core/server/utils/api-access'
-
 const idSchema = z.string().regex(/^[0-9a-f]{64}$/)
 
 export default defineEventHandler(async (event) => {

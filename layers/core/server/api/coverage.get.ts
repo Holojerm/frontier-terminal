@@ -2,10 +2,6 @@
 // snapshot count, the audit's caveat; the thesis recipes and their last runs;
 // plus the deliberate cuts, the table totals, and what /export serves.
 
-import { queryCoverage, recipeRunsStamp } from '#layers/core/server/utils/terminal-db'
-import { serveTerminal, terminalDb } from '#layers/core/server/utils/terminal-handler'
-import { rateLimitTerminal } from '#layers/core/server/utils/api-access'
-
 export default defineEventHandler(async (event) => {
   await rateLimitTerminal(event, { name: 'coverage', limit: 60, windowSeconds: 60 })
   const variant = await recipeRunsStamp(terminalDb)

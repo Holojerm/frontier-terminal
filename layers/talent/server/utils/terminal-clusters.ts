@@ -11,7 +11,7 @@
 // Infrastructure" is code, not concrete). Which labels matched ships beside
 // every count, so the sum is never a black box.
 
-import type { ClusterSeries, DeptSeries } from '../../shared/utils/terminal-types/hiring'
+import type { ClusterSeries, DeptSeries } from '../../shared/types/hiring'
 
 import { byString } from '#layers/core/server/utils/terminal-json'
 

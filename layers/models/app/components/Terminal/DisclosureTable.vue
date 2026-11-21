@@ -8,9 +8,7 @@
 // its own reason behind an info control (TerminalTable `foldGaps`): where most
 // labs publish no index, eight gap rows were taller than the one row of figures.
 
-import { grouped } from '#layers/core/shared/utils/terminal-format'
-import type { DisclosuresData } from '../../../shared/utils/terminal-types/disclosures'
-import type { GapRef, TableColumn } from '#layers/core/app/types/terminal-ui'
+import type { DisclosuresData } from '../../../shared/types/disclosures'
 
 const watchlist = useWatchlist()
 

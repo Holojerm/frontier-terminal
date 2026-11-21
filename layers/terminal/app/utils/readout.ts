@@ -3,24 +3,6 @@
 // The front page draws these as a table row per lab and the lab page as a row
 // of figures; deriving both from here is what keeps the two from disagreeing.
 
-import {
-  compactUsd,
-  count,
-  money,
-  periodLabel,
-  ppLabel,
-  sharePct,
-  signed,
-} from '#layers/core/shared/utils/terminal-format'
-import { labPath } from '../../../core/shared/utils/lab-names'
-import { type LabSummary } from '../../shared/utils/terminal-lab-summary'
-import type { DataCentersData } from '#layers/compute/shared/utils/compute-views'
-import type { LabId, Prov, RevenueProviderView } from '../../shared/utils/terminal-types'
-import type { GapRef } from '#layers/core/app/types/terminal-ui'
-
-import { feedGap } from '#layers/core/app/utils/feed-gap'
-import { priceCitation } from '#layers/pricing/app/utils/price-display'
-
 /** Whose revenue a figure is when it is not the lab's own: a parent's segment, or the whole parent. */
 export function revenueScope(view: RevenueProviderView | null): string {
   if (view?.disclosure !== 'parent') return ''

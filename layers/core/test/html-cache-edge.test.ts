@@ -12,13 +12,6 @@
 
 import { describe, expect, it } from 'vitest'
 
-import {
-  CACHE_STATUS,
-  HEADER_SIDECAR,
-  HTML_CACHE_TTL_SECONDS,
-  htmlCacheKey,
-} from '../server/utils/html-cache'
-
 const HTML = '<!DOCTYPE html><html><body>frontier</body></html>'
 const YEAR = 2026
 

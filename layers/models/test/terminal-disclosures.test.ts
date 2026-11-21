@@ -1,22 +1,9 @@
 import { env } from 'cloudflare:test'
-import { drizzle } from 'drizzle-orm/d1'
 import { beforeEach, describe, expect, it } from 'vitest'
 
-import * as schema from '~~/server/db/schema'
-import { disclosureKey } from '#layers/core/server/pipeline/contracts'
 import { deriveSources } from '#server/registries/derived'
-import type { SourceFetcher } from '#layers/core/server/pipeline/fetch'
 import { pendingChanges } from '#layers/core/server/pipeline/judge/pending'
 import { runRefresh } from '../../core/server/pipeline/refresh'
-import type { RawStore } from '#layers/core/server/pipeline/raw'
-import { terminalStamps } from '#layers/core/server/utils/terminal-cache'
-import { queryContext } from '#layers/core/server/utils/terminal-db'
-import {
-  daysBetween,
-  earliestListed,
-  median,
-  queryDisclosures,
-} from '../server/utils/terminal-disclosures'
 import { fixtureText, manifest } from '#layers/core/test/pipeline/fixtures'
 import { indexPage, withReport } from './pipeline/misalignment-index'
 
@@ -25,7 +12,6 @@ import { indexPage, withReport } from './pipeline/misalignment-index'
 // the MCP tool serve. Then a second index tick where one report's printed
 // date moves (a revision) and a new report appears.
 
-const db = drizzle(env.DB, { schema })
 const sourcesYaml = fixtureText('sources.yaml')
 const INDEX_ID = 'openai-misalignment-reports'
 const BASE = 'https://openai.com/safety-alignment/misalignment-reports/'

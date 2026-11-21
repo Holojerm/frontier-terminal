@@ -16,8 +16,6 @@
 // renders here fill only the cron's own; /prices/<sku> pages are not
 // enumerated (hundreds of them, each its own payload) and stay on demand.
 
-import type { CacheStore } from './terminal-cache'
-
 /** Garbage collection only, like the payload TTL: a new stamp or build makes a new marker. */
 export const WARM_MARKER_TTL_SECONDS = 2400
 

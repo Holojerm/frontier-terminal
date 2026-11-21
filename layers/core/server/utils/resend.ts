@@ -2,8 +2,6 @@
 // OWNER_EMAIL binding only reaches one verified inbox). No SDK, so no new
 // dependency. Single sends use POST /emails, groups POST /emails/batch.
 
-import type { SubscribeConfig } from './subscribe-config'
-
 export interface MailMessage {
   to: string
   subject: string

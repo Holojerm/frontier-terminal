@@ -1,12 +1,5 @@
 import { afterEach, describe, expect, it } from 'vitest'
 
-import {
-  classifyOps,
-  registerOpsSeverity,
-  resetOpsSeverityForTest,
-  SERVER_ERROR_CRITICAL_COUNT,
-} from '../server/utils/ops-severity'
-
 afterEach(() => resetOpsSeverityForTest())
 
 describe('classifyOps', () => {

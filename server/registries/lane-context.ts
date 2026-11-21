@@ -9,11 +9,11 @@
 // a source's parse reads into that parse's input.
 
 import type { TickInput } from '#layers/core/server/pipeline/lanes'
-import type { Provider } from '#layers/core/server/pipeline/contracts'
+import type { Provider } from '#layers/core/server/utils/contracts'
 import type { PendingFilers } from '#layers/companies/server/pipeline/parsers/sec/pending-filers'
 import type { RevenueFilers } from '#layers/companies/server/pipeline/parsers/sec/revenue-filers'
 import type { CikWhitelist } from '#layers/companies/server/pipeline/parsers/sec/whitelist'
-import type { PipelineDb } from '#layers/core/server/pipeline/store'
+import type { PipelineDb } from '#layers/core/server/utils/pipeline-store'
 import { CLASS_MAP_INPUT } from '#layers/pricing/server/pipeline/class-map'
 import { loadFilerBlocks } from '#layers/companies/server/pipeline/lane-blocks'
 

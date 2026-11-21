@@ -22,12 +22,12 @@ import type {
   GroundTruthGuidanceData,
   GroundTruthGuidanceFiler,
   GroundTruthGuidanceTally,
-} from '../../shared/utils/terminal-types/guidance'
+} from '../../shared/types/guidance'
 
 import * as tables from '#server/db/schema'
 import { GUIDANCE_SINCE } from '../exposure/guidance'
 import { FILER_NAMES, filingUrl, type StoredFact } from '../exposure/series'
-import type { PipelineDb } from '#layers/core/server/pipeline/store'
+import type { PipelineDb } from '#layers/core/server/utils/pipeline-store'
 import { filedBefore } from './terminal-exposure'
 import { middle } from '../../../core/server/utils/terminal-median'
 

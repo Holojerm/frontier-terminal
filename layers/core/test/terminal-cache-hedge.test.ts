@@ -3,9 +3,6 @@
 
 import { describe, expect, it } from 'vitest'
 
-import type { ServerTiming } from '../server/utils/server-timing'
-import { cachedTerminal, terminalCacheKey, type CacheStore } from '../server/utils/terminal-cache'
-
 const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
 
 function slowStore(initial: Record<string, unknown>, readMs: number) {

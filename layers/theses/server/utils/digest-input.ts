@@ -2,16 +2,12 @@
 // reader for the Monday task and the public sample page, so the two never
 // describe different weeks.
 
-import { db } from '@nuxthub/db'
 import { and, eq, gte } from 'drizzle-orm'
 
 import sourcesYaml from 'raw:~~/sources.yaml'
 
 import * as tables from '#server/db/schema'
 import { DIGEST_DAYS, type DigestInput } from '../theses/digest'
-import { terminalStamps } from '#layers/core/server/utils/terminal-cache'
-import { queryContext } from '#layers/core/server/utils/terminal-db'
-import { queryTheses } from './terminal-theses'
 
 export async function loadDigestInput(
   now: Date,

@@ -4,11 +4,9 @@
 // again before it keeps it (recordFigureFile). 409 for a file that is not
 // listed or already read.
 
-import { db } from '@nuxthub/db'
 import { z } from 'zod'
 
 import { MAX_FIGURES_PER_FILE, recordFigureFile } from '../../pipeline/reported/store'
-import { requireGdeltToken } from '../../utils/gdelt-auth'
 
 /** A fetch time this far off the Worker's clock is refused: the job posts each file at once. */
 const FETCHED_AT_SLACK_MS = 15 * 60_000

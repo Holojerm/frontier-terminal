@@ -5,17 +5,8 @@
 // an agent asking what the site holds was never told the lab pages, the
 // theses, or the bulk tables existed.
 
-import type { PublicPage } from '#shared/utils/site'
-import { COMPARE_PAGES } from '../../shared/utils/terminal-compare'
-import { LAB_PAGES, TEAR_SHEET_PAGES } from '../../shared/utils/terminal-lab-summary'
-import { thesisPages } from '../../../theses/shared/utils/thesis-format'
-
 import manifest from '~~/fleet.json'
 import { THESES } from '../../../theses/server/theses/registry'
-import type { LlmsTxtInput, LlmsTxtSection } from '#server/utils/seo'
-import { BREAKING_NOTICE_DAYS, SCHEMA_VERSION } from '#layers/core/server/utils/data-schema'
-import { AS_OF_ROUTES } from '#layers/core/server/utils/terminal-asof'
-import { DICTIONARY_NAME } from './terminal-dictionary'
 import { EXPORT_TABLES } from '#server/registries/export-tables'
 
 /** The route-table pages plus the dynamic ones enumerable without a query. */

@@ -1,9 +1,6 @@
-import { env } from 'cloudflare:test'
-import { drizzle } from 'drizzle-orm/d1'
 import { and, eq } from 'drizzle-orm'
 import { beforeEach, describe, expect, it } from 'vitest'
 
-import * as schema from '~~/server/db/schema'
 import {
   actualFor,
   parseCompanyConcept,
@@ -58,19 +55,13 @@ import {
   sentencesOf,
   spokenSentences,
 } from '../server/calls/text'
-import type { FetchOutcome, SourceFetcher } from '#layers/core/server/pipeline/fetch'
-import { D1_MAX_BOUND_PARAMS } from '#layers/core/server/pipeline/store'
 import { decoded, pdfPages } from '#layers/core/server/pipeline/pdf-text'
-import { queryCallGuidance } from '../server/utils/terminal-call-guidance'
-import { queryContext } from '#layers/core/server/utils/terminal-db'
 import { fixtureText } from '#layers/core/test/pipeline/fixtures'
 
 // The earnings-call reader on committed bytes: EDGAR's submissions feed, an
 // 8-K index and release outlook, a company-concept document, excerpts of
 // posted transcripts, and a trimmed AssemblyAI transcript; then the reader end
 // to end against fake fetchers.
-
-const db = drizzle(env.DB, { schema })
 
 const SUBMISSIONS = fixtureText('fixtures/calls/amd-submissions.json')
 const INDEX = fixtureText('fixtures/calls/amd-8k-index.htm')

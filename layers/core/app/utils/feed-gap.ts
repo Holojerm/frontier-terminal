@@ -2,8 +2,6 @@
 // same three states (ok, an audited cut, registered but unparsed); the words
 // for each live here once, so a gap reads the same in every table and card.
 
-import type { GapRef } from '#layers/core/app/types/terminal-ui'
-
 type FeedAxis = 'hiring' | 'incidents' | 'disclosures'
 
 const CUT: Record<FeedAxis, string> = {

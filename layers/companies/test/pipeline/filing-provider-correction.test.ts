@@ -1,16 +1,12 @@
 import { env } from 'cloudflare:test'
-import { drizzle } from 'drizzle-orm/d1'
 import { beforeEach, describe, expect, it } from 'vitest'
 
-import * as schema from '~~/server/db/schema'
 import migration from '~~/server/db/migrations/0056_correct_lab_filing_provider.sql?raw'
-import { ChangeRow, StoredEntityRow } from '#layers/core/server/pipeline/contracts'
 import {
   issuerProviderFor,
   parseRevenueFilersBlock,
 } from '../../server/pipeline/parsers/sec/revenue-filers'
 import { parseCikWhitelistBlock } from '../../server/pipeline/parsers/sec/whitelist'
-import { insertRows } from '#layers/core/server/pipeline/store'
 import { fixtureText } from '#layers/core/test/pipeline/fixtures'
 
 // Every filing was stored under provider 'other', so /alerts listed the
@@ -19,7 +15,6 @@ import { fixtureText } from '#layers/core/test/pipeline/fixtures'
 // already stored. The 424B4's change row is copied from production
 // (/api/alerts, alert e5bbb2b8…).
 
-const db = drizzle(env.DB, { schema })
 const ANTHROPIC_CIK = '0002130357'
 const SPCX_CIK = '0001181412'
 const HASH = (c: string) => c.repeat(64)

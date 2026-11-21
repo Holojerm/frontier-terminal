@@ -5,10 +5,8 @@
 // reports, so the chart never gates a number. `labs` narrows both to one lab
 // beside the any-AI line, for the lab pages.
 
-import { grouped } from '#layers/core/shared/utils/terminal-format'
 import type { AdoptionData } from '../../../shared/utils/adoption-views'
-import type { LabId } from '#layers/core/shared/utils/terminal-types/common'
-import type { TableColumn } from '#layers/core/app/types/terminal-ui'
+import type { LabId } from '#layers/core/shared/types/common'
 
 const props = defineProps<{
   ramp: NonNullable<AdoptionData['ramp']>

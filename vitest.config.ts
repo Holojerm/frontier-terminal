@@ -12,7 +12,22 @@ import { readFileSync, readdirSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 
 import { cloudflareTest, readD1Migrations } from '@cloudflare/vitest-plugin'
+import Unimport from 'unimport/unplugin'
 import { defineConfig } from 'vitest/config'
+
+import { generatedImports } from './scripts/lib/auto-imports'
+
+// Tests and the code under them get the auto-imports Nitro and the app get, read from the
+// lists Nuxt generates. Nitro's own runtime helpers (useRuntimeConfig, defineTask,
+// useStorage…) are left out: they import virtual modules that exist only in a Nitro build.
+const ROOT = fileURLToPath(new URL('./', import.meta.url))
+const APP_FILE = new RegExp(`^${ROOT.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(layers/[^/]+/)?app/`)
+const serverImports = generatedImports(ROOT, 'server').filter(
+  (i) => !/^nitropack\/|\/node_modules\/@nuxt\/nitro-server\//.test(i.from),
+)
+const appImports = generatedImports(ROOT, 'app').filter(
+  (i) => i.from === 'vue' || (i.from.startsWith(ROOT) && !i.from.includes('/node_modules/')),
+)
 
 // Every committed fixture (plus sources.yaml) keyed by repo-relative path, served to the
 // tests by a Node-side service binding. Importing them with `?raw` made each test file
@@ -43,6 +58,18 @@ const serveFixtures = () =>
 
 export default defineConfig({
   plugins: [
+    Unimport.vite({
+      imports: serverImports,
+      dts: false,
+      include: [/\.ts$/],
+      exclude: [/[\\/]node_modules[\\/]/, APP_FILE],
+    }),
+    Unimport.vite({
+      imports: appImports,
+      dts: false,
+      include: [APP_FILE],
+      exclude: [/[\\/]node_modules[\\/]/, /\.vue/, /\?raw$/],
+    }),
     cloudflareTest(async () => ({
       wrangler: { configPath: './wrangler.toml' },
       miniflare: {
@@ -62,9 +89,7 @@ export default defineConfig({
       // like `import { ... } from '~/server/db/schema'` resolve correctly.
       '~': fileURLToPath(new URL('./', import.meta.url)),
       '~~': fileURLToPath(new URL('./', import.meta.url)),
-      // Nuxt 4's shared/ alias. Server utils import through it rather than
-      // relying on auto-imports, which typecheck everywhere but are not always
-      // injected at runtime — see AGENTS.md › Gotchas.
+      // Nuxt 4's shared/ alias, for the files that keep explicit imports.
       '#shared': fileURLToPath(new URL('./shared', import.meta.url)),
       // Nuxt's alias for the app's server/ dir. Layer code reaches core utils
       // through it, so it resolves against whichever app the layer is in.

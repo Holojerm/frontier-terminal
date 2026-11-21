@@ -13,23 +13,13 @@
 
 import { eq } from 'drizzle-orm'
 
-import type {
-  IncidentArchiveLab,
-  IncidentArchiveView,
-} from '../../shared/utils/terminal-types/incidents'
-import type { LabId } from '../../../core/shared/utils/terminal-types/common'
-
 import * as tables from '#server/db/schema'
-import { ARCHIVE_FROM } from '#layers/core/server/utils/archive-floor'
 import {
   STATUS_ARCHIVE_ERAS,
   STATUS_ARCHIVE_GAPS,
   STATUS_ARCHIVE_NOT_COVERED,
   STATUS_LIVE_FROM,
 } from '../pipeline/archive/status-eras'
-import type { PipelineDb } from '#layers/core/server/pipeline/store'
-import { byString } from '#layers/core/server/utils/terminal-json'
-import { PROVIDER_DISPLAY } from '#layers/core/server/utils/terminal-sources'
 
 export const INCIDENT_ARCHIVE_METHOD =
   'Before our first read of each lab’s status feed, the history comes from the Internet Archive’s copies of the same feed (source_id wayback:<era>). We read every copy the Archive holds (one a month for Google Cloud, whose copies each list a year), and an incident listed in many copies is one row, in the state the newest copy gives it. ' +

@@ -8,7 +8,6 @@ import { z } from 'zod'
 
 import { PROBE_PLACEMENTS, insideDurableObject } from '../../pipeline/probes/placement'
 import { probeOrigin } from '../../pipeline/probes/run'
-import { runProbesHere } from '../../utils/probe-runner'
 
 const query = z.object({ placement: z.enum(PROBE_PLACEMENTS) })
 

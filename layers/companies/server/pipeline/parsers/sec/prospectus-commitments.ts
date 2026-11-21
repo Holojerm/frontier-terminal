@@ -2,7 +2,7 @@ import {
   CommitmentRow,
   type CommitmentLine,
   type Provenance,
-} from '#layers/core/server/pipeline/contracts'
+} from '#layers/core/server/utils/contracts'
 import type { RegistrationTarget } from './filing-index'
 import {
   DATE_PATTERN,

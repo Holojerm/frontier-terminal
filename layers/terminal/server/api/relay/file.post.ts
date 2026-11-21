@@ -2,11 +2,9 @@
 // relay job got for one URL on a relayed host, as the request body. The
 // pipeline reads them in place of the network (core pipeline/relay.ts).
 
-import { blob } from '@nuxthub/blob'
 import { z } from 'zod'
 
 import { isRelayed, putRelayCopy, RELAY_MAX_BYTES } from '#layers/core/server/pipeline/relay'
-import { requireGdeltToken } from '../../../../press/server/utils/gdelt-auth'
 
 /** The job posts each URL as soon as it has it. */
 const FETCHED_AT_SLACK_MS = 15 * 60_000

@@ -7,11 +7,6 @@
 // all because every step reads the outboxes, not the message. A step that
 // throws retries its messages; the rest of the batch is acked.
 
-import { logEvent } from '#server/utils/log'
-
-import { EventMessageSchema, type EventType } from '#layers/core/server/utils/events'
-import { fanOutAlerts, runSocialDrain, runWebhookDrain, type EventDeps } from './event-work'
-
 /** The slice of Cloudflare's `Message` used here. */
 export interface QueueMessageLike {
   id: string

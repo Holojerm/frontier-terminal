@@ -1,12 +1,9 @@
 import { env } from 'cloudflare:test'
-import { drizzle } from 'drizzle-orm/d1'
 import { beforeAll, beforeEach, describe, expect, it } from 'vitest'
 
 import epochTimelines from '~~/fixtures/recipes/epoch-data-center-timelines.csv?raw'
 import epochSites from '~~/fixtures/recipes/epoch-data-centers.csv?raw'
-import * as schema from '~~/server/db/schema'
 import curated from '../server/curated/power-sites.json'
-import type { SourceFetcher } from '#layers/core/server/pipeline/fetch'
 import { handTies, insertTies } from '../server/power/store'
 import { parseCsv } from '#layers/core/server/recipes/csv'
 import {
@@ -14,15 +11,11 @@ import {
   EPOCH_DATA_CENTER_TIMELINES,
 } from '../server/recipes/epoch-data-centers'
 import { runRecipes } from '#layers/core/server/recipes/run'
-import { comparable, pageText } from '#layers/core/server/utils/quote-match'
-import { queryPowerSites } from '../server/utils/terminal-datacenters'
-import { curatedPowerSites, type CuratedPowerSites } from '../shared/utils/power-sites'
 
 // The power-sites view over Epoch's committed fixtures, with a small table of
 // our own stored in D1, so the join is tested apart from whatever the
 // hand-read file holds.
 
-const db = drizzle(env.DB, { schema })
 const NOW = new Date('2026-11-04T12:00:00Z')
 const raw = { put: async (key: string, body: string) => void (await env.BLOB.put(key, body)) }
 const BODIES: Record<string, string> = {

@@ -2,21 +2,7 @@
 // get_listed_companies, registered between them, is the shell's (layers/terminal/server/mcp/listed.ts).
 
 import { z } from 'zod'
-import { queryDependencies } from '../utils/terminal-dependencies'
 import { suppliersStamp } from '../suppliers/store'
-import { querySuppliers } from '../utils/terminal-suppliers'
-import { PARENT_RECIPE_IDS, queryParents } from '../utils/terminal-parents'
-import { recipeRunsStamp } from '#layers/core/server/utils/terminal-db'
-import { queryExposure } from '../utils/terminal-exposure'
-import { identifiersPayload } from '../utils/terminal-identifiers'
-import {
-  json,
-  READ_ONLY,
-  AsOfSchema,
-  asOfErrors,
-  PROVENANCE,
-  type McpKit,
-} from '#layers/core/server/mcp/kit'
 
 export function registerExposureTools({ server, deps, read }: McpKit): void {
   server.registerTool(

@@ -3,8 +3,6 @@
 // Monday between the first and the last: a week with no rows then breaks the
 // line instead of being bridged.
 
-import type { AdoptionWeek } from './adoption-views'
-
 const DAY_MS = 86_400_000
 
 /** Every Monday from `first` to `last` (both Mondays, YYYY-MM-DD), ascending. */

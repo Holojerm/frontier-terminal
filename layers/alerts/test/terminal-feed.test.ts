@@ -1,12 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import {
-  ALERTS_FEED_PATH,
-  alertEntryId,
-  buildAlertsAtom,
-  feedPath,
-} from '../server/utils/terminal-feed'
-import type { AlertView } from '../shared/utils/terminal-types/alerts'
+import { ALERTS_FEED_PATH } from '../server/utils/terminal-feed'
 
 // The Atom feed as a document. workerd has no XML parser, so well-formedness
 // is checked the way it fails in practice — an unescaped character or an

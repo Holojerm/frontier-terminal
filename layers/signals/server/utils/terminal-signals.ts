@@ -6,23 +6,9 @@
 import { count } from 'drizzle-orm'
 
 import * as tables from '#server/db/schema'
-import {
-  HOLDOUT_FRACTION,
-  MIN_SAMPLE,
-  SIGNAL_HORIZONS,
-  type SignalHorizon,
-  type SignalSeriesView,
-  type SignalStat,
-  type SignalsData,
-} from '../../shared/utils/signals'
-import { GRID_AREAS } from '#layers/compute/shared/utils/grid-load'
-import { PRINT_ENTITIES } from '#layers/compute/shared/utils/prints'
-import { labName } from '#layers/core/shared/utils/lab-names'
-import type { PipelineDb } from '#layers/core/server/pipeline/store'
 import { forwardCallViews } from '../signals/forward-calls'
 import { SIGNALS, sourceLabel } from '../signals/registry'
 import { latestRun, type SeriesCoverage } from '../signals/run'
-import type { QueryContext } from '#layers/core/server/utils/terminal-db'
 
 export const SIGNALS_METHOD =
   'For each series and each ticker it is expected to lead: the correlation between the series’ change each period and the ticker’s return over the next 1, 5, 20 and 60 trading days less SPY’s, measured from the first session after the figure was public. For event series (launches, price cuts, filings), the mean of that abnormal return from the close before each event. The newest third of each series is held out of sample. P-values shrink the sample where returns overlap. Prices are Databento daily closes, split-adjusted, without dividends, used internally and never published.'

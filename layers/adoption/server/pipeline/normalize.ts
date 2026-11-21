@@ -1,8 +1,4 @@
-import {
-  rankingKey,
-  type EntityRow,
-  type RankingRow,
-} from '../../../core/server/pipeline/contracts'
+import { rankingKey, type EntityRow, type RankingRow } from '../../../core/server/utils/contracts'
 import { collapse, toEntity } from '../../../core/server/pipeline/normalize'
 
 // Normalize the OpenRouter rankings: validated ranking rows -> EntityRow

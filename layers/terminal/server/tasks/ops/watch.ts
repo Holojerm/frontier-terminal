@@ -5,26 +5,10 @@
 // Each watchdog reads D1 and KV, and the deploy check calls GitHub, which is not
 // worth doing more often. The prunes live here because this app has no purge
 // task; without them the spool and the rate_limits table would grow without bound.
-//
-// Imports are explicit: a task is an untested bundling surface that runs
-// unattended, and an auto-import that resolves to `undefined` here would fail
-// every half hour with nobody watching.
-
-import { db } from '@nuxthub/db'
-import { kv } from '@nuxthub/kv'
-
-import { FleetManifestSchema } from '#shared/utils/fleet-manifest'
-import { logEvent } from '#server/utils/log'
-import { pruneOpsEvents } from '#server/utils/ops'
-import { pruneRateLimits } from '#server/utils/rate-limit'
 
 import rawManifest from '../../../../../fleet.json'
 import { fetchMainHead } from '../../../../reliability/server/pipeline/deploy-watch'
 import { checkLaunchCoverage } from '#layers/models/server/pipeline/launch-watch'
-import { unstorageLockStore } from '#layers/core/server/pipeline/lock'
-import { checkFreshness } from '#layers/core/server/utils/freshness'
-import { freshnessChecks } from '../../utils/terminal-freshness'
-import { withHeartbeat } from '#layers/core/server/utils/task-heartbeat'
 
 const manifest = FleetManifestSchema.parse(rawManifest)
 

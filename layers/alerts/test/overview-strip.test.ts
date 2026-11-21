@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
 import { overviewStrip, slimAlerts } from '../app/utils/overview-strip'
-import { alertDelta } from '../shared/utils/terminal-labs'
 
 const alert = (id: string, at: string, provider: string) =>
   ({

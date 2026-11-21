@@ -4,7 +4,7 @@
 // core's (layers/core/server/pipeline/scopes.ts). A scope with no entry polls
 // nothing of its own; the survey has none.
 
-import type { PollScope } from '#layers/core/server/pipeline/contracts'
+import type { PollScope } from '#layers/core/server/utils/contracts'
 import type { ScopeEntry } from '#layers/core/server/pipeline/scopes'
 import { LAUNCH_SCOPE } from '#layers/pricing/server/pipeline/scopes'
 import { CAREERS_SCOPE } from '#layers/talent/server/pipeline/scopes'

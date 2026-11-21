@@ -9,11 +9,7 @@
 // (server/db/schema.ts), so every past state is the current state with the
 // changes after that instant undone. No clock is read.
 
-import type { ReleaseView } from '../../shared/utils/terminal-types/releases'
-
 import type * as tables from '#server/db/schema'
-import { byString, num, parseJson, str } from '../../../core/server/utils/terminal-json'
-import { byDetectedAt } from '../../../core/server/utils/terminal-db'
 
 type Change = typeof tables.changes.$inferSelect
 

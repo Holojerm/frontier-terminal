@@ -2,11 +2,7 @@
 // One side of a track-record row (first press, or the lab's newsroom): the
 // matched report with its outlet and time, or the plain reason there is none.
 
-import type {
-  TrackRecordRow,
-  TrackRecordSide,
-  TrackRecordState,
-} from '../../../shared/utils/terminal-types/track-record'
+import type { TrackRecordRow, TrackRecordSide } from '../../../shared/types/track-record'
 
 const props = defineProps<{
   side: TrackRecordSide

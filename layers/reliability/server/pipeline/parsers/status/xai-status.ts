@@ -3,9 +3,9 @@ import {
   registerParser,
   type IncidentRow,
   type Provenance,
-} from '../../../../../core/server/pipeline/contracts'
+} from '../../../../../core/server/utils/contracts'
 import { decodeEntities } from '../../../../../core/server/pipeline/parsers/html-text'
-import { fixtureProvenance } from '../../../../../core/server/pipeline/parsers/fixture-provenance'
+import { fixtureProvenance } from '../../../../../core/server/utils/fixture-provenance'
 
 // xai-status — status.x.ai/feed.xml, the RSS history the status page
 // publishes ("Incident history for xAI services."). Its JSON API and HTML

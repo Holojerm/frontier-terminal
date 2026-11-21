@@ -9,7 +9,7 @@
 
 import { z } from 'zod'
 
-import type { RecipeCitation, LabId } from '../../../core/shared/utils/terminal-types/common'
+import type { RecipeCitation, LabId } from '../../../core/shared/types/common'
 
 export const POWER_ROLES = ['utility', 'generation', 'equipment', 'host'] as const
 export type PowerRole = (typeof POWER_ROLES)[number]

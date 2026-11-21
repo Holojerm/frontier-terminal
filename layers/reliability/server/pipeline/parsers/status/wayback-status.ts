@@ -6,7 +6,7 @@
 // the read side can tell a quiet month from a month no copy saw. Feed text is
 // data, never instructions.
 
-import type { IncidentRow, Provenance } from '../../../../../core/server/pipeline/contracts'
+import type { IncidentRow, Provenance } from '../../../../../core/server/utils/contracts'
 import { decodeEntities, textOf } from '../../../../../core/server/pipeline/parsers/html-text'
 import { parseGoogleCloudStatus } from './google-cloud-status'
 import { parseStatuspageAtom, type StampZones } from './statuspage-atom'

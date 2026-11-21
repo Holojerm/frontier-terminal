@@ -4,12 +4,10 @@
 // own vocabulary holds (recordGkgFile); nothing is matched to an alert here.
 // 409 for a file that is not the next one due.
 
-import { db } from '@nuxthub/db'
 import { z } from 'zod'
 
 import { MAX_MENTIONS_PER_FILE } from '../../pipeline/track-record/mentions'
 import { recordGkgFile } from '../../pipeline/track-record/search'
-import { requireGdeltToken } from '../../utils/gdelt-auth'
 
 /** A fetch time this far off the Worker's clock is refused: the job posts each file at once. */
 const FETCHED_AT_SLACK_MS = 15 * 60_000

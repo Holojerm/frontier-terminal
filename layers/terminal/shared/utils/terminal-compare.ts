@@ -5,7 +5,7 @@
 
 import { LAB_DISPLAY } from '../../../core/shared/utils/lab-names'
 import { LABS } from '../../../core/shared/utils/lab-names'
-import type { LabId } from './terminal-types'
+import type { LabId } from '../../../core/shared/types/common'
 
 export type LabPair = readonly [LabId, LabId]
 

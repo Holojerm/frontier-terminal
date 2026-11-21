@@ -8,12 +8,6 @@
 // rows are rewound. `lab` scores that lab's reports alone, filtered before the
 // lists are cut, so it is its own cache entry.
 
-import { queryGroundTruth } from '../utils/terminal-ground-truth'
-import { reportedStamp } from '../utils/terminal-reported'
-import { serveTerminal, terminalDb } from '#layers/core/server/utils/terminal-handler'
-import { rateLimitTerminal } from '#layers/core/server/utils/api-access'
-import { labQuerySchema } from '#layers/core/server/utils/lab-query'
-
 export default defineEventHandler(async (event) => {
   await rateLimitTerminal(event, { name: 'ground-truth', limit: 60, windowSeconds: 60 })
   // Articles and readings land between polls, so they key the cache too.

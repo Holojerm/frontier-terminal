@@ -30,8 +30,8 @@
 // Prices are never in this file. They come from the store, with the row's
 // own provenance, and the class map only says which row to put where.
 
-import type { LabId } from '#layers/core/shared/utils/terminal-types/common'
-import type { ClassColumn, ModelClassId } from '../../shared/utils/terminal-types/prices'
+import type { LabId } from '#layers/core/shared/types/common'
+import type { ClassColumn, ModelClassId } from '../../shared/types/prices'
 
 export const MODEL_CLASSES: ClassColumn[] = [
   {

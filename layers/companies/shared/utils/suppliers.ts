@@ -9,7 +9,7 @@ import { z } from 'zod'
 import { count } from '../../../core/shared/utils/terminal-format'
 import { SUPPLIER_LAYERS, type SupplierLayer } from '../../../core/shared/utils/supplier-layers'
 import { LAB_SITE } from '../../../core/shared/utils/lab-names'
-import type { LabId } from '../../../core/shared/utils/terminal-types/common'
+import type { LabId } from '../../../core/shared/types/common'
 
 /** The layers /hardware lists. Compute rental and hosting read on /dependencies only. */
 export const HARDWARE_LAYERS: readonly SupplierLayer[] = [

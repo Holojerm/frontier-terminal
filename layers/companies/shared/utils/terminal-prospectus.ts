@@ -4,7 +4,7 @@
 // filing it came from and the URL and fetch time of the document it was read off.
 
 import { grouped, trimmed } from '../../../core/shared/utils/terminal-format'
-import type { LabId, Prov, SourceRef } from '../../../core/shared/utils/terminal-types/common'
+import type { LabId, Prov, SourceRef } from '../../../core/shared/types/common'
 
 /** The filing a figure was printed in, and the document it was read from. */
 export interface ProspectusFilingRef extends Prov {

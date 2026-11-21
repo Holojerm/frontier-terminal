@@ -4,8 +4,6 @@
 // data center is. Every figure cites its file or report and fetch time (layers/compute/server/power/grid-query.ts).
 
 import { gridLoadStamp, queryGridLoad } from '../power/grid-query'
-import { serveTerminal, terminalDb } from '#layers/core/server/utils/terminal-handler'
-import { rateLimitTerminal } from '#layers/core/server/utils/api-access'
 
 export default defineEventHandler(async (event) => {
   await rateLimitTerminal(event, { name: 'grid-load', limit: 60, windowSeconds: 60 })

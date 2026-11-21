@@ -5,9 +5,6 @@
 // fetch time. The hardware prints and the power panels moved to /hardware and
 // /power; MOVED forwards their old anchors there.
 
-import type { UtilizationData } from '../../shared/utils/compute-views'
-import type { GpuPricesData } from '../../shared/utils/terminal-types/gpu-prices'
-
 definePageMeta({
   publicPage: {
     changefreq: 'daily',

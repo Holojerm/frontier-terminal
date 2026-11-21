@@ -4,10 +4,6 @@
 // there, rebuilt from the set and log as they stood. Each lab's `archived`
 // points are the Internet Archive's copies of its board from before then.
 
-import { queryHiringHistory } from '../../utils/terminal-hiring'
-import { serveTerminal, terminalDb } from '#layers/core/server/utils/terminal-handler'
-import { rateLimitTerminal } from '#layers/core/server/utils/api-access'
-
 export default defineEventHandler(async (event) => {
   await rateLimitTerminal(event, { name: 'hiring-history', limit: 60, windowSeconds: 60 })
   return serveTerminal(event, 'hiring-history', (ctx) => queryHiringHistory(terminalDb, ctx), {

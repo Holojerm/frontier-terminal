@@ -12,8 +12,6 @@
 
 import type { H3Event } from 'h3'
 
-import { verifyFleetToken } from '#server/utils/fleet-auth'
-
 export type JudgeAuthVerdict = { ok: true } | { ok: false; status: 401 | 404 }
 
 /** Pure: the verdict for a request header against the configured token. */

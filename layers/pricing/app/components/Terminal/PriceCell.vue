@@ -9,8 +9,7 @@
 // screen-reader <time>. The matrix's foot prints each page with its age, so a
 // cell trades a third line for a row that is one line tall.
 
-import { exactStamp, hostOf } from '#layers/core/shared/utils/terminal-format'
-import type { MatrixCell } from '../../../shared/utils/terminal-types/prices'
+import type { MatrixCell } from '../../../shared/types/prices'
 
 const stamps = useStamps()
 

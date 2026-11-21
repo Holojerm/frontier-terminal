@@ -7,21 +7,11 @@
 import { and, inArray, lte, sql } from 'drizzle-orm'
 
 import * as tables from '#server/db/schema'
-import type {
-  CallCoverage,
-  CallGuidanceData,
-  CallSource,
-  CallStatement,
-  CallTally,
-} from '../../shared/utils/call-guidance'
 import { NO_FILING_DAYS, unscorable } from '../calls/actuals'
 import { CALL_COMPANIES, curatedCalls } from '../calls/curated'
 import { CALL_SOURCES } from '../calls/ingest'
 import { daysBetween, periodLabel, reportedQuarter } from '../calls/periods'
 import { filingUrl } from '../exposure/series'
-import type { PipelineDb } from '#layers/core/server/pipeline/store'
-import type { QueryContext } from '#layers/core/server/utils/terminal-db'
-import { middle } from '../../../core/server/utils/terminal-median'
 
 export const CALL_GUIDANCE_RULE =
   'What management guided, read from the company’s earnings release and its own transcript or remarks, or from our transcript of its replay, and scored against the figure a later 10-Q or 10-K filed for the same measure and period. A range is met when the filed figure is inside it, a single figure within 5% (half a point for a percentage). Error is the filed figure less the guided midpoint, over the midpoint. A segment line, an AI figure or a non-GAAP margin is listed but not scored: no filing we read states it. Quotes are at most 25 words. Not investment advice.'

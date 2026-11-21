@@ -4,7 +4,7 @@ import {
   type DisclosureRow,
   type DisclosureTimelineRow,
   type EntityRow,
-} from '../../../core/server/pipeline/contracts'
+} from '../../../core/server/utils/contracts'
 import { collapse, toEntity } from '../../../core/server/pipeline/normalize'
 
 // Normalize the misalignment disclosures: validated disclosure rows -> EntityRow

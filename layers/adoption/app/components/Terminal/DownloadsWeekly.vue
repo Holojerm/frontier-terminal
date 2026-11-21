@@ -13,11 +13,7 @@
 // week missing a day, so they break only under MIN_RATIO_DAYS. Shares share
 // one y-axis top, so their heights compare.
 
-import { weekColumns, weekValues } from '../../../shared/utils/adoption-weeks'
-import { compactCount, count, sharePct } from '#layers/core/shared/utils/terminal-format'
-import { LAB_DISPLAY } from '#layers/core/shared/utils/lab-names'
-import type { AdoptionData, AdoptionRatioWeek } from '../../../shared/utils/adoption-views'
-import type { TableColumn } from '#layers/core/app/types/terminal-ui'
+import type { AdoptionData } from '../../../shared/utils/adoption-views'
 
 const props = withDefaults(
   defineProps<{

@@ -4,12 +4,6 @@
 // what Microsoft tags on OpenAI and Amazon on Anthropic. Quarterly from 2020,
 // every value linked to its filing. Every number is the filer's.
 
-import type {
-  ExposureData,
-  ExposureGroup,
-  ExposureSeries,
-} from '../../shared/utils/terminal-exposure'
-
 definePageMeta({
   publicPage: {
     changefreq: 'daily',

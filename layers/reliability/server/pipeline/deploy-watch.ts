@@ -1,5 +1,3 @@
-import type { FreshnessCheck } from '#layers/core/server/utils/freshness'
-
 // Deploy drift: is production running the commit main points at?
 //
 // On 2026-11-03 the Workers Build for a merged fix failed before it started

@@ -6,11 +6,7 @@
 // queues the rest, and a queued probe's wait would be read as the lab's.
 
 import * as tables from '#server/db/schema'
-import { recordOpsEvent } from '#server/utils/ops'
 import { effectiveClassMap } from '#layers/pricing/server/pipeline/class-map'
-import { OPENROUTER_KEY_UNSET } from '#layers/core/server/pipeline/fetch'
-import type { RawReader, RawStore } from '#layers/core/server/pipeline/raw'
-import type { PipelineDb } from '#layers/core/server/pipeline/store'
 import { rollProbeDays } from './daily'
 import { PROBE_PLACEMENTS, type ProbePlacement } from './placement'
 import { loadProbeCatalog, resolveProbeTargets, type ProbeSkip } from './resolve'

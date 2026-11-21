@@ -1,11 +1,7 @@
-import { env } from 'cloudflare:test'
-import { drizzle } from 'drizzle-orm/d1'
 import { beforeAll, beforeEach, describe, expect, it } from 'vitest'
 
 import epochTimelines from '~~/fixtures/recipes/epoch-data-center-timelines.csv?raw'
 import epochSites from '~~/fixtures/recipes/epoch-data-centers.csv?raw'
-import * as schema from '~~/server/db/schema'
-import type { FetchOutcome, SourceFetcher } from '#layers/core/server/pipeline/fetch'
 import {
   csvFields,
   eia930FileUrl,
@@ -32,15 +28,11 @@ import {
 import { runRecipes } from '#layers/core/server/recipes/run'
 import { SIGNALS } from '#layers/signals/server/signals/registry'
 import { createLoader } from '#layers/signals/server/signals/sources'
-import { queryContext } from '#layers/core/server/utils/terminal-db'
-import { GRID_AREAS, gridMonths, gridWeeks } from '../shared/utils/grid-load'
 import { fixtureText } from '#layers/core/test/pipeline/fixtures'
 
 // The grid-load reader: EIA-930's six-month files read line by line into
 // days, ERCOT's monthly PDFs read for their large-load sentences, and the
 // join that places each lab site in a balancing authority.
-
-const db = drizzle(env.DB, { schema })
 
 const EIA = fixtureText('fixtures/grid-load/eia930-balance-2026-jul-dec.csv')
 const pdf = (path: string) => {

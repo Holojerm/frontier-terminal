@@ -7,8 +7,6 @@
 // the HTML cache (html-cache.ts › isCacheableDocument), so none of this can
 // reach it.
 
-import { AS_OF_PARAM, asOfRefusal } from '../utils/terminal-asof'
-
 const ANSWERED_ELSEWHERE = /^\/(export\/|api\/(?!(status|fleet|health|judge)(\/|\?|$)))/
 
 export default defineEventHandler((event) => {

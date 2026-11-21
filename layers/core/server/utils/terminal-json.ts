@@ -5,7 +5,7 @@
 // Shared by the queries (terminal-db.ts and its per-axis siblings) and terminal-history.ts (the pure
 // derivations over rows), so the two agree on what a field is.
 
-import type { FieldDiff } from '../../shared/utils/terminal-types/common'
+import type { FieldDiff } from '../../shared/types/common'
 
 export type Json = Record<string, unknown>
 

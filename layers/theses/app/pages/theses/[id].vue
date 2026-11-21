@@ -6,9 +6,6 @@
 
 import manifest from '~~/fleet.json'
 
-import { journalUrl, thesisPath } from '../../../shared/utils/thesis-format'
-import type { ThesesData } from '../../../shared/utils/thesis-types'
-
 // Inert for a dynamic route: the collecting hook skips paths with a
 // parameter, and sitemap.xml / llms.txt append one page per thesis from the
 // registry. Declared anyway — the seo gate's invariant is per-page.

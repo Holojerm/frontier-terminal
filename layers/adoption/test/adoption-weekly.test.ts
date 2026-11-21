@@ -1,8 +1,5 @@
 import { describe, expect, it } from 'vitest'
 
-import { newestFullWeek, weekColumns, weekValues } from '../shared/utils/adoption-weeks'
-import { weeklySums } from '../server/utils/terminal-adoption'
-
 const days = (from: string, n: number, value = 1, retrospective = false) =>
   Array.from({ length: n }, (_, i) => ({
     date: new Date(Date.parse(`${from}T00:00:00Z`) + i * 86_400_000).toISOString().slice(0, 10),

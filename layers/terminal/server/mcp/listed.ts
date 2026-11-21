@@ -6,8 +6,6 @@
 import { z } from 'zod'
 import { powerSitesStamp } from '#layers/compute/server/power/stamp'
 import { suppliersStamp } from '#layers/companies/server/suppliers/store'
-import { queryListed } from '../utils/terminal-listed'
-import { json, READ_ONLY, PROVENANCE, type McpKit } from '#layers/core/server/mcp/kit'
 
 export function registerListedTools({ server, deps }: McpKit): void {
   server.registerTool(

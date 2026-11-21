@@ -3,20 +3,7 @@
 // hours (mistral-status, issue #406) and docs pages that fail about one poll
 // a day and recover (openai-*-md, issue #402).
 
-import { env } from 'cloudflare:test'
-import { drizzle } from 'drizzle-orm/d1'
 import { beforeEach, describe, expect, it } from 'vitest'
-
-import * as schema from '~~/server/db/schema'
-import {
-  FAILING_AFTER_MS,
-  failingSources,
-  markFailing,
-  sourceFailures,
-  sourceHealth,
-} from '../server/utils/source-health'
-
-const db = drizzle(env.DB, { schema })
 
 const AS_OF = '2026-11-16T14:30:59.063Z'
 

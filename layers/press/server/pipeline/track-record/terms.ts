@@ -9,7 +9,7 @@
 // each one as the same event or not, so a broad term costs a rating, while a
 // narrow one loses the article for good.
 
-import type { ChangeRow } from '#layers/core/server/pipeline/contracts'
+import type { ChangeRow } from '#layers/core/server/utils/contracts'
 
 export interface SearchTerms {
   who: string[]

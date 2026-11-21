@@ -19,8 +19,6 @@
 import { and, eq, inArray, max, sql } from 'drizzle-orm'
 
 import * as tables from '#server/db/schema'
-import { recordOpsEvent } from '#server/utils/ops'
-import { GRID_AREA_CODES } from '../../shared/utils/grid-load'
 import {
   EIA_API_FIRST_DAY,
   EIA_API_OVERLAP_DAYS,
@@ -29,8 +27,7 @@ import {
   zoneGroups,
 } from './eia-api'
 import { eia930FileUrl, Eia930Reader, periodsDue, periodsThrough, type GridDay } from './eia930'
-import { contentHashOfText } from '#layers/core/server/pipeline/contracts'
-import { chunk, D1_MAX_BOUND_PARAMS, type PipelineDb } from '#layers/core/server/pipeline/store'
+import { D1_MAX_BOUND_PARAMS } from '#layers/core/server/utils/pipeline-store'
 
 export const GRID_FILE_TIMEOUT_MS = 120_000
 

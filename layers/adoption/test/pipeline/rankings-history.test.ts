@@ -1,9 +1,6 @@
 import { env } from 'cloudflare:test'
-import { drizzle } from 'drizzle-orm/d1'
 import { beforeEach, describe, expect, it } from 'vitest'
 
-import * as schema from '~~/server/db/schema'
-import type { SourceFetcher } from '#layers/core/server/pipeline/fetch'
 import {
   backfillWindows,
   RANKINGS_SOURCE_ID,
@@ -11,7 +8,6 @@ import {
   windowUrl,
 } from '../../server/pipeline/rankings-history'
 import { runRefresh, type RefreshDeps } from '../../../core/server/pipeline/refresh'
-import type { RawStore } from '#layers/core/server/pipeline/raw'
 import { fixtureText } from '#layers/core/test/pipeline/fixtures'
 
 // The rankings backfill (scripts/rankings-backfill.ts): windows from the
@@ -19,7 +15,6 @@ import { fixtureText } from '#layers/core/test/pipeline/fixtures'
 // that neither re-reads nor announces them.
 
 const FIXTURE = 'fixtures/rankings/openrouter-rankings-daily.json'
-const db = drizzle(env.DB, { schema })
 const DAY_MS = 86_400_000
 const span = (w: { start: string; end: string }) =>
   (Date.parse(w.end) - Date.parse(w.start)) / DAY_MS

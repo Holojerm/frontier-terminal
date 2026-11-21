@@ -9,13 +9,6 @@
 // No llmsHeading on purpose: llms.txt stays a static map (llmsTxtInput in
 // crawler-pages.ts, shared with the MCP `describe` tool) and never wakes D1.
 
-import { filingPath, revenueFilings } from '../../../companies/shared/utils/terminal-filings'
-
-import type { PublicPageSource } from '#server/utils/public-pages'
-
-import { terminalPayload } from '#layers/core/server/utils/terminal-handler'
-import { queryRevenue } from '../../../companies/server/utils/terminal-revenue'
-
 export const terminalPagesSource: PublicPageSource = {
   key: 'terminal',
   list: async (db) => {

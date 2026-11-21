@@ -4,10 +4,6 @@
 // from the exposure series and the prospectus commitments. Cached for the
 // poll tick. No `as_of`: the prospectus half has no point-in-time read.
 
-import { queryDependencies } from '../utils/terminal-dependencies'
-import { serveTerminal, terminalDb } from '#layers/core/server/utils/terminal-handler'
-import { rateLimitTerminal } from '#layers/core/server/utils/api-access'
-
 export default defineEventHandler(async (event) => {
   await rateLimitTerminal(event, { name: 'dependencies', limit: 60, windowSeconds: 60 })
   return serveTerminal(event, 'dependencies', (ctx) => queryDependencies(terminalDb, ctx))

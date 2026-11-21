@@ -11,31 +11,6 @@
 // controls, and the sheet resets the colour tokens to black on white so dark
 // mode prints the same as light. Links print their short URL beside them.
 
-import {
-  HISTORY_LICENSE,
-  LICENSE_SPLIT_EFFECTIVE,
-  LICENSE_WINDOW_DAYS,
-  attributionLine,
-} from '#shared/utils/license'
-import { readableEdgarNames } from '#layers/core/shared/utils/terminal-format'
-import { LAB_SITE } from '#layers/core/shared/utils/lab-names'
-import { isLab } from '#layers/core/shared/utils/lab-names'
-import { labPath } from '../../../../../core/shared/utils/lab-names'
-import { tearSheetPath } from '../../../../shared/utils/terminal-lab-summary'
-import { alertPath } from '../../../../../core/shared/utils/terminal-tiers'
-import type { ExposureData } from '../../../../../companies/shared/utils/terminal-exposure'
-import type { ListedData } from '../../../../shared/utils/listed'
-import type {
-  AlertsData,
-  GroundTruthData,
-  HiringHistoryData,
-  IncidentsData,
-  PricesData,
-  RankingsData,
-  RevenueData,
-} from '../../../../shared/utils/terminal-types'
-import type { ThesesData } from '../../../../../theses/shared/utils/thesis-types'
-
 // Inert for a dynamic route, as on the lab page: sitemap.xml and llms.txt list
 // the sheets from TEAR_SHEET_PAGES (terminal-lab-summary.ts).
 definePageMeta({

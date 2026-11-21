@@ -16,46 +16,10 @@
 // headline read back from GDELT's archive: the press had it before the filing
 // and our store did not.
 
-import type {
-  GroundTruthData,
-  GroundTruthFiled,
-  GroundTruthReport,
-  GroundTruthResolution,
-  GroundTruthTally,
-  GroundTruthWaiting,
-} from '../../shared/utils/terminal-types/ground-truth'
-import type { LabId } from '../../../core/shared/utils/terminal-types/common'
-import type { ReportedHeadline, ReportedMetric } from '../../shared/utils/terminal-types/reported'
-import type { RevenuePeriod } from '../../../companies/shared/utils/terminal-types/revenue'
-
-import type {
-  PressEarlyPeriod,
-  PressEarlyRead,
-} from '../../shared/utils/terminal-types/ground-truth'
-
 import { isNull } from 'drizzle-orm'
 
 import * as tables from '#server/db/schema'
 import { DEAL_WORDS } from '../pipeline/reported/figures'
-import type { PipelineDb } from '#layers/core/server/pipeline/store'
-import type { QueryContext } from '#layers/core/server/utils/terminal-db'
-import { EXPOSURE_METHOD, filedFactsAt } from '../../../companies/server/utils/terminal-exposure'
-import {
-  DEAL_LIMIT,
-  dealMeasures,
-  dealTally,
-  scoreDeals,
-  type FiledAggregate,
-} from './terminal-ground-truth-deals'
-import {
-  TOLERANCE_PCT,
-  queryGuidance,
-} from '../../../companies/server/utils/terminal-ground-truth-guidance'
-import { queryProspectus } from '../../../companies/server/utils/terminal-prospectus'
-import { middle } from '../../../core/server/utils/terminal-median'
-import { storedHeadlines, type StoredHeadline } from './terminal-reported'
-import { queryRevenue } from '../../../companies/server/utils/terminal-revenue'
-import { queryTrackRecord } from './terminal-track-record'
 
 /** Open reports listed. */
 export const OPEN_LIMIT = 50

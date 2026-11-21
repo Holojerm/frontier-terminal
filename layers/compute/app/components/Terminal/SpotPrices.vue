@@ -5,9 +5,7 @@
 // print a spot price for the same GPU (the payload decides, not the page).
 // Prices read at two decimals; the exact printed value is the tooltip.
 
-import { exactUsd, gpuHour, sharePct } from '#layers/core/shared/utils/terminal-format'
-import type { Bounds, UtilizationData } from '../../../shared/utils/compute-views'
-import type { TableColumn } from '#layers/core/app/types/terminal-ui'
+import type { UtilizationData } from '../../../shared/utils/compute-views'
 
 const props = defineProps<{ spot: UtilizationData['spot'] }>()
 

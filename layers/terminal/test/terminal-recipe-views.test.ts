@@ -1,5 +1,4 @@
 import { env } from 'cloudflare:test'
-import { drizzle } from 'drizzle-orm/d1'
 import { beforeAll, describe, expect, it } from 'vitest'
 
 import epochSites from '~~/fixtures/recipes/epoch-data-centers.csv?raw'
@@ -7,25 +6,17 @@ import limitsMeta from '~~/fixtures/recipes/limits-meta.md?raw'
 import payAnthropic from '~~/fixtures/recipes/pay-anthropic.json?raw'
 import ramp from '~~/fixtures/recipes/ramp-ai-index.html?raw'
 import msft from '~~/fixtures/recipes/sec-msft-openai.xml?raw'
-import * as schema from '~~/server/db/schema'
-import type { SourceFetcher } from '#layers/core/server/pipeline/fetch'
 import { EPOCH_DATA_CENTERS } from '#layers/compute/server/recipes/epoch-data-centers'
 import { INVESTEE_RECIPES } from '../../companies/server/recipes/investee-facts'
 import { PAY_RECIPES } from '../../talent/server/recipes/pay-bands'
 import { RAMP_AI_INDEX } from '../../adoption/server/recipes/ramp-ai-index'
 import { RATE_LIMIT_RECIPES } from '../../pricing/server/recipes/rate-limits'
 import { runRecipes } from '../../core/server/recipes/run'
-import { queryLimits } from '../../pricing/server/utils/terminal-limits'
-import { queryPay } from '../../talent/server/utils/terminal-pay'
-import { queryAdoption } from '../../adoption/server/utils/terminal-adoption'
-import { queryParents } from '../../companies/server/utils/terminal-parents'
-import { queryDataCenters } from '#layers/compute/server/utils/terminal-datacenters'
 import { fixtureText } from '#layers/core/test/pipeline/fixtures'
 
 // The panels' read side over a store the recipe runner filled from the
 // committed fixtures: the numbers a page shows are the sources' own.
 
-const db = drizzle(env.DB, { schema })
 const NOW = new Date('2026-11-04T12:00:00Z')
 const raw = { put: async (key: string, body: string) => void (await env.BLOB.put(key, body)) }
 const ok = (text: string) => ({ ok: true as const, status: 200, text, bytes: text.length })

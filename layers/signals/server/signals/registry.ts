@@ -9,21 +9,8 @@
 // recipes and their derived series (layers/adoption/server/recipes/download-series.ts) and the probe
 // rollups (pipeline/probes/, probe_days).
 
-import {
-  PRINT_ENTITIES,
-  type PrintSeries,
-  type PrintWindow,
-} from '#layers/compute/shared/utils/prints'
 import { FOREIGN_FILERS } from '../../../companies/server/calls/actuals'
 import { curatedCalls } from '../../../companies/server/calls/curated'
-import { LISTED_BOARDS } from '../../../talent/shared/utils/listed-hiring'
-import type { LabId } from '../../../core/shared/utils/terminal-types/common'
-import type {
-  SignalEntityKind,
-  SignalFrequency,
-  SignalTest,
-  SignalTransform,
-} from '../../shared/utils/signals'
 
 export type SignalSource =
   /** recipe_observations rows of one recipe and key. */

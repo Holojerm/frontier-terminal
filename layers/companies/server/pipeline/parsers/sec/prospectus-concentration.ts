@@ -1,4 +1,4 @@
-import { ConcentrationRow, type Provenance } from '#layers/core/server/pipeline/contracts'
+import { ConcentrationRow, type Provenance } from '#layers/core/server/utils/contracts'
 import { cellText, type RegistrationTarget } from './filing-index'
 import { MONTHS, findAll, iso, tableAfter, tableGrid, type DocText } from './prospectus-doc'
 import { periodColumns } from './prospectus-revenue'

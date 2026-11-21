@@ -1,4 +1,4 @@
-import { SharesRow, type Provenance } from '#layers/core/server/pipeline/contracts'
+import { SharesRow, type Provenance } from '#layers/core/server/utils/contracts'
 import type { RegistrationTarget } from './filing-index'
 import { cellText } from './filing-index'
 import { DATE_PATTERN, docText, findAll, isoDate, tableAfter, type DocText } from './prospectus-doc'

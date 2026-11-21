@@ -1,11 +1,5 @@
 import { describe, expect, it } from 'vitest'
 
-import { skuLede } from '../../pricing/shared/utils/price-ledes'
-import { longDate } from '../../core/shared/utils/terminal-format'
-import { labLede } from '../shared/utils/terminal-ledes'
-import type { LabSummary } from '../shared/utils/terminal-lab-summary'
-import type { PriceHistoryData, PricePoint } from '../shared/utils/terminal-types'
-
 const PROV = {
   source_url: 'https://platform.claude.com/pricing',
   fetched_at: '2026-09-22T18:01:00Z',

@@ -7,7 +7,7 @@ import { eq, sql } from 'drizzle-orm'
 
 import * as tables from '#server/db/schema'
 import type { ExtensionDb } from '#server/utils/extensions'
-import type { PipelineDb } from '../pipeline/store'
+import type { PipelineDb } from './pipeline-store'
 
 type CountsDb = Pick<PipelineDb | ExtensionDb, 'select'>
 

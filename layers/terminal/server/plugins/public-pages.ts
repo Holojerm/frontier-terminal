@@ -8,10 +8,6 @@
 // from the route table and from crawler-pages.ts, and the sitemap route dates
 // them from the freshness rows.
 
-import { registerPublicPageSource, registerRobotsDisallow } from '#server/utils/public-pages'
-
-import { terminalPagesSource } from '../utils/terminal-page-source'
-
 export default defineNitroPlugin(() => {
   registerPublicPageSource(terminalPagesSource)
   // The MCP endpoint is not a page.

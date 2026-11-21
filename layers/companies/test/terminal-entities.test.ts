@@ -2,12 +2,6 @@ import { describe, expect, it } from 'vitest'
 
 import { parseCikWhitelistBlock } from '../server/pipeline/parsers/sec/whitelist'
 import { SEC_REVENUE_CRWV } from '../server/recipes/sec-revenue'
-import {
-  DISCLOSED,
-  ENTITY_SECURITIES,
-  ENTITY_SECURITY_COLUMNS,
-} from '../server/utils/terminal-entities'
-import { PROVIDER_ORDER } from '#layers/core/server/utils/terminal-sources'
 import { fixtureText, manifest } from '#layers/core/test/pipeline/fixtures'
 
 // The security map is hand-written, so every number in it is checked against

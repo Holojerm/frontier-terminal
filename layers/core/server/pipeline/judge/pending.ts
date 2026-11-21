@@ -1,8 +1,8 @@
 import { and, count, eq, gte, isNotNull, notInArray, sql } from 'drizzle-orm'
 
 import * as tables from '#server/db/schema'
-import { ChangeRow } from '../contracts'
-import type { PipelineDb } from '../store'
+import { ChangeRow } from '../../utils/contracts'
+import type { PipelineDb } from '../../utils/pipeline-store'
 
 // What GET /api/judge/pending hands the routine: change rows detected since
 // the last judged run, minus the ones that only say "the board re-stamped

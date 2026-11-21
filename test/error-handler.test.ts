@@ -1,4 +1,3 @@
-import { createError } from 'h3'
 import { describe, expect, it } from 'vitest'
 
 import { quietClientError } from '../server/error'

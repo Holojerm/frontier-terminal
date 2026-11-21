@@ -1,8 +1,5 @@
 // The signal scorecard: how each registered series has related to the stocks it is expected to lead, and the forward calls.
 
-import { querySignals, signalsStamp } from '../utils/terminal-signals'
-import { json, READ_ONLY, PROVENANCE, type McpKit } from '#layers/core/server/mcp/kit'
-
 export function registerSignalTools({ server, deps }: McpKit): void {
   server.registerTool(
     'get_signals',

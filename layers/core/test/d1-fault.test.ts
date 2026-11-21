@@ -2,9 +2,6 @@
 
 import { describe, expect, it } from 'vitest'
 
-import { asDatabaseFault, isD1Fault, withDatabaseFault } from '../server/utils/d1-fault'
-import { errorDetail } from '../server/utils/error-detail'
-
 const failedQuery = (ids: number) =>
   Object.assign(
     new Error(

@@ -13,7 +13,7 @@
 // docs/source-audit.md › "Addendum, 2026-11-21: Internet Archive (rate
 // limits and usage tiers)".
 
-import type { LabId } from '../../../../core/shared/utils/terminal-types/common'
+import type { LabId } from '../../../../core/shared/types/common'
 import { extractAnthropicLimits, mdTables } from '../../recipes/rate-limits'
 import {
   parseAnthropicLimitsHtml,

@@ -2,10 +2,6 @@
 // renders: answer engines quote a sentence, not a chart. Nothing here is a
 // figure the page doesn't show beside it; a missing value drops the sentence.
 
-import { labName } from '../../../core/shared/utils/lab-names'
-import { longDate, pricePhrase } from '../../../core/shared/utils/terminal-format'
-import type { PriceHistoryData, PricePoint } from './terminal-types/prices'
-
 const isPriced = (p: PricePoint) =>
   p.kind !== 'removed' && (p.input_per_mtok !== null || p.output_per_mtok !== null)
 

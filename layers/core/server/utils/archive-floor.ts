@@ -7,8 +7,8 @@
 import { and, eq, min } from 'drizzle-orm'
 
 import * as tables from '#server/db/schema'
-import type { LabId } from '../../shared/utils/terminal-types/common'
-import type { PipelineDb } from '../pipeline/store'
+import type { LabId } from '../../shared/types/common'
+import type { PipelineDb } from './pipeline-store'
 import { HIRING_SOURCES, PROVIDER_ORDER, type SourceRegistry } from './terminal-sources'
 import { PointInTimeError, firstSnapshotAt } from './terminal-asof'
 

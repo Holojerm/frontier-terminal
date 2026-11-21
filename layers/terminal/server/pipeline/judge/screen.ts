@@ -1,6 +1,4 @@
 import type { JudgeAlertScreen } from '#layers/core/server/pipeline/judge/review'
-import type { DepartmentCluster } from '#layers/talent/server/utils/terminal-clusters'
-import { parseDepartmentClusters } from '#layers/talent/server/utils/terminal-clusters'
 import { clampHiringAlerts } from '#layers/talent/server/pipeline/hiring-floor'
 import { effectiveClassMap } from '#layers/pricing/server/pipeline/class-map'
 import {

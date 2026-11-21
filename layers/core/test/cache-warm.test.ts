@@ -3,16 +3,6 @@
 
 import { describe, expect, it } from 'vitest'
 
-import {
-  WARM_LEASE_TTL_SECONDS,
-  warmCaches,
-  warmLeaseKey,
-  warmMarkerKey,
-  warmPaths,
-  type WarmDeps,
-} from '../server/utils/cache-warm'
-import type { CacheStore } from '../server/utils/terminal-cache'
-
 function deps(overrides: Partial<WarmDeps> = {}) {
   const map = new Map<string, unknown>()
   const rendered: string[] = []

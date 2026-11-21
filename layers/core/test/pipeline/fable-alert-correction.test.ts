@@ -1,21 +1,15 @@
 import { env } from 'cloudflare:test'
-import { drizzle } from 'drizzle-orm/d1'
 import { eq } from 'drizzle-orm'
 import { beforeEach, describe, expect, it } from 'vitest'
 
-import * as schema from '~~/server/db/schema'
 import migration from '~~/server/db/migrations/0045_correct_fable_alert.sql?raw'
-import { AlertRow, ChangeRow } from '#layers/core/server/pipeline/contracts'
 import { corpusOf, groundingFailure } from '#layers/core/server/pipeline/judge/grounding'
 import { falseDelisting } from '../../server/pipeline/judge/still-listed'
-import { insertRows } from '#layers/core/server/pipeline/store'
 
 // Migration 0045 rewrites the 2026-11-09 judge alert that called
 // claude-fable-5-1 delisted. The records below are the six change rows it
 // cites, copied from production's /export/changes.json, so the corrected text
 // is held to the same two gates a new alert meets: grounding and still-listed.
-
-const db = drizzle(env.DB, { schema })
 
 const ALERT_ID = '645cb39b89c3a4c721ea09cb5a147bf31c3d80816d7efe60511c2644f5c3d3d8'
 const OVERVIEW = 'https://platform.claude.com/docs/en/models/overview.md'

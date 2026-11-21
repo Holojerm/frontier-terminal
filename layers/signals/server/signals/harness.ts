@@ -20,14 +20,6 @@
 // sessions from observations fewer than h sessions apart overlap, so the
 // sample behind each p-value is shrunk to n × spacing / h.
 
-import {
-  HOLDOUT_FRACTION,
-  MIN_SAMPLE,
-  SIGNAL_HORIZONS,
-  type SignalHorizon,
-  type SignalStat,
-  type SignalTransform,
-} from '../../shared/utils/signals'
 import { addDays, type PricePanel } from './market'
 
 export interface Point {

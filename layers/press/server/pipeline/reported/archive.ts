@@ -19,7 +19,6 @@
 import { and, eq, gte, lt, max } from 'drizzle-orm'
 
 import * as tables from '#server/db/schema'
-import type { PipelineDb } from '#layers/core/server/pipeline/store'
 import { GKG_FROM, GKG_SLOT_MS, gkgStamp, gkgUrl, stampIso } from '../track-record/gkg'
 import { storeFigureRows, type FigureRow, type FigureRowsOutcome } from './store'
 

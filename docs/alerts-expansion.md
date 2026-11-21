@@ -55,7 +55,7 @@ October 10-Qs were read as its baseline. Three things are missing, and every can
 needs the same three:
 
 1. `filed_fact` isn't in `ChangeView`'s entity types
-   (`layers/alerts/shared/utils/terminal-types/alerts.ts`), so `ENTITY_AXIS` has no axis for
+   (`layers/alerts/shared/types/alerts.ts`), so `ENTITY_AXIS` has no axis for
    it. Its alerts can't be found by `/alerts?topic=`, and `alertAxis()` returns nothing.
 2. `termsOf` has no `filed_fact` case, so these alerts are `not-searchable` in the track record.
 3. The surfaces gate (#469) waives `/api/exposure` as `covered:` until the axis exists.

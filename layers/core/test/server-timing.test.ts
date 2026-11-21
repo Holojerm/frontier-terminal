@@ -3,9 +3,6 @@
 
 import { describe, expect, it } from 'vitest'
 
-import { serverTimingHeader, timed, type ServerTiming } from '../server/utils/server-timing'
-import { cachedTerminal, type CacheStore } from '../server/utils/terminal-cache'
-
 function mapStore(): CacheStore {
   const map = new Map<string, unknown>()
   return {
