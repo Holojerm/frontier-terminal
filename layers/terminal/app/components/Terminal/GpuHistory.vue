@@ -6,14 +6,14 @@
 // the quorum it draws each provider, which is three lines at most. A range is
 // drawn at its lower end and printed in full in the table under the charts.
 
-import { gpuHour } from '../../../shared/utils/terminal-format'
+import { gpuHour, sharePct } from '../../../shared/utils/terminal-format'
 import { dayLabel } from '../../../shared/utils/thesis-format'
 import type { GpuHistoryView, SpotShare } from '../../../shared/utils/terminal-types'
 import type { Citation, TableColumn } from '../../types/terminal-ui'
 
 const props = defineProps<{ history: GpuHistoryView; sources?: Citation[] }>()
 
-const pct = (n: number) => `${(n * 100).toFixed(1)}%`
+const pct = (n: number) => sharePct(n)
 const wholePct = (n: number) => `${Math.round(n * 100)}%`
 const range = (s: SpotShare) =>
   pct(s.low) === pct(s.high) ? pct(s.low) : `${pct(s.low)}–${pct(s.high)}`

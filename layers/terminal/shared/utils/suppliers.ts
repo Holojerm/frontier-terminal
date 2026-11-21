@@ -6,6 +6,7 @@
 
 import { z } from 'zod'
 
+import { count } from './terminal-format'
 import { LAB_SITE } from './terminal-labs'
 import type { LabId } from './terminal-types'
 
@@ -191,5 +192,5 @@ export function supplierFigureText(f: SupplierFigure, usd: (v: number) => string
 function compactCount(v: number): string {
   if (v >= 1e9) return `${Math.round(v / 1e7) / 100}B`
   if (v >= 1e6) return `${Math.round(v / 1e4) / 100}M`
-  return v.toLocaleString('en-US')
+  return count(v)
 }

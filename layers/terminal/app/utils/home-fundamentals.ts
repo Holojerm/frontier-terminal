@@ -5,7 +5,7 @@
 
 import type { ListedData } from '../../shared/utils/listed'
 import type { Bounds, UtilizationData } from '../../shared/utils/recipe-views'
-import { count, money } from '../../shared/utils/terminal-format'
+import { count, money, percent } from '../../shared/utils/terminal-format'
 import { labName } from '../../shared/utils/terminal-labs'
 import type { GpuPricesData, GroundTruthData, Prov } from '../../shared/utils/terminal-types'
 import { dayLabel, STATUS_META, thesisPath } from '../../shared/utils/thesis-format'
@@ -32,8 +32,7 @@ const figure = (f: Pick<FundamentalFigure, 'label' | 'to'> & Partial<Fundamental
 
 const plural = (n: number, one: string, many = `${one}s`) => `${count(n)} ${n === 1 ? one : many}`
 
-const pct = (n: number) => `${n.toLocaleString('en-US', { maximumFractionDigits: 1 })}%`
-const sharePct = (n: number) => pct(n * 100)
+const sharePct = (n: number) => percent(n * 100)
 const range = (b: Bounds) =>
   sharePct(b.low) === sharePct(b.high) ? sharePct(b.low) : `${sharePct(b.low)}–${sharePct(b.high)}`
 
@@ -59,7 +58,7 @@ export function truthFigure(d: GroundTruthData): FundamentalFigure {
   const filed = d.resolutions[0]
   return figure({
     ...base,
-    value: pct(t.median_abs_error_pct),
+    value: percent(t.median_abs_error_pct),
     sub: `Median error of ${plural(t.reports, 'report')} against ${plural(t.periods, 'filed figure')}`,
     source: filed ? prov(filed.filed, `${labName(filed.lab)} ${filed.filed.form}`) : null,
   })

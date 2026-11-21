@@ -5,13 +5,13 @@
 // print a spot price for the same GPU (the payload decides, not the page).
 // Prices read at two decimals; the exact printed value is the tooltip.
 
-import { exactUsd, gpuHour } from '../../../shared/utils/terminal-format'
+import { exactUsd, gpuHour, sharePct } from '../../../shared/utils/terminal-format'
 import type { Bounds, UtilizationData } from '../../../shared/utils/recipe-views'
 import type { TableColumn } from '../../types/terminal-ui'
 
 const props = defineProps<{ spot: UtilizationData['spot'] }>()
 
-const pct = (n: number) => `${(n * 100).toFixed(1)}%`
+const pct = (n: number) => sharePct(n)
 const range = (b: Bounds, f: (n: number) => string) =>
   f(b.low) === f(b.high) ? f(b.low) : `${f(b.low)}–${f(b.high)}`
 

@@ -4,6 +4,7 @@
 // and what we compare it with. A filer whose guidance we can't score is named
 // with the reason.
 
+import { grouped, roundBillions } from '../../../shared/utils/terminal-format'
 import type {
   GroundTruthGuidance,
   GroundTruthGuidanceData,
@@ -13,14 +14,10 @@ import type { TableColumn } from '../../types/terminal-ui'
 
 const props = defineProps<{ guidance: GroundTruthGuidanceData; tolerancePct: number }>()
 
-const billions = (n: number) =>
-  `$${(n / 1e9).toLocaleString('en-US', { maximumFractionDigits: 1 })}B`
-
 const guided = (g: GroundTruthGuidance) =>
-  g.low === g.high ? billions(g.low) : `${billions(g.low)} to ${billions(g.high)}`
+  g.low === g.high ? roundBillions(g.low) : `${roundBillions(g.low)} to ${roundBillions(g.high)}`
 
-const pct = (n: number) =>
-  `${Math.abs(n).toLocaleString('en-US', { minimumFractionDigits: 1, maximumFractionDigits: 1 })}%`
+const pct = (n: number) => `${grouped(Math.abs(n), 1)}%`
 
 const resultText = (g: GroundTruthGuidance) => {
   const single = g.low === g.high
@@ -40,7 +37,7 @@ const resultText = (g: GroundTruthGuidance) => {
 
 const partsText = (g: GroundTruthGuidance) =>
   g.actual && g.actual.parts.length > 1
-    ? g.actual.parts.map((p) => `${p.label}, ${billions(p.value)}`).join('. ')
+    ? g.actual.parts.map((p) => `${p.label}, ${roundBillions(p.value)}`).join('. ')
     : ''
 
 const printed = computed(() => props.guidance.filers.filter((f) => f.releases_with_figure > 0))
@@ -109,7 +106,7 @@ const stamps = useStamps()
               target="_blank"
               rel="noopener noreferrer"
               class="underline underline-offset-2 hover:text-primary"
-              >{{ billions(row.actual.value) }}</a
+              >{{ roundBillions(row.actual.value) }}</a
             ><TerminalCaveatMark
               v-if="partsText(row)"
               :name="`How ${row.filer}’s ${row.period} figure is added up`"

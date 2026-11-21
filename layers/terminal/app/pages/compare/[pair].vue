@@ -5,6 +5,7 @@
 // there. The pair is a route parameter in LABS order; the reverse spelling
 // redirects to it, and anything else is a 404.
 
+import { percent } from '../../../shared/utils/terminal-format'
 import { alertLabs, LAB_DISPLAY } from '../../../shared/utils/terminal-labs'
 import { comparePath, pairTitle, parsePair } from '../../../shared/utils/terminal-compare'
 import { labPath } from '../../../shared/utils/terminal-lab-summary'
@@ -168,7 +169,6 @@ const both = computed(() =>
     : null,
 )
 
-const pct = (n: number) => `${n.toLocaleString('en-US', { maximumFractionDigits: 1 })}%`
 const truthRows = computed(() =>
   [truthA.data.value, truthB.data.value]
     .filter((t) => t !== undefined && t !== null)
@@ -177,7 +177,7 @@ const truthRows = computed(() =>
       display: LAB_DISPLAY[t.lab],
       scored: t.tally.reports,
       periods: t.tally.periods,
-      error: t.tally.median_abs_error_pct === null ? '' : pct(t.tally.median_abs_error_pct),
+      error: t.tally.median_abs_error_pct === null ? '' : percent(t.tally.median_abs_error_pct),
       lead: t.tally.median_lead_days === null ? '' : `${t.tally.median_lead_days}`,
       filed: t.filed,
     })),
