@@ -394,6 +394,18 @@ export function readPrintSources(sourcesYaml: string): IdentifierSourceEntry[] {
   }))
 }
 
+/** sources.yaml `call_sources`: the hosts earnings-call documents and replays are read from, and AssemblyAI. */
+export function readCallSources(sourcesYaml: string): ArchiveSourceEntry[] {
+  return readBlock(sourcesYaml.split('\n'), 'call_sources').map((block) => ({
+    id: block.id,
+    url: block.fields.url ?? null,
+    verdict: block.fields.verdict ?? '',
+    terms: block.fields.terms ?? null,
+    rights: rightsOf(block.id, block.fields.rights),
+    caveat: block.fields.caveats ?? null,
+  }))
+}
+
 /** Every include source and every deliberate cut, as sources.yaml states them. */
 export function readSourceRegistry(sourcesYaml: string): SourceRegistry {
   const lines = sourcesYaml.split('\n')

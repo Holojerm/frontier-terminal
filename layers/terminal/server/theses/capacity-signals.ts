@@ -248,7 +248,7 @@ export async function capexGuidanceShortfalls(
   deps: SignalDeps,
 ): Promise<SignalReading[]> {
   const [guidance, facts] = await Promise.all([
-    db.select().from(tables.filedGuidance),
+    db.select().from(tables.filedGuidance).where(eq(tables.filedGuidance.source, 'release')),
     filedFactsAt(db, null),
   ])
   const today = deps.now().toISOString().slice(0, 10)

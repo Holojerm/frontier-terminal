@@ -1,0 +1,56 @@
+{
+ "id": "042832d4-e03a-40ca-af7e-20231166f304",
+ "sentences": [
+  {
+   "text": "And we have a lot of training revenue as well.",
+   "start": 624002,
+   "end": 625980,
+   "confidence": 0.9999883,
+   "speaker": "C"
+  },
+  {
+   "text": "We still expect 2026 cash CapEx of approximately $220 billion, the majority for AWS, and expect to spend meaningfully more in 2027 with a clear line of sight to attractive financial returns, as I laid out on our last call.",
+   "start": 626910,
+   "end": 641520,
+   "confidence": 0.9999237,
+   "speaker": "C"
+  },
+  {
+   "text": "AWS is a $184 billion annualized revenue run rate business, and yet the opportunity remains extraordinary with their continued pace of innovation, new core and AI functionality, enterprises wanting to run their core and AI workloads in AWS, and the amount of capacity that we're adding each year, we believe that AWS can grow north of 40% in each of 2027 and in 2028 and be a trillion-dollar revenue business in the next 5 to 10 years.",
+   "start": 642700,
+   "end": 671240,
+   "confidence": 0.9996859,
+   "speaker": "C"
+  },
+  {
+   "text": "I'll finish with our financial guidance for Q4.",
+   "start": 1455290,
+   "end": 1457670,
+   "confidence": 0.9999573,
+   "speaker": "D"
+  },
+  {
+   "text": "Q4 net sales are expected to be between $240 billion and $247 billion.",
+   "start": 1458670,
+   "end": 1464450,
+   "confidence": 0.9999785,
+   "speaker": "D"
+  },
+  {
+   "text": "We estimate the year-over-year impact of changes in foreign exchange rates based on current rates, which we expect to be a headwind of approximately 60 basis points in the quarter.",
+   "start": 1465360,
+   "end": 1475010,
+   "confidence": 0.99999,
+   "speaker": "D"
+  },
+  {
+   "text": "It's pretty rare you would make comments about, you know, $1 trillion of revenue 5 to 10 years from now.",
+   "start": 1827110,
+   "end": 1833287,
+   "confidence": 0.9599843,
+   "speaker": "F"
+  }
+ ],
+ "confidence": 0.98771673,
+ "audio_duration": 3168.0
+}

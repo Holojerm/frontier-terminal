@@ -4,6 +4,7 @@ import { AlertRow, contentHash, parseAgentOutput, type AgentGateResult } from '.
 import type { ChangeRow } from '../contracts'
 import { JudgeClaimVerdict } from '../../theses/verdicts'
 import { JudgeFigureReading } from '../reported/review'
+import { JudgeGuidanceReading } from '../../calls/review'
 import { JudgePowerSiteReading } from '../../power/review'
 import { JudgeSupplierReading } from '../../suppliers/review'
 import { JudgeTrackRecordVerdict } from '../track-record/review'
@@ -45,6 +46,8 @@ export const JudgeOutput = z.strictObject({
   suppliers: JudgeSupplierReading.array().max(20).default([]),
   /** Ties read from an SEC document naming a lab site, one entry per document in a POWER SITE REVIEW block. */
   power_sites: JudgePowerSiteReading.array().max(20).default([]),
+  /** Guidance read from a call document the parser found none in, one entry per document in a GUIDANCE REVIEW block. */
+  guidance: JudgeGuidanceReading.array().max(10).default([]),
 })
 export type JudgeOutput = z.infer<typeof JudgeOutput>
 

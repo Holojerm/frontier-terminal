@@ -9,6 +9,7 @@ import { applyFigureReadings, type FigureReport } from '../reported/review'
 import { applyFilingReadings, type FilingReport } from './filing-review'
 import { applyPriceReadings, type PriceReport } from './price-review'
 import { applySupplierReadings, type SupplierReport } from '../../suppliers/review'
+import { applyGuidanceReadings, type GuidanceReviewReport } from '../../calls/review'
 import { applyPowerSiteReadings, type PowerSiteReport } from '../../power/review'
 import { applyTrackRecordVerdicts, type TrackRecordVerdictReport } from '../track-record/review'
 import { evaluateTheses } from '../../theses/evaluate'
@@ -66,6 +67,8 @@ export interface JudgeRunReport {
   suppliers: SupplierReport
   /** Ties read from an SEC document naming a lab site (power/review.ts). */
   power_sites: PowerSiteReport
+  /** Guidance read from a call document the parser found none in (calls/review.ts). */
+  guidance: GuidanceReviewReport
 }
 
 async function loadChanges(db: PipelineDb, ids: readonly string[]): Promise<ChangeRow[]> {
@@ -247,6 +250,7 @@ export async function submitJudgeRun(
       prices: { accepted: 0, changed: 0, rejected: [] },
       suppliers: { accepted: 0, ended: 0, settled: 0, rejected: [] },
       power_sites: { accepted: 0, ended: 0, settled: 0, rejected: [] },
+      guidance: { accepted: 0, judged: 0, rejected: [] },
     }
   }
 
@@ -286,6 +290,7 @@ export async function submitJudgeRun(
       prices: { accepted: 0, changed: 0, rejected: [] },
       suppliers: { accepted: 0, ended: 0, settled: 0, rejected: [] },
       power_sites: { accepted: 0, ended: 0, settled: 0, rejected: [] },
+      guidance: { accepted: 0, judged: 0, rejected: [] },
     }
   }
 
@@ -446,6 +451,15 @@ export async function submitJudgeRun(
       path: JUDGE_OPS_PATH,
     })
   }
+  const guidance = await applyGuidanceReadings(db, opts.readRaw ?? NO_PAGES, body.guidance, now)
+  if (guidance.rejected.length > 0) {
+    const [first] = guidance.rejected
+    await recordOpsEvent(db, {
+      kind: 'judge_rejected',
+      detail: `${guidance.rejected.length} guidance statement(s) rejected; first: ${first!.reason} — ${first!.detail} (${first!.document_id})`,
+      path: JUDGE_OPS_PATH,
+    })
+  }
   if (opts.sourcesYaml) {
     await evaluateTheses(db, { sourcesYaml: opts.sourcesYaml, now: () => now }, undefined, {
       judgedOnly: true,
@@ -460,6 +474,7 @@ export async function submitJudgeRun(
     prices,
     suppliers,
     power_sites,
+    guidance,
     changes_seen: body.change_ids_seen.length,
     accepted: accepted.length,
     inserted,

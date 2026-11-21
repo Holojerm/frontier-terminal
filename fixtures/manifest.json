@@ -2356,6 +2356,70 @@
       "http_status": 200,
       "raw_bytes": 25043,
       "trim": "none — committed whole (January 2017 confirmed (HWP): a year earlier, the two months before and the month)"
+    },
+    {
+      "path": "fixtures/calls/amd-submissions.json",
+      "source_id": "call-edgar-submissions",
+      "source_url": "https://data.sec.gov/submissions/CIK0000002488.json",
+      "fetched_at": "2026-11-21T08:26:57Z",
+      "http_status": 200,
+      "raw_bytes": 162034,
+      "trim": "filings.recent cut to the 24 newest filings since 2025-09-01 and the five fields the parser reads; the header but cik and name dropped"
+    },
+    {
+      "path": "fixtures/calls/amd-8k-index.htm",
+      "source_id": "call-edgar-index",
+      "source_url": "https://www.sec.gov/Archives/edgar/data/2488/000000248826000188/0000002488-26-000188-index.html",
+      "fetched_at": "2026-11-21T08:26:58Z",
+      "http_status": 200,
+      "raw_bytes": 19501,
+      "trim": "the accession line and the document table kept; the EDGAR page chrome dropped"
+    },
+    {
+      "path": "fixtures/calls/amd-revenue-companyconcept.json",
+      "source_id": "call-edgar-companyconcept",
+      "source_url": "https://data.sec.gov/api/xbrl/companyconcept/CIK0000002488/us-gaap/RevenueFromContractWithCustomerExcludingAssessedTax.json",
+      "fetched_at": "2026-11-21T08:26:58Z",
+      "http_status": 200,
+      "raw_bytes": 21052,
+      "trim": "units.USD cut to the facts for periods ending from 2024-12-01; description dropped"
+    },
+    {
+      "path": "fixtures/calls/amd-q3-2026-release-outlook.htm",
+      "source_id": "call-edgar-exhibit",
+      "source_url": "https://www.sec.gov/Archives/edgar/data/2488/000000248826000188/q32026991.htm",
+      "fetched_at": "2026-11-21T08:27:07Z",
+      "http_status": 200,
+      "raw_bytes": 459809,
+      "trim": "the Current Outlook section kept; the rest of the release dropped"
+    },
+    {
+      "path": "fixtures/calls/assemblyai-amzn-q3-2026-sentences.json",
+      "source_id": "assemblyai",
+      "source_url": "https://api.assemblyai.com/v2/transcript/042832d4-e03a-40ca-af7e-20231166f304/sentences",
+      "fetched_at": "2026-11-21T08:20:00Z",
+      "http_status": 200,
+      "raw_bytes": 889815,
+      "trim": "7 of 428 sentences kept (the two guidance sentences, their neighbours and one analyst sentence); words dropped. Our machine transcript of the replay is never published whole."
+    },
+    {
+      "path": "fixtures/calls/assemblyai-amzn-q3-2026-job.json",
+      "source_id": "assemblyai",
+      "source_url": "https://api.assemblyai.com/v2/transcript/042832d4-e03a-40ca-af7e-20231166f304",
+      "fetched_at": "2026-11-21T08:20:00Z",
+      "http_status": 200,
+      "raw_bytes": 775,
+      "trim": "status, audio_duration and speech_understanding kept; text, words and utterances dropped"
+    },
+    {
+      "path": "fixtures/calls/transcript-excerpts.json",
+      "source_id": "call-transcripts-company",
+      "source_url": "https://www.microsoft.com/en-us/investor/events/fy-2026/earnings-fy-2026-q2",
+      "fetched_at": "2026-11-21T08:30:00Z",
+      "http_status": 200,
+      "raw_bytes": 0,
+      "trim": "per call (Meta, Qualcomm, NVIDIA, Dell, Super Micro, Ciena, CoreWeave, Microsoft) only its guidance sentences and the one before each, as the reader cut them; each call's own URL is in the file",
+      "note": "Excerpts of company-posted transcripts and remarks (LSEG, FactSet and S&P files among them), never a whole transcript."
     }
   ]
 }

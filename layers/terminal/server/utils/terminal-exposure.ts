@@ -9,7 +9,7 @@
 // from the day after the filing date keeps a filing accepted late on T's own
 // day out of T.
 
-import { lt } from 'drizzle-orm'
+import { and, lt, ne } from 'drizzle-orm'
 
 import type { ExposureData, ExposureTicker } from '../../shared/utils/terminal-exposure'
 
@@ -34,7 +34,11 @@ export const EXPOSURE_RULE =
 /** UTC day of an instant: facts filed before it count at that instant. */
 export const filedBefore = (at: string) => at.slice(0, 10)
 
-/** Every stored fact filed before the UTC day of `at`, or all of them. */
+/**
+ * Every stored fact filed before the UTC day of `at`, or all of them. The
+ * concept reads behind call guidance (basis `companyconcept`, calls/actuals.ts)
+ * cover forty more companies and are left out: no exposure series reads them.
+ */
 export function filedFactsAt(db: PipelineDb, at: string | null): Promise<StoredFact[]> {
   return db
     .select({
@@ -53,7 +57,12 @@ export function filedFactsAt(db: PipelineDb, at: string | null): Promise<StoredF
       fetched_at: tables.filedFacts.fetched_at,
     })
     .from(tables.filedFacts)
-    .where(at ? lt(tables.filedFacts.filed, filedBefore(at)) : undefined)
+    .where(
+      and(
+        ne(tables.filedFacts.basis, 'companyconcept'),
+        at ? lt(tables.filedFacts.filed, filedBefore(at)) : undefined,
+      ),
+    )
 }
 
 export async function queryExposure(db: PipelineDb, ctx: QueryContext): Promise<ExposureData> {

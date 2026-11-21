@@ -442,6 +442,8 @@ const waitingKey = (w: GroundTruthWaiting) => `${w.lab}|${w.metric}|${w.currency
         :tolerance-pct="truth.tolerance_pct"
       />
 
+      <TerminalCallGuidance />
+
       <TerminalPanel
         id="alerts"
         title="Alerts against the press"

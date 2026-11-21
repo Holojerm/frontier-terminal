@@ -124,6 +124,8 @@ describe('readSourceRegistry', () => {
       'mops-monthly-revenue-history',
       'taiwan-ir-revenue-pages',
       'census-hs-847150',
+      'call-webcast-players',
+      'call-ir-sites-blocked',
     ])
   })
 

@@ -27,6 +27,8 @@ export const SURFACE_WAIVERS = {
   },
 
   tearSheet: {
+    '/api/call-guidance':
+      'not yet: guidance is per listed company, not per lab; the lab page renders /ground-truth’s panels, the sheet does not',
     '/api/adoption': 'not yet: adoption panels are on the lab page and /rankings only',
     '/api/datacenters': 'not yet: data-center power is on the lab page, /hiring and /compute only',
     '/api/disclosures': 'not yet: the disclosure summary is on the lab page and /disclosures only',
@@ -44,6 +46,8 @@ export const SURFACE_WAIVERS = {
   },
 
   alerts: {
+    '/api/call-guidance':
+      'not yet: a scored call statement raises no alert; its surprise is a /signals event',
     '/api/adoption': 'not yet: recipe observations raise no alert',
     '/api/alerts': 'internal: the alert feed itself',
     '/api/alerts/[id]': 'internal: one alert of the feed',

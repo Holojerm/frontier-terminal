@@ -484,6 +484,13 @@
       "when": 1795243493456,
       "tag": "0068_slim_blindfold",
       "breakpoints": true
+    },
+    {
+      "idx": 69,
+      "version": "6",
+      "when": 1795248627671,
+      "tag": "0069_cute_ultimo",
+      "breakpoints": true
     }
   ]
 }
