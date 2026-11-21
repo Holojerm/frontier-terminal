@@ -11,6 +11,7 @@ import { EXPORT_TABLES } from '../server/utils/terminal-export'
 import {
   SERIES_DAYS,
   daysBefore,
+  foldRankingWeeks,
   queryRankings,
   summarizeRankings,
   type RankingObservation,
@@ -166,6 +167,40 @@ describe('summarizeRankings', () => {
     expect(daysBefore('2026-03-01', 1)).toBe('2026-02-28')
     expect(daysBefore('2026-01-01', 1)).toBe('2025-12-31')
     expect(daysBefore('2026-09-30', 0)).toBe('2026-09-30')
+  })
+})
+
+describe('foldRankingWeeks', () => {
+  it('maps each prefix to its lab, shares over every provider, and unions the days present', () => {
+    const weeks = foldRankingWeeks([
+      // Out of order on purpose: the fold sorts.
+      { week: '2025-01-13', prefix: 'openai', tokens: 100, mask: 0b0000001 },
+      { week: '2025-01-06', prefix: 'openai', tokens: 300, mask: 0b0011100 },
+      { week: '2025-01-06', prefix: 'qwen', tokens: 100, mask: 0b0001100 },
+      { week: '2025-01-06', prefix: 'meta-llama', tokens: 50, mask: 0b0100000 },
+      { week: '2025-01-06', prefix: 'meta', tokens: 50, mask: 0b0000100 },
+      { week: '2025-01-06', prefix: 'z-ai', tokens: 100, mask: 0b0010000 },
+      { week: '2025-01-06', prefix: 'other', tokens: 400, mask: 0b0011100 },
+    ])
+    expect(weeks.map((w) => w.week)).toEqual(['2025-01-06', '2025-01-13'])
+    const [first, second] = weeks
+    // Days 2..5 of the week of Monday 6 January: Wednesday 8 to Saturday 11.
+    expect(first).toMatchObject({ from: '2025-01-08', to: '2025-01-11', days: 4, total: 1000 })
+    expect(first!.tokens.alibaba).toBe(100)
+    expect(first!.tokens.meta).toBe(100)
+    // An unmapped prefix and the aggregate row are both `other`, and both count.
+    expect(first!.tokens.other).toBe(500)
+    expect(first!.share.openai).toBeCloseTo(0.3, 12)
+    expect(first!.share.other).toBeCloseTo(0.5, 12)
+    expect(Object.values(first!.share).reduce((a, s) => a! + (s ?? 0), 0)).toBeCloseTo(1, 12)
+    expect(second).toMatchObject({ from: '2025-01-13', to: '2025-01-13', days: 1, total: 100 })
+    expect(second!.share.openai).toBe(1)
+    expect(second!.share.anthropic).toBe(0)
+  })
+
+  it('a week with no tokens has null shares, not zero', () => {
+    const [w] = foldRankingWeeks([{ week: '2025-01-06', prefix: 'openai', tokens: 0, mask: 1 }])
+    expect(w!.share.openai).toBeNull()
   })
 })
 
@@ -335,6 +370,23 @@ describe('queryRankings', () => {
     expect(r.series.at(-1)!.date).toBe('2026-09-08')
     expect(r.series[0]!.tokens.other).toBe(4_749_891_595_607)
     expect(r.series[0]!.tokens.openai).toBe(1_299_773_079_324)
+
+    // The weekly fold is summed in SQL, the series in JS: over the same 30
+    // days they must agree to the token. 2026-08-10 is a Monday.
+    expect(r.weekly.map((w) => [w.week, w.from, w.to, w.days])).toEqual([
+      ['2026-08-10', '2026-08-10', '2026-08-16', 7],
+      ['2026-08-17', '2026-08-17', '2026-08-23', 7],
+      ['2026-08-24', '2026-08-24', '2026-08-30', 7],
+      ['2026-08-31', '2026-08-31', '2026-09-06', 7],
+      ['2026-09-07', '2026-09-07', '2026-09-08', 2],
+    ])
+    for (const w of r.weekly) {
+      const days = r.series.filter((d) => d.date >= w.from && d.date <= w.to)
+      for (const p of Object.keys(w.tokens) as (keyof typeof w.tokens)[]) {
+        expect(w.tokens[p]).toBe(days.reduce((acc, d) => acc + d.tokens[p], 0))
+      }
+      expect(w.total).toBe(days.reduce((acc, d) => acc + d.total, 0))
+    }
 
     // The per-model rows are read here, never bulk-exported (OpenRouter's
     // "not … a competing free API"; docs/source-audit.md).

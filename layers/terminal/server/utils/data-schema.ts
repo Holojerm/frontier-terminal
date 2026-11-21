@@ -240,6 +240,12 @@ export const SCHEMA_RELEASES: readonly SchemaRelease[] = [
       },
     },
   },
+  {
+    version: '1.12.0',
+    date: '2026-11-20',
+    summary:
+      '/api/rankings gains weekly: each lab’s share of OpenRouter tokens per ISO week (Monday to Sunday, UTC) over every stored day, oldest first, with tokens and share per lab (other included, as in shares) and the days of the week on record. get_rankings returns it too. No table columns changed, and the per-model rows still aren’t exported.',
+  },
 ]
 
 export const SCHEMA_VERSION = SCHEMA_RELEASES.at(-1)!.version
