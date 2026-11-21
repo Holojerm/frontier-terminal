@@ -3004,8 +3004,9 @@ power_site_sources:
 # and "Large loads on ERCOT" panels on /compute (layers/terminal/server/power/
 # grid-load.ts, ercot-large-loads.ts). Each lab site is placed in a balancing
 # authority by a grid row of power_site_ties, or by its utility's row in
-# EIA-861 (layers/terminal/server/curated/grid-areas.json). EIA's API v2 needs
-# a key and isn't used: the six-month files carry the same hourly series.
+# EIA-861 (layers/terminal/server/curated/grid-areas.json). With
+# NUXT_EIA_API_KEY set, EIA's API v2 gives the days from 2019 on (eia930-api)
+# and the six-month files 2018 and any run the API fails.
 # Terms and robots.txt were read on 2026-11-21 (docs/source-audit.md).
 grid_load_sources:
   eia930-balance:
@@ -3032,6 +3033,25 @@ grid_load_sources:
       A load reading, never a measure of data-center use: an authority's
       demand moves with weather, the economy and every other customer. EIA
       revises past hours, so a day is rewritten when a later read differs.
+  eia930-api:
+    publisher: U.S. Energy Information Administration
+    url: https://api.eia.gov/v2/electricity/rto/daily-region-data/data/
+    format: JSON, EIA API v2, daily demand per authority on its own local clock (timezone facet), 5,000 rows a page
+    verdict: include
+    terms: >-
+      The same EIA Copyrights and Reuse terms as eia930-balance. The API needs
+      a free key (registered by the owner, 2026-11-21), sent as the
+      X-Api-Key header and never in a URL, so no stored source_url or raw
+      response carries it. api.eia.gov/robots.txt answers 403 (the API host,
+      behind api.data.gov's gateway); www.eia.gov/robots.txt allows
+      /opendata/, where EIA documents the API for programmatic use. Taken: type D
+      (demand) for the eight authorities, from 2019-01-01 (where the API's
+      daily series starts), re-read six-hourly from six weeks before the
+      newest stored day. Each day equals the six-month file's adjusted hours
+      summed by local date, checked for all eight on 2026-07-01. Read
+      2026-11-21.
+    rights: upstream
+    license: Public domain (U.S. government work). Source - U.S. Energy Information Administration.
   eia861-utility-ba:
     publisher: U.S. Energy Information Administration
     url: https://www.eia.gov/electricity/data/eia861/zip/f8612025.zip

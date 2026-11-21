@@ -1,5 +1,7 @@
-// EIA-930 hourly demand for the balancing authorities that hold a tracked
-// lab site, read from EIA's six-month Grid Monitor files (no key). Each file
+// EIA-930 demand for the balancing authorities that hold a tracked lab site.
+// With NUXT_EIA_API_KEY set, EIA's API v2 gives the days from 2019 on
+// (eia-api.ts) and the six-month Grid Monitor files only 2018; without it, or
+// on a run where the API fails, the files give everything. Each file
 // is one half-year of every authority's hours, 30 to 47 MB: over the
 // pipeline fetcher's body cap, so it is read here as a stream, one line at a
 // time, and only the lines of the tracked authorities are kept. Those lines
@@ -14,12 +16,19 @@
 // half before it for six weeks after it closes (EIA revises), and walks back
 // through unread halves to EIA930_FIRST_PERIOD, BACKFILL_PER_RUN at a time.
 
-import { and, eq, inArray, sql } from 'drizzle-orm'
+import { and, eq, inArray, max, sql } from 'drizzle-orm'
 
 import * as tables from '#server/db/schema'
 import { recordOpsEvent } from '#server/utils/ops'
 import { GRID_AREA_CODES } from '../../shared/utils/grid-load'
-import { eia930FileUrl, Eia930Reader, periodsDue, type GridDay } from './eia930'
+import {
+  EIA_API_FIRST_DAY,
+  EIA_API_OVERLAP_DAYS,
+  eiaDailyUrl,
+  readEiaDaily,
+  zoneGroups,
+} from './eia-api'
+import { eia930FileUrl, Eia930Reader, periodsDue, periodsThrough, type GridDay } from './eia930'
 import { contentHashOfText } from '../pipeline/contracts'
 import { chunk, D1_MAX_BOUND_PARAMS, type PipelineDb } from '../pipeline/store'
 
@@ -38,7 +47,12 @@ export interface GridLoadDeps {
   fetch?: typeof globalThis.fetch
   userAgent: string
   now: Date
+  /** NUXT_EIA_API_KEY. Empty or absent = the six-month files only. */
+  apiKey?: string
 }
+
+/** The grid_load_files row the API reads keep (the files' rows are half-years). */
+export const API_PERIOD = 'api'
 
 const DAY_COLUMNS = 8
 
@@ -138,13 +152,114 @@ async function readFile(
   }
 }
 
-/** One run: the halves periodsDue names, in order. A failure is spooled and the walk stops. */
+/** Each authority's newest stored day. */
+async function newestDays(db: PipelineDb): Promise<Map<string, string>> {
+  const rows = await db
+    .select({ ba: tables.gridLoadDays.ba, at: max(tables.gridLoadDays.date) })
+    .from(tables.gridLoadDays)
+    .groupBy(tables.gridLoadDays.ba)
+  return new Map(rows.map((r) => [r.ba, r.at ?? '']))
+}
+
+const daysBefore = (date: string, n: number) =>
+  new Date(Date.parse(`${date}T00:00:00Z`) - n * 86_400_000).toISOString().slice(0, 10)
+
+/**
+ * The API read: per EIA clock, every day from six weeks before the newest
+ * stored day of its authorities (from 2019-01-01 for one with none since),
+ * page by page. Throws on the first page that fails, so the run falls back to
+ * the files.
+ */
+async function readApi(
+  db: PipelineDb,
+  deps: GridLoadDeps & { apiKey: string },
+): Promise<GridFileRead> {
+  const doFetch = deps.fetch ?? globalThis.fetch
+  const newest = await newestDays(db)
+  const fetched_at = deps.now.toISOString()
+  let stored = 0
+  let lastUrl = ''
+  for (const [zone, areas] of zoneGroups()) {
+    const since = areas
+      .map((a) => {
+        const n = newest.get(a.ba)
+        return n && n >= EIA_API_FIRST_DAY ? daysBefore(n, EIA_API_OVERLAP_DAYS) : EIA_API_FIRST_DAY
+      })
+      .sort()[0]!
+    const start = since < EIA_API_FIRST_DAY ? EIA_API_FIRST_DAY : since
+    for (let offset = 0; ;) {
+      const url = eiaDailyUrl({ bas: areas.map((a) => a.ba), zone, start, offset })
+      const res = await doFetch(url, {
+        headers: {
+          'User-Agent': deps.userAgent,
+          'X-Api-Key': deps.apiKey,
+          Accept: 'application/json',
+        },
+        signal: AbortSignal.timeout(GRID_FILE_TIMEOUT_MS),
+      })
+      if (!res.ok) throw new Error(`EIA API HTTP ${res.status} (${zone}, offset ${offset})`)
+      const body = await res.text()
+      // The key travels in a header; a body that echoes it is never stored.
+      if (body.includes(deps.apiKey))
+        throw new Error('EIA API response contains the key; not stored')
+      const page = readEiaDaily(body, areas)
+      const raw_key = `grid-load/eia-api/${zone}/${contentHashOfText(body)}.json`
+      await deps.put(raw_key, body, 'application/json')
+      await storeDays(db, page.days, { raw_key, url, fetched_at })
+      stored += page.days.length
+      lastUrl = url
+      offset += page.rows
+      if (page.rows === 0 || offset >= page.total) break
+    }
+  }
+  const row = {
+    status: 'read',
+    detail: null,
+    etag: null,
+    content_hash: null,
+    days: stored,
+    raw_key: null,
+    read_at: fetched_at,
+  }
+  await db
+    .insert(tables.gridLoadFiles)
+    .values({ period: API_PERIOD, url: lastUrl, ...row })
+    .onConflictDoUpdate({ target: tables.gridLoadFiles.period, set: { url: lastUrl, ...row } })
+  return { period: API_PERIOD, status: 'read', days: stored, detail: null }
+}
+
+/**
+ * One run. With a key, the API reads 2019 on and the files only the halves
+ * before it; an API failure is spooled and the run reads the files as it
+ * would with no key. Without one, the halves periodsDue names, in order. A
+ * file failure is spooled and the walk stops.
+ */
 export async function runGridLoad(db: PipelineDb, deps: GridLoadDeps): Promise<GridFileRead[]> {
   const files = await db.select().from(tables.gridLoadFiles)
   const read = new Set(files.filter((f) => f.status === 'read').map((f) => f.period))
   const prior = new Map(files.map((f) => [f.period, f]))
   const out: GridFileRead[] = []
-  for (const period of periodsDue(deps.now, read)) {
+  let periods = periodsDue(deps.now, read)
+  const apiKey = deps.apiKey?.trim()
+  if (apiKey) {
+    const api = await readApi(db, { ...deps, apiKey }).catch((error: unknown): GridFileRead => ({
+      period: API_PERIOD,
+      status: 'failed',
+      days: 0,
+      detail: String(error).replaceAll(apiKey, '[key]').slice(0, 300),
+    }))
+    out.push(api)
+    if (api.status === 'failed') {
+      await recordOpsEvent(db, {
+        kind: 'grid_load_read_failed',
+        detail: `EIA API, reading the six-month files instead: ${api.detail}`,
+      })
+    } else {
+      const firstApiHalf = `${EIA_API_FIRST_DAY.slice(0, 4)}H1`
+      periods = periodsThrough(deps.now).filter((p) => p < firstApiHalf && !read.has(p))
+    }
+  }
+  for (const period of periods) {
     const r = await readFile(db, period, prior.get(period), deps).catch(
       (error: unknown): GridFileRead => ({
         period,

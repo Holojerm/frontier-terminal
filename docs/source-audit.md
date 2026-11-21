@@ -943,6 +943,7 @@ Checked to see whether public grid data can show load growing where the labs bui
 | Publisher | What | robots.txt | Terms (read 2026-11-21) | Rights |
 |---|---|---|---|---|
 | U.S. Energy Information Administration, EIA-930 six-month files (`eia.gov/electricity/gridmonitor/sixMonthFiles/`) | Hourly adjusted demand for eight authorities, 2018 on | Allows `/electricity/` | Public domain. EIA asks for "Source: U.S. Energy Information Administration" | `upstream` (public domain) |
+| U.S. Energy Information Administration, API v2 (`api.eia.gov/v2/electricity/rto/daily-region-data/`) | Daily demand for the same eight authorities, 2019 on | The API host answers 403; `www.eia.gov` allows `/opendata/`, where EIA documents the API | Same EIA terms. Free key, sent as a header | `upstream` (public domain) |
 | U.S. Energy Information Administration, EIA-861 2025 (`f8612025.zip`) | The balancing authority of five utilities tied to a lab site | Same | Same | `upstream` (public domain) |
 | ERCOT, Monthly Operational Overview and ERCOT Monthly PDFs | Approved-to-energize and observed large load, the large-load queue | Allows `/committees/`, `/news/`, `/files/docs/` | Raw data "may be used, reproduced, and redistributed in compilations, charts, and analyses"; whole contents unmodified with notices | `ours` |
 
@@ -952,7 +953,7 @@ The exact sentences are in `sources.yaml` under `grid_load_sources`.
 
 **Left out, and why.**
 
-- **EIA's API v2.** It needs a key only the owner can register, and the six-month files carry the same hourly series. The code doesn't read `NUXT_EIA_API_KEY`.
+- **EIA's API v2, at first.** It needs a key only the owner can register. The owner registered one later on 2026-11-21, so the API is now the primary read from 2019 (`eia930-api`): its daily series equals the six-month files' adjusted hours summed by local date for all eight authorities, it is a day fresher, and the key goes in a header, never a URL. The files stay for 2018 and as the fallback.
 - **EIA's bulk ZIP (`EBA.zip`, 705 MB).** Too large for a Worker. The six-month files (30 to 47 MB) are read as a stream and only the tracked authorities' lines are kept.
 - **The Grid Monitor's own JSON endpoints.** Undocumented, so they can change without notice.
 - **ERCOT's queue breakdown.** It's a chart in the overview PDFs, not text. Only sentences are read.
@@ -964,4 +965,4 @@ The exact sentences are in `sources.yaml` under `grid_load_sources`.
 - **A report's month isn't always its own.** The December 2025 overview states January 2026, and the January 2026 overview states January 2026 again with a different figure (3,349 MW, then 4,049 MW). Each report is a vintage. The panel shows a month from the newest report that states it.
 - **The PDF reader is ours.** No PDF library is installed, so `layers/terminal/server/power/pdf-text.ts` reads the text operators of Flate streams through each font's ToUnicode map. Spacing is collapsed, so a quote reads as the PDF's text, not its layout ("non -simultaneous").
 
-**Verdict: include `eia930-balance`, `eia861-utility-ba` and `ercot-large-loads` under `grid_load_sources`.** The owner approved the alpha program on 2026-11-20.
+**Verdict: include `eia930-api`, `eia930-balance`, `eia861-utility-ba` and `ercot-large-loads` under `grid_load_sources`.** The owner approved the alpha program on 2026-11-20.
