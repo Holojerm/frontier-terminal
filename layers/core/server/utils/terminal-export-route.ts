@@ -4,7 +4,7 @@
 import type { H3Event } from 'h3'
 import sourcesYaml from 'raw:~~/sources.yaml'
 
-import { DICTIONARY_NAME, dataDictionary, dictionaryCsv } from '#server/registries/dictionary'
+import { dataDictionary } from '#server/registries/dictionary'
 import {
   ARCHIVED_EXPORTS,
   EXPORT_TABLES,

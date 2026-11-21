@@ -1,6 +1,6 @@
 // `bun run schema:lock`: record the columns /export serves in schema.lock.json.
 //
-// The lock is what layers/terminal/test/terminal-dictionary.test.ts holds the
+// The lock is what layers/core/test/terminal-dictionary.test.ts holds the
 // exports to, so it is only rewritten when the newest release in
 // layers/core/server/utils/data-schema.ts accounts for every column that
 // moved since the last lock (lockRefusal). Run it after adding a release, and

@@ -29,9 +29,8 @@ export const DOMAIN_LAYERS = {
       // fixture fill call.
       'server/suppliers/store.ts',
       'server/suppliers/ingest.ts',
-      // The SEC forms the shell's severity gates read, and the whitelist its dictionary reads.
+      // The SEC forms the shell's severity gates read.
       'server/pipeline/parsers/sec/forms.ts',
-      'server/pipeline/parsers/sec/whitelist.ts',
       // The prospectus floor's rule name, which the press notes read.
       'server/pipeline/prospectus-floor.ts',
     ],

@@ -5,7 +5,7 @@
 // no column change is a patch.
 //
 // schema.lock.json holds the columns /export served at the last release.
-// layers/terminal/test/terminal-dictionary.test.ts fails when they drift or a
+// layers/core/test/terminal-dictionary.test.ts fails when they drift or a
 // release's bump is too small, and `bun run schema:lock` rewrites the lock only
 // when the newest release says exactly what changed (lockRefusal).
 

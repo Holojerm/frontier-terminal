@@ -60,7 +60,7 @@ const windowed = (
 /**
  * Every export table's license-window rule. Current-state and reference
  * tables stay whole; a log, an observation series, or a list of dated events
- * is windowed on its natural date. layers/terminal/test/terminal-dictionary.test.ts
+ * is windowed on its natural date. layers/core/test/terminal-dictionary.test.ts
  * fails when a table has no rule or a rule names a column the table lacks.
  */
 export const EXPORT_HISTORY: Readonly<Record<string, HistoryRule>> = {
