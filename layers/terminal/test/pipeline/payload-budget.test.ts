@@ -9,7 +9,7 @@ import { sourceIdsForScope } from '../../../core/server/pipeline/scopes'
 import { CAREERS_SOURCES } from '../../../talent/server/pipeline/scopes'
 import { isRegistrationSource } from '../../server/pipeline/scopes'
 import { includeSources, type FetchSource } from '#layers/core/server/pipeline/sources'
-import { TRIPWIRE_REFRESH } from '../../server/pipeline/tripwire'
+import { TRIPWIRE_REFRESH } from '../../../models/server/pipeline/tripwire'
 import { RECIPES } from '#server/registries/recipes'
 import { EXPORT_PAGE_SIZE } from '#layers/core/server/utils/terminal-export-views'
 import { PARQUET_ROW_GROUP_BYTES } from '#layers/core/server/utils/terminal-parquet'
@@ -247,7 +247,7 @@ const productionLanes: readonly Lane[] = [
   },
   {
     name: 'tripwire',
-    where: 'layers/terminal/server/pipeline/tripwire.ts, */5',
+    where: 'layers/models/server/pipeline/tripwire.ts, */5',
     ids: TRIPWIRE_REFRESH,
   },
 ]

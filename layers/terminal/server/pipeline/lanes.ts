@@ -1,9 +1,7 @@
 import { cikResolvedAlerts, periodicFloorAlerts, s1FloorAlerts } from './filing-floors'
 import type { FilingRow } from '#layers/core/server/pipeline/contracts'
-import { setLane, type Lane } from '#layers/core/server/pipeline/lanes'
+import type { Lane } from '#layers/core/server/pipeline/lanes'
 import {
-  normalizeDisclosureTimelines,
-  normalizeDisclosures,
   normalizeDocuments,
   normalizeFilers,
   normalizeFilings,
@@ -11,8 +9,6 @@ import {
   normalizeProspectusDetails,
   normalizeRevenues,
 } from './normalize'
-import { parseOpenAiMisalignmentReport } from './parsers/disclosures/openai-misalignment-report'
-import { parseOpenAiMisalignmentReports } from './parsers/disclosures/openai-misalignment-reports'
 import { COMPANYFACTS_SOURCES, parseEdgarCompanyfacts } from './parsers/sec/edgar-companyfacts'
 import { FTS_SOURCES, parseEdgarFts } from './parsers/sec/edgar-fts'
 import { archivesCik, parseFilingIndex, registrationTarget } from './parsers/sec/filing-index'
@@ -28,12 +24,10 @@ import {
 import { parseXbrlSegment, segmentTarget } from './parsers/sec/xbrl-segment'
 import type { CikWhitelist } from './parsers/sec/whitelist'
 
-// Every lane of the domains still in the shell: SEC filings and revenue, and
-// disclosures. The lane contract is core's (layers/core/server/pipeline/lanes.ts);
-// pricing's, talent's, reliability's and adoption's lanes are in their layers'
+// Every lane of the domains still in the shell: SEC filings and revenue. The lane
+// contract is core's (layers/core/server/pipeline/lanes.ts); pricing's, talent's,
+// reliability's, models' and adoption's lanes are in their layers'
 // server/pipeline/lanes.ts, and server/registries/lanes.ts assembles them.
-
-const set = setLane
 
 /**
  * Each filing's lab, read off its whitelisted CIK: a lab's own registration
@@ -157,19 +151,6 @@ const XBRL_SEGMENT_LANE: Lane = {
   },
 }
 
-// A derived misalignment report page: the dates the index omits, one row.
-// The page IS the report's current state.
-const MISALIGNMENT_REPORT_PAGE_LANE: Lane = {
-  sides: [],
-  removals: 'set',
-  parse: (text, { prov, snapshotId, derivedKey }) => ({
-    entities: normalizeDisclosureTimelines(
-      parseOpenAiMisalignmentReport(text, derivedKey, prov).rows,
-      snapshotId,
-    ),
-  }),
-}
-
 // A derived filing index: the one primary document of a registration filing.
 const FILING_INDEX_LANE: Lane = {
   sides: [],
@@ -224,24 +205,10 @@ export const DERIVED_LANES: readonly { prefix: string; lane: Lane }[] = [
   { prefix: 'xbrl-segment-', lane: XBRL_SEGMENT_LANE },
   { prefix: 'filing-index-', lane: FILING_INDEX_LANE },
   { prefix: 'prospectus-revenue-', lane: PROSPECTUS_REVENUE_LANE },
-  { prefix: 'openai-misalignment-report-', lane: MISALIGNMENT_REPORT_PAGE_LANE },
 ]
 
 export const LANES: Readonly<Record<string, Lane>> = {
   ...ftsLanes(),
   ...submissionsLanes(),
   ...companyfactsLanes(),
-  // The disclosure index IS the current set: a report taken down is a
-  // 'removed' change the judge should see, not a window scrolling on. Its
-  // printed date is in each row but never wakes the judge on its own
-  // (layers/core/server/pipeline/judge/pending.ts › isTimestampOnlyChange).
-  'openai-misalignment-reports': set((html, { prov, snapshotId }) => {
-    const { rows, skipped } = parseOpenAiMisalignmentReports(html, prov)
-    return {
-      entities: normalizeDisclosures(rows, snapshotId),
-      note: skipped.length
-        ? `${skipped.length} skipped: ${skipped.map((s) => `${s.entry} (${s.reason})`).join('; ')}`
-        : undefined,
-    }
-  }),
 }

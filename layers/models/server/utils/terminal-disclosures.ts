@@ -19,15 +19,13 @@
 
 import { eq, inArray } from 'drizzle-orm'
 
+import type { LabId, Prov, SourceRef } from '#layers/core/shared/utils/terminal-types/common'
 import type {
-  LabId,
   DisclosureProviderView,
   DisclosuresData,
   DisclosureTimeline,
   DisclosureView,
-  Prov,
-  SourceRef,
-} from '../../shared/utils/terminal-types'
+} from '../../shared/utils/terminal-types/disclosures'
 
 import * as tables from '#server/db/schema'
 import type { PipelineDb } from '#layers/core/server/pipeline/store'
@@ -303,5 +301,14 @@ export async function queryDisclosures(
     computed_at: ctx.now().toISOString(),
     providers,
     entries: views,
+  }
+}
+
+/** One lab's slice of the cached all-lab payload, for `?lab=` (layers/core/server/utils/lab-query.ts). */
+export function disclosuresForLab(data: DisclosuresData, lab: LabId): DisclosuresData {
+  return {
+    ...data,
+    providers: data.providers.filter((p) => p.provider === lab),
+    entries: data.entries.filter((e) => e.provider === lab),
   }
 }

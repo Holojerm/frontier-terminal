@@ -31,8 +31,6 @@ import { MODEL_FLOOR_RULE } from '#layers/core/server/utils/terminal-asof'
 // change log is read too: without it a model listed before this rule existed
 // would be announced as new when it came back.
 
-export { MODEL_FLOOR_RULE }
-
 /** A slug as vendors write them. Anything else is a parser reading a table
  * cell as a name; the judge still sees the row, but no launch is announced. */
 const WELL_FORMED_SLUG = /^[a-z0-9][a-z0-9._-]*$/i

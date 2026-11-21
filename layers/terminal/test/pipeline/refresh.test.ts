@@ -14,7 +14,7 @@ import { registerFleetExtraContributor } from '~~/server/utils/extensions'
 import { collectFleetCounters, latestFetchBySource } from '~~/server/utils/fleet-status'
 import { collectTerminalCounters } from '../../server/utils/fleet-counters'
 import { fixtureText, manifest } from '#layers/core/test/pipeline/fixtures'
-import { indexPage } from './misalignment-index'
+import { indexPage } from '../../../models/test/pipeline/misalignment-index'
 
 // The refresh end-to-end against the real D1 and R2 test bindings, driven by
 // a fetcher that serves the committed fixtures (edited in place for the
