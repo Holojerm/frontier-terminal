@@ -10,6 +10,7 @@ import {
   LAB_OF_NAME,
   humanizeConcept,
   type AdoptionData,
+  type AgentPrWeek,
   type DataCentersData,
   type LimitRow,
   type LimitsData,
@@ -109,6 +110,45 @@ function windowSums(points: readonly { date: string; value: number }[]) {
     : { last_28d: null, prior_28d: null, through: null }
 }
 
+/**
+ * Pure: per-ISO-week sums (Monday to Sunday, UTC), oldest week first, through
+ * the newest week whose Sunday is on record, so the week still running never
+ * reads as a drop. A week missing any day is partial: its total covers only
+ * the days present. A week is retrospective when any of its days is.
+ */
+export function weeklySums(
+  points: readonly { date: string; value: number; retrospective?: boolean }[],
+): AgentPrWeek[] {
+  const byDay = new Map<number, { value: number; retrospective: boolean }>()
+  let last = -Infinity
+  for (const p of points) {
+    const d = dayOf(p.date)
+    byDay.set(d, { value: p.value, retrospective: p.retrospective === true })
+    if (d > last) last = d
+  }
+  // Day 0 (1970-01-01) was a Thursday, so (d + 3) % 7 is days since Monday.
+  const mondayOf = (d: number) => d - ((d + 3) % 7)
+  const weeks = new Map<number, { days: number; total: number; retrospective: boolean }>()
+  for (const [d, v] of byDay) {
+    const monday = mondayOf(d)
+    if (monday + 6 > last) continue
+    const w = weeks.get(monday) ?? { days: 0, total: 0, retrospective: false }
+    w.days++
+    w.total += v.value
+    w.retrospective ||= v.retrospective
+    weeks.set(monday, w)
+  }
+  return [...weeks.entries()]
+    .sort(([a], [b]) => a - b)
+    .map(([monday, w]) => ({
+      week: new Date(monday * DAY_MS).toISOString().slice(0, 10),
+      days: w.days,
+      total: w.total,
+      partial: w.days < 7,
+      retrospective: w.retrospective,
+    }))
+}
+
 export async function queryAdoption(db: PipelineDb): Promise<AdoptionData> {
   const pkgRecipes = [
     ...NPM_LAB_RECIPES.map((r) => ({ r, registry: 'npm' as const })),
@@ -160,6 +200,7 @@ export async function queryAdoption(db: PipelineDb): Promise<AdoptionData> {
     const pkg =
       rs[0]?.key ?? /\/([^/]+)\/?$/.exec(r.url({ now: new Date(), newest: null }))?.[1] ?? r.id
     const newest = newestRow(rs)
+    const points = rs.map((x) => ({ date: x.date, value: x.value! }))
     return [
       {
         recipe_id: r.id,
@@ -167,7 +208,8 @@ export async function queryAdoption(db: PipelineDb): Promise<AdoptionData> {
         registry,
         package: pkg,
         kind: AGENT_PACKAGES.has(pkg) ? ('agent' as const) : ('sdk' as const),
-        ...windowSums(rs.map((x) => ({ date: x.date, value: x.value! }))),
+        ...windowSums(points),
+        weekly: weeklySums(points).map(({ retrospective: _, ...w }) => w),
         source: newest ? cite(r.id, `${registry} ${pkg}`, newest) : null,
       },
     ]
@@ -187,6 +229,13 @@ export async function queryAdoption(db: PipelineDb): Promise<AdoptionData> {
         days: rs
           .map((x) => ({ date: x.date, value: x.value! }))
           .sort((a, b) => (a.date < b.date ? -1 : 1)),
+        weekly: weeklySums(
+          rs.map((x) => ({
+            date: x.date,
+            value: x.value!,
+            retrospective: payloadOf(x).retrospective === true,
+          })),
+        ),
         source: newest ? cite(r.id, `GitHub search: ${agent}`, newest) : null,
       },
     ]
