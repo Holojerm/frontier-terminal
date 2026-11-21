@@ -2,7 +2,7 @@
 // closed (layers/terminal/server/pipeline/track-record/search.ts): the newsroom
 // side, and the GDELT side's search row once every GKG file in the window is
 // read. Runs on the */5 tick and fetches nothing: the newsroom posts are
-// stored by the poll, and the GDELT files are read on GitHub Actions
+// stored by the poll, and the GDELT files are read on the owner's Mac mini
 // (scripts/gdelt-search.ts).
 
 import { db } from '@nuxthub/db'

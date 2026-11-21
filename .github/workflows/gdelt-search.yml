@@ -1,4 +1,13 @@
-# The GDELT side of the track record (scripts/gdelt-search.ts), twice an hour.
+# The GDELT side of the track record (scripts/gdelt-search.ts), by hand only.
+#
+# The script runs every 30 minutes on the owner's Mac mini, from a launchd job
+# outside this repo (com.holojerm.job.gdelt-search, ~/agent-jobs/gdelt-search.sh).
+# This workflow used to run it on a schedule, but GitHub's scheduler dropped
+# most triggers: hourly, it fired 2 of 12 on 2026-11-06 and none from 08:03Z to
+# 18:52Z on 2026-11-09 (issues #301, #323); twice an hour, 4 from 2026-11-19 to
+# 2026-11-21 03:30Z. It stays for 'Run workflow' while the mini is down: a run
+# goes to ubuntu-latest then (pick-runner.yml). Don't start one while the mini's
+# job is running; the two would read the same files.
 #
 # Each run asks the site for the GDELT GKG files it has not read (one per
 # quarter hour, ~5 MB zipped), reads them oldest first, and posts back the
@@ -9,7 +18,7 @@
 # /api/gdelt/* routes failed. A backlog (the queue starts at 2026-09-01)
 # drains at up to 40 minutes a run.
 #
-# Needs the repository secret GDELT_TOKEN, the same value as the Worker's
+# Here it needs the repository secret GDELT_TOKEN, the same value as the Worker's
 # NUXT_GDELT_TOKEN. Without it the run passes with a warning and reads
 # nothing.
 #
@@ -21,14 +30,6 @@
 name: GDELT search
 
 on:
-  schedule:
-    # Minutes 23 and 53: off the top of the hour, when GitHub's scheduler is
-    # busiest. Twice an hour because the scheduler drops triggers: hourly, it
-    # fired 2 of 12 on 2026-11-06 and none from 08:03Z to 18:52Z on 2026-11-09
-    # (issues #301, #323). A run is about a minute once caught up, and a
-    # backlog run stops at 40 minutes, so the next trigger at most waits in
-    # the concurrency queue below and none is cancelled.
-    - cron: '23,53 * * * *'
   workflow_dispatch:
 
 # One run at a time: two would double our rate at GDELT.
