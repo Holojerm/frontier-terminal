@@ -6,8 +6,8 @@
 // returned. Terms: sources.yaml › track_record_sources › gdelt-gkg.
 //
 // The press side reads every file once, in order, off the Worker
-// (scripts/gdelt-search.ts on GitHub Actions; a file is ~2.5 MB zipped
-// and ~8 MB unzipped). What a row carries that the track record uses: the
+// (scripts/gdelt-search.ts on GitHub Actions; a file is ~5 MB zipped
+// and ~15 MB unzipped). What a row carries that the track record uses: the
 // record id, DATE (the quarter hour GDELT read it, UTC), the outlet's domain,
 // the article URL, its <PAGE_TITLE>, and the names GDELT found in its text.
 // Rows naming a tracked lab, filer or model family are kept, compacted, for

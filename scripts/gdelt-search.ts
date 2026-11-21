@@ -16,9 +16,13 @@
 // nothing is unread, the run reads files from before reported figures existed
 // again (`figure_files`), posting only their figure headlines to
 // /api/gdelt/figures. A new file needs no such pass: the Worker finds its
-// figure headlines among the rows it keeps. The
-// files are static, with no per-IP limit, so no pacing is needed beyond
-// reading one at a time. A 404 means GDELT never published that quarter hour
+// figure headlines among the rows it keeps. Once those are read too, the run
+// reads the archive (`archive_files`): files from before GKG_FROM that the
+// Worker picks (layers/terminal/server/pipeline/reported/archive.ts), four
+// downloads at a time but posted in order, figure headlines only, to
+// /api/gdelt/archive. Every call to /api/gdelt/work puts live files first, so
+// the archive only ever fills idle time. The files are static, with no per-IP
+// limit, so no pacing is needed. A 404 means GDELT never published that quarter hour
 // and is recorded as missing; any other failure to fetch ends the run quietly
 // and the next run retries. The job exits non-zero only when our own routes
 // fail, so a red run means this site is broken, not GDELT.
@@ -43,7 +47,7 @@ import { figureHeadline } from '../layers/terminal/server/pipeline/reported/figu
 
 const ROOT = resolve(import.meta.dir, '..')
 
-/** Per file download. A file is ~2.5 MB; this is generous for a slow link. */
+/** Per file download. A file is ~5 MB, up to ~10 MB; this is generous for a slow link. */
 const FETCH_TIMEOUT_MS = 120_000
 
 interface Work {
@@ -53,7 +57,12 @@ interface Work {
   vocabulary: string[]
   /** Files read before reported figures existed; absent from a Worker deployed before them. */
   figure_files?: { stamp: string; url: string }[]
+  /** Files from before GKG_FROM to read for figures alone; absent from a Worker deployed before them. */
+  archive_files?: { stamp: string; url: string }[]
 }
+
+/** Archive files downloaded at once. Posts still go one at a time, in order. */
+const ARCHIVE_CONCURRENCY = 4
 
 interface Mention {
   record_id: string
@@ -169,17 +178,64 @@ async function backfillFigures(file: { stamp: string; url: string }, userAgent: 
   return null
 }
 
+/** A file's row count and figure headlines. */
+function archiveOf(text: string) {
+  return { rows: text.split('\n').filter((l) => l.trim()).length, figures: figuresOf(text) }
+}
+
+/**
+ * Read archive files, ARCHIVE_CONCURRENCY at a time, posting each in order so
+ * the last one the Worker holds says how far the pass has read. Stops at the
+ * first file that fails to download, before posting it or any after it.
+ */
+async function readArchive(files: { stamp: string; url: string }[], userAgent: string) {
+  for (let i = 0; i < files.length; i += ARCHIVE_CONCURRENCY) {
+    if (Date.now() - started >= budgetMs) return null
+    const batch = files.slice(i, i + ARCHIVE_CONCURRENCY)
+    const got = await Promise.all(batch.map((f) => fetchFile(f.url, userAgent)))
+    for (const [j, file] of batch.entries()) {
+      const fetched = got[j]!
+      if (fetched.kind === 'failed') return `${file.stamp}: ${fetched.why}`
+      const { rows, figures: found } =
+        fetched.kind === 'ok' ? archiveOf(fetched.text) : { rows: 0, figures: [] }
+      const outcome = (await ours('/api/gdelt/archive', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          stamp: file.stamp,
+          fetched_at: new Date().toISOString(),
+          status: fetched.kind,
+          rows,
+          figures: found,
+        }),
+      })) as { articles: number; rejected: number }
+      archived++
+      figures += outcome.articles
+      if (outcome.rejected) {
+        annotate('warning', `${file.stamp}: the site rejected ${outcome.rejected} archive row(s)`)
+      }
+    }
+  }
+  return null
+}
+
 let read = 0
 let kept = 0
 let missing = 0
 let backfilled = 0
+let archived = 0
 let figures = 0
 let stop: string | null = null
 while (!stop && Date.now() - started < budgetMs) {
   const work = (await ours('/api/gdelt/work')) as Work
   if (work.files.length === 0) {
     const backlog = work.figure_files ?? []
-    if (backlog.length === 0) break
+    if (backlog.length === 0) {
+      const archive = work.archive_files ?? []
+      if (archive.length === 0) break
+      stop = await readArchive(archive, work.user_agent)
+      continue
+    }
     for (const file of backlog) {
       if (Date.now() - started >= budgetMs) break
       stop = await backfillFigures(file, work.user_agent)
@@ -219,5 +275,6 @@ while (!stop && Date.now() - started < budgetMs) {
 if (stop) annotate('notice', `GDELT file not read (${stop}); the next run retries from there`)
 console.info(
   `read ${read} GKG file(s), ${missing} missing, ${kept} row(s) kept; ` +
-    `${backfilled} file(s) re-read for figures, ${figures} figure headline(s)`,
+    `${backfilled} file(s) re-read for figures, ${archived} archive file(s) read, ` +
+    `${figures} figure headline(s)`,
 )

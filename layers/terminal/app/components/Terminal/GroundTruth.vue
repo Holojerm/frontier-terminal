@@ -8,6 +8,7 @@
 // and the panels about every lab (capex guidance, alerts, the method) are left
 // to /ground-truth.
 
+import { percent, preciseUsd, signedPercent, trimmed } from '../../../shared/utils/terminal-format'
 import { LAB_DISPLAY } from '../../../shared/utils/terminal-labs'
 import type {
   GroundTruthData,
@@ -34,10 +35,6 @@ const METRIC_LABEL: Record<ReportedMetric, string> = {
   funding_total: 'Total raised',
 }
 
-/** '+0.3%' when the report was above the filed figure, '−0.9%' when below. */
-const pct = (n: number) =>
-  `${n > 0 ? '+' : n < 0 ? '−' : '±'}${Math.abs(n).toLocaleString('en-US', { minimumFractionDigits: 1, maximumFractionDigits: 1 })}%`
-
 const plural = (n: number, one: string, many = `${one}s`) => `${n} ${n === 1 ? one : many}`
 
 const money = (amount: number, currency: 'USD' | 'EUR') =>
@@ -46,7 +43,7 @@ const money = (amount: number, currency: 'USD' | 'EUR') =>
 /** Two decimals in billions: $17.0B filed beside $16.8B reported would hide a 0.9% gap. */
 const precise = (n: number) => {
   const compact = figures.usd(n)
-  return compact.endsWith('B') ? `$${(n / 1e9).toFixed(2)}B` : compact
+  return compact.endsWith('B') ? preciseUsd(n) : compact
 }
 
 const derivedText = (f: GroundTruthFiled) => {
@@ -65,7 +62,7 @@ const summary = computed(() => {
   if (t.reports === 0) return ['No filing has printed a revenue figure the press reported first.']
   const lines = [
     `${plural(t.reports, 'press report')} stated a revenue figure before a filing printed it, across ${plural(t.periods, 'filed figure')}.`,
-    `The median report was ${t.median_abs_error_pct!.toLocaleString('en-US', { maximumFractionDigits: 1 })}% from the filed number.`,
+    `The median report was ${percent(t.median_abs_error_pct!)} from the filed number.`,
     `The first report of each figure came a median of ${plural(t.median_lead_days!, 'day')} before the filing.`,
   ]
   if (t.missed) {
@@ -153,7 +150,7 @@ const pressText = (t: TrackRecordTally) =>
     : `Of ${plural(t.matched, 'alert')} with a rated press report, we saw ${t.led} first and the press saw ${t.lagged} first.${
         t.median_lead_hours === null
           ? ''
-          : ` The median lead is ${t.median_lead_hours.toLocaleString('en-US', { maximumFractionDigits: 1 })} hours.`
+          : ` The median lead is ${trimmed(t.median_lead_hours)} hours.`
       }`
 
 const newsroomText = (t: TrackRecordTally) =>
@@ -297,7 +294,7 @@ const waitingKey = (w: GroundTruthWaiting) => `${w.lab}|${w.metric}|${w.currency
               rangeText(row)
             }}</span>
           </template>
-          <template #cell-error="{ row }">{{ pct(row.error_pct) }}</template>
+          <template #cell-error="{ row }">{{ signedPercent(row.error_pct) }}</template>
           <template #cell-lead="{ row }">{{ row.lead_days }}</template>
           <template #cell-reports="{ row }">{{ row.reports.length }}</template>
           <template #cell-held="{ row }">{{ row.held }}</template>
@@ -348,7 +345,7 @@ const waitingKey = (w: GroundTruthWaiting) => `${w.lab}|${w.metric}|${w.currency
                 row.matched_by === 'stated' ? 'named in the headline' : 'nearest filed figure'
               }}</span>
             </template>
-            <template #cell-error="{ row }">{{ pct(row.error_pct!) }}</template>
+            <template #cell-error="{ row }">{{ signedPercent(row.error_pct!) }}</template>
             <template #cell-lead="{ row }">{{ row.lead_days }}</template>
           </TerminalTable>
         </TerminalExpand>
@@ -394,7 +391,7 @@ const waitingKey = (w: GroundTruthWaiting) => `${w.lab}|${w.metric}|${w.currency
           <span v-else class="text-muted">None filed for that period</span>
         </template>
         <template #cell-error="{ row }">
-          <template v-if="row.error_pct !== null">{{ pct(row.error_pct) }}</template>
+          <template v-if="row.error_pct !== null">{{ signedPercent(row.error_pct) }}</template>
           <span v-else class="text-muted">—</span>
         </template>
       </TerminalTable>

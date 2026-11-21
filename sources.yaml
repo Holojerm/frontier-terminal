@@ -2369,8 +2369,10 @@ track_record_sources:
     url: http://data.gdeltproject.org/gdeltv2/{stamp}.gkg.csv.zip
     format: >-
       Zipped TSV, GDELT 2.0 Global Knowledge Graph (GKG 2.1), one file per
-      quarter hour, ~2.5 MB zipped and ~8 MB unzipped, ~1,200 English news
-      articles each (~110,000 a day, sampled 2026-11-06)
+      quarter hour, 1.8 to 9.5 MB zipped (about three times that
+      unzipped) and 1,300 to 2,300 English news articles each, by hour of
+      day; 490 MB a day on 2026-11-10, 720 MB on 2024-03-12 (sampled
+      2026-11-20)
     verdict: include
     terms: >-
       GDELT's terms (gdeltproject.org/about.html): "all datasets released by
@@ -2388,7 +2390,12 @@ track_record_sources:
       Of each kept row whose headline also names an amount of money and a
       financial word (reported figures), its record id, URL, title, outlet
       domain and quarter hour, kept for good; files read before 2026-11-07
-      are read again for these.
+      are read again for these. Before 2026-09-01, back to 2023-01-01, the
+      same figure fields alone, never a mention: the first file of every
+      hour, then every file of each day whose hourly files carried two
+      figure headlines or one stating revenue, and of the day either side
+      (layers/terminal/server/pipeline/reported/archive.ts, from
+      2026-11-21).
       Read 2026-11-07.
     rights: upstream
     caveats: >-

@@ -9,6 +9,7 @@ import {
   compactCount,
   compactTokens,
   count,
+  sharePct,
   splitInstants,
 } from '../../../shared/utils/terminal-format'
 import type { Bounds, UtilizationData } from '../../../shared/utils/recipe-views'
@@ -21,7 +22,7 @@ const props = defineProps<{
   shape: UtilizationData['demand_shape']
 }>()
 
-const pct = (n: number) => (n >= 10 ? `${count(Math.round(n * 100))}%` : `${(n * 100).toFixed(1)}%`)
+const pct = (n: number) => (n >= 10 ? `${count(Math.round(n * 100))}%` : sharePct(n))
 const h100e = compactCount
 const stamps = useStamps()
 // OpenRouter's citation is its license's own wording: only the instant in it
@@ -113,7 +114,7 @@ const fleet = computed(() => props.implied.fleet)
 
     <p v-if="shape" class="text-xs text-muted">
       Demand shape: OpenRouter’s average day was
-      <span class="font-mono text-highlighted">{{ (shape.ratio * 100).toFixed(1) }}%</span>
+      <span class="font-mono text-highlighted">{{ sharePct(shape.ratio) }}</span>
       of its busiest day ({{ stamps.date(shape.peak_date) }},
       {{ compactTokens(shape.peak_tokens) }} tokens) over {{ stamps.date(shape.window.from) }} →
       {{ stamps.date(shape.window.to) }}.

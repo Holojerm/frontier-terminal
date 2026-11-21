@@ -273,6 +273,47 @@ export function grouped(n: number, digits = 0): string {
 }
 
 /**
+ * '1,260.5' / '12' / '−0.4': a grouped figure to at most `digits` decimals,
+ * with no trailing zeros. For prose and single figures; a column that has to
+ * line up takes `grouped()`, which fixes the decimals.
+ */
+export function trimmed(n: number, digits = 1): string {
+  const text = Math.abs(n).toLocaleString('en-US', { maximumFractionDigits: digits })
+  return n < 0 && Number(text.replaceAll(',', '')) !== 0 ? `${MINUS}${text}` : text
+}
+
+/** '12.3%' / '12%': a figure already in percent. A 0..1 share takes `sharePct()`. */
+export function percent(n: number): string {
+  return `${trimmed(n)}%`
+}
+
+/**
+ * '+0.9%' / '−0.9%' / '±0.0%': how far a figure landed from the one it is
+ * measured against, at one fixed decimal, the sign always visible. A value
+ * that rounds to zero is '±0.0%', whichever side it fell.
+ */
+export function signedPercent(n: number): string {
+  const text = grouped(Math.abs(n), 1)
+  const sign = Number(text.replaceAll(',', '')) === 0 ? '±' : n > 0 ? '+' : MINUS
+  return `${sign}${text}%`
+}
+
+/** '$38B' / '$38.5B': a figure someone stated in round billions (a press report, a company's guidance). */
+export function roundBillions(n: number): string {
+  return `${n < 0 ? MINUS : ''}$${trimmed(Math.abs(n) / 1e9)}B`
+}
+
+/**
+ * '$17.00B': two decimals in billions, for a filed figure set beside a
+ * reported one. At `compactUsd()`'s three figures $17.0B beside $16.8B hides
+ * a 0.9% gap. Under a billion it is `compactUsd()`.
+ */
+export function preciseUsd(n: number): string {
+  if (Math.abs(n) < 1e9) return compactUsd(n)
+  return `${n < 0 ? MINUS : ''}$${grouped(Math.abs(n) / 1e9, 2)}B`
+}
+
+/**
  * '$6.16': a rental price per GPU-hour at a fixed two decimals, so a column
  * of them lines up. Providers print two to four; `exactUsd` is the value as
  * printed, for the tooltip beside it. '—' for absent.

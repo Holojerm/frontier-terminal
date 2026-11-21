@@ -430,10 +430,14 @@ screen the way a terminal function key does. The data below it is the content.
 - **Deltas:** a sign the reader can see, never a color: `+12`, `−3` (U+2212), `±0`. Formatted
   once, in `layers/terminal/shared/utils/terminal-format.ts`. So is every other figure: a negative
   is `grouped()` (never `toLocaleString`'s hyphen), a GPU-hour price is `gpuHour()` at two
-  decimals with `exactUsd()` in its tooltip, a count too big for a cell is `compactCount()`, and
+  decimals with `exactUsd()` in its tooltip, a count too big for a cell is `compactCount()`, a
+  percent is `percent()` (prose), `sharePct()` (a 0..1 share, one decimal) or `signedPercent()`
+  (an error against a filed figure), a stated round figure is `roundBillions()`, a filed one
+  beside it is `preciseUsd()`, and
   a vendor's enum or key (`SOFTWARE_ENGINEERING`, `batch_long_context`, `NVIDIA CORP`) reads
   through `boardLabel()`, `tierLabel()` or `edgarName()`. A delta takes `text-muted` beside its figure;
-  green and red would read as good and bad, and a price rise is neither.
+  green and red would read as good and bad, and a price rise is neither. No component
+  calls `toLocaleString` or `toFixed` itself; a test fails on it.
 
 ### Terminal primitives
 

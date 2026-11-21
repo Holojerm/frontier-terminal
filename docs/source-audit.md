@@ -805,6 +805,46 @@ At 24 days a day, Claude Code's 20 months fill in under four weeks, Codex's and 
 
 **Verdict: include**, as retrospective counts, with the caveat on each entry in `sources.yaml` and on the adoption panel. Rights stay `not-cleared`.
 
+## Addendum, 2026-11-20: GDELT GKG before 2026-09-01
+
+Checked because a buyer asked for press scored against filings, and Anthropic's S-1 (first filed 2026-10-26) prints revenue for 2023, 2024, 2025 and the first nine months of 2026, so press from well before `GKG_FROM` could be scored. GDELT publishes a GKG file for every quarter hour back to 2015, under the terms already read (`gdelt-gkg`). Measured 2026-11-20 between 23:15Z and 00:30Z with a generic client: HEAD requests, 21 files parsed with the pipeline's own `parseGkgRow` and `figureHeadline`, and a pilot read of six whole days. Production's counts come from its public export and its GitHub Actions logs. Nothing was stored.
+
+| Measure | Result |
+|---|---|
+| File size | HEAD on all 96 files of four days: 7.5 MB a file on average on 2024-03-12 (718 MB that day), 6.7 MB on 2025-03-12 (643 MB), 6.1 MB on 2025-09-17 (585 MB), 5.1 MB on 2026-11-10 (490 MB). A file runs 1.8 MB at 03:15Z to 9.5 MB at 17:00Z, and unzips to about three times that. None of the 384 was missing. The registry's "~2.5 MB" was wrong and is corrected |
+| Bytes | From 2025-01-01: 608 days, 58,368 files, about 360 GB. From 2024-01-01: 974 days, 93,504 files, about 610 GB |
+| Job throughput | The backlog runs of 2026-11-07 read 3,120 files in 40 minutes for mentions (78 a minute) and 3,975 in 36 minutes for figures alone (110 a minute), one file at a time, about 6.5 MB/s. The scheduler started about five such runs a day, so about 3.3 hours of reading a day |
+| Runtime at that rate | From 2025-01-01: 9 to 15 hours of reading, 3 to 5 days. From 2024-01-01: 14 to 26 hours, 5 to 8 days |
+| Runtime, four at once | The pilot fetched 576 files (3.23 GB) in 95 seconds from the Mac mini with four downloads at a time, 34 MB/s. At that rate 360 GB is about 3 hours |
+| Rows kept by the vocabulary filter | 56 a file on 2026-11-07 (98,639 over 1,773 files), 98 on 2026-11-20 (2,358 over 24). These are pruned after `MENTION_RETAIN_DAYS` (15), and no alert's window starts before 2026-09-01, so an old file's mentions would be deleted as they were written. They add nothing to D1 |
+| Figure rows | Production since 2026-09-01: 1,917 figure articles (975 headlines) over about 7,800 files, 0.25 a file and about 500 bytes each. Nine files sampled from 2024-03 to 2026-03 had none. The six pilot days, each a known Anthropic round or revenue report (2025-03-03/04, 05-30/31, 09-02/03), had 121 rows and 89 headlines, 0.21 a file |
+| D1 growth | Figure rows: a few thousand at most from 2025-01-01, under 5 MB. A `gdelt_files` row per file adds about 15 MB (2025) or 23 MB (2024). Either way under 30 MB |
+| Judge | Reads 60 figure headlines an hour, 1,440 a day, so a few thousand old headlines take a day or two. But `figureReview` offers the oldest first, so until they are read no new headline would be |
+| Sampled files instead of all | Simulated on production's headlines since 2026-09-01: reading every second quarter hour keeps 54% of figure headlines and 79% of distinct claims (lab, metric, amount); every fourth keeps 29% and 57%. Most headlines appear in only one or two files, so sampling loses them |
+
+**What the pilot found.** GDELT carried each event: the Series E at $61.5 billion (27 Anthropic headlines over two days), Reuters' "Anthropic hits $3 billion in annualized revenue" (4 headlines, 7 copies), and the Series F at $183 billion with its "$5B run-rate" (36). It also carried deals with other companies: OpenAI's Statsig purchase, Telegram's $300 million with xAI, SoftBank's Stargate loan.
+
+**What the ground truth would do with them.** Nothing bounds a report by date. `scoreReport` scores a USD `reported` revenue headline against any filed period that had ended when it ran and was first filed after it, and marks it `held_before_filing: false`, so the page counts it as the press's and not ours. Deal sizes are scored the same way against the counterparty's filings (Amazon, Alphabet, Microsoft and the rest, which the terminal holds from 2020). Two limits:
+
+- **Only period revenue is scored.** Every Anthropic revenue headline in the pilot was a run rate, which `revenue_run_rate` keeps and the page lists under "waiting", never scored against a filed period. Headlines that state a finished year's revenue were not seen in the pilot. How many exist is the open number.
+- **Valuations and rounds aren't filed.** They extend the "Reported in the press" series back, which has its own value, but nothing scores them.
+
+No live alert is touched: alerts start at `TRACK_RECORD_FROM` (2026-09-08), the matcher reads only mentions inside an alert's window, and mentions from an old file are pruned on write.
+
+**Verdict: not built.** The full read is 360 GB from 2025-01-01 and 610 GB from 2024-01-01, ten times what a backfill on the owner's home connection should take, for a scored yield the pilot can't yet put a number on. Two ways that fit:
+
+1. **Figures only, from 2025-01-01, on a hosted runner.** GitHub's runners carry the bytes for nothing on a public repository, so the 360 GB never touches the mini's line. Read four files at a time (about 3 hours of downloads, a few runs), post only figure headlines, keep no mentions, and record the old files apart from `gdelt_files`' contiguous run so `GKG_FROM`, `oldestUnread` and the coverage count stay as they are. Before it runs, `figureReview` must offer new headlines ahead of the backlog. 2024 can follow if 2025 yields scored reports.
+2. **One month first.** The same build pointed at one month of 2025 (about 2,900 files, 18 GB), to count how many headlines state a finished period's revenue, before committing to the rest.
+
+Also possible, not checked: GDELT's public BigQuery table (`gdelt-bq.gdeltv2.gkg_partitioned`) would return only the matching rows from one query, inside BigQuery's free monthly scan if the title column is small enough. It needs a Google Cloud account, and the scan size wasn't measured.
+
+**Built the same day, as event windows on the Mac mini.** The owner chose to read only the days that matter, back as far as the events go, from the mini. 2023 was sized too: all 96 files of 2023-06-14 came to 785 MB (8.2 MB a file), and two 2023 files parsed with the same columns and page titles as 2026's. `ARCHIVE_FROM` is 2023-01-01, which takes in Microsoft's January 2023 investment in OpenAI, Amazon's and Google's 2023 stakes in Anthropic, and the press on Anthropic's 2023 revenue, the first year its S-1 prints. A list of event dates was considered and not used, because it would miss what nobody wrote down. The Worker finds the days from the files themselves instead (`layers/terminal/server/pipeline/reported/archive.ts`):
+
+- **Scout.** The first file of every hour of every day from 2023-01-01 to 2026-08-31: 32,136 files, about 230 GB.
+- **Fill.** Every other quarter hour of each day whose scout files carried two distinct figure headlines or one stating revenue, and of the day either side. Coverage that runs for a week is filled day by day. A day is judged on its scout files alone, so the fill can't widen itself. Each hot day costs at most three days of files, about 1.5 GB. How many days qualify is known only once the scout is done.
+- **Figures only.** The job posts only figure headlines (`/api/gdelt/archive`), recorded in `gdelt_archive_files` apart from `gdelt_files`, so `GKG_FROM`, the live cursor and freshness are unchanged. No mention is kept from an archive file, so no alert is matched against one.
+- **Live first.** `/api/gdelt/work` hands out archive files only when no live file and no figure backlog is waiting. The job downloads four archive files at a time and posts them in order. The judge's queue offers headlines from 2026-09-01 on before any archive headline.
+
 ## Addendum, 2026-11-20: MLPerf Inference rounds before v6.0
 
 Checked so tokens per second per accelerator has a history across chip generations. Each `mlcommons/inference_results_v*` repository was read through the GitHub API, and each `summary_results.json` was fetched from `raw.githubusercontent.com` on 2026-11-21 00:15Z (2026-11-20 in New York) with a generic client.
@@ -818,7 +858,7 @@ Checked so tokens per second per accelerator has a history across chip generatio
 
 Rounds are dated by MLCommons's announcements: v5.1 on 2025-09-09 (`mlcommons.org/2025/09/mlperf-inference-v5-1-results/`) and v6.0 on 2026-04-01 (`mlcommons.org/2026/04/mlperf-inference-v6-0-results/`).
 
-**How they are stored.** One recipe (`mlperf-inference-datacenter`) with a fixed list of rounds. Each row is dated by its round and cites its round's URL and round label. A run reads the oldest listed round newer than the newest stored date, through the `newest` the contract already passes to `url`, so the runner needs no change. Each past round is read once, and the newest round is re-read every survey. Migration 0061 clears the v6.0 rows dated by their fetch day (2026-11-20), so the first two surveys after deploy read v5.1 and then v6.0. For about six hours in between, the implied read on `/compute` shows v5.1, labeled as v5.1.
+**How they are stored.** One recipe (`mlperf-inference-datacenter`) with a fixed list of rounds. Each row is dated by its round and cites its round's URL and round label. A run reads the oldest listed round newer than the newest stored date, through the `newest` the contract already passes to `url`, so the runner needs no change. Each past round is read once, and the newest round is re-read every survey. Migration 0062 clears the v6.0 rows dated by their fetch day (2026-11-20), so the first two surveys after deploy read v5.1 and then v6.0. For about six hours in between, the implied read on `/compute` shows v5.1, labeled as v5.1.
 
 **Surfaces.** The implied read on `/compute`, `/api/utilization` and the `get_utilization` MCP tool show one benchmark round, the newest stored, and name it in the footnote and citation. The bulk export carries every round's rows, each with its `round`, date and source URL. No thesis or alert reads this recipe, so a past round never appears as a change.
 
