@@ -1,8 +1,8 @@
 # Email
 
-How an email is written (Maizzle templates, compiled at build time, filled in with Mustache). This app sends two email templates: the weekly thesis digest (`layers/terminal/server/theses/digest.ts`) and the subscription confirmation. The owner's digest and the press receipt (or, without Resend, the mailto press brief) go through the `OWNER_EMAIL` `send_email` binding (`layers/core/server/utils/owner-mail.ts`). Subscribers' mail and the press notes to reporters go through Resend (see Subscribers below; press notes send from `NUXT_PRESS_EMAIL_FROM`). It sends no alerts: the fleet dashboard is the only alert sender. The pipeline is the template's, trimmed to the thesis digest.
+How an email is written (Maizzle templates, compiled at build time, filled in with Mustache). This app sends two email templates: the weekly thesis digest (`layers/theses/server/theses/digest.ts`) and the subscription confirmation. The owner's digest and the press receipt (or, without Resend, the mailto press brief) go through the `OWNER_EMAIL` `send_email` binding (`layers/core/server/utils/owner-mail.ts`). Subscribers' mail and the press notes to reporters go through Resend (see Subscribers below; press notes send from `NUXT_PRESS_EMAIL_FROM`). It sends no alerts: the fleet dashboard is the only alert sender. The pipeline is the template's, trimmed to the thesis digest.
 
-> **Load this when:** touching `emails/`, `layers/terminal/server/theses/digest.ts`, or adding a second outbound email.
+> **Load this when:** touching `emails/`, `layers/theses/server/theses/digest.ts`, or adding a second outbound email.
 > Canonical index: [AGENTS.md](../../AGENTS.md).
 
 ---
@@ -39,7 +39,7 @@ server/emails/generated.ts  GENERATED at install — never commit it
 4. `bun run email:build`, then `bun run email:dev` and look at it.
 5. A function that returns `{ subject, html, text }` by calling `renderEmail('<name>', data)`
    (`server/utils/render-email.ts`) — the subject, and turning a `Date` or an enum into the
-   strings the template reads, stay in TypeScript (see `layers/terminal/server/theses/digest.ts`). Add its
+   strings the template reads, stay in TypeScript (see `layers/theses/server/theses/digest.ts`). Add its
    action URL to `ACTION_URL` in `test/emails.test.ts`, plus a test for anything specific to it.
    That file already proves a template renders, leaves no `{{` behind, escapes hostile data,
    and that the text carries the action URL.

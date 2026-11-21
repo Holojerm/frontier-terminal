@@ -23,8 +23,8 @@ import {
   type KcsRelease,
 } from '../server/prints/kcs'
 import { printsStamp } from '../server/prints/store'
-import { createLoader } from '#layers/terminal/server/signals/sources'
-import { SIGNALS } from '#layers/terminal/server/signals/registry'
+import { createLoader } from '#layers/signals/server/signals/sources'
+import { SIGNALS } from '#layers/signals/server/signals/registry'
 import { readPrintSources } from '#layers/core/server/utils/terminal-sources'
 import { queryContext } from '#layers/core/server/utils/terminal-db'
 import { printRows, queryPrints } from '../server/utils/terminal-prints'

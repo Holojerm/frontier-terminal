@@ -179,7 +179,7 @@ enabled = true
 #                   alerts whose window closed, and the GDELT side's search row once its
 #                   files are read (layers/press/server/pipeline/track-record/); the files
 #                   are read on the owner's Mac mini (scripts/gdelt-search.ts)
-#   "0 13 * * MON"  theses:digest — the weekly thesis digest email (layers/terminal/server/theses/digest.ts)
+#   "0 13 * * MON"  theses:digest — the weekly thesis digest email (layers/theses/server/theses/digest.ts)
 #                   social:digest — queues the weekly what-moved thread
 #                   alerts:hiring-rollup — one hiring alert per lab for the week
 #                   just ended (layers/talent/server/pipeline/hiring-rollup.ts)
@@ -195,9 +195,9 @@ enabled = true
 #   "7 * * * *"     probes:latency — one timed streaming request per lab's flagship model
 #                   (layers/reliability/server/pipeline/probes/), alone in its invocation
 #   "40 6 * * *"    signals:prices — Databento daily closes once EQUS.SUMMARY has the US session,
-#                   plus the one-off hourly backfill (layers/terminal/server/signals/market.ts)
+#                   plus the one-off hourly backfill (layers/signals/server/signals/market.ts)
 #   "10 7 * * *"    signals:run — the signals harness over those closes
-#                   (layers/terminal/server/signals/run.ts)
+#                   (layers/signals/server/signals/run.ts)
 #   "23 * * * *"    calls:read — earnings-call exhibits, transcripts and AssemblyAI replays,
 #                   and the filed figures that score them (layers/companies/server/calls/ingest.ts)
 #

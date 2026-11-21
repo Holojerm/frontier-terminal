@@ -50,8 +50,8 @@ import type {
   Prov,
   RevenueProviderView,
 } from '../../shared/utils/terminal-types'
-import { statusCounts, STATUS_META, thesisPath } from '../../shared/utils/thesis-format'
-import type { ThesesData } from '../../shared/utils/thesis-types'
+import { statusCounts, STATUS_META, thesisPath } from '../../../theses/shared/utils/thesis-format'
+import type { ThesesData } from '../../../theses/shared/utils/thesis-types'
 import { feedGap } from '#layers/core/app/utils/feed-gap'
 
 /** How many alerts the sheet lists: enough to show what moved, few enough to fit the page. */

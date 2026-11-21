@@ -1371,7 +1371,7 @@ derived_sources:
       the printed disclosure date where one exists, else against the
       earliest date the index has shown for the report.
 
-# Thesis recipes (layers/terminal/server/theses/recipes/) audited in docs/source-audit.md.
+# Thesis recipes (server/registries/recipes.ts) audited in docs/source-audit.md.
 # A recipe runs on the survey tick and stores into recipe_observations, never
 # the lab tables, so it is registered here rather than under `sources:`;
 # /api/coverage lists every recipe and reads its caveat and terms from this

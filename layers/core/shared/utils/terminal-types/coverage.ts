@@ -220,7 +220,7 @@ export interface CutSource {
   reason: string
 }
 
-/** One thesis recipe (layers/terminal/server/theses/recipes/): how its last run ended and what it has stored. */
+/** One thesis recipe (server/registries/recipes.ts): how its last run ended and what it has stored. */
 export interface TrackRecordSource {
   id: string
   url: string | null

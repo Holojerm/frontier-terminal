@@ -14,7 +14,7 @@ import { count } from '#layers/core/shared/utils/terminal-format'
 import { labLede } from '../../../../shared/utils/terminal-ledes'
 import type { TableColumn } from '#layers/core/app/types/terminal-ui'
 import type { ListedData } from '../../../../shared/utils/listed'
-import type { ThesesData, ThesisView } from '../../../../shared/utils/thesis-types'
+import type { ThesesData, ThesisView } from '../../../../../theses/shared/utils/thesis-types'
 import type {
   AlertsData,
   DisclosuresData,

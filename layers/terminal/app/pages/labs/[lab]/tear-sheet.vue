@@ -34,7 +34,7 @@ import type {
   RankingsData,
   RevenueData,
 } from '../../../../shared/utils/terminal-types'
-import type { ThesesData } from '../../../../shared/utils/thesis-types'
+import type { ThesesData } from '../../../../../theses/shared/utils/thesis-types'
 
 // Inert for a dynamic route, as on the lab page: sitemap.xml and llms.txt list
 // the sheets from TEAR_SHEET_PAGES (terminal-lab-summary.ts).

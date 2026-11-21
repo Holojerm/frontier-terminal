@@ -152,12 +152,41 @@ export const DOMAIN_LAYERS = {
     uses: ['core', 'pricing', 'press'],
     public: [
       // The confirmed-subscriber count the shell's fleet counters report, and the subscriber
-      // fan-out and stale-pending purge the shell's theses:digest task runs.
+      // fan-out and stale-pending purge the theses:digest task runs.
       'server/utils/subscribers.ts',
       'server/utils/subscriber-mail.ts',
       // The overview strip and the alert slimming the home page and the lab page apply.
       'app/utils/overview-strip.ts',
     ],
+  },
+  theses: {
+    // Its claims read every domain but models. Its pages carry alerts' digest signup, and its
+    // digest task runs alerts' subscriber fan-out and purge, handing it the digest to build.
+    // It uses no signals code.
+    uses: [
+      'core',
+      'companies',
+      'compute',
+      'pricing',
+      'talent',
+      'reliability',
+      'adoption',
+      'press',
+      'alerts',
+    ],
+    public: [
+      // The theses, which the crawler pages, the cache warm and the OG cards list.
+      'server/theses/registry.ts',
+      // The evaluator, which the shell's survey tick and the fixture fill run after the recipes.
+      'server/theses/evaluate.ts',
+    ],
+  },
+  signals: {
+    // The series it tests come from every domain but models. It uses no theses code.
+    uses: ['core', 'companies', 'compute', 'pricing', 'talent', 'reliability', 'adoption', 'press'],
+    // Nothing beyond its shared/ types: the call reader gets its concepts through the app's
+    // server/registries/call-concepts.ts, and its tools and tables register there too.
+    public: [],
   },
   terminal: {
     uses: [
@@ -171,6 +200,8 @@ export const DOMAIN_LAYERS = {
       'models',
       'press',
       'alerts',
+      'theses',
+      'signals',
     ],
   },
 } satisfies LayerTable

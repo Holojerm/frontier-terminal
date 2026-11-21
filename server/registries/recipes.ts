@@ -3,7 +3,7 @@
 // file in its domain's recipes folder, a fixture under fixtures/recipes/ with
 // its test, and a line here.
 
-import { CLOUDFLARE_CHANGELOG } from '#layers/terminal/server/theses/recipes/cloudflare-changelog'
+import { CLOUDFLARE_CHANGELOG } from '#layers/theses/server/recipes/cloudflare-changelog'
 import type { Recipe } from '#layers/core/server/recipes/contract'
 import { EARNINGS_RELEASE_RECIPES } from '#layers/compute/server/recipes/earnings-releases'
 import { EPOCH_CHIP_TYPES, EPOCH_CHIP_USERS } from '#layers/compute/server/recipes/epoch-chip-users'

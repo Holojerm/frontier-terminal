@@ -13,7 +13,7 @@
 // that page's text to map them from
 // (layers/pricing/server/pipeline/judge/class-map.ts). `claim_review` lists, per judged
 // thesis claim, the pending changes it offers for a verdict
-// (layers/terminal/server/theses/verdicts.ts): events among `changes`, and recipe items
+// (layers/theses/server/theses/verdicts.ts): events among `changes`, and recipe items
 // (a changelog entry, say) not yet rated, so it can be non-empty when
 // `changes` is empty. `hiring` gives, per lab with job changes pending, the
 // board and department sizes and which moves clear the materiality floor

@@ -23,7 +23,7 @@ import { DATACENTER_RECIPES } from '#layers/compute/server/utils/terminal-datace
 import { powerSitesStamp } from '#layers/compute/server/power/stamp'
 import { reportedStamp } from '../../press/server/utils/terminal-reported'
 import { UTILIZATION_RECIPES } from '#layers/terminal/server/utils/terminal-utilization-query'
-import { THESES } from '../server/theses/registry'
+import { THESES } from '../../theses/server/theses/registry'
 import { served } from '#layers/core/server/utils/terminal-envelope'
 import { fixtureText, manifest } from '#layers/core/test/pipeline/fixtures'
 

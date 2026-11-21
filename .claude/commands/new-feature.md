@@ -33,7 +33,7 @@ and [`.claude/docs/voice.md`](../docs/voice.md) before any copy.
 ### 1. Source
 
 Add the source to `sources.yaml` with its `axis`, `provider`, `url`, `diff_mechanism`,
-`verdict`, `terms` and `rights`. A thesis recipe (`layers/terminal/server/theses/recipes/`,
+`verdict`, `terms` and `rights`. A thesis recipe (`server/registries/recipes.ts`,
 stored in `recipe_observations`) goes under `recipe_sources:` instead, and the other blocks
 (`filed_fact_sources:`, `identifier_sources:` and so on) take their own kinds. Note the audit
 in `docs/source-audit.md`.
