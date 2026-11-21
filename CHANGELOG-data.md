@@ -23,6 +23,16 @@ is smaller than its changes need. `bun run schema:lock` rewrites the lock only
 when the newest release in `layers/terminal/server/utils/data-schema.ts` says
 exactly which columns changed.
 
+## 1.23.0 (2026-11-21)
+
+`hardware_prints` gains Korea's semiconductor exports from Korea Customs
+Service: `series` `kr_chip_exports`, `entity` `kr-semiconductors`, for the
+first 10 and 20 days of a month (`window` `d10`, `d20`) and the whole month,
+in USD, with the stated year-on-year change. `published_at` is the release's
+embargo time (보도시점), `ticker` and `due_on` are null. Only releases under
+KOGL Type 1 (October 2026 on) are served. Attribute Korea Customs Service and
+the release URL in `source_url`.
+
 ## 1.22.0 (2026-11-21)
 
 A new table, `hardware_prints`: the monthly revenue of TSMC, Hon Hai, Quanta,

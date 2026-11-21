@@ -347,6 +347,17 @@ export const SCHEMA_RELEASES: readonly SchemaRelease[] = [
       'A new hardware_prints table: the monthly revenue of TSMC, Hon Hai, Quanta, Wistron, Wiwynn, Gigabyte, Accton and Delta, each figure as a source first gave it, with first_seen_at, published_at (the release time where the source states one), due_on and a vintage per revision. TSMC’s history from its 6-Ks starts in 2015 and Accton’s from its own page in July 2023. /api/prints serves it with each company’s sourced ties, and get_hardware_prints returns the same.',
     tables: { hardware_prints: { note: 'New table.' } },
   },
+  {
+    version: '1.23.0',
+    date: '2026-11-21',
+    summary:
+      'hardware_prints gains Korea’s semiconductor exports (series kr_chip_exports, entity kr-semiconductors) from Korea Customs Service: the first 10 and 20 days of a month (window d10, d20) and the whole month, in USD, with the stated year-on-year change and the release’s embargo time as published_at. Only releases under KOGL Type 1 (October 2026 on) are served. /api/prints and get_hardware_prints show them.',
+    tables: {
+      hardware_prints: {
+        note: 'series can be kr_chip_exports, with currency USD, a null ticker and a null due_on.',
+      },
+    },
+  },
 ]
 
 export const SCHEMA_VERSION = SCHEMA_RELEASES.at(-1)!.version

@@ -2185,6 +2185,159 @@
       "http_status": 200,
       "raw_bytes": 249063,
       "trim": "the unit line and the revenue table kept; the WordPress page around them dropped"
+    },
+    {
+      "path": "fixtures/prints/kcs-board.html",
+      "source_id": "kcs-chip-exports",
+      "source_url": "https://www.customs.go.kr/kcs/na/ntt/selectNttList.do?mi=2891&bbsId=1362&listCo=20&searchType=sj&searchValue=%EC%88%98%EC%B6%9C%EC%9E%85+%ED%98%84%ED%99%A9&currPage=1",
+      "fetched_at": "2026-11-21T07:55:41Z",
+      "http_status": 200,
+      "raw_bytes": 108048,
+      "trim": "the result count and five of the page's 20 rows kept (the four releases below and one by company size); the page around them and blank lines dropped"
+    },
+    {
+      "path": "fixtures/prints/kcs-release-10182926.html",
+      "source_id": "kcs-chip-exports",
+      "source_url": "https://www.customs.go.kr/kcs/na/ntt/selectNttInfo.do?mi=2891&bbsId=1362&nttSn=10182926&nttSnUrl=f245ffc86cc10295d215ed0379c4a630",
+      "fetched_at": "2026-11-21T07:45:58Z",
+      "http_status": 200,
+      "raw_bytes": 130395,
+      "trim": "1–10 November 2026, KOGL Type 1: the title, the attachment list and the licence block kept; the rest of the page dropped"
+    },
+    {
+      "path": "fixtures/prints/kcs-viewer-10182926.json",
+      "source_id": "kcs-chip-exports",
+      "source_url": "https://www.customs.go.kr/streamdocs/v4/documents/view/tnnf/315cfcb06b903fc9721e383c914b8874",
+      "fetched_at": "2026-11-21T07:55:53Z",
+      "http_status": 200,
+      "raw_bytes": 60,
+      "trim": "none — committed whole"
+    },
+    {
+      "path": "fixtures/prints/kcs-release-10183383.html",
+      "source_id": "kcs-chip-exports",
+      "source_url": "https://www.customs.go.kr/kcs/na/ntt/selectNttInfo.do?mi=2891&bbsId=1362&nttSn=10183383&nttSnUrl=543e432d867f6dd472a69c7a3cfff59c",
+      "fetched_at": "2026-11-21T07:42:54Z",
+      "http_status": 200,
+      "raw_bytes": 118266,
+      "trim": "October 2026 confirmed, KOGL Type 1: the title, the attachment list and the licence block kept; the rest of the page dropped"
+    },
+    {
+      "path": "fixtures/prints/kcs-viewer-10183383.json",
+      "source_id": "kcs-chip-exports",
+      "source_url": "https://www.customs.go.kr/streamdocs/v4/documents/view/tnnf/4c603a0f65708a0a0dbe442aa0eba433",
+      "fetched_at": "2026-11-21T07:55:54Z",
+      "http_status": 200,
+      "raw_bytes": 60,
+      "trim": "none — committed whole"
+    },
+    {
+      "path": "fixtures/prints/kcs-release-10177443.html",
+      "source_id": "kcs-chip-exports",
+      "source_url": "https://www.customs.go.kr/kcs/na/ntt/selectNttInfo.do?mi=2891&bbsId=1362&nttSn=10177443&nttSnUrl=b76927b3d643e2a959deed83783dc1b8",
+      "fetched_at": "2026-11-21T07:46:08Z",
+      "http_status": 200,
+      "raw_bytes": 124961,
+      "trim": "1–20 September 2026, no licence mark: the title, the attachment list and the licence block kept; the rest of the page dropped"
+    },
+    {
+      "path": "fixtures/prints/kcs-viewer-10177443.json",
+      "source_id": "kcs-chip-exports",
+      "source_url": "https://www.customs.go.kr/streamdocs/v4/documents/view/tnnf/de453e056876a627ccd443c3fdd6306e",
+      "fetched_at": "2026-11-21T07:55:54Z",
+      "http_status": 200,
+      "raw_bytes": 60,
+      "trim": "none — committed whole"
+    },
+    {
+      "path": "fixtures/prints/kcs-release-10181824.html",
+      "source_id": "kcs-chip-exports",
+      "source_url": "https://www.customs.go.kr/kcs/na/ntt/selectNttInfo.do?mi=2891&bbsId=1362&nttSn=10181824&nttSnUrl=4c5427b9707dd3a4c5c0a47f53dbf1c7",
+      "fetched_at": "2026-11-21T07:43:06Z",
+      "http_status": 200,
+      "raw_bytes": 207747,
+      "trim": "October 2026 provisional, no chip figure: the title, the attachment list and the licence block kept; the rest of the page dropped"
+    },
+    {
+      "path": "fixtures/prints/kcs-viewer-10181824.json",
+      "source_id": "kcs-chip-exports",
+      "source_url": "https://www.customs.go.kr/streamdocs/v4/documents/view/tnnf/5de67b529e138a0ad8ce51e274147d4d",
+      "fetched_at": "2026-11-21T07:55:55Z",
+      "http_status": 200,
+      "raw_bytes": 60,
+      "trim": "none — committed whole"
+    },
+    {
+      "path": "fixtures/prints/kcs-texts-10182926.txt",
+      "source_id": "kcs-chip-exports",
+      "source_url": "https://www.customs.go.kr/streamdocs/v4/documents/72059388394710016/texts",
+      "fetched_at": "2026-11-21T07:45:59Z",
+      "http_status": 200,
+      "raw_bytes": 4653,
+      "trim": "none — committed whole (1–10 November 2026, KOGL Type 1)"
+    },
+    {
+      "path": "fixtures/prints/kcs-texts-10183383.txt",
+      "source_id": "kcs-chip-exports",
+      "source_url": "https://www.customs.go.kr/streamdocs/v4/documents/72059388825261725/texts",
+      "fetched_at": "2026-11-21T07:42:56Z",
+      "http_status": 200,
+      "raw_bytes": 28691,
+      "trim": "none — committed whole (October 2026 confirmed, KOGL Type 1)"
+    },
+    {
+      "path": "fixtures/prints/kcs-texts-10177443.txt",
+      "source_id": "kcs-chip-exports",
+      "source_url": "https://www.customs.go.kr/streamdocs/v4/documents/72059383987067363/texts",
+      "fetched_at": "2026-11-21T07:46:08Z",
+      "http_status": 200,
+      "raw_bytes": 4604,
+      "trim": "none — committed whole (1–20 September 2026, no licence mark)"
+    },
+    {
+      "path": "fixtures/prints/kcs-texts-10181824.txt",
+      "source_id": "kcs-chip-exports",
+      "source_url": "https://www.customs.go.kr/streamdocs/v4/documents/72059387614762371/texts",
+      "fetched_at": "2026-11-21T07:43:06Z",
+      "http_status": 200,
+      "raw_bytes": 2671,
+      "trim": "none — committed whole (October 2026 provisional, no chip figure)"
+    },
+    {
+      "path": "fixtures/prints/kcs-texts-45133.txt",
+      "source_id": "kcs-chip-exports",
+      "source_url": "https://www.customs.go.kr/streamdocs/v4/documents/72059186402929861/texts",
+      "fetched_at": "2026-11-21T07:44:31Z",
+      "http_status": 200,
+      "raw_bytes": 27423,
+      "trim": "none — committed whole (August 2019 confirmed (HWP): table and 억 달러 sentence)"
+    },
+    {
+      "path": "fixtures/prints/kcs-texts-10051925.txt",
+      "source_id": "kcs-chip-exports",
+      "source_url": "https://www.customs.go.kr/streamdocs/v4/documents/72059181474475499/texts",
+      "fetched_at": "2026-11-21T07:44:29Z",
+      "http_status": 200,
+      "raw_bytes": 2136,
+      "trim": "none — committed whole (1–20 March 2020 (HWP): the change only)"
+    },
+    {
+      "path": "fixtures/prints/kcs-texts-10163364.txt",
+      "source_id": "kcs-chip-exports",
+      "source_url": "https://www.customs.go.kr/streamdocs/v4/documents/72059372070810372/texts",
+      "fetched_at": "2026-11-21T07:46:54Z",
+      "http_status": 200,
+      "raw_bytes": 2335,
+      "trim": "none — committed whole (April 2026 provisional: the chip figure in 억 달러 only)"
+    },
+    {
+      "path": "fixtures/prints/kcs-texts-41571.txt",
+      "source_id": "kcs-chip-exports",
+      "source_url": "https://www.customs.go.kr/streamdocs/v4/documents/72059212330535216/texts",
+      "fetched_at": "2026-11-21T07:44:39Z",
+      "http_status": 200,
+      "raw_bytes": 28940,
+      "trim": "none — committed whole (November 2017 confirmed (HWP): \"98억 3천만 달러\")"
     }
   ]
 }

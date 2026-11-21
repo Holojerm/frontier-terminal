@@ -190,8 +190,8 @@ const securityHeaders = {
 //                (layers/terminal/server/pipeline/reliability/), and
 //                reliability:deploys, which reads its deploy smoke results
 //                from GitHub.
-//              — prints:read, the Taiwan monthly revenue feeds and TSMC's revenue 6-Ks
-//                (layers/terminal/server/prints/ingest.ts).
+//              — prints:read, the Taiwan monthly revenue feeds, TSMC's revenue 6-Ks and
+//                Korea Customs Service's export releases (layers/terminal/server/prints/ingest.ts).
 //   7 * * * *  — probes:latency, layers/terminal/server/tasks/probes/latency.ts: one
 //                timed streaming request per lab, alone in its invocation so no
 //                other task's requests queue in front of a probe.

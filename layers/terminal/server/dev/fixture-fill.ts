@@ -90,7 +90,7 @@ export interface FixtureFillReport {
   recipes: number
   /** The hand-read rows seeded; no site search has a fixture, so no filing is read. */
   power: PowerReadReport
-  /** The exchange feed, Accton's page and the three committed TSMC 6-Ks. */
+  /** The exchange feed, Accton’s page, the three committed TSMC 6-Ks and the four KCS releases. */
   prints: PrintReadReport
   theses: Awaited<ReturnType<typeof evaluateTheses>>
 }

@@ -31,6 +31,12 @@ import { addDays, type PricePanel } from './market'
 export interface Point {
   date: string
   value: number
+  /**
+   * The day the value became public, where the source states it (a release
+   * time). Without it the change is public available_after_days after its
+   * period ends. A 10-day count is public before its month ends.
+   */
+  available?: string
 }
 
 export type Period = 'day' | 'week' | 'month'
@@ -87,7 +93,11 @@ export function resample(
       if (days * 2 > daysIn(key, period)) out.push({ date: key, value: total / list.length })
     } else {
       const newest = list.reduce((a, b) => (b.date > a.date ? b : a))
-      out.push({ date: key, value: newest.value })
+      out.push(
+        newest.available
+          ? { date: key, value: newest.value, available: newest.available }
+          : { date: key, value: newest.value },
+      )
     }
   }
   return out.sort((a, b) => (a.date < b.date ? -1 : 1))
@@ -121,7 +131,11 @@ export function changesOf(
       else if (prev.value > 0 && cur.value > 0) x = Math.log(cur.value / prev.value)
     }
     if (x === null || !Number.isFinite(x)) continue
-    out.push({ period: cur.date, available: addDays(periodEnd(cur.date, period), lagDays), x })
+    out.push({
+      period: cur.date,
+      available: cur.available ?? addDays(periodEnd(cur.date, period), lagDays),
+      x,
+    })
   }
   return out
 }

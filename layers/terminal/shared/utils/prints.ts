@@ -33,6 +33,15 @@ export type PrintObservedAs = (typeof PRINT_OBSERVED_AS)[number]
  */
 export type PrintBasis = 'live' | 'backfill'
 
+/**
+ * Print sources whose rows are kept for the signals harness and internal
+ * research only: no route, page, export or MCP tool reads them. Korea Customs
+ * Service's releases before it marked them KOGL Type 1 (about October 2026)
+ * carry no licence, and KCS asks to be consulted before an unmarked work is
+ * reused (sources.yaml › print_sources, rights not-cleared).
+ */
+export const PRINT_HELD_SOURCES: readonly string[] = ['kcs-chip-exports-unmarked']
+
 /** The tickers a series is meant to lead, as the signal registry names them. */
 export const PRINT_BASKET = ['NVDA', 'SMCI', 'DELL', 'HPE', 'AMD', 'MU', 'TSM'] as const
 export type BasketTicker = (typeof PRINT_BASKET)[number]
