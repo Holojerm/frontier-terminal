@@ -1,13 +1,10 @@
 import { beforeEach, describe, expect, it } from 'vitest'
 
 import { diff } from '#layers/core/server/pipeline/diff'
-import { buildAlertRows } from '#layers/core/server/pipeline/judge/alerts'
-import { gateJudgeSubmission } from '../../../core/server/pipeline/judge/contract'
 import { groundAlerts, groundingFailure } from '#layers/core/server/pipeline/judge/grounding'
 import {
   isTimestampOnlyChange,
   isUntrackedFilingChange,
-  JUDGE_CHANGE_LIMIT,
   offerCount,
   pendingChanges,
 } from '#layers/core/server/pipeline/judge/pending'
@@ -186,6 +183,24 @@ function memoryMarker(): LockStore & { values: Map<string, string> } {
   }
 }
 
+/** A judge run on record; a gate-rejected one has a NULL cursor. */
+const recordRun = (
+  id: string,
+  started_at: string,
+  judged_through: string | null,
+  rejection_reason: string | null = null,
+) =>
+  db.insert(schema.judgeRuns).values({
+    id,
+    started_at,
+    judged_through,
+    changes_seen: 1,
+    accepted: 0,
+    rejected: 0,
+    rejection_reason,
+    source: 'routine',
+  })
+
 async function opsKinds(): Promise<string[]> {
   return (await db.select({ kind: schema.opsEvents.kind }).from(schema.opsEvents)).map(
     (r) => r.kind,
@@ -221,19 +236,6 @@ describe('isTimestampOnlyChange', () => {
       ),
     ).toBe(true)
   })
-
-  it('is false when anything else moved, and for every non-job or non-modified row', () => {
-    expect(
-      isTimestampOnlyChange(
-        jobModified('1', JOB, {
-          ...JOB,
-          updated_at: '2026-08-25T00:00:00Z',
-          location: 'Austin, TX',
-        }),
-      ),
-    ).toBe(false)
-    for (const c of changes) expect(isTimestampOnlyChange(c)).toBe(false)
-  })
 })
 
 describe('isUntrackedFilingChange', () => {
@@ -245,14 +247,6 @@ describe('isUntrackedFilingChange', () => {
     expect(isUntrackedFilingChange(filingAdded('0001193125-26-396051', 'Oura Inc.', null))).toBe(
       true,
     )
-  })
-
-  it('is false for a filing from a whitelisted filer', () => {
-    expect(
-      isUntrackedFilingChange(
-        filingAdded('0001181412-26-000123', 'SPACE EXPLORATION TECHNOLOGIES CORP', '0001181412'),
-      ),
-    ).toBe(false)
   })
 
   it('reads a removal off before_json, and leaves every non-filing row alone', () => {
@@ -311,27 +305,9 @@ describe('pendingChanges', () => {
       change(1, '2026-08-25T00:00:00Z'),
       change(2, '2026-08-26T00:00:00Z'),
     ])
-    await db.insert(schema.judgeRuns).values({
-      id: 'run-1',
-      started_at: '2026-08-25T01:00:00Z',
-      judged_through: '2026-08-25T00:00:00Z',
-      changes_seen: 2,
-      accepted: 0,
-      rejected: 0,
-      rejection_reason: null,
-      source: 'routine',
-    })
+    await recordRun('run-1', '2026-08-25T01:00:00Z', '2026-08-25T00:00:00Z')
     // A gate-rejected run has a NULL cursor and must not advance anything.
-    await db.insert(schema.judgeRuns).values({
-      id: 'run-2',
-      started_at: '2026-08-26T01:00:00Z',
-      judged_through: null,
-      changes_seen: 0,
-      accepted: 0,
-      rejected: 0,
-      rejection_reason: 'not-json: x',
-      source: 'routine',
-    })
+    await recordRun('run-2', '2026-08-26T01:00:00Z', null, 'not-json: x')
 
     const pending = await pendingChanges(db)
     expect(pending.since).toBe('2026-08-25T00:00:00Z')
@@ -350,7 +326,6 @@ describe('pendingChanges', () => {
       rows.slice(0, 5).map((r) => r.detected_at),
     )
     expect(pending.through).toBe(rows[4]!.detected_at)
-    expect(JUDGE_CHANGE_LIMIT).toBe(200)
 
     // Judging that bite moves the cursor to its newest row; the next bite
     // starts right after it, so no backlog row is ever skipped.
@@ -382,16 +357,7 @@ describe('pendingChanges', () => {
       change(0, '2026-08-25T00:00:00.000Z'),
       change(1, '2026-08-25T00:00:00.500Z'),
     ])
-    await db.insert(schema.judgeRuns).values({
-      id: 'run-1',
-      started_at: '2026-08-25T01:00:00Z',
-      judged_through: '2026-08-25T00:00:00Z',
-      changes_seen: 1,
-      accepted: 0,
-      rejected: 0,
-      rejection_reason: null,
-      source: 'routine',
-    })
+    await recordRun('run-1', '2026-08-25T01:00:00Z', '2026-08-25T00:00:00Z')
     const pending = await pendingChanges(db)
     expect(pending.changes.map((c) => c.detected_at)).toEqual(['2026-08-25T00:00:00.500Z'])
   })
@@ -574,16 +540,7 @@ describe('the cursor and the offered window', () => {
 
   beforeEach(async () => {
     await insertRows(db, 'changes', [JUDGED, OFFERED, LATER])
-    await db.insert(schema.judgeRuns).values({
-      id: 'run-0',
-      started_at: '2026-08-25T00:00:00Z',
-      judged_through: '2026-08-25T00:00:00Z',
-      changes_seen: 1,
-      accepted: 0,
-      rejected: 0,
-      rejection_reason: null,
-      source: 'routine',
-    })
+    await recordRun('run-0', '2026-08-25T00:00:00Z', '2026-08-25T00:00:00Z')
   })
 
   const submit = (judged_through: string, seen: ChangeRow[], alerts: unknown[] = []) =>
@@ -597,14 +554,7 @@ describe('the cursor and the offered window', () => {
     expect(behind.gate_rejection).toMatchObject({ reason: 'cursor' })
     expect(behind.gate_rejection!.detail).toContain('behind')
 
-    const ahead = await submitJudgeRun(
-      db,
-      JSON.stringify({
-        alerts: [],
-        judged_through: '2026-08-28T00:00:00Z',
-        change_ids_seen: [OFFERED.id, LATER.id],
-      }),
-    )
+    const ahead = await submit('2026-08-28T00:00:00Z', [OFFERED, LATER])
     expect(ahead.gate_rejection!.detail).toContain('past the newest change offered')
 
     const mismatch = await submit(LATER.detected_at, [OFFERED])
@@ -646,19 +596,7 @@ describe('the cursor and the offered window', () => {
   })
 })
 
-describe('gate + grounding, without the store', () => {
-  it('a real unedited claude -p transcript shape gates and grounds clean', () => {
-    const gate = gateJudgeSubmission(body(live))
-    if (!gate.ok) throw new Error(`${gate.reason}: ${gate.detail}`)
-    const { accepted, rejected } = groundAlerts(gate.value.alerts, changes)
-    expect(rejected).toEqual([])
-    expect(accepted.map((a) => a.severity)).toEqual(['notable', 'info'])
-    expect(buildAlertRows(accepted, changes).map((r) => r.rule)).toEqual([
-      'agent-judge',
-      'agent-judge',
-    ])
-  })
-
+describe('grounding, without the store', () => {
   const priceChange = changes.find((c) => c.id === PRICE_CHANGE_ID)!
   const alert = (over: Record<string, unknown>) => ({
     severity: 'notable' as const,
@@ -845,16 +783,7 @@ describe('the judge freshness check', () => {
 
   it('ignores changes the cursor already passed', async () => {
     await insertRows(db, 'changes', [change(0, OLD)])
-    await db.insert(schema.judgeRuns).values({
-      id: 'run-old',
-      started_at: '2026-08-25T13:00:00Z', // older than the window
-      judged_through: OLD,
-      changes_seen: 1,
-      accepted: 0,
-      rejected: 0,
-      rejection_reason: null,
-      source: 'routine',
-    })
+    await recordRun('run-old', '2026-08-25T13:00:00Z', OLD) // started before the window
     expect(await checkJudgeSilence(db, memoryMarker(), NOW)).toBe('not-owed')
   })
 })

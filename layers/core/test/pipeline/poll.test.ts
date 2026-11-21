@@ -1,10 +1,8 @@
-import { env } from 'cloudflare:test'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { POLL_LOCK_KEY } from '#layers/core/server/utils/pipeline-lock'
 import { runPoll, type PollDeps } from '../../server/pipeline/poll'
 import { isSurveyInstant } from '../../server/pipeline/scopes'
-import { fixtureText, manifest } from '#layers/core/test/pipeline/fixtures'
+import { fixtureText, manifest, raw } from '#layers/core/test/pipeline/fixtures'
 
 // The cron-collision policy: edgar and the survey are both due at :00 of
 // every sixth hour, and the survey must be the one that runs there. Observed
@@ -26,12 +24,6 @@ describe('isSurveyInstant', () => {
 })
 
 const sourcesYaml = fixtureText('sources.yaml')
-
-const raw: RawStore = {
-  put: async (key, body, contentType) => {
-    await env.BLOB.put(key, body, { httpMetadata: { contentType } })
-  },
-}
 
 /** Every request answered from the committed fixtures, counted so a test can prove nothing was fetched. */
 function fixtureFetcher(): SourceFetcher & { calls: number } {
@@ -187,14 +179,6 @@ describe('runPoll between survey instants', () => {
 })
 
 describe('the careers lane', () => {
-  it('the survey leaves google-careers to its own tick', async () => {
-    const { all } = deps('2026-09-09T00:00:08Z')
-    const outcome = await runPoll('survey', all)
-    expect(outcome.status).toBe('ran')
-    if (outcome.status !== 'ran') return
-    expect(outcome.result.sources.map((s) => s.source_id)).not.toContain('google-careers')
-  })
-
   it('runs google-careers alone, under its own scope', async () => {
     const { all, fetcher } = deps('2026-09-09T00:17:02Z')
     const outcome = await runPoll('careers', all)

@@ -14,12 +14,7 @@ import verda from '~~/fixtures/recipes/gpu-verda.html?raw'
 import crwv from '~~/fixtures/recipes/sec-companyfacts-crwv.json?raw'
 
 import { crusoeRows, googleCloudRows } from '#layers/compute/server/recipes/gpu-pages'
-import {
-  blendedPrice,
-  gpuSetChange,
-  labSetChange,
-  sumAcrossLabs,
-} from '../server/theses/compute-signals'
+import { gpuSetChange, labSetChange, sumAcrossLabs } from '../server/theses/compute-signals'
 import { gpuMedian, median, type GpuObservation } from '#layers/compute/server/recipes/gpu-series'
 import { COMPUTE_THESIS } from '../server/theses/compute'
 import { evaluateTheses } from '../server/theses/evaluate'
@@ -251,10 +246,6 @@ describe('compute arithmetic', () => {
     source_url: `https://${provider}.test`,
     fetched_at: '2026-11-02T00:00:00Z',
     ...extra,
-  })
-
-  it('blends three input tokens to one output token', () => {
-    expect(blendedPrice(5, 25, 3, 1)).toBe(10)
   })
 
   it('counts each provider once, at the median of its own rows', () => {

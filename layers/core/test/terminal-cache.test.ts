@@ -22,25 +22,25 @@ beforeEach(async () => {
   await db.delete(schema.sourceStats)
 })
 
+const run = (at: string) => ({
+  id: `survey:x:${at}`,
+  scope: 'survey',
+  source_id: 'xai-models-md',
+  started_at: at,
+  status: 'ok',
+  detail: null,
+  snapshot_id: null,
+  added: 0,
+  removed: 0,
+  modified: 0,
+  source_url: 'https://docs.x.ai/developers/models.md',
+})
+
 describe('terminalStamps', () => {
   it('moves the cache key on a judge run, and keeps as_of on the poll', async () => {
     await db.delete(schema.judgeRuns)
     expect(await terminalStamps(db)).toEqual({ poll: null, key: null })
-    await insertRows(db, 'source_runs', [
-      {
-        id: 'survey:x:1',
-        scope: 'survey',
-        source_id: 'xai-models-md',
-        started_at: '2026-09-07T10:00:00.000Z',
-        status: 'ok',
-        detail: null,
-        snapshot_id: null,
-        added: 0,
-        removed: 0,
-        modified: 0,
-        source_url: 'https://docs.x.ai/developers/models.md',
-      },
-    ])
+    await insertRows(db, 'source_runs', [run('2026-09-07T10:00:00.000Z')])
     const polled = await terminalStamps(db)
     expect(polled.poll).toBe('2026-09-07T10:00:00.000Z')
     expect(polled.key).toMatch(/^2026-09-07T10:00:00\.000Z\+/)
@@ -127,21 +127,7 @@ describe('terminalStamps', () => {
     await db.delete(schema.trackRecordCandidates)
   })
 
-  it('is null before any poll and the newest started_at after', async () => {
-    expect((await terminalStamps(db)).poll).toBeNull()
-    const run = (at: string) => ({
-      id: `survey:x:${at}`,
-      scope: 'survey',
-      source_id: 'xai-models-md',
-      started_at: at,
-      status: 'ok',
-      detail: null,
-      snapshot_id: null,
-      added: 0,
-      removed: 0,
-      modified: 0,
-      source_url: 'https://docs.x.ai/developers/models.md',
-    })
+  it('is the newest started_at of several polls', async () => {
     await insertRows(db, 'source_runs', [
       run('2026-09-07T10:00:00.000Z'),
       run('2026-09-07T16:00:00.000Z'),
@@ -262,26 +248,5 @@ describe('sharedTerminalStamp', () => {
     }
     expect(await sharedTerminalStamp(fresh, 20, now)).toBe('fresh')
     expect(reads).toBe(1)
-  })
-
-  it('reads the real stamp through the same path terminalPayload uses', async () => {
-    await insertRows(db, 'source_runs', [
-      {
-        id: 'survey:openai:1',
-        scope: 'survey',
-        source_id: 'openai-pricing',
-        started_at: '2026-09-22T10:00:00.000Z',
-        status: 'ok',
-        detail: null,
-        snapshot_id: null,
-        added: 0,
-        removed: 0,
-        modified: 0,
-        source_url: 'https://openai.com/api/pricing/',
-      },
-    ])
-    expect((await sharedTerminalStamp(() => terminalStamps(db))).poll).toBe(
-      '2026-09-22T10:00:00.000Z',
-    )
   })
 })

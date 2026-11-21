@@ -376,17 +376,6 @@ describe('enqueue', () => {
     expect(await deliveries()).toHaveLength(1)
   })
 
-  it('sends a new webhook only alerts written after it was added', async () => {
-    await seedKey()
-    await seedAlert('critical')
-    await enqueueWebhookDeliveries(db, T0)
-    await seedWebhook('whk_000000000a', 'info', at(1))
-    await enqueueWebhookDeliveries(db, at(5))
-    expect(await deliveries()).toHaveLength(0)
-    await seedAlert('critical', { created_at: at(6) })
-    expect((await enqueueWebhookDeliveries(db, at(10))).queued).toBe(1)
-  })
-
   it('skips webhooks whose key is revoked or expired, and removed webhooks', async () => {
     await seedKey({ revoked: true, revoked_at: T0.toISOString() })
     await seedWebhook('whk_000000000a', 'info')

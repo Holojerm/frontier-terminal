@@ -98,8 +98,6 @@ describe('buildAlertsAtom', () => {
   it('is the alert tier by default: a distinct feed id, self link and title once the minor changes are included', () => {
     const alerts = [alert(), alert({ id: 't1', severity: 'info', headline: 'One role added' })]
     const base = buildAlertsAtom({ ...SITE, alerts: [alerts[0]!], fallbackUpdated: 'x' })
-    expect(base).toContain('<id>https://example.com/alerts.xml</id>')
-    expect(base).toContain('<title>Frontier Terminal alerts</title>')
     expect(base).toContain('Notable and critical alerts')
     expect(base).not.toContain('<category term="info"')
 

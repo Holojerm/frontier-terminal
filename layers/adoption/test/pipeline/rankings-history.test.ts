@@ -1,4 +1,3 @@
-import { env } from 'cloudflare:test'
 import { beforeEach, describe, expect, it } from 'vitest'
 
 import {
@@ -8,7 +7,7 @@ import {
   windowUrl,
 } from '../../server/pipeline/rankings-history'
 import { runRefresh, type RefreshDeps } from '../../../core/server/pipeline/refresh'
-import { fixtureText } from '#layers/core/test/pipeline/fixtures'
+import { fixtureText, raw } from '#layers/core/test/pipeline/fixtures'
 
 // The rankings backfill (scripts/rankings-backfill.ts): windows from the
 // dataset's first day, rows the live lane can sit beside, and a live tick
@@ -88,7 +87,6 @@ describe('windowRows', () => {
 })
 
 describe('beside the live source', () => {
-  const raw: RawStore = { put: async (key, body) => void (await env.BLOB.put(key, body)) }
   let tick = Date.parse('2026-09-09T12:01:00Z')
   const deps = (text: string): RefreshDeps => ({
     db,

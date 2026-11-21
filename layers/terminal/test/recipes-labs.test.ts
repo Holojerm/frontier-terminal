@@ -37,10 +37,8 @@ describe('package downloads', () => {
 
   it('asks npm for each lab package by its own name, with the window the runner expects', () => {
     const codex = NPM_LAB_RECIPES.find((r) => r.id === 'npm-codex')!
+    // A stored newest day leaves the window alone: recipes-cloudflare.test.ts.
     expect(codex.url({ now: NOW, newest: null })).toBe(
-      'https://api.npmjs.org/downloads/range/2025-05-13:2026-11-03/@openai/codex',
-    )
-    expect(codex.url({ now: NOW, newest: '2026-11-02' })).toBe(
       'https://api.npmjs.org/downloads/range/2025-05-13:2026-11-03/@openai/codex',
     )
     expect(NPM_LAB_RECIPES.some((r) => r.company === 'xai')).toBe(false)

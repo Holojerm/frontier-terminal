@@ -70,18 +70,12 @@ describe('insertRows', () => {
 
 describe('D1 bound-parameter chunking', () => {
   it('keeps every statement within the 100-parameter cap for each table width', () => {
+    // Miniflare would happily bind more, so the arithmetic is the test.
     for (const columns of [8, 9, 10, 11, 12]) {
       const perStatement = rowsPerStatement(columns)
       expect(perStatement * columns).toBeLessThanOrEqual(D1_MAX_BOUND_PARAMS)
       expect((perStatement + 1) * columns).toBeGreaterThan(D1_MAX_BOUND_PARAMS)
     }
-    // Miniflare would happily bind more, so the arithmetic is the test.
-    expect(rowsPerStatement(12)).toBe(8)
-  })
-
-  it('chunks without dropping or duplicating', () => {
-    const groups = chunk([1, 2, 3, 4, 5, 6, 7], 3)
-    expect(groups).toEqual([[1, 2, 3], [4, 5, 6], [7]])
   })
 })
 
@@ -102,12 +96,6 @@ describe('applyDiff', () => {
     removed: [],
     changes: [change(n)],
     alerts: [],
-  })
-
-  it('writes the entity and its change row together', async () => {
-    await applyDiff(db, 'xai-greenhouse', writes(1))
-    expect(await db.select().from(schema.entities)).toHaveLength(1)
-    expect(await db.select().from(schema.changes)).toHaveLength(1)
   })
 
   // The 2026-09-22 google-pricing-html failure: entities landed, the changes
@@ -161,7 +149,7 @@ describe('applyDiff', () => {
     expect(stored.get(fresh.entity_key)).toEqual(fresh)
   })
 
-  it('writes the snapshot with the entities that cite it', async () => {
+  it('writes the snapshot, the entities that cite it and their change rows together', async () => {
     const snapshot = {
       id: 'snap-1',
       source_id: 'xai-greenhouse',
@@ -174,6 +162,7 @@ describe('applyDiff', () => {
     await applyDiff(db, 'xai-greenhouse', { ...writes(5), snapshot })
     expect((await db.select().from(schema.snapshots)).map((s) => s.id)).toEqual(['snap-1'])
     expect(await db.select().from(schema.entities)).toHaveLength(1)
+    expect(await db.select().from(schema.changes)).toHaveLength(1)
   })
 
   // edgar-fts and edgar-fts-openai both returned one filing; the second

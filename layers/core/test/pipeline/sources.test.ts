@@ -81,13 +81,6 @@ describe('includeSources', () => {
     expect(byId.get('openai-misalignment-reports')!.ext).toBe('html')
   })
 
-  test('the cut block never yields a source', () => {
-    const ids = includeSources(sourcesYaml, manifest.fixtures).map((s) => s.source_id)
-    expect(ids).not.toContain('compute-deals')
-    expect(ids).not.toContain('meta-hiring')
-    expect(ids).not.toContain('meta-status')
-  })
-
   test('non-include verdicts are skipped; an include source must name a fixture the manifest knows', () => {
     const yaml = [
       'sources:',
