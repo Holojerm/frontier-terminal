@@ -5,7 +5,7 @@
 // page header and the axis panels cannot disagree about a number.
 
 import { alertLabs } from './terminal-labs'
-import { LAB_DISPLAY } from './terminal-labs'
+import { LAB_DISPLAY } from '../../../core/shared/utils/lab-names'
 import type {
   AlertView,
   LabId,

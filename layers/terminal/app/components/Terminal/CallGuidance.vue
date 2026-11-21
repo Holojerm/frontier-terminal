@@ -11,8 +11,8 @@ import {
   type CallGuidanceData,
   type CallStatement,
 } from '../../../shared/utils/call-guidance'
-import { grouped, roundBillions } from '../../../shared/utils/terminal-format'
-import type { TableColumn } from '../../types/terminal-ui'
+import { grouped, roundBillions } from '#layers/core/shared/utils/terminal-format'
+import type { TableColumn } from '#layers/core/app/types/terminal-ui'
 
 const ALL = 'All companies'
 const ticker = ref<string>(ALL)

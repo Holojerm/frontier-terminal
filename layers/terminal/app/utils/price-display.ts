@@ -2,7 +2,12 @@
 // and the move since the previous revision. Shared by the matrix and the
 // front page's flagship grid so one cell never explains itself two ways.
 
-import { absoluteStamp, money, pctChange, pctLabel } from '../../shared/utils/terminal-format'
+import {
+  absoluteStamp,
+  money,
+  pctChange,
+  pctLabel,
+} from '#layers/core/shared/utils/terminal-format'
 import type {
   MatrixCell,
   PriceDeltaView,

@@ -13,7 +13,8 @@
 // not probed on that run, and the run spools why.
 
 import { parseOpenRouter, providerOfOpenRouterId } from '../parsers/openrouter'
-import { latestSnapshot, type RawReader } from '../judge/class-map'
+import { latestSnapshot } from '../judge/class-map'
+import type { RawReader } from '#layers/core/server/pipeline/raw'
 import type { PipelineDb } from '#layers/core/server/pipeline/store'
 import type { ClassEntry } from '../../utils/terminal-classes'
 import {

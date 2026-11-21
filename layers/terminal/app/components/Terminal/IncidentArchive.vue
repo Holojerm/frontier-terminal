@@ -3,9 +3,9 @@
 // from the Internet Archive's copies of the same feeds. A month the copies
 // don't reach whole is a break in the line, not a low count.
 
-import { count } from '../../../shared/utils/terminal-format'
+import { count } from '#layers/core/shared/utils/terminal-format'
 import type { IncidentArchiveView } from '../../../shared/utils/terminal-types'
-import type { TableColumn } from '../../types/terminal-ui'
+import type { TableColumn } from '#layers/core/app/types/terminal-ui'
 
 const props = defineProps<{ archived: IncidentArchiveView }>()
 

@@ -18,9 +18,9 @@ import { parseOpenRouterRankings } from '../../server/pipeline/parsers/openroute
 import {
   SKIPPED_EVENT_INTERVAL_MS,
   runRefresh,
-  type RawStore,
   type RefreshDeps,
 } from '../../server/pipeline/refresh'
+import type { RawStore } from '#layers/core/server/pipeline/raw'
 import { includeSources } from '#layers/core/server/pipeline/sources'
 import { queryMovement } from '../../server/utils/terminal-alerts'
 import { fixtureText, manifest, provenanceOf } from '#layers/core/test/pipeline/fixtures'

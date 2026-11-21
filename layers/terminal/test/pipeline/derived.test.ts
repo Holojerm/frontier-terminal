@@ -21,7 +21,8 @@ import {
   parsePendingFilersBlock,
   resolveFilers,
 } from '../../server/pipeline/parsers/sec/pending-filers'
-import { runRefresh, type RawStore } from '../../server/pipeline/refresh'
+import { runRefresh } from '../../server/pipeline/refresh'
+import type { RawStore } from '#layers/core/server/pipeline/raw'
 import { CAREERS_SOURCES, sourceIdsForScope } from '../../server/pipeline/scopes'
 import { includeSources } from '#layers/core/server/pipeline/sources'
 import { terminalStamps } from '#layers/core/server/utils/terminal-cache'

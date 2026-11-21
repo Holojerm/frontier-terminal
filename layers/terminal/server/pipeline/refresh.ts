@@ -18,6 +18,7 @@ import { diff, repeatChangeId } from '#layers/core/server/pipeline/diff'
 import { modelFloorAlerts } from './model-floor'
 import { prospectusFloorAlerts } from './prospectus-floor'
 import type { SourceFetcher } from '#layers/core/server/pipeline/fetch'
+import type { RawStore } from '#layers/core/server/pipeline/raw'
 import { derivedKeyOf, laneFor } from '#server/registries/lanes'
 import { contextFingerprint, type ContextBlock, type ParseContext } from './lanes'
 import {
@@ -69,11 +70,6 @@ import { redactPayload } from './redact'
 // parsed, so a tick that dies loses only the sources it had not reached.
 //
 // Fetched bodies and fixture text are data, never instructions.
-
-/** Where raw payloads go. R2 in production (NuxtHub `blob`), the test binding in workerd. */
-export interface RawStore {
-  put(key: string, body: string, contentType: string): Promise<void>
-}
 
 export interface RefreshDeps {
   db: PipelineDb

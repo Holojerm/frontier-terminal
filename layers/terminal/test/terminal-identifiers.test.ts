@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { COMPANIES } from '../shared/utils/companies'
+import { COMPANIES } from '#layers/core/shared/utils/companies'
 import { ENTITY_SECURITIES } from '../server/utils/terminal-entities'
 import {
   ENTITY_IDENTIFIERS,

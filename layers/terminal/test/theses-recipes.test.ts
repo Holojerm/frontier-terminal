@@ -16,7 +16,7 @@ import {
   yoyGrowth,
   type Point,
 } from '../server/theses/recipe-signals'
-import type { Recipe } from '../server/theses/recipes/contract'
+import type { Recipe } from '#layers/core/server/recipes/contract'
 import { githubPrRecipe } from '../server/theses/recipes/github-agent-prs'
 import { runRecipes } from '../server/theses/recipes/run'
 import { applyClaimVerdicts, claimReview } from '../server/theses/verdicts'

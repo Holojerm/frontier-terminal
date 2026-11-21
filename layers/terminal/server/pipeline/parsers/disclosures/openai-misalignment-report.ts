@@ -5,7 +5,7 @@ import {
   type Provenance,
 } from '#layers/core/server/pipeline/contracts'
 import { fixtureProvenance } from '#layers/core/server/pipeline/parsers/fixture-provenance'
-import { printedDate, textOf } from './html-text'
+import { printedDate, textOf } from '#layers/core/server/pipeline/parsers/html-text'
 
 // openai-misalignment-report-<slug> —
 // https://openai.com/safety-alignment/misalignment-reports/<slug>/

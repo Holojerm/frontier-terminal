@@ -1,4 +1,9 @@
-import type { LabId, Prov, SourceRef, Stamp } from '#layers/core/shared/utils/terminal-types/common'
+import type {
+  LabId,
+  Prov,
+  SourceRef,
+  Stamp,
+} from '../../../../core/shared/utils/terminal-types/common'
 
 /**
  * One reported period: the filer's own XBRL value for one revenue tag over

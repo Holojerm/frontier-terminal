@@ -23,7 +23,7 @@ import type {
   LabId,
 } from '../../shared/utils/terminal-types'
 
-import { labName } from '../../shared/utils/terminal-labs'
+import { labName } from '#layers/core/shared/utils/lab-names'
 import { FILER_NAMES, filingUrl, type StoredFact } from '../exposure/series'
 import { middle, type StoredDeal } from './terminal-reported'
 

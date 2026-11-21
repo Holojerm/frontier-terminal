@@ -4,8 +4,8 @@
 // stood sit one click away.
 
 import type { ForwardCallView, ForwardInput } from '../../../shared/utils/signals'
-import { grouped, signedPercent, trimmed } from '../../../shared/utils/terminal-format'
-import type { TableColumn } from '../../types/terminal-ui'
+import { grouped, signedPercent, trimmed } from '#layers/core/shared/utils/terminal-format'
+import type { TableColumn } from '#layers/core/app/types/terminal-ui'
 
 const props = defineProps<{ calls: ForwardCallView[] }>()
 

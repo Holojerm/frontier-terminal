@@ -6,9 +6,9 @@
 // a longer period the filer tags without a quarter (Amazon's nine-month
 // marks) is in the table, labelled with its length.
 
-import { count } from '../../../shared/utils/terminal-format'
+import { count } from '#layers/core/shared/utils/terminal-format'
 import type { ExposurePoint, ExposureSeries } from '../../../shared/utils/terminal-exposure'
-import type { CaveatRef, Citation, TableColumn } from '../../types/terminal-ui'
+import type { CaveatRef, Citation, TableColumn } from '#layers/core/app/types/terminal-ui'
 
 const figures = useFigures()
 

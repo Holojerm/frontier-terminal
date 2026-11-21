@@ -20,7 +20,7 @@ import type {
 } from '../../shared/utils/terminal-types'
 
 import * as tables from '#server/db/schema'
-import { ARCHIVE_FROM } from '../pipeline/archive/eras'
+import { ARCHIVE_FROM } from '#layers/core/server/utils/archive-floor'
 import {
   STATUS_ARCHIVE_ERAS,
   STATUS_ARCHIVE_GAPS,

@@ -5,7 +5,7 @@
 
 import { POSITION_LABEL } from '../../../shared/utils/thesis-format'
 import type { ThesisCardView } from '../../../shared/utils/thesis-format'
-import type { Fact } from '../../types/terminal-ui'
+import type { Fact } from '#layers/core/app/types/terminal-ui'
 
 const props = defineProps<{ thesis: Omit<ThesisCardView, 'claims'> }>()
 const stamps = useStamps()

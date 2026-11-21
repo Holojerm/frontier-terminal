@@ -12,7 +12,7 @@ import {
   LICENSE_SPLIT_EFFECTIVE,
   LICENSE_WINDOW_DAYS,
 } from '#shared/utils/license'
-import { exactStamp } from '../../../shared/utils/terminal-format'
+import { exactStamp } from '#layers/core/shared/utils/terminal-format'
 
 const stamps = useStamps()
 

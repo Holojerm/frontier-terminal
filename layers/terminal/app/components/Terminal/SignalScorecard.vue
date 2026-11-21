@@ -10,7 +10,7 @@ import type {
   SignalStat,
   SignalsData,
 } from '../../../shared/utils/signals'
-import type { TableColumn } from '../../types/terminal-ui'
+import type { TableColumn } from '#layers/core/app/types/terminal-ui'
 
 const props = defineProps<{ data: SignalsData }>()
 

@@ -14,6 +14,7 @@ import {
 } from '../../utils/terminal-classes'
 import { effectiveClassMap } from '../class-map'
 import type { SourceRunRow } from '#layers/core/server/pipeline/contracts'
+import type { RawReader } from '#layers/core/server/pipeline/raw'
 import { MODEL_FLOOR_RULE } from '../model-floor'
 import { basisOnPage, flattenMdLinks } from '../recommendations'
 import { cardDescriptions, cardOwners, type CardDescriptions } from './page-cards'
@@ -91,19 +92,6 @@ export interface SourcePage {
   fetched_at: string
   /** The stored bytes with markdown links flattened to their text. */
   text: string
-}
-
-/** Reads an R2 object's text; null when it is not there. */
-export type RawReader = (key: string) => Promise<string | null>
-
-/** NuxtHub's `blob` (or anything with its get signature) as a RawReader. */
-export function blobRawReader(blob: {
-  get(key: string): Promise<{ text(): Promise<string> } | null>
-}): RawReader {
-  return async (key) => {
-    const object = await blob.get(key)
-    return object ? object.text() : null
-  }
 }
 
 /** The newest good snapshot of a source, as text — what the drift check last read. */

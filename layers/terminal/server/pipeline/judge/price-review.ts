@@ -12,7 +12,7 @@ import {
   repeatedChangeIds,
   type PipelineDb,
 } from '#layers/core/server/pipeline/store'
-import type { RawReader } from './class-map'
+import type { RawReader } from '#layers/core/server/pipeline/raw'
 
 // The judge's fallback for a price list whose parser is failing. A vendor
 // reshapes its pricing page, the parser throws, and until the parser is fixed

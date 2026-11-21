@@ -130,10 +130,10 @@ export const TERMINAL_OPS_SEVERITY: Record<string, OpsKindPolicy> = {
   // The suppliers reader (layers/terminal/server/suppliers/ingest.ts): a feed
   // it could not parse, a 429, or the run itself throwing.
   supplier_read_failed: { severity: 'warning' },
-  // The power-sites reader (layers/terminal/server/power/ingest.ts): a search
+  // The power-sites reader (layers/compute/server/power/ingest.ts): a search
   // it could not run or parse, a 429, or the run itself throwing.
   power_site_read_failed: { severity: 'warning' },
-  // The print reader (layers/terminal/server/prints/ingest.ts): a feed or 6-K
+  // The print reader (layers/compute/server/prints/ingest.ts): a feed or 6-K
   // it could not fetch or parse, a 429, or a step throwing.
   print_read_failed: { severity: 'warning' },
   // The call reader (layers/terminal/server/calls/ingest.ts): a document it
@@ -142,10 +142,10 @@ export const TERMINAL_OPS_SEVERITY: Record<string, OpsKindPolicy> = {
   // AssemblyAI refused for credits or billing, or the $40 spend cap was
   // reached: replays stop being submitted until the owner acts.
   assemblyai_credits: { severity: 'warning' },
-  // The weekly re-check (layers/terminal/server/power/verify.ts): a hand-read
+  // The weekly re-check (layers/compute/server/power/verify.ts): a hand-read
   // quote is no longer on its utility, regulator or company page.
   power_quote_gone: { severity: 'warning' },
-  // The grid-load reader (layers/terminal/server/power/grid-load.ts and
+  // The grid-load reader (layers/compute/server/power/grid-load.ts and
   // ercot-large-loads.ts): an EIA-930 file or an ERCOT report it could not
   // fetch or read, or ERCOT's listing pages linking no report.
   grid_load_read_failed: { severity: 'warning' },

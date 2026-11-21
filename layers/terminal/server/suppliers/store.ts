@@ -12,14 +12,14 @@ import {
 } from '../../shared/utils/suppliers'
 import type { LabId } from '../../shared/utils/terminal-types'
 import curated from '../curated/suppliers.json'
-import { contentHash } from '#layers/core/server/pipeline/contracts/keys'
+import { accessionOf, contentHash } from '#layers/core/server/pipeline/contracts/keys'
 import {
   chunk,
   D1_MAX_BOUND_PARAMS,
   runStatements,
   type PipelineDb,
 } from '#layers/core/server/pipeline/store'
-import { contains } from './excerpts'
+import { contains } from '#layers/core/server/pipeline/document-text'
 import { PERIODIC_FORMS } from './filers'
 
 const HAND = curatedSuppliers.parse(curated).rows
@@ -38,12 +38,6 @@ export const passageId = (
     source_url: r.source_url,
     quote: r.quote,
   })
-
-/** The accession number in an EDGAR archive URL, dashed, or null. */
-export function accessionOf(url: string): string | null {
-  const m = /\/Archives\/edgar\/data\/\d+\/(\d{10})(\d{2})(\d{6})\//.exec(url)
-  return m ? `${m[1]}-${m[2]}-${m[3]}` : null
-}
 
 export function insertOf(
   r: CuratedSupplierRow,

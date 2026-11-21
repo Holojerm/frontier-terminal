@@ -4,17 +4,11 @@
 
 import type { SupplierFigure } from '../../shared/utils/suppliers'
 import { amountsIn } from '../pipeline/reported/figures'
-import { comparable, pageText } from '../utils/quote-match'
 import { COUNTERPARTIES } from './filers'
 
 /** Characters of excerpts offered per document, and the run around each hit. */
 export const EXCERPT_CHARS = 24_000
 const WINDOW = 700
-
-const fold = (s: string) => s.replace(/\s+/g, ' ').trim()
-
-/** The document as a reader sees it, whitespace folded. */
-export const documentText = (html: string): string => fold(pageText(html))
 
 const escape = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
 
@@ -60,10 +54,6 @@ export function supplierExcerpts(text: string, ticker: string): string[] {
   }
   return out
 }
-
-/** Whether `needle` is in `haystack` as a reader would compare them (see comparable). */
-export const contains = (haystack: string, needle: string): boolean =>
-  comparable(haystack).toLowerCase().includes(comparable(needle).toLowerCase())
 
 const SCALE: Record<string, number> = { thousand: 1e3, million: 1e6, billion: 1e9, trillion: 1e12 }
 

@@ -3,7 +3,7 @@
 // payload carries what a rating may cite: title, products, link, and the
 // opening of the entry's text.
 
-import type { Observation, Recipe } from './contract'
+import type { Observation, Recipe } from '#layers/core/server/recipes/contract'
 
 export const AI_PRODUCTS = ['Workers AI', 'Agents'] as const
 

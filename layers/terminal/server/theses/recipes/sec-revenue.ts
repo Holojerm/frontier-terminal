@@ -4,9 +4,9 @@
 // quarter, so Q4 is derived as the year less its three reported quarters
 // and marked derived. A restated period keeps the latest filing's value.
 
-import type { CompanyId } from '../../../shared/utils/companies'
+import type { CompanyId } from '#layers/core/shared/utils/companies'
 
-import type { Observation, Recipe } from './contract'
+import type { Observation, Recipe } from '#layers/core/server/recipes/contract'
 
 const TAGS = [
   'RevenueFromContractWithCustomerExcludingAssessedTax',

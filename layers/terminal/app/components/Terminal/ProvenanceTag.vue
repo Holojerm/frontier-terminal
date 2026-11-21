@@ -16,7 +16,7 @@
 // target floor (DESIGN.md › Target size), and these sit stacked in table cells
 // and footers where axe found 120+ of them once the pages had real rows.
 
-import { exactStamp, hostOf } from '../../../shared/utils/terminal-format'
+import { exactStamp, hostOf } from '#layers/core/shared/utils/terminal-format'
 
 const props = withDefaults(
   defineProps<{

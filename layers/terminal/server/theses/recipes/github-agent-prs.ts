@@ -12,8 +12,8 @@
 // (docs/source-audit.md, 2026-11-20). Those counts are taken today, from the
 // PRs that still exist, and the runner labels them retrospective.
 
-import type { CompanyId } from '../../../shared/utils/companies'
-import type { Observation, Recipe } from './contract'
+import type { CompanyId } from '#layers/core/shared/utils/companies'
+import type { Observation, Recipe } from '#layers/core/server/recipes/contract'
 
 const DAY_MS = 86_400_000
 const dayMs = (date: string) => Date.parse(`${date}T00:00:00Z`)

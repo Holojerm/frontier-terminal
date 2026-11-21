@@ -11,11 +11,11 @@ import {
   ppLabel,
   sharePct,
   signed,
-} from '../../shared/utils/terminal-format'
+} from '#layers/core/shared/utils/terminal-format'
 import { labPath, type LabSummary } from '../../shared/utils/terminal-lab-summary'
-import type { DataCentersData } from '../../shared/utils/recipe-views'
+import type { DataCentersData } from '#layers/compute/shared/utils/compute-views'
 import type { LabId, Prov, RevenueProviderView } from '../../shared/utils/terminal-types'
-import type { GapRef } from '../types/terminal-ui'
+import type { GapRef } from '#layers/core/app/types/terminal-ui'
 
 import { feedGap } from './feed-gap'
 import { priceCitation } from './price-display'

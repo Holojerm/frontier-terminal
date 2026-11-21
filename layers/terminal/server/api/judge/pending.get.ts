@@ -43,7 +43,7 @@
 // `power_site_review` lists the SEC documents EDGAR full-text search found
 // naming one of Epoch's lab sites and speaking of power near it, each with
 // excerpts and the ties already held for that site
-// (layers/terminal/server/power/review.ts); likewise.
+// (layers/compute/server/power/review.ts); likewise.
 // `guidance_review` lists the call transcripts, remarks and replays the
 // guidance parser found no figure in but that have sentences looking ahead
 // with a figure, each with those sentences (layers/terminal/server/calls/review.ts);
@@ -56,7 +56,8 @@ import judgePrompt from 'raw:../../pipeline/judge/judge-explain.prompt.md'
 import sourcesYaml from 'raw:~~/sources.yaml'
 
 import { hiringBoards } from '../../pipeline/hiring-floor'
-import { blobRawReader, classMapReview } from '../../pipeline/judge/class-map'
+import { classMapReview } from '../../pipeline/judge/class-map'
+import { blobRawReader } from '#layers/core/server/pipeline/raw'
 import { filingReview } from '../../pipeline/judge/filing-review'
 import { priceReview } from '../../pipeline/judge/price-review'
 import {
@@ -67,7 +68,7 @@ import {
 import { stillListedRemovals } from '../../pipeline/judge/still-listed'
 import { figureReview } from '../../pipeline/reported/review'
 import { guidanceReview } from '../../calls/review'
-import { powerSiteReview } from '../../power/review'
+import { powerSiteReview } from '#layers/compute/server/power/review'
 import { supplierReview } from '../../suppliers/review'
 import { trackRecordReview } from '../../pipeline/track-record/review'
 import { claimReview, flagshipMap } from '../../theses/verdicts'

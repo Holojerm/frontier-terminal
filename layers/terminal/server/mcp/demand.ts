@@ -1,7 +1,7 @@
 // Demand: OpenRouter share, implied spend, GPU rental prices, and adoption.
 
 import { recipeRunsStamp } from '#layers/core/server/utils/terminal-db'
-import { gpuRunsStamp, queryGpuPrices } from '../utils/terminal-gpu'
+import { gpuRunsStamp, queryGpuPrices } from '#layers/compute/server/utils/terminal-gpu'
 import { queryAdoption, VIEW_RECIPES } from '../utils/terminal-recipe-views'
 import { SERIES_DAYS, SHARE_WINDOW_DAYS, queryRankings } from '../utils/terminal-rankings'
 import { querySpend } from '../utils/terminal-spend'

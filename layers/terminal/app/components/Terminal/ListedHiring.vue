@@ -4,10 +4,9 @@
 // the data-center roles per week once there are two. The boards we don't
 // read are one line each under the table.
 
-import { count, signed } from '../../../shared/utils/terminal-format'
-import { dayLabel } from '../../../shared/utils/thesis-format'
+import { count, signed, dayLabel } from '#layers/core/shared/utils/terminal-format'
 import type { ListedHiringData } from '../../../shared/utils/listed-hiring'
-import type { TableColumn } from '../../types/terminal-ui'
+import type { TableColumn } from '#layers/core/app/types/terminal-ui'
 
 const props = defineProps<{ data: ListedHiringData }>()
 

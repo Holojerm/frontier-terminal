@@ -7,7 +7,7 @@
 import { and, desc, eq, gte, sql } from 'drizzle-orm'
 
 import type { ClaimDef, ClaimStatus, ThesisDef } from '../../shared/utils/thesis-types'
-import type { CompanyId } from '../../shared/utils/companies'
+import type { CompanyId } from '#layers/core/shared/utils/companies'
 import type { HiringHistoryData } from '../../shared/utils/terminal-types'
 
 import * as tables from '#server/db/schema'

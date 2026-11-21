@@ -9,9 +9,10 @@ import sourcesYaml from 'raw:~~/sources.yaml'
 
 import { createFetcher } from '#layers/core/server/pipeline/fetch'
 import { unstorageLockStore } from '#layers/core/server/pipeline/lock'
-import { blobRawStore, runPoll } from '../../pipeline/poll'
-import { writeGpuMedianAlerts } from '../../pipeline/gpu-median-floor'
-import { paceSec } from '../../pipeline/sec-pace'
+import { runPoll } from '../../pipeline/poll'
+import { blobRawStore } from '#layers/core/server/pipeline/raw'
+import { writeGpuMedianAlerts } from '#layers/compute/server/pipeline/gpu-median-floor'
+import { paceSec } from '#layers/core/server/pipeline/sec-pace'
 import { evaluateTheses } from '../../theses/evaluate'
 import { runRecipes } from '../../theses/recipes/run'
 import { recordOpsEvent } from '#server/utils/ops'
@@ -27,7 +28,7 @@ const task = defineTask({
   async run({ context }) {
     const config = useRuntimeConfig()
     // One paced fetcher for the poll and the recipes, so the SEC spacing
-    // counts the whole tick (pipeline/sec-pace.ts).
+    // counts the whole tick (layers/core/server/pipeline/sec-pace.ts).
     const fetcher = paceSec(
       createFetcher({
         secContactEmail: config.secContactEmail,

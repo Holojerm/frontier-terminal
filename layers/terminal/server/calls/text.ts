@@ -3,7 +3,7 @@
 // "$9.8" or "U.S."), and each sentence with the page it is on. Pure.
 
 import { releaseBlocks } from '../exposure/guidance'
-import { pdfPages } from '../power/pdf-text'
+import { pdfPages } from '#layers/core/server/pipeline/pdf-text'
 import type { SpokenSentence } from './assemblyai'
 
 export interface DocSentence {

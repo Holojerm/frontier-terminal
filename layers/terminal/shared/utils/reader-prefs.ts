@@ -2,7 +2,7 @@
 // holds the live state). Pure, so the parsing and ordering rules are tested
 // without a browser.
 
-import { isTimeZone } from './terminal-format'
+import { isTimeZone } from '../../../core/shared/utils/terminal-format'
 import { LABS } from './terminal-lab-summary'
 import type { LabId } from './terminal-types'
 

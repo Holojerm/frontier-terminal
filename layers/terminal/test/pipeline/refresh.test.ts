@@ -6,12 +6,8 @@ import * as schema from '~~/server/db/schema'
 import { contentHash, type PollScope } from '#layers/core/server/pipeline/contracts'
 import type { FetchOutcome, SourceFetcher } from '#layers/core/server/pipeline/fetch'
 import { MAX_UNJOINED_JOBS } from '../../server/pipeline/parsers/hiring/common'
-import {
-  describeError,
-  runRefresh,
-  type RawStore,
-  type RefreshDeps,
-} from '../../server/pipeline/refresh'
+import { describeError, runRefresh, type RefreshDeps } from '../../server/pipeline/refresh'
+import type { RawStore } from '#layers/core/server/pipeline/raw'
 import { sourceIdsForScope } from '../../server/pipeline/scopes'
 import { includeSources } from '#layers/core/server/pipeline/sources'
 import { registerFleetExtraContributor } from '~~/server/utils/extensions'

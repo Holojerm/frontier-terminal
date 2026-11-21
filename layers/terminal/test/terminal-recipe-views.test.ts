@@ -9,7 +9,7 @@ import ramp from '~~/fixtures/recipes/ramp-ai-index.html?raw'
 import msft from '~~/fixtures/recipes/sec-msft-openai.xml?raw'
 import * as schema from '~~/server/db/schema'
 import type { SourceFetcher } from '#layers/core/server/pipeline/fetch'
-import { EPOCH_DATA_CENTERS } from '../server/theses/recipes/epoch-data-centers'
+import { EPOCH_DATA_CENTERS } from '#layers/compute/server/recipes/epoch-data-centers'
 import { INVESTEE_RECIPES } from '../server/theses/recipes/investee-facts'
 import { PAY_RECIPES } from '../server/theses/recipes/pay-bands'
 import { RAMP_AI_INDEX } from '../server/theses/recipes/ramp-ai-index'
@@ -17,11 +17,11 @@ import { RATE_LIMIT_RECIPES } from '../server/theses/recipes/rate-limits'
 import { runRecipes } from '../server/theses/recipes/run'
 import {
   queryAdoption,
-  queryDataCenters,
   queryLimits,
   queryParents,
   queryPay,
 } from '../server/utils/terminal-recipe-views'
+import { queryDataCenters } from '#layers/compute/server/utils/terminal-datacenters'
 import { fixtureText } from '#layers/core/test/pipeline/fixtures'
 
 // The panels' read side over a store the recipe runner filled from the

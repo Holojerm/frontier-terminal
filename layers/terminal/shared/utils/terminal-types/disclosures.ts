@@ -1,4 +1,9 @@
-import type { LabId, Prov, SourceRef, Stamp } from '#layers/core/shared/utils/terminal-types/common'
+import type {
+  LabId,
+  Prov,
+  SourceRef,
+  Stamp,
+} from '../../../../core/shared/utils/terminal-types/common'
 
 /**
  * The dates on one report's own page. `lines` is the page's metadata cell,

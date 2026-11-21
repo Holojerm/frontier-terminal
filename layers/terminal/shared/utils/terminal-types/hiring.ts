@@ -3,7 +3,7 @@ import type {
   LabId,
   SourceRef,
   Stamp,
-} from '#layers/core/shared/utils/terminal-types/common'
+} from '../../../../core/shared/utils/terminal-types/common'
 
 export interface DeptCount {
   department: string

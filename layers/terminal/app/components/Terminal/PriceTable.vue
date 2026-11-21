@@ -10,11 +10,11 @@
 // instead of running a column of dashes. A context window read from another
 // page on the row's own host links that page by name, so the host prints once.
 
-import { hostOf, money, tierLabel } from '../../../shared/utils/terminal-format'
+import { hostOf, money, tierLabel } from '#layers/core/shared/utils/terminal-format'
 import { SAME_PRICE, moveText, priceMoves } from '../../utils/price-display'
-import { labName } from '../../../shared/utils/terminal-labs'
+import { labName } from '#layers/core/shared/utils/lab-names'
 import type { PriceRowView, PricesData } from '../../../shared/utils/terminal-types'
-import type { TableColumn } from '../../types/terminal-ui'
+import type { TableColumn } from '#layers/core/app/types/terminal-ui'
 
 const watchlist = useWatchlist()
 const stamps = useStamps()

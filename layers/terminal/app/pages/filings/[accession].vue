@@ -5,7 +5,7 @@
 // the cached /api/revenue payload (layers/terminal/shared/utils/terminal-filings.ts), so the
 // figures are the revenue panel's, regrouped by filing.
 
-import { count, periodLabel } from '../../../shared/utils/terminal-format'
+import { count, periodLabel } from '#layers/core/shared/utils/terminal-format'
 import {
   ACCESSION_RE,
   filerName,
@@ -16,9 +16,9 @@ import {
   type FilingPeriod,
 } from '../../../shared/utils/terminal-filings'
 import { labPath } from '../../../shared/utils/terminal-lab-summary'
-import { LAB_SITE } from '../../../shared/utils/terminal-labs'
+import { LAB_SITE } from '#layers/core/shared/utils/lab-names'
 import type { RevenueData } from '../../../shared/utils/terminal-types'
-import type { Fact, TableColumn } from '../../types/terminal-ui'
+import type { Fact, TableColumn } from '#layers/core/app/types/terminal-ui'
 
 const figures = useFigures()
 

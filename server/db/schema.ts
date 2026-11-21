@@ -12,8 +12,8 @@ import { index, integer, sqliteTable, text } from 'drizzle-orm/sqlite-core'
 //
 // This site has no accounts. The tables here are the ops substrate the
 // template shipped with; the store's tables live in the core layer
-// (layers/core/server/db/schema.ts), the domain tables in the terminal layer
-// (layers/terminal/server/db/schema.ts), and both are re-exported at the end.
+// (layers/core/server/db/schema.ts), each domain's tables in its own layer
+// (layers/<name>/server/db/schema.ts), and all are re-exported at the end.
 // ─────────────────────────────────────────────
 
 // Timestamps helper — spread into every table
@@ -72,9 +72,10 @@ export type NewOpsEvent = typeof opsEvents.$inferInsert
 // schema of every layer the app uses, so the typed `db` (and every `*Db` type
 // derived from this module) includes their tables. NuxtHub merges layer schemas
 // on its own; these lines are what make the typed `db` and drizzle-kit see them.
-// The core layer owns the store's tables, the terminal layer the domain tables.
+// The core layer owns the store's tables, each domain layer its own.
 export * from '../../layers/core/server/db/schema'
 export * from '../../layers/terminal/server/db/schema'
+export * from '../../layers/compute/server/db/schema'
 export * from '../../layers/social/server/db/schema'
 
 // Rate-limit counters: one row per caller, endpoint and window, moved by one

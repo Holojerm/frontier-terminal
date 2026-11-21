@@ -4,37 +4,8 @@
 // cited rows, never off the prose. An alert whose rows did not resolve
 // reads as "—" on every column rather than as a guess.
 
-import { pctChange, pctLabel, readableEdgarNames } from './terminal-format'
+import { pctChange, pctLabel, readableEdgarNames } from '../../../core/shared/utils/terminal-format'
 import type { AlertView, ChangeView, ProviderId } from './terminal-types'
-
-export const LAB_DISPLAY: Record<ProviderId, string> = {
-  openai: 'OpenAI',
-  anthropic: 'Anthropic',
-  google: 'Google',
-  xai: 'xAI',
-  meta: 'Meta',
-  mistral: 'Mistral',
-  deepseek: 'DeepSeek',
-  alibaba: 'Alibaba',
-  moonshot: 'Moonshot AI',
-  other: 'Other',
-}
-
-/** Each lab's own homepage: the identity a lab page's structured data points at. */
-export const LAB_SITE: Record<Exclude<ProviderId, 'other'>, string> = {
-  openai: 'https://openai.com',
-  anthropic: 'https://www.anthropic.com',
-  google: 'https://ai.google',
-  xai: 'https://x.ai',
-  meta: 'https://ai.meta.com',
-  mistral: 'https://mistral.ai',
-  deepseek: 'https://www.deepseek.com',
-  alibaba: 'https://qwen.ai',
-  moonshot: 'https://www.moonshot.ai',
-}
-
-/** A provider id as a reader sees it; an id outside the registry reads as itself. */
-export const labName = (id: string): string => (LAB_DISPLAY as Record<string, string>)[id] ?? id
 
 export type AlertAxis =
   | 'pricing'

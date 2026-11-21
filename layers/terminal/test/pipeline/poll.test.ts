@@ -6,7 +6,7 @@ import * as schema from '~~/server/db/schema'
 import type { SourceFetcher } from '#layers/core/server/pipeline/fetch'
 import { POLL_LOCK_KEY, type LockStore } from '#layers/core/server/pipeline/lock'
 import { runPoll, type PollDeps } from '../../server/pipeline/poll'
-import type { RawStore } from '../../server/pipeline/refresh'
+import type { RawStore } from '#layers/core/server/pipeline/raw'
 import { isSurveyInstant } from '../../server/pipeline/scopes'
 import { fixtureText, manifest } from '#layers/core/test/pipeline/fixtures'
 

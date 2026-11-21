@@ -5,9 +5,9 @@
 // labs are rows that say so. The landing page's Disclosures panel is the
 // summary of this.
 
-import { labName } from '../../shared/utils/terminal-labs'
+import { labName } from '#layers/core/shared/utils/lab-names'
 import type { DisclosureView, DisclosuresData } from '../../shared/utils/terminal-types'
-import type { TableColumn } from '../types/terminal-ui'
+import type { TableColumn } from '#layers/core/app/types/terminal-ui'
 
 definePageMeta({
   publicPage: {

@@ -24,8 +24,8 @@ import {
   type StoredGuidance,
 } from '../utils/terminal-ground-truth-guidance'
 import { daysBefore } from '../utils/terminal-rankings'
-import { spotRead } from '../utils/terminal-utilization'
-import { gpuState, median, type GpuObservation } from './recipes/gpu-series'
+import { spotRead } from '#layers/compute/server/utils/terminal-utilization'
+import { gpuState, median, type GpuObservation } from '#layers/compute/server/recipes/gpu-series'
 import type { SignalDeps, SignalReading } from './signals'
 
 type Spec<S extends string> = Extract<SignalSpec, { signal: S }>

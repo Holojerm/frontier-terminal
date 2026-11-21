@@ -4,7 +4,7 @@
 // anything the axis adds (a license line). One layout everywhere, so a reader
 // learns once where a number's source is.
 
-import type { CaveatRef, Citation } from '../../types/terminal-ui'
+import type { CaveatRef, Citation } from '#layers/core/app/types/terminal-ui'
 
 withDefaults(defineProps<{ sources?: Citation[]; caveats?: CaveatRef[] }>(), {
   sources: () => [],

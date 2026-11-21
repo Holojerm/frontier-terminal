@@ -428,7 +428,7 @@ screen the way a terminal function key does. The data below it is the content.
   "When" column is absolute, never relative for its first rows and absolute after. Starred labs reorder
   only lists in registry order, never a ranking, a timeline or a chart's stack.
 - **Deltas:** a sign the reader can see, never a color: `+12`, `−3` (U+2212), `±0`. Formatted
-  once, in `layers/terminal/shared/utils/terminal-format.ts`. So is every other figure: a negative
+  once, in `layers/core/shared/utils/terminal-format.ts`. So is every other figure: a negative
   is `grouped()` (never `toLocaleString`'s hyphen), a GPU-hour price is `gpuHour()` at two
   decimals with `exactUsd()` in its tooltip, a count too big for a cell is `compactCount()`, a
   percent is `percent()` (prose), `sharePct()` (a 0..1 share, one decimal) or `signedPercent()`
@@ -442,7 +442,7 @@ screen the way a terminal function key does. The data below it is the content.
 ### Terminal primitives
 
 Every page is composed from these, in `layers/terminal/app/components/Terminal/`. They own the classes; a page
-passes data and copy. Their prop shapes live in `layers/terminal/app/types/terminal-ui.ts`, and the words for a
+passes data and copy. Their prop shapes live in `layers/core/app/types/terminal-ui.ts`, and the words for a
 feed with nothing to show live once in `layers/terminal/app/utils/feed-gap.ts`.
 
 | Primitive | What it is | Replaces |

@@ -53,7 +53,7 @@ export const TIMESTAMP_FIELDS: Readonly<Record<string, readonly string[]>> = {
 // 'filed_fact', 'guidance', 'guidance_check' and 'gpu_price' changes exist
 // only as the citation of a rule-based alert that is already written
 // (layers/terminal/server/exposure/alerts.ts, guidance-alerts.ts,
-// layers/terminal/server/pipeline/gpu-median-floor.ts).
+// layers/compute/server/pipeline/gpu-median-floor.ts).
 export const JUDGE_EXCLUDED_ENTITY_TYPES = [
   'ranking',
   'filed_fact',

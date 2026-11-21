@@ -4,8 +4,14 @@
 // number, the unit, and the date. Nothing here is a figure the page doesn't
 // show beside it; a missing value drops its sentence instead of a placeholder.
 
-import { compactUsd, count, money, periodLabel, sharePct } from './terminal-format'
-import { labName } from './terminal-labs'
+import {
+  compactUsd,
+  count,
+  money,
+  periodLabel,
+  sharePct,
+} from '../../../core/shared/utils/terminal-format'
+import { labName } from '../../../core/shared/utils/lab-names'
 import type { LabSummary } from './terminal-lab-summary'
 import type { PriceHistoryData, PricePoint } from './terminal-types'
 

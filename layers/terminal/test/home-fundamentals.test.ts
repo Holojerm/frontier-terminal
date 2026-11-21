@@ -8,7 +8,7 @@ import {
   utilizationFigure,
 } from '../app/utils/home-fundamentals'
 import type { ListedData } from '../shared/utils/listed'
-import type { UtilizationData } from '../shared/utils/recipe-views'
+import type { UtilizationData } from '#layers/compute/shared/utils/compute-views'
 import type { GpuPricesData, GroundTruthData } from '../shared/utils/terminal-types'
 import type { ThesesData } from '../shared/utils/thesis-types'
 
