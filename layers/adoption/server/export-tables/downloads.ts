@@ -1,7 +1,7 @@
 // The derived download series, after recipe_observations in EXPORT_TABLES
 // (server/registries/export-tables.ts), which fixes the order.
 
-import type { PipelineDb } from '#layers/core/server/pipeline/store'
+import type { PipelineDb } from '#layers/core/server/utils/pipeline-store'
 import { DOWNLOAD_SERIES, readDownloadSeries, seriesById } from '../recipes/download-series'
 import { PointInTimeError } from '#layers/core/server/utils/terminal-asof'
 import type { ColumnDocs, ExportTable, Row } from '#layers/core/server/utils/terminal-export-views'

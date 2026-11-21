@@ -25,7 +25,7 @@ import {
 } from '../../../press/server/pipeline/press'
 import type { MailMessage } from '../../../core/server/utils/resend'
 import { enqueueCriticalAlerts, enqueueLaunchAlerts } from '../pipeline/social'
-import type { PipelineDb } from '#layers/core/server/pipeline/store'
+import type { PipelineDb } from '#layers/core/server/utils/pipeline-store'
 import { delaySecondsUntil, scheduleDrain } from '#layers/core/server/utils/events'
 import type { CacheStore } from '#layers/core/server/utils/terminal-cache'
 import {

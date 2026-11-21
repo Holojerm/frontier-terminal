@@ -7,7 +7,7 @@ import type { CompanyId } from '#layers/core/shared/utils/companies'
 import type { ClaimDef, JudgedSpec, ThesisDef } from '../../shared/utils/thesis-types'
 
 import type { RecipeObservation } from '#server/db/schema'
-import type { ChangeRow } from '#layers/core/server/pipeline/contracts'
+import type { ChangeRow } from '#layers/core/server/utils/contracts'
 import { corpusOf } from '#layers/core/server/pipeline/judge/grounding'
 
 /** The record a candidate rests on: a change row, or a recipe observation. */

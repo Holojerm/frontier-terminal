@@ -13,10 +13,9 @@ import type {
   DictionaryJoin,
   DictionaryTable,
   DictionaryType,
-  SourceAxis,
   SourceLicensing,
-  SourceRights,
-} from '../../shared/utils/terminal-types'
+} from '../../../core/shared/types/coverage'
+import type { SourceAxis, SourceRights } from '../../../core/shared/types/common'
 import {
   DATA_LICENSE,
   HISTORY_LICENSE,

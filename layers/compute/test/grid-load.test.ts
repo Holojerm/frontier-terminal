@@ -5,7 +5,7 @@ import { beforeAll, beforeEach, describe, expect, it } from 'vitest'
 import epochTimelines from '~~/fixtures/recipes/epoch-data-center-timelines.csv?raw'
 import epochSites from '~~/fixtures/recipes/epoch-data-centers.csv?raw'
 import * as schema from '~~/server/db/schema'
-import type { FetchOutcome, SourceFetcher } from '#layers/core/server/pipeline/fetch'
+import type { FetchOutcome, SourceFetcher } from '#layers/core/server/utils/pipeline-fetch'
 import {
   csvFields,
   eia930FileUrl,

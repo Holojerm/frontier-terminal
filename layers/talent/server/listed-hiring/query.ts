@@ -14,7 +14,7 @@ import {
   type ListedHiringData,
   type RoleClass,
 } from '../../shared/utils/listed-hiring'
-import type { PipelineDb } from '#layers/core/server/pipeline/store'
+import type { PipelineDb } from '#layers/core/server/utils/pipeline-store'
 
 /** Data-center roles listed per board on the page and in the tool. */
 export const DATACENTER_ROLES_SHOWN = 12

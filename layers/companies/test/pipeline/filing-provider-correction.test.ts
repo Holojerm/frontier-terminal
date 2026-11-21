@@ -4,13 +4,13 @@ import { beforeEach, describe, expect, it } from 'vitest'
 
 import * as schema from '~~/server/db/schema'
 import migration from '~~/server/db/migrations/0056_correct_lab_filing_provider.sql?raw'
-import { ChangeRow, StoredEntityRow } from '#layers/core/server/pipeline/contracts'
+import { ChangeRow, StoredEntityRow } from '#layers/core/server/utils/contracts'
 import {
   issuerProviderFor,
   parseRevenueFilersBlock,
 } from '../../server/pipeline/parsers/sec/revenue-filers'
 import { parseCikWhitelistBlock } from '../../server/pipeline/parsers/sec/whitelist'
-import { insertRows } from '#layers/core/server/pipeline/store'
+import { insertRows } from '#layers/core/server/utils/pipeline-store'
 import { fixtureText } from '#layers/core/test/pipeline/fixtures'
 
 // Every filing was stored under provider 'other', so /alerts listed the

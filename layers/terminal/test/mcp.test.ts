@@ -4,11 +4,11 @@ import { beforeAll, describe, expect, it } from 'vitest'
 
 import * as schema from '~~/server/db/schema'
 import handlerSource from '~~/layers/core/server/utils/terminal-handler.ts?raw'
-import type { SourceFetcher } from '#layers/core/server/pipeline/fetch'
+import type { SourceFetcher } from '#layers/core/server/utils/pipeline-fetch'
 import { runRefresh } from '../../core/server/pipeline/refresh'
-import type { RawStore } from '#layers/core/server/pipeline/raw'
-import { includeSources } from '#layers/core/server/pipeline/sources'
-import { ALERT_SEARCH_DEPTH } from '#layers/core/server/mcp/kit'
+import type { RawStore } from '#layers/core/server/utils/pipeline-raw'
+import { includeSources } from '#layers/core/server/utils/pipeline-sources'
+import { ALERT_SEARCH_DEPTH } from '#layers/core/server/utils/mcp-kit'
 import { createTerminalMcpHandler, type McpDeps } from '#layers/core/server/utils/mcp'
 import {
   assertKnowable,

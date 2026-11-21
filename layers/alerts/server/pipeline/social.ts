@@ -30,7 +30,7 @@ import { absoluteUrl } from '#shared/utils/site'
 import { AXIS_OF } from '../utils/terminal-alerts'
 import { effectiveClassMap } from '#layers/pricing/server/pipeline/class-map'
 import { MODEL_FLOOR_RULE } from '#layers/core/server/utils/terminal-asof'
-import type { PipelineDb } from '#layers/core/server/pipeline/store'
+import type { PipelineDb } from '#layers/core/server/utils/pipeline-store'
 
 /** Alerts before posting went live are history, not news. */
 export const SOCIAL_EPOCH = '2026-11-02T00:00:00.000Z'

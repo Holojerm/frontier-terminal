@@ -15,9 +15,9 @@ import verda from '~~/fixtures/recipes/gpu-verda.html?raw'
 import crwv from '~~/fixtures/recipes/sec-companyfacts-crwv.json?raw'
 
 import * as schema from '~~/server/db/schema'
-import { insertRows } from '#layers/core/server/pipeline/store'
+import { insertRows } from '#layers/core/server/utils/pipeline-store'
 import { crusoeRows, googleCloudRows } from '#layers/compute/server/recipes/gpu-pages'
-import type { SourceFetcher } from '#layers/core/server/pipeline/fetch'
+import type { SourceFetcher } from '#layers/core/server/utils/pipeline-fetch'
 import {
   blendedPrice,
   gpuSetChange,

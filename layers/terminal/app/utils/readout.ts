@@ -15,7 +15,8 @@ import {
 import { labPath } from '../../../core/shared/utils/lab-names'
 import { type LabSummary } from '../../shared/utils/terminal-lab-summary'
 import type { DataCentersData } from '#layers/compute/shared/utils/compute-views'
-import type { LabId, Prov, RevenueProviderView } from '../../shared/utils/terminal-types'
+import type { LabId, Prov } from '../../../core/shared/types/common'
+import type { RevenueProviderView } from '../../../companies/shared/types/revenue'
 import type { GapRef } from '#layers/core/app/types/terminal-ui'
 
 import { feedGap } from '#layers/core/app/utils/feed-gap'

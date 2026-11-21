@@ -57,7 +57,7 @@ import judgePrompt from 'raw:../../pipeline/judge/judge-explain.prompt.md'
 import sourcesYaml from 'raw:~~/sources.yaml'
 
 import { JUDGE_CONTEXT, JUDGE_REVIEWS } from '#server/registries/judge'
-import { blobRawReader } from '../../pipeline/raw'
+import { blobRawReader } from '../../utils/pipeline-raw'
 import { JUDGE_CHANGE_LIMIT, pendingChanges } from '../../pipeline/judge/pending'
 import type { JudgeContextEntry } from '../../pipeline/judge/review'
 import { requireJudgeToken } from '../../utils/judge-auth'

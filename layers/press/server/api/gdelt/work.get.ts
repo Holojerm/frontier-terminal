@@ -10,7 +10,7 @@
 
 import { db } from '@nuxthub/db'
 
-import { userAgentFor } from '#layers/core/server/pipeline/fetch'
+import { userAgentFor } from '#layers/core/server/utils/pipeline-fetch'
 import { GKG_BASE } from '../../pipeline/track-record/gkg'
 import { archiveWork } from '../../pipeline/reported/archive'
 import { figureBackfill } from '../../pipeline/reported/store'

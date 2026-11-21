@@ -3,11 +3,11 @@ import { drizzle } from 'drizzle-orm/d1'
 import { beforeEach, describe, expect, it } from 'vitest'
 
 import * as schema from '~~/server/db/schema'
-import { contentHash } from '#layers/core/server/pipeline/contracts'
-import type { SourceFetcher } from '#layers/core/server/pipeline/fetch'
+import { contentHash } from '#layers/core/server/utils/contracts'
+import type { SourceFetcher } from '#layers/core/server/utils/pipeline-fetch'
 import { runRefresh, type RefreshDeps } from '../../core/server/pipeline/refresh'
-import type { RawStore } from '#layers/core/server/pipeline/raw'
-import { includeSources } from '#layers/core/server/pipeline/sources'
+import type { RawStore } from '#layers/core/server/utils/pipeline-raw'
+import { includeSources } from '#layers/core/server/utils/pipeline-sources'
 import { terminalStamps } from '#layers/core/server/utils/terminal-cache'
 import {
   baselineInstants,

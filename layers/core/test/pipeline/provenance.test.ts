@@ -12,7 +12,7 @@ import {
   Provenance,
   SnapshotRow,
   contentHashOfText,
-} from '../../server/pipeline/contracts'
+} from '../../server/utils/contracts'
 
 // Provenance gate: a row without source_url + fetched_at must be impossible
 // to validate, on every row schema in the system. Whatever insert path lands

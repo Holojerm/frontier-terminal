@@ -7,8 +7,8 @@ import { beforeAll, describe, expect, it } from 'vitest'
 import * as schema from '~~/server/db/schema'
 import { HISTORY_LICENSE, PAID_LICENSE } from '~~/shared/utils/license'
 import { LICENSED_BUCKET } from '#layers/core/shared/utils/institutional'
-import { contentHashOfText } from '#layers/core/server/pipeline/contracts'
-import { insertRows } from '#layers/core/server/pipeline/store'
+import { contentHashOfText } from '#layers/core/server/utils/contracts'
+import { insertRows } from '#layers/core/server/utils/pipeline-store'
 import { SCHEMA_VERSION, tableChangedAfter } from '#layers/core/server/utils/data-schema'
 import {
   BULK_INDEX_PATH,

@@ -6,10 +6,7 @@
 // the Archive, which its terms ask for.
 
 import { count, gpuHour, dayLabel } from '#layers/core/shared/utils/terminal-format'
-import type {
-  ArchivedGpuPoint,
-  GpuArchiveView,
-} from '../../../shared/utils/terminal-types/gpu-prices'
+import type { ArchivedGpuPoint, GpuArchiveView } from '../../../shared/types/gpu-prices'
 import type { TableColumn } from '#layers/core/app/types/terminal-ui'
 
 const props = defineProps<{ archived: GpuArchiveView }>()

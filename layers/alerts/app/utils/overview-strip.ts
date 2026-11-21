@@ -5,8 +5,8 @@
 // /alerts, one link away.
 
 import { alertLabs } from '../../shared/utils/terminal-labs'
-import type { AlertView, ChangeView } from '../../shared/utils/terminal-types/alerts'
-import type { OverviewData } from '../../shared/utils/terminal-types/overview'
+import type { AlertView, ChangeView } from '../../shared/types/alerts'
+import type { OverviewData } from '../../shared/types/overview'
 
 /** Rows on the signal band (SignalBand.vue SHOWN). */
 export const OVERVIEW_BAND_ROWS = 5

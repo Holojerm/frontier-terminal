@@ -12,18 +12,18 @@
 
 import { eq } from 'drizzle-orm'
 
-import type { LabId, SourceRef } from '../../../core/shared/utils/terminal-types/common'
+import type { LabId, SourceRef } from '../../../core/shared/types/common'
 import type {
   RevenueData,
   RevenueFilerView,
   RevenuePeriod,
   RevenueProviderView,
-} from '../../shared/utils/terminal-types/revenue'
+} from '../../shared/types/revenue'
 
 import * as tables from '#server/db/schema'
 import { REVENUE_TAGS } from '../pipeline/parsers/sec/edgar-companyfacts'
 import { filerAt } from '../pipeline/parsers/sec/revenue-filers'
-import type { PipelineDb } from '#layers/core/server/pipeline/store'
+import type { PipelineDb } from '#layers/core/server/utils/pipeline-store'
 import { sourceReads, rewound, type QueryContext } from '#layers/core/server/utils/terminal-db'
 import { byString, num, parseJson, str } from '#layers/core/server/utils/terminal-json'
 import {

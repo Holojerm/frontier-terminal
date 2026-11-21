@@ -10,8 +10,8 @@
 import { asc, eq, lte } from 'drizzle-orm'
 
 import * as tables from '#server/db/schema'
-import type { ArchiveReach, LabId } from '#layers/core/shared/utils/terminal-types/common'
-import type { ArchivedHiringPoint } from '../../shared/utils/terminal-types/hiring'
+import type { ArchiveReach, LabId } from '#layers/core/shared/types/common'
+import type { ArchivedHiringPoint } from '../../shared/types/hiring'
 import {
   HIRING_ARCHIVE_ERAS,
   HIRING_ARCHIVE_GAPS,
@@ -20,7 +20,7 @@ import {
   HIRING_GAP_DAYS,
   type HiringArchiveProvider,
 } from '../pipeline/archive/hiring-eras'
-import type { PipelineDb } from '#layers/core/server/pipeline/store'
+import type { PipelineDb } from '#layers/core/server/utils/pipeline-store'
 import { ARCHIVE_FROM, archiveSourceId } from '#layers/core/server/utils/archive-floor'
 import { inCluster, type DepartmentCluster } from './terminal-clusters'
 import { byString } from '#layers/core/server/utils/terminal-json'

@@ -3,7 +3,7 @@ import { drizzle } from 'drizzle-orm/d1'
 import { beforeEach, describe, expect, it } from 'vitest'
 
 import * as schema from '~~/server/db/schema'
-import { insertRows } from '../server/pipeline/store'
+import { insertRows } from '../server/utils/pipeline-store'
 import {
   TERMINAL_CACHE_TTL_SECONDS,
   cachedTerminal,

@@ -11,8 +11,8 @@
 
 import { exactStamp, hostOf } from '#layers/core/shared/utils/terminal-format'
 import { LAB_DISPLAY } from '#layers/core/shared/utils/lab-names'
-import type { LabId } from '#layers/core/shared/utils/terminal-types/common'
-import type { MatrixCell, PriceMatrix } from '../../../shared/utils/terminal-types/prices'
+import type { LabId } from '#layers/core/shared/types/common'
+import type { MatrixCell, PriceMatrix } from '../../../shared/types/prices'
 import type { TableColumn } from '#layers/core/app/types/terminal-ui'
 
 const watchlist = useWatchlist()

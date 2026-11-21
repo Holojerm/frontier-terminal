@@ -8,7 +8,7 @@ import {
   POLL_LOCK_TTL_SECONDS,
   unstorageLockStore,
   withPollLock,
-} from '../../server/pipeline/lock'
+} from '../../server/utils/pipeline-lock'
 
 // The poll mutex, through the same unstorage driver NuxtHub's `kv` uses in
 // production, over the real KV binding.

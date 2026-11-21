@@ -11,8 +11,8 @@ import {
   parseRetryAfter,
   readCappedBody,
   userAgentFor,
-} from '../../server/pipeline/fetch'
-import type { FetchSource } from '../../server/pipeline/sources'
+} from '../../server/utils/pipeline-fetch'
+import type { FetchSource } from '../../server/utils/pipeline-sources'
 
 // The fetch stage with a scripted `fetch`: nothing here reaches the network.
 

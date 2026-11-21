@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
 import { alertAxis, alertDelta, alertLabs, clipHeadline } from '../shared/utils/terminal-labs'
-import type { ChangeView } from '../shared/utils/terminal-types/alerts'
+import type { ChangeView } from '../shared/types/alerts'
 
 const change = (over: Partial<ChangeView>): ChangeView => ({
   id: 'c',

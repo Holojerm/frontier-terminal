@@ -13,7 +13,7 @@ import {
   rowsPerStatement,
   runStatements,
   type PipelineDb,
-} from '#layers/core/server/pipeline/store'
+} from '#layers/core/server/utils/pipeline-store'
 import { EXCLUDED_OUTCOMES, type ProbeOutcome } from './stream'
 import { PROBE_TARGETS, PROBE_WINDOWS, type ProbeTargetSpec, type ProbeWindow } from './targets'
 

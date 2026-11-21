@@ -5,7 +5,7 @@ import { describe, expect, it } from 'vitest'
 import type { ThesisDef } from '../shared/utils/thesis-types'
 
 import * as schema from '~~/server/db/schema'
-import type { FetchOutcome, SourceFetcher } from '#layers/core/server/pipeline/fetch'
+import type { FetchOutcome, SourceFetcher } from '#layers/core/server/utils/pipeline-fetch'
 import { evaluateTheses } from '../server/theses/evaluate'
 import { evaluateJudgedClaim } from '../server/theses/judged-status'
 import {

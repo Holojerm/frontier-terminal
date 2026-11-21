@@ -8,8 +8,8 @@ import {
   PriceRow,
   contentHash,
   type ChangeRow,
-} from '#layers/core/server/pipeline/contracts'
-import type { PipelineDb } from '#layers/core/server/pipeline/store'
+} from '#layers/core/server/utils/contracts'
+import type { PipelineDb } from '#layers/core/server/utils/pipeline-store'
 import { MODEL_FLOOR_RULE } from '#layers/core/server/utils/terminal-asof'
 
 // The model-floor rule: a model slug no vendor catalog in the store has

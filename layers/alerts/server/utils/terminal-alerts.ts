@@ -17,12 +17,12 @@ import type {
   AlertsData,
   ChangeDetailView,
   ChangeView,
-} from '../../shared/utils/terminal-types/alerts'
-import type { MovementSummary, OverviewData } from '../../shared/utils/terminal-types/overview'
-import type { ProviderId } from '../../../core/shared/utils/terminal-types/common'
+} from '../../shared/types/alerts'
+import type { MovementSummary, OverviewData } from '../../shared/types/overview'
+import type { ProviderId } from '../../../core/shared/types/common'
 
 import * as tables from '#server/db/schema'
-import type { PipelineDb } from '#layers/core/server/pipeline/store'
+import type { PipelineDb } from '#layers/core/server/utils/pipeline-store'
 import {
   ALERTS_METHOD,
   alertsKnownAt,

@@ -2,7 +2,7 @@
 // The pricing axis in full: the like-for-like matrix, then every SKU row the
 // store holds with its delta against the previous revision.
 
-import type { PricesData } from '../../../shared/utils/terminal-types/prices'
+import type { PricesData } from '../../../shared/types/prices'
 
 definePageMeta({
   publicPage: {

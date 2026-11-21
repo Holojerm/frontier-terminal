@@ -36,8 +36,8 @@ import * as tables from '#server/db/schema'
 import { recordOpsEvent } from '#server/utils/ops'
 import { logEvent } from '#server/utils/log'
 
-import type { LockStore } from '../pipeline/lock'
-import type { PipelineDb } from '../pipeline/store'
+import type { LockStore } from './pipeline-lock'
+import type { PipelineDb } from './pipeline-store'
 
 const MINUTE_MS = 60_000
 const HOUR_MS = 60 * MINUTE_MS

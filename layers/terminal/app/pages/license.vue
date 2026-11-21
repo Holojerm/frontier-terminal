@@ -18,7 +18,7 @@ import {
   LICENSE_SPLIT_EFFECTIVE,
   LICENSE_WINDOW_DAYS,
 } from '#shared/utils/license'
-import type { CoverageData } from '../../shared/utils/terminal-types'
+import type { CoverageData } from '../../../core/shared/types/coverage'
 
 definePageMeta({
   publicPage: {

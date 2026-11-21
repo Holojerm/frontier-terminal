@@ -3,7 +3,7 @@
 // root for MCP. The server itself is layers/core/server/utils/mcp.ts. A domain's
 // tools live in its own server/mcp/<domain>.ts and get one line here.
 
-import { MCP_SERVER_NAME, PROVENANCE, type McpKit } from '#layers/core/server/mcp/kit'
+import { MCP_SERVER_NAME, PROVENANCE, type McpKit } from '#layers/core/server/utils/mcp-kit'
 import { registerAlertTools } from '#layers/alerts/server/mcp/alerts'
 import { registerComputeTools, registerGpuPriceTools } from '#layers/compute/server/mcp/compute'
 import { registerAdoptionTools, registerDemandTools } from '#layers/adoption/server/mcp/demand'

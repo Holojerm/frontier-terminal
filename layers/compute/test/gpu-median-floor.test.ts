@@ -3,7 +3,7 @@ import { drizzle } from 'drizzle-orm/d1'
 import { beforeEach, describe, expect, it } from 'vitest'
 
 import * as schema from '~~/server/db/schema'
-import { ChangeRow } from '#layers/core/server/pipeline/contracts'
+import { ChangeRow } from '#layers/core/server/utils/contracts'
 import {
   GPU_MEDIAN_RULE,
   gpuMedianAlert,

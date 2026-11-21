@@ -16,7 +16,7 @@ import type { OwnerMessage } from '../../../core/server/utils/owner-mail'
 import type { MailMessage } from '../../../core/server/utils/resend'
 import { absoluteUrl } from '#shared/utils/site'
 import { PROSPECTUS_FLOOR_RULE } from '../../../companies/server/pipeline/prospectus-floor'
-import type { PipelineDb } from '#layers/core/server/pipeline/store'
+import type { PipelineDb } from '#layers/core/server/utils/pipeline-store'
 
 /** Alerts before briefs went live are history, not news. */
 export const PRESS_EPOCH = '2026-11-05T00:00:00.000Z'

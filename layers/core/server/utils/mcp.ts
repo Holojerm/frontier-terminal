@@ -38,13 +38,13 @@ import {
   isLegacyRequest,
 } from '@modelcontextprotocol/server'
 
-import type { PipelineDb } from '../pipeline/store'
+import type { PipelineDb } from './pipeline-store'
 import { type StatusConfig } from '#server/utils/fleet-status'
 import { type AsOfPayload } from './terminal-asof'
 import { type QueryContext } from './terminal-db'
 import type { RebuiltAsOf } from './terminal-handler'
 import { MCP_INSTRUCTIONS, MCP_TOOLS } from '#server/registries/mcp-tools'
-import { MCP_SERVER_NAME, READ_ONLY, makeRead } from '../mcp/kit'
+import { MCP_SERVER_NAME, READ_ONLY, makeRead } from './mcp-kit'
 
 /** What the server needs from its host — the route supplies the real thing, the test a fixture. */
 export interface McpDeps {

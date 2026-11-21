@@ -4,8 +4,8 @@ import {
   type ChangeRow,
   type EntityRow,
   type Provenance,
-} from './contracts'
-import type { PipelineDb } from './store'
+} from '../utils/contracts'
+import type { PipelineDb } from '../utils/pipeline-store'
 import type { LaneBlocks, TickInputs } from '#server/registries/lane-context'
 
 // The lane contract: how each include source turns a fetched body into

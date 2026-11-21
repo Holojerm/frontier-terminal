@@ -1,13 +1,13 @@
 import { and, desc, eq, inArray, like, sql } from 'drizzle-orm'
 
 import * as tables from '#server/db/schema'
-import type { Provider } from '#layers/core/server/pipeline/contracts'
+import type { Provider } from '#layers/core/server/utils/contracts'
 import { parseRevenueFilersBlock } from './parsers/sec/revenue-filers'
 import { parseCikWhitelistBlock } from './parsers/sec/whitelist'
 import { registrationFormSlug, registrationKey } from './parsers/sec/filing-index'
 import { periodBefore, segmentKey } from './parsers/sec/xbrl-segment'
 import { derivedSourceId, type DerivedKind } from '#layers/core/server/pipeline/derived'
-import type { PipelineDb } from '#layers/core/server/pipeline/store'
+import type { PipelineDb } from '#layers/core/server/utils/pipeline-store'
 
 // The SEC's derived sources (core's derived.ts has the mechanism): a resolved
 // lab's submissions and company facts from its `filer` row, a segment filer's

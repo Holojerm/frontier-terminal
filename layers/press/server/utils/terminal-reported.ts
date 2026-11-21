@@ -10,8 +10,8 @@
 
 import { and, count, inArray, isNotNull, isNull, lte, max, eq } from 'drizzle-orm'
 
-import type { DealMetric } from '../../shared/utils/terminal-types/ground-truth'
-import type { LabId } from '../../../core/shared/utils/terminal-types/common'
+import type { DealMetric } from '../../shared/types/ground-truth'
+import type { LabId } from '../../../core/shared/types/common'
 import type {
   ReportedBasis,
   ReportedData,
@@ -19,12 +19,16 @@ import type {
   ReportedMetric,
   ReportedQuarter,
   ReportedSeries,
-} from '../../shared/utils/terminal-types/reported'
+} from '../../shared/types/reported'
 
 import * as tables from '#server/db/schema'
 import { GKG_FROM } from '../pipeline/track-record/gkg'
 import { earliestPerHeadline, isDealMetric } from '../pipeline/reported/review'
-import { D1_MAX_BOUND_PARAMS, chunk, type PipelineDb } from '#layers/core/server/pipeline/store'
+import {
+  D1_MAX_BOUND_PARAMS,
+  chunk,
+  type PipelineDb,
+} from '#layers/core/server/utils/pipeline-store'
 import type { QueryContext } from '#layers/core/server/utils/terminal-db'
 import { middle } from '#layers/core/server/utils/terminal-median'
 

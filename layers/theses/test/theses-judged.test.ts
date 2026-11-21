@@ -5,7 +5,7 @@ import { beforeAll, describe, expect, it } from 'vitest'
 import type { ClaimDef, JudgedSpec, ThesisDef } from '../shared/utils/thesis-types'
 
 import * as schema from '~~/server/db/schema'
-import { contentHash, type ChangeRow } from '#layers/core/server/pipeline/contracts'
+import { contentHash, type ChangeRow } from '#layers/core/server/utils/contracts'
 import { submitJudgeRun } from '../../core/server/pipeline/judge/submit'
 import { ANTHROPIC_THESIS } from '../server/theses/anthropic'
 import { claimCandidates } from '../server/theses/candidates'

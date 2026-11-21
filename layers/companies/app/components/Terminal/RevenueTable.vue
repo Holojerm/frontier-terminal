@@ -5,7 +5,7 @@
 // Labs with the same gap share one line after the figures.
 
 import { count, periodLabel } from '#layers/core/shared/utils/terminal-format'
-import type { RevenueData, RevenueProviderView } from '../../../shared/utils/terminal-types/revenue'
+import type { RevenueData, RevenueProviderView } from '../../../shared/types/revenue'
 import type { TableColumn } from '#layers/core/app/types/terminal-ui'
 
 const watchlist = useWatchlist()

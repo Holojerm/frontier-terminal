@@ -6,7 +6,7 @@
 // weather, the economy and every other customer, and nothing here separates
 // the sites' share of it.
 
-import type { LabId } from '../../../core/shared/utils/terminal-types/common'
+import type { LabId } from '../../../core/shared/types/common'
 
 export interface GridArea {
   /** EIA-930's respondent code. */

@@ -23,7 +23,7 @@ import { gzipSync } from 'node:zlib'
 
 import { ByteWriter, ParquetWriter } from 'hyparquet-writer/src/index.js'
 
-import type { DictionaryType } from '../../shared/utils/terminal-types/coverage'
+import type { DictionaryType } from '../../shared/types/coverage'
 import { LICENSE_COLUMN } from './terminal-export-history'
 import { type ExportTable } from './terminal-export-views'
 

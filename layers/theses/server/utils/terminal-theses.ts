@@ -4,10 +4,10 @@
 // and the status-change log cannot disagree; status_since comes from the log.
 
 import { COMPANIES, companyName, gpuProviderName } from '#layers/core/shared/utils/companies'
-import type { LabId } from '../../../core/shared/utils/terminal-types/common'
+import type { LabId } from '../../../core/shared/types/common'
 import type { ClaimView, ReadingPoint, ThesesData } from '../../shared/utils/thesis-types'
 
-import type { PipelineDb } from '#layers/core/server/pipeline/store'
+import type { PipelineDb } from '#layers/core/server/utils/pipeline-store'
 import {
   currentEvaluation,
   latestStatusChange,

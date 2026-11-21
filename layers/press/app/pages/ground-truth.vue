@@ -5,7 +5,7 @@
 // guidance against the year's filed capex. The alert track record's totals
 // sit beside them (its rows are on /alerts).
 
-import type { GroundTruthData } from '../../shared/utils/terminal-types/ground-truth'
+import type { GroundTruthData } from '../../shared/types/ground-truth'
 
 definePageMeta({
   publicPage: {

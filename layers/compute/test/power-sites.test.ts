@@ -6,7 +6,7 @@ import epochTimelines from '~~/fixtures/recipes/epoch-data-center-timelines.csv?
 import epochSites from '~~/fixtures/recipes/epoch-data-centers.csv?raw'
 import * as schema from '~~/server/db/schema'
 import curated from '../server/curated/power-sites.json'
-import type { SourceFetcher } from '#layers/core/server/pipeline/fetch'
+import type { SourceFetcher } from '#layers/core/server/utils/pipeline-fetch'
 import { handTies, insertTies } from '../server/power/store'
 import { parseCsv } from '#layers/core/server/recipes/csv'
 import {

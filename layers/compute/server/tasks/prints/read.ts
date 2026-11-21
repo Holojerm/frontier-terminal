@@ -8,8 +8,8 @@
 import { blob } from '@nuxthub/blob'
 import { db } from '@nuxthub/db'
 
-import { createFetcher } from '#layers/core/server/pipeline/fetch'
-import { blobRawStore } from '#layers/core/server/pipeline/raw'
+import { createFetcher } from '#layers/core/server/utils/pipeline-fetch'
+import { blobRawStore } from '#layers/core/server/utils/pipeline-raw'
 import { paceSec } from '#layers/core/server/pipeline/sec-pace'
 import { runPrintReads } from '../../prints/ingest'
 import { withHeartbeat } from '#layers/core/server/utils/task-heartbeat'

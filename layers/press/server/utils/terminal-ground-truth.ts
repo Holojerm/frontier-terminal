@@ -23,21 +23,18 @@ import type {
   GroundTruthResolution,
   GroundTruthTally,
   GroundTruthWaiting,
-} from '../../shared/utils/terminal-types/ground-truth'
-import type { LabId } from '../../../core/shared/utils/terminal-types/common'
-import type { ReportedHeadline, ReportedMetric } from '../../shared/utils/terminal-types/reported'
-import type { RevenuePeriod } from '../../../companies/shared/utils/terminal-types/revenue'
+} from '../../shared/types/ground-truth'
+import type { LabId } from '../../../core/shared/types/common'
+import type { ReportedHeadline, ReportedMetric } from '../../shared/types/reported'
+import type { RevenuePeriod } from '../../../companies/shared/types/revenue'
 
-import type {
-  PressEarlyPeriod,
-  PressEarlyRead,
-} from '../../shared/utils/terminal-types/ground-truth'
+import type { PressEarlyPeriod, PressEarlyRead } from '../../shared/types/ground-truth'
 
 import { isNull } from 'drizzle-orm'
 
 import * as tables from '#server/db/schema'
 import { DEAL_WORDS } from '../pipeline/reported/figures'
-import type { PipelineDb } from '#layers/core/server/pipeline/store'
+import type { PipelineDb } from '#layers/core/server/utils/pipeline-store'
 import type { QueryContext } from '#layers/core/server/utils/terminal-db'
 import { EXPOSURE_METHOD, filedFactsAt } from '../../../companies/server/utils/terminal-exposure'
 import {

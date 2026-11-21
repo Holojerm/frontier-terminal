@@ -5,9 +5,13 @@ import { boardLabel } from '#layers/core/shared/utils/terminal-format'
 import { labName } from '#layers/core/shared/utils/lab-names'
 import { emitEvent } from '#layers/core/server/utils/events'
 import type { DepartmentCluster } from '../utils/terminal-clusters'
-import { AlertRow, ChangeRow, contentHash } from '#layers/core/server/pipeline/contracts'
+import { AlertRow, ChangeRow, contentHash } from '#layers/core/server/utils/contracts'
 import { boardMoves, describeReason, signed, type BoardMove } from './hiring-floor'
-import { insertRows, unstoredAlerts, type PipelineDb } from '#layers/core/server/pipeline/store'
+import {
+  insertRows,
+  unstoredAlerts,
+  type PipelineDb,
+} from '#layers/core/server/utils/pipeline-store'
 
 // The hiring roll-up: one alert per lab per week saying what its board did
 // — net change, and the departments that moved most — citing every role

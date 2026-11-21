@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { includeSources } from '#layers/core/server/pipeline/sources'
+import { includeSources } from '#layers/core/server/utils/pipeline-sources'
 import { RECIPES } from '#server/registries/recipes'
 import {
   SOURCE_LABELS,

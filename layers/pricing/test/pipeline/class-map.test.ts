@@ -5,14 +5,14 @@ import { beforeEach, describe, expect, it } from 'vitest'
 
 import * as schema from '~~/server/db/schema'
 import { effectiveClassMap, overlayClassMap } from '../../server/pipeline/class-map'
-import type { SourceFetcher } from '#layers/core/server/pipeline/fetch'
+import type { SourceFetcher } from '#layers/core/server/utils/pipeline-fetch'
 import {
   basisNamesModel,
   classMapReview,
   modelNamedBy,
   REVIEW_WINDOW_MS,
 } from '../../server/pipeline/judge/class-map'
-import type { RawReader, RawStore } from '#layers/core/server/pipeline/raw'
+import type { RawReader, RawStore } from '#layers/core/server/utils/pipeline-raw'
 import { cardDescriptions, cardOwners } from '../../server/pipeline/judge/page-cards'
 import { submitJudgeRun } from '../../../core/server/pipeline/judge/submit'
 import { recommendationRows } from '../../server/pipeline/recommendations'

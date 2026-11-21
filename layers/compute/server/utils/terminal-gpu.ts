@@ -6,10 +6,10 @@
 import { count, desc, eq, inArray, max } from 'drizzle-orm'
 
 import { gpuProviderName } from '#layers/core/shared/utils/companies'
-import type { GpuHistoryView, GpuPricesData } from '../../shared/utils/terminal-types/gpu-prices'
+import type { GpuHistoryView, GpuPricesData } from '../../shared/types/gpu-prices'
 
 import * as tables from '#server/db/schema'
-import type { PipelineDb } from '#layers/core/server/pipeline/store'
+import type { PipelineDb } from '#layers/core/server/utils/pipeline-store'
 import { gpuMedian, gpuState, type GpuObservation } from '../recipes/gpu-series'
 import { GPU_MODELS, gpuPricePayload } from '../recipes/gpu-prices'
 import { GPU_RECIPES } from '../recipes/gpu-recipes'

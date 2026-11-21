@@ -42,14 +42,11 @@ import type {
   GroundTruthDealTally,
   GroundTruthResolution,
   GroundTruthTally,
-  IncidentsData,
-  LabId,
-  ModelClassId,
-  PriceDeltaView,
-  PricesData,
-  Prov,
-  RevenueProviderView,
-} from '../../shared/utils/terminal-types'
+} from '../../../press/shared/types/ground-truth'
+import type { IncidentsData } from '../../../reliability/shared/types/incidents'
+import type { LabId, Prov } from '../../../core/shared/types/common'
+import type { ModelClassId, PriceDeltaView, PricesData } from '../../../pricing/shared/types/prices'
+import type { RevenueProviderView } from '../../../companies/shared/types/revenue'
 import { statusCounts, STATUS_META, thesisPath } from '../../../theses/shared/utils/thesis-format'
 import type { ThesesData } from '../../../theses/shared/utils/thesis-types'
 import { feedGap } from '#layers/core/app/utils/feed-gap'

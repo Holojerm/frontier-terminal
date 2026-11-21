@@ -19,16 +19,16 @@
 
 import { eq, inArray } from 'drizzle-orm'
 
-import type { LabId, Prov, SourceRef } from '#layers/core/shared/utils/terminal-types/common'
+import type { LabId, Prov, SourceRef } from '#layers/core/shared/types/common'
 import type {
   DisclosureProviderView,
   DisclosuresData,
   DisclosureTimeline,
   DisclosureView,
-} from '../../shared/utils/terminal-types/disclosures'
+} from '../../shared/types/disclosures'
 
 import * as tables from '#server/db/schema'
-import type { PipelineDb } from '#layers/core/server/pipeline/store'
+import type { PipelineDb } from '#layers/core/server/utils/pipeline-store'
 import { sourceReads, type QueryContext } from '#layers/core/server/utils/terminal-db'
 import { byString, parseJson, str, type Json } from '#layers/core/server/utils/terminal-json'
 import {

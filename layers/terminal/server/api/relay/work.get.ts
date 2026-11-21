@@ -4,7 +4,7 @@
 
 import { kv } from '@nuxthub/kv'
 
-import { userAgentFor } from '#layers/core/server/pipeline/fetch'
+import { userAgentFor } from '#layers/core/server/utils/pipeline-fetch'
 import { wantedUrls } from '#layers/core/server/pipeline/relay'
 import { requireGdeltToken } from '../../../../press/server/utils/gdelt-auth'
 

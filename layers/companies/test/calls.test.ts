@@ -58,8 +58,8 @@ import {
   sentencesOf,
   spokenSentences,
 } from '../server/calls/text'
-import type { FetchOutcome, SourceFetcher } from '#layers/core/server/pipeline/fetch'
-import { D1_MAX_BOUND_PARAMS } from '#layers/core/server/pipeline/store'
+import type { FetchOutcome, SourceFetcher } from '#layers/core/server/utils/pipeline-fetch'
+import { D1_MAX_BOUND_PARAMS } from '#layers/core/server/utils/pipeline-store'
 import { decoded, pdfPages } from '#layers/core/server/pipeline/pdf-text'
 import { queryCallGuidance } from '../server/utils/terminal-call-guidance'
 import { queryContext } from '#layers/core/server/utils/terminal-db'

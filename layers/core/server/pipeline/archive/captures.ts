@@ -6,7 +6,7 @@
 // fetching and the writing.
 
 import type * as tables from '#server/db/schema'
-import { contentHashOfText } from '../contracts'
+import { contentHashOfText } from '../../utils/contracts'
 import { captureInstant, captureUrl, type CdxCapture } from './wayback'
 import type { ArchiveAxis } from '../../utils/archive-floor'
 

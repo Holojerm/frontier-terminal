@@ -7,7 +7,7 @@
 // truth filters inside its query instead (queryGroundTruth's `lab`).
 
 import { listedSubset, type ListedCompany, type ListedData } from '../../shared/utils/listed'
-import type { LabId } from '../../shared/utils/terminal-types'
+import type { LabId } from '../../../core/shared/types/common'
 
 /** Tied to the lab by being it or its parent, by a filing that names it, or by a site it uses. */
 export const listedTiedTo = (c: ListedCompany, lab: LabId): boolean =>

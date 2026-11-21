@@ -1,4 +1,4 @@
-import { EntityRow, contentHash, stableStringify, type Provider } from './contracts'
+import { EntityRow, contentHash, stableStringify, type Provider } from '../utils/contracts'
 
 // The two steps every domain's normalizers share: a validated parser-output
 // row becomes an EntityRow (toEntity), and a page's rows collapse to one per

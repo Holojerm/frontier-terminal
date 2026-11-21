@@ -16,10 +16,10 @@ import type {
   CoverageData,
   DataDictionary,
   ExportTableInfo,
-  HiringHistoryData,
-  PricesData,
-  SourceAxis,
-} from '../../shared/utils/terminal-types'
+} from '../../../core/shared/types/coverage'
+import type { HiringHistoryData } from '../../../talent/shared/types/hiring'
+import type { PricesData } from '../../../pricing/shared/types/prices'
+import type { SourceAxis } from '../../../core/shared/types/common'
 import type { TableColumn } from '#layers/core/app/types/terminal-ui'
 
 definePageMeta({

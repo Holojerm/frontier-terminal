@@ -5,8 +5,8 @@
 // for the dollars, the vendors' own price pages.
 
 import type { AdoptionData } from '../../shared/utils/adoption-views'
-import type { RankingsData } from '../../shared/utils/terminal-types/rankings'
-import type { SpendData } from '../../shared/utils/terminal-types/spend'
+import type { RankingsData } from '../../shared/types/rankings'
+import type { SpendData } from '../../shared/types/spend'
 
 definePageMeta({
   publicPage: {

@@ -25,8 +25,12 @@
 import { and, asc, count, eq, gte, inArray, max } from 'drizzle-orm'
 
 import * as tables from '#server/db/schema'
-import { ChangeRow, contentHash } from '#layers/core/server/pipeline/contracts'
-import { D1_MAX_BOUND_PARAMS, chunk, type PipelineDb } from '#layers/core/server/pipeline/store'
+import { ChangeRow, contentHash } from '#layers/core/server/utils/contracts'
+import {
+  D1_MAX_BOUND_PARAMS,
+  chunk,
+  type PipelineDb,
+} from '#layers/core/server/utils/pipeline-store'
 import { NEWSROOM_OF } from './newsrooms'
 import { storeFigureRows } from '../reported/store'
 import {

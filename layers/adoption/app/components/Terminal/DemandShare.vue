@@ -6,7 +6,7 @@
 // and NOT ingested all ship visibly, not behind a control.
 
 import { ppLabel, sharePct } from '#layers/core/shared/utils/terminal-format'
-import type { RankingsData } from '../../../shared/utils/terminal-types/rankings'
+import type { RankingsData } from '../../../shared/types/rankings'
 
 const watchlist = useWatchlist()
 

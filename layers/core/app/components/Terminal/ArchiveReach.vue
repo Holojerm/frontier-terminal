@@ -6,7 +6,7 @@
 // empty span.
 
 import { labName } from '#layers/core/shared/utils/lab-names'
-import type { ArchiveReach } from '../../../shared/utils/terminal-types/common'
+import type { ArchiveReach } from '../../../shared/types/common'
 import type { TableColumn } from '#layers/core/app/types/terminal-ui'
 
 const watchlist = useWatchlist()

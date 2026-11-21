@@ -30,7 +30,7 @@ import {
   type WebhookChangeRow,
 } from '../../shared/utils/webhooks'
 import { JUDGED_HOLD_MS } from '../pipeline/social'
-import { D1_MAX_BOUND_PARAMS, type PipelineDb } from '#layers/core/server/pipeline/store'
+import { D1_MAX_BOUND_PARAMS, type PipelineDb } from '#layers/core/server/utils/pipeline-store'
 import { keyRefusal } from '#layers/core/server/utils/api-key-token'
 import { EXPORT_TABLES } from '#server/registries/export-tables'
 import { webhookUrlRefusal } from './webhook-url'

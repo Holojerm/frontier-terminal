@@ -3,7 +3,7 @@ import { drizzle } from 'drizzle-orm/d1'
 import { beforeEach, describe, expect, it } from 'vitest'
 
 import * as schema from '~~/server/db/schema'
-import { ChangeRow, contentHash } from '#layers/core/server/pipeline/contracts'
+import { ChangeRow, contentHash } from '#layers/core/server/utils/contracts'
 import {
   boardMoves,
   describeReason,
@@ -18,7 +18,7 @@ import {
 } from '../../server/pipeline/hiring-rollup'
 import { submitJudgeRun } from '../../../core/server/pipeline/judge/submit'
 import { enqueueCriticalAlerts } from '../../../alerts/server/pipeline/social'
-import { insertRows } from '#layers/core/server/pipeline/store'
+import { insertRows } from '#layers/core/server/utils/pipeline-store'
 import { parseDepartmentClusters } from '../../server/utils/terminal-clusters'
 import { NO_DEPARTMENT } from '../../server/utils/terminal-hiring-history'
 import { fixtureText } from '#layers/core/test/pipeline/fixtures'

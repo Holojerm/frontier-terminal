@@ -12,7 +12,7 @@ import {
   rowsPerStatement,
   runStatements,
   type PipelineDb,
-} from '#layers/core/server/pipeline/store'
+} from '#layers/core/server/utils/pipeline-store'
 import type { QueryContext } from '#layers/core/server/utils/terminal-db'
 import {
   changesOf,

@@ -26,7 +26,7 @@ import {
   rowsPerStatement,
   runStatements,
   type PipelineDb,
-} from '#layers/core/server/pipeline/store'
+} from '#layers/core/server/utils/pipeline-store'
 
 export const SMOKE_WORKFLOW = 'post-deploy-smoke.yml'
 export const GITHUB_USER_AGENT =

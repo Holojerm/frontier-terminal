@@ -3,7 +3,7 @@ import { drizzle } from 'drizzle-orm/d1'
 import { beforeEach, describe, expect, it } from 'vitest'
 
 import * as schema from '~~/server/db/schema'
-import type { SourceFetcher } from '#layers/core/server/pipeline/fetch'
+import type { SourceFetcher } from '#layers/core/server/utils/pipeline-fetch'
 import {
   backfillWindows,
   RANKINGS_SOURCE_ID,
@@ -11,7 +11,7 @@ import {
   windowUrl,
 } from '../../server/pipeline/rankings-history'
 import { runRefresh, type RefreshDeps } from '../../../core/server/pipeline/refresh'
-import type { RawStore } from '#layers/core/server/pipeline/raw'
+import type { RawStore } from '#layers/core/server/utils/pipeline-raw'
 import { fixtureText } from '#layers/core/test/pipeline/fixtures'
 
 // The rankings backfill (scripts/rankings-backfill.ts): windows from the

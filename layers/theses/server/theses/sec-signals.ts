@@ -2,10 +2,10 @@
 // (terminal-revenue.ts): the newest filing's value per period, restatements
 // applied, so a claim reads the same figures the /revenue page prints.
 
-import type { LabId } from '../../../core/shared/utils/terminal-types/common'
-import type { RevenuePeriod } from '../../../companies/shared/utils/terminal-types/revenue'
+import type { LabId } from '../../../core/shared/types/common'
+import type { RevenuePeriod } from '../../../companies/shared/types/revenue'
 
-import type { PipelineDb } from '#layers/core/server/pipeline/store'
+import type { PipelineDb } from '#layers/core/server/utils/pipeline-store'
 import { queryContext } from '#layers/core/server/utils/terminal-db'
 import { queryRevenue } from '../../../companies/server/utils/terminal-revenue'
 import type { SignalDeps, SignalReading } from './signals'

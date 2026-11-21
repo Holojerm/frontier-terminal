@@ -12,7 +12,7 @@ import {
   fetchMainHead,
   parseRefAdvertisement,
 } from '../../reliability/server/pipeline/deploy-watch'
-import type { LockStore } from '#layers/core/server/pipeline/lock'
+import type { LockStore } from '#layers/core/server/utils/pipeline-lock'
 import {
   FRESHNESS_CHECK_FAILED_KIND,
   checkFreshness,

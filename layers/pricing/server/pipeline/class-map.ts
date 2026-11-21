@@ -2,7 +2,7 @@ import { desc, lte } from 'drizzle-orm'
 
 import * as tables from '#server/db/schema'
 import { MODEL_CLASS_MAP, type ClassEntry } from '../utils/terminal-classes'
-import type { PipelineDb } from '#layers/core/server/pipeline/store'
+import type { PipelineDb } from '#layers/core/server/utils/pipeline-store'
 import type { TickInput } from '#layers/core/server/pipeline/lanes'
 
 // The class map in effect: the hand-transcribed seed (terminal-classes.ts)

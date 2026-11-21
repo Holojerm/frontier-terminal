@@ -4,7 +4,7 @@ import { drizzle } from 'drizzle-orm/d1'
 import { beforeAll, describe, expect, it } from 'vitest'
 
 import * as schema from '~~/server/db/schema'
-import { insertRows } from '#layers/core/server/pipeline/store'
+import { insertRows } from '#layers/core/server/utils/pipeline-store'
 import { evaluateTheses } from '../server/theses/evaluate'
 import { queryContext } from '#layers/core/server/utils/terminal-db'
 import { daysBefore } from '../../adoption/server/utils/terminal-rankings'

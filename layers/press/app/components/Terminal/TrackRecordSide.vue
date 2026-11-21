@@ -6,7 +6,7 @@ import type {
   TrackRecordRow,
   TrackRecordSide,
   TrackRecordState,
-} from '../../../shared/utils/terminal-types/track-record'
+} from '../../../shared/types/track-record'
 
 const props = defineProps<{
   side: TrackRecordSide

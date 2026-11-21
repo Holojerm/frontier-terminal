@@ -11,17 +11,15 @@ import { LAB_DISPLAY } from '#layers/core/shared/utils/lab-names'
 import { comparePath, pairTitle, parsePair } from '../../../shared/utils/terminal-compare'
 import { labPath } from '../../../../core/shared/utils/lab-names'
 import { listedBoth, type ListedData } from '../../../shared/utils/listed'
-import type {
-  AlertsData,
-  GroundTruthData,
-  HiringHistoryData,
-  IncidentsData,
-  LabId,
-  PricesData,
-  ProbesData,
-  RankingsData,
-  RevenueData,
-} from '../../../shared/utils/terminal-types'
+import type { AlertsData } from '../../../../alerts/shared/types/alerts'
+import type { GroundTruthData } from '../../../../press/shared/types/ground-truth'
+import type { HiringHistoryData } from '../../../../talent/shared/types/hiring'
+import type { IncidentsData } from '../../../../reliability/shared/types/incidents'
+import type { LabId } from '../../../../core/shared/types/common'
+import type { PricesData } from '../../../../pricing/shared/types/prices'
+import type { ProbesData } from '../../../../reliability/shared/types/probes'
+import type { RankingsData } from '../../../../adoption/shared/types/rankings'
+import type { RevenueData } from '../../../../companies/shared/types/revenue'
 import type { TableColumn } from '#layers/core/app/types/terminal-ui'
 
 // Inert for a dynamic route: sitemap.xml and llms.txt append the compare

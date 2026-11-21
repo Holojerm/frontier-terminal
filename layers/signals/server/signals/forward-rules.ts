@@ -34,8 +34,8 @@ import {
   type FiscalPeriod,
 } from '../../../companies/server/calls/periods'
 import { filingUrl } from '../../../companies/server/exposure/series'
-import type { RevenueData } from '../../../companies/shared/utils/terminal-types/revenue'
-import type { PipelineDb } from '#layers/core/server/pipeline/store'
+import type { RevenueData } from '../../../companies/shared/types/revenue'
+import type { PipelineDb } from '#layers/core/server/utils/pipeline-store'
 import { FORWARD_CALLS, recordCalls, resolveForwardCalls, settle } from './forward-calls'
 import { forwardFiler, PRINT_RULES, ruleConcepts, type PrintRule } from './forward-filers'
 

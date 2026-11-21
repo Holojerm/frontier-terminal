@@ -16,7 +16,7 @@ import type {
   RevenueData,
   RevenuePeriod,
   RevenueProviderView,
-} from '../shared/utils/terminal-types'
+} from '../../companies/shared/types/revenue'
 
 describe('compare pairs', () => {
   it('lists every unordered pair once, in LABS order', () => {

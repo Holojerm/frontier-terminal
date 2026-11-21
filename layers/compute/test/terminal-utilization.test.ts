@@ -14,7 +14,7 @@ import crwvFacts from '~~/fixtures/recipes/sec-companyfacts-crwv.json?raw'
 import crwvRelease from '~~/fixtures/recipes/sec-crwv-active-power.html?raw'
 import googlRelease from '~~/fixtures/recipes/sec-googl-api-tokens.html?raw'
 import * as schema from '~~/server/db/schema'
-import type { SourceFetcher } from '#layers/core/server/pipeline/fetch'
+import type { SourceFetcher } from '#layers/core/server/utils/pipeline-fetch'
 import type { Recipe } from '#layers/core/server/recipes/contract'
 import {
   SEC_CRWV_ACTIVE_POWER,

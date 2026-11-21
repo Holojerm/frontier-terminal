@@ -9,7 +9,7 @@ import type {
   GroundTruthGuidance,
   GroundTruthGuidanceData,
   GroundTruthGuidanceFiler,
-} from '../../../../companies/shared/utils/terminal-types/guidance'
+} from '../../../../companies/shared/types/guidance'
 import type { TableColumn } from '#layers/core/app/types/terminal-ui'
 
 const props = defineProps<{ guidance: GroundTruthGuidanceData; tolerancePct: number }>()

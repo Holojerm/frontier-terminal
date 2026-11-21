@@ -18,7 +18,7 @@ import {
   type PrintsData,
   type PrintTie,
 } from '../../shared/utils/prints'
-import type { PipelineDb } from '#layers/core/server/pipeline/store'
+import type { PipelineDb } from '#layers/core/server/utils/pipeline-store'
 import type { QueryContext } from '#layers/core/server/utils/terminal-db'
 
 export const PRINTS_RULE =

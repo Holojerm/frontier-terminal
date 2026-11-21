@@ -4,7 +4,7 @@ import { drizzle } from 'drizzle-orm/d1'
 import { beforeEach, describe, expect, it } from 'vitest'
 
 import * as schema from '~~/server/db/schema'
-import type { FetchOutcome, SourceFetcher } from '#layers/core/server/pipeline/fetch'
+import type { FetchOutcome, SourceFetcher } from '#layers/core/server/utils/pipeline-fetch'
 import {
   COMTRADE,
   comtradeAvailabilityUrl,

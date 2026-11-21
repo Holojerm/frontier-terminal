@@ -13,7 +13,7 @@
 import { hostOf, money, tierLabel } from '#layers/core/shared/utils/terminal-format'
 import { SAME_PRICE, moveText, priceMoves } from '../../utils/price-display'
 import { labName } from '#layers/core/shared/utils/lab-names'
-import type { PriceRowView, PricesData } from '../../../shared/utils/terminal-types/prices'
+import type { PriceRowView, PricesData } from '../../../shared/types/prices'
 import type { TableColumn } from '#layers/core/app/types/terminal-ui'
 
 const watchlist = useWatchlist()

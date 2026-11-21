@@ -3,7 +3,7 @@ import { drizzle } from 'drizzle-orm/d1'
 import { beforeAll, describe, expect, it } from 'vitest'
 
 import * as schema from '~~/server/db/schema'
-import type { SourceFetcher } from '#layers/core/server/pipeline/fetch'
+import type { SourceFetcher } from '#layers/core/server/utils/pipeline-fetch'
 import { readNormalizedTrailing } from '../server/theses/download-signals'
 import {
   CONTROL_INDEX_ID,

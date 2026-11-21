@@ -19,7 +19,7 @@ import {
   quarterly,
   type StoredFact,
 } from '../server/exposure/series'
-import type { FetchOutcome, FetchSource } from '#layers/core/server/pipeline/fetch'
+import type { FetchOutcome, FetchSource } from '#layers/core/server/utils/pipeline-fetch'
 import { queryContext } from '#layers/core/server/utils/terminal-db'
 import { EXPORT_TABLES } from '#server/registries/export-tables'
 import { collect, csvChunks } from '#layers/core/server/utils/terminal-export-format'

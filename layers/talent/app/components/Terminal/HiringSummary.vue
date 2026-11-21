@@ -10,7 +10,7 @@ import type {
   ClusterSeries,
   HiringHistoryData,
   HiringHistoryProvider,
-} from '../../../shared/utils/terminal-types/hiring'
+} from '../../../shared/types/hiring'
 import type { GapRef, TableColumn } from '#layers/core/app/types/terminal-ui'
 
 const watchlist = useWatchlist()

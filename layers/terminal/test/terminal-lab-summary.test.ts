@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 
 import { isLab } from '../../core/shared/utils/lab-names'
 import { LAB_PAGES, summarizeLab } from '../shared/utils/terminal-lab-summary'
-import type { HiringHistoryData } from '../shared/utils/terminal-types'
+import type { HiringHistoryData } from '../../talent/shared/types/hiring'
 
 const hiring: HiringHistoryData = {
   as_of: null,

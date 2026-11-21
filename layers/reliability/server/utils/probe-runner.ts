@@ -8,7 +8,7 @@ import { blob } from '@nuxthub/blob'
 import { db } from '@nuxthub/db'
 
 import { recordOpsEvent } from '#server/utils/ops'
-import { blobRawReader, blobRawStore } from '#layers/core/server/pipeline/raw'
+import { blobRawReader, blobRawStore } from '#layers/core/server/utils/pipeline-raw'
 import {
   PROBE_PLACEMENT_FAILED_KIND,
   PROBE_PLACEMENTS,
@@ -20,7 +20,7 @@ import {
   type ProbePlacement,
 } from '../pipeline/probes/placement'
 import { runProbes, type ProbeRunReport } from '../pipeline/probes/run'
-import type { PipelineDb } from '#layers/core/server/pipeline/store'
+import type { PipelineDb } from '#layers/core/server/utils/pipeline-store'
 
 /** Spooled once per run in which a probe was refused for a reason of ours. */
 export const PROBE_SETUP_FAILED_KIND = 'probe_setup_failed'

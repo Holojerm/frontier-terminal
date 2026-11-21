@@ -25,8 +25,8 @@ import * as tables from '#server/db/schema'
 import { gpuMedian, gpuState, type GpuObservation } from '../recipes/gpu-series'
 import { GPU_MODELS, type GpuModel } from '../recipes/gpu-prices'
 import { emitEvent } from '#layers/core/server/utils/events'
-import { AlertRow, ChangeRow, contentHash } from '#layers/core/server/pipeline/contracts'
-import type { PipelineDb } from '#layers/core/server/pipeline/store'
+import { AlertRow, ChangeRow, contentHash } from '#layers/core/server/utils/contracts'
+import type { PipelineDb } from '#layers/core/server/utils/pipeline-store'
 
 export const GPU_MEDIAN_RULE = 'gpu-median-floor' as const
 

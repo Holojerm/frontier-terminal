@@ -3,7 +3,7 @@ import { drizzle } from 'drizzle-orm/d1'
 import { beforeEach, describe, expect, it } from 'vitest'
 
 import * as schema from '~~/server/db/schema'
-import { ChangeRow, contentHash } from '#layers/core/server/pipeline/contracts'
+import { ChangeRow, contentHash } from '#layers/core/server/utils/contracts'
 import { requotedKey } from '../../../pricing/server/pipeline/judge/class-map'
 import { incidentCounts } from '#layers/core/server/pipeline/judge/pending'
 import { clampRoutineAlerts } from '../../server/pipeline/judge/severity-gates'
@@ -15,7 +15,7 @@ import {
 } from '../../../companies/server/pipeline/parsers/sec/edgar-submissions'
 import { eightKItems, isRoutine8K } from '../../../companies/server/pipeline/parsers/sec/forms'
 import { parseCikWhitelistBlock } from '../../../companies/server/pipeline/parsers/sec/whitelist'
-import { insertRows } from '#layers/core/server/pipeline/store'
+import { insertRows } from '#layers/core/server/utils/pipeline-store'
 import { fixtureText } from '#layers/core/test/pipeline/fixtures'
 
 // The severity rules outside the hiring floor: routine 8-Ks and minor price

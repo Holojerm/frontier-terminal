@@ -24,7 +24,7 @@ import {
   type StoredFact,
   type StoredTextFact,
 } from '../exposure/series'
-import type { PipelineDb } from '#layers/core/server/pipeline/store'
+import type { PipelineDb } from '#layers/core/server/utils/pipeline-store'
 import type { QueryContext } from '#layers/core/server/utils/terminal-db'
 
 export const EXPOSURE_METHOD =

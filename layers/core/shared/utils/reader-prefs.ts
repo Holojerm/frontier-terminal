@@ -4,7 +4,7 @@
 
 import { isTimeZone } from './terminal-format'
 import { LABS } from './lab-names'
-import type { LabId } from './terminal-types/common'
+import type { LabId } from '../types/common'
 
 export const PREFS_KEY = 'ft:reader-prefs'
 

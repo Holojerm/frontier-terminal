@@ -5,7 +5,7 @@
 // provider printed ($6.155) is the tooltip.
 
 import { exactUsd, gpuHour } from '#layers/core/shared/utils/terminal-format'
-import type { GpuPricesData } from '../../../shared/utils/terminal-types/gpu-prices'
+import type { GpuPricesData } from '../../../shared/types/gpu-prices'
 import type { TableColumn } from '#layers/core/app/types/terminal-ui'
 
 defineProps<{ gpu: GpuPricesData }>()

@@ -10,7 +10,7 @@ import { queryPriceHistory } from '../../utils/terminal-prices'
 import { serveTerminal, terminalDb } from '#layers/core/server/utils/terminal-handler'
 import { rateLimitTerminal } from '#layers/core/server/utils/api-access'
 
-// modelKey() output: `model:<provider>:<slug>[:<tier>]` (layers/core/server/pipeline/contracts/keys.ts).
+// modelKey() output: `model:<provider>:<slug>[:<tier>]` (layers/core/server/utils/contracts/keys.ts).
 const keySchema = z
   .string()
   .min(1)

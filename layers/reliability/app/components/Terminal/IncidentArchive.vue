@@ -4,7 +4,7 @@
 // don't reach whole is a break in the line, not a low count.
 
 import { count } from '#layers/core/shared/utils/terminal-format'
-import type { IncidentArchiveView } from '../../../shared/utils/terminal-types/incidents'
+import type { IncidentArchiveView } from '../../../shared/types/incidents'
 import type { TableColumn } from '#layers/core/app/types/terminal-ui'
 
 const props = defineProps<{ archived: IncidentArchiveView }>()

@@ -8,15 +8,15 @@ import { desc, inArray } from 'drizzle-orm'
 
 import * as tables from '#server/db/schema'
 import { recordOpsEvent } from '#server/utils/ops'
-import { contentHash, contentHashOfText } from '#layers/core/server/pipeline/contracts'
-import type { SourceFetcher } from '#layers/core/server/pipeline/fetch'
+import { contentHash, contentHashOfText } from '#layers/core/server/utils/contracts'
+import type { SourceFetcher } from '#layers/core/server/utils/pipeline-fetch'
 import {
   activeRelay,
   isRelayed,
   relayedBytes,
   type RelayStore,
 } from '#layers/core/server/pipeline/relay'
-import type { PipelineDb } from '#layers/core/server/pipeline/store'
+import type { PipelineDb } from '#layers/core/server/utils/pipeline-store'
 import { ercotFacts, ercotListings, ercotReportLinks, type ErcotReportLink } from './ercot-reports'
 import { pdfPages } from '#layers/core/server/pipeline/pdf-text'
 

@@ -15,7 +15,7 @@ import { drizzle } from 'drizzle-orm/d1'
 import { getPlatformProxy } from 'wrangler'
 
 import { fillFromFixtures } from '../../layers/terminal/server/dev/fixture-fill'
-import type { LockStore } from '../../layers/core/server/pipeline/lock'
+import type { LockStore } from '../../layers/core/server/utils/pipeline-lock'
 import * as schema from '../../server/db/schema'
 
 const store = process.argv[2]

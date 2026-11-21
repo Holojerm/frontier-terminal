@@ -3,7 +3,7 @@ import { drizzle } from 'drizzle-orm/d1'
 import { beforeEach, describe, expect, it } from 'vitest'
 
 import * as schema from '~~/server/db/schema'
-import type { RevenueRow } from '#layers/core/server/pipeline/contracts'
+import type { RevenueRow } from '#layers/core/server/utils/contracts'
 import { diff } from '#layers/core/server/pipeline/diff'
 import { normalizeOfferings, normalizeRevenues } from '../../server/pipeline/normalize'
 import {
@@ -14,7 +14,7 @@ import { parseProspectusOffering } from '../../server/pipeline/parsers/sec/prosp
 import { parseProspectusRevenue } from '../../server/pipeline/parsers/sec/prospectus-revenue'
 import { prospectusFloorAlerts, usd } from '../../server/pipeline/prospectus-floor'
 import { sourceIdsForScope } from '../../../core/server/pipeline/scopes'
-import { includeSources } from '#layers/core/server/pipeline/sources'
+import { includeSources } from '#layers/core/server/utils/pipeline-sources'
 import { fixtureText, manifest, provenanceOf } from '#layers/core/test/pipeline/fixtures'
 
 // What a lab's registration filing says, read off its own document: the cover

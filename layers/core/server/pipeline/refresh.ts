@@ -11,10 +11,10 @@ import {
   type PollScope,
   type SourceRunRow,
   type StoredEntityRow,
-} from '#layers/core/server/pipeline/contracts'
+} from '#layers/core/server/utils/contracts'
 import { diff, repeatChangeId } from '#layers/core/server/pipeline/diff'
-import type { SourceFetcher } from '#layers/core/server/pipeline/fetch'
-import type { RawStore } from '#layers/core/server/pipeline/raw'
+import type { SourceFetcher } from '#layers/core/server/utils/pipeline-fetch'
+import type { RawStore } from '#layers/core/server/utils/pipeline-raw'
 import { CHANGE_ALERTS, derivedKeyOf, laneFor, PAYLOAD_REDACTIONS } from '#server/registries/lanes'
 import { deriveSources } from '#server/registries/derived'
 import { loadLaneBlocks, TICK_INPUTS, type TickInputs } from '#server/registries/lane-context'
@@ -33,8 +33,8 @@ import {
   rateLimitSince,
   type RunSummary,
 } from '#layers/core/server/pipeline/rate-limit'
-import { manifestFixtures } from '#layers/core/server/pipeline/parsers/fixture-provenance'
-import { includeSources, type FetchSource } from '#layers/core/server/pipeline/sources'
+import { manifestFixtures } from '#layers/core/server/utils/fixture-provenance'
+import { includeSources, type FetchSource } from '#layers/core/server/utils/pipeline-sources'
 import {
   applyDiff,
   currentEntities,
@@ -50,7 +50,7 @@ import {
   unstoredAlerts,
   type GoodSnapshot,
   type PipelineDb,
-} from '#layers/core/server/pipeline/store'
+} from '#layers/core/server/utils/pipeline-store'
 
 // One poll tick: fetch → hash → snapshot → parse → normalize → diff → store,
 // per source, with every stage's outcome written to source_runs.

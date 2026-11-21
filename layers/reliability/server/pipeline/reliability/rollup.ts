@@ -20,7 +20,7 @@ import {
   rowsPerStatement,
   runStatements,
   type PipelineDb,
-} from '#layers/core/server/pipeline/store'
+} from '#layers/core/server/utils/pipeline-store'
 
 const DAY_MS = 86_400_000
 

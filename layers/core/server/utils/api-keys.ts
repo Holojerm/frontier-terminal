@@ -12,7 +12,7 @@
 import { and, count, eq, gt } from 'drizzle-orm'
 
 import * as tables from '#server/db/schema'
-import type { PipelineDb } from '../pipeline/store'
+import type { PipelineDb } from './pipeline-store'
 import {
   hashApiKey,
   isApiKeyShape,

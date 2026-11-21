@@ -16,7 +16,7 @@ import { SUPPLIER_RELATIONS, type SuppliersData } from '../../../companies/share
 import { SUPPLIER_LAYERS } from '#layers/core/shared/utils/supplier-layers'
 import type { DependenciesData } from '../../../companies/shared/utils/terminal-dependencies'
 
-import type { PipelineDb } from '#layers/core/server/pipeline/store'
+import type { PipelineDb } from '#layers/core/server/utils/pipeline-store'
 import type { QueryContext } from '#layers/core/server/utils/terminal-db'
 import { queryDependencies } from '../../../companies/server/utils/terminal-dependencies'
 import { queryPowerSites } from '#layers/compute/server/utils/terminal-datacenters'

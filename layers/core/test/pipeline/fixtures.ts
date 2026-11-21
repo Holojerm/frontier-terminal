@@ -10,7 +10,7 @@ import { env } from 'cloudflare:test'
 
 import manifestJson from '~~/fixtures/manifest.json'
 
-import { fixtureProvenance } from '../../server/pipeline/parsers/fixture-provenance'
+import { fixtureProvenance } from '../../server/utils/fixture-provenance'
 
 export const manifest = manifestJson
 

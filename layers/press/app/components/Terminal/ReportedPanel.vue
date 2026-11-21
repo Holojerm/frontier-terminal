@@ -12,7 +12,7 @@ import type {
   ReportedHeadline,
   ReportedMetric,
   ReportedSeries,
-} from '../../../shared/utils/terminal-types/reported'
+} from '../../../shared/types/reported'
 import type { TableColumn } from '#layers/core/app/types/terminal-ui'
 
 const figures = useFigures()

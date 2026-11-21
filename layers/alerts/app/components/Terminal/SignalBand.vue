@@ -6,7 +6,7 @@
 
 import { readableEdgarNames } from '#layers/core/shared/utils/terminal-format'
 import { alertPath, INFO_TIER_LABEL } from '../../../../core/shared/utils/terminal-tiers'
-import type { OverviewData } from '../../../shared/utils/terminal-types/overview'
+import type { OverviewData } from '../../../shared/types/overview'
 
 const props = defineProps<{ overview: OverviewData }>()
 

@@ -2,7 +2,7 @@ import { and, lt, max, sql } from 'drizzle-orm'
 
 import * as tables from '#server/db/schema'
 import type { FreshnessCheck } from '#layers/core/server/utils/freshness'
-import type { PipelineDb } from '#layers/core/server/pipeline/store'
+import type { PipelineDb } from '#layers/core/server/utils/pipeline-store'
 import {
   detectedAfter,
   isTimestampOnlyChange,

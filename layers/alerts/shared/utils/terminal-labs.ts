@@ -5,8 +5,8 @@
 // reads as "—" on every column rather than as a guess.
 
 import { pctChange, pctLabel, readableEdgarNames } from '../../../core/shared/utils/terminal-format'
-import type { AlertView, ChangeView } from './terminal-types/alerts'
-import type { ProviderId } from '../../../core/shared/utils/terminal-types/common'
+import type { AlertView, ChangeView } from '../types/alerts'
+import type { ProviderId } from '../../../core/shared/types/common'
 
 export type AlertAxis =
   | 'pricing'

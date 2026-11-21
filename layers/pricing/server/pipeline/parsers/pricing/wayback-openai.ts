@@ -3,7 +3,7 @@ import {
   modelKey,
   type PriceRow,
   type Provenance,
-} from '../../../../../core/server/pipeline/contracts'
+} from '../../../../../core/server/utils/contracts'
 import {
   decodeEntities,
   htmlSections,

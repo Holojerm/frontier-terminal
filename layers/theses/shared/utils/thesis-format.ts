@@ -11,13 +11,8 @@
 import { companyName, gpuProviderName } from '../../../core/shared/utils/companies'
 import { absoluteStamp, compactUsd, count, money } from '../../../core/shared/utils/terminal-format'
 import type { PublicPage } from '#shared/utils/site'
-import type {
-  ClaimStatus,
-  PressEarlyRead,
-  ThesisDef,
-  ThesisView,
-  ValueFormat,
-} from './thesis-types'
+import type { PressEarlyRead } from '../../../press/shared/types/ground-truth'
+import type { ClaimStatus, ThesisDef, ThesisView, ValueFormat } from './thesis-types'
 
 export const thesisPath = (id: string) => `/theses/${id}`
 

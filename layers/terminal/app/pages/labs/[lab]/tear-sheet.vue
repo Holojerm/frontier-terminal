@@ -25,15 +25,13 @@ import { tearSheetPath } from '../../../../shared/utils/terminal-lab-summary'
 import { alertPath } from '../../../../../core/shared/utils/terminal-tiers'
 import type { ExposureData } from '../../../../../companies/shared/utils/terminal-exposure'
 import type { ListedData } from '../../../../shared/utils/listed'
-import type {
-  AlertsData,
-  GroundTruthData,
-  HiringHistoryData,
-  IncidentsData,
-  PricesData,
-  RankingsData,
-  RevenueData,
-} from '../../../../shared/utils/terminal-types'
+import type { AlertsData } from '../../../../../alerts/shared/types/alerts'
+import type { GroundTruthData } from '../../../../../press/shared/types/ground-truth'
+import type { HiringHistoryData } from '../../../../../talent/shared/types/hiring'
+import type { IncidentsData } from '../../../../../reliability/shared/types/incidents'
+import type { PricesData } from '../../../../../pricing/shared/types/prices'
+import type { RankingsData } from '../../../../../adoption/shared/types/rankings'
+import type { RevenueData } from '../../../../../companies/shared/types/revenue'
 import type { ThesesData } from '../../../../../theses/shared/utils/thesis-types'
 
 // Inert for a dynamic route, as on the lab page: sitemap.xml and llms.txt list

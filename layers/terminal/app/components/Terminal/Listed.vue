@@ -16,7 +16,7 @@ import {
 import { count } from '#layers/core/shared/utils/terminal-format'
 import type { ListedHiringData } from '../../../../talent/shared/utils/listed-hiring'
 import { LAB_DISPLAY } from '#layers/core/shared/utils/lab-names'
-import type { LabId } from '../../../shared/utils/terminal-types'
+import type { LabId } from '../../../../core/shared/types/common'
 import type { TableColumn } from '#layers/core/app/types/terminal-ui'
 
 const props = defineProps<{ data: ListedData; lab?: LabId | readonly [LabId, LabId] }>()

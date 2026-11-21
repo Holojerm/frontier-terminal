@@ -8,7 +8,7 @@ import { dependencyEdges } from '../utils/terminal-dependencies'
 import { filedBefore, filedFactsAt } from '../utils/terminal-exposure'
 import { PointInTimeError } from '#layers/core/server/utils/terminal-asof'
 import * as tables from '#server/db/schema'
-import type { PipelineDb } from '#layers/core/server/pipeline/store'
+import type { PipelineDb } from '#layers/core/server/utils/pipeline-store'
 import {
   CIK,
   plainTable,

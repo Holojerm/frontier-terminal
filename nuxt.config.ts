@@ -561,7 +561,7 @@ export default defineNuxtConfig({
     pressEmailFrom: '',
     // SEC fair-access policy requires a contact email in the User-Agent of
     // every request to sec.gov hosts. Empty = the EDGAR sources are skipped
-    // with a 'failed' run, never fetched anonymously (layers/core/server/pipeline/fetch.ts).
+    // with a 'failed' run, never fetched anonymously (layers/core/server/utils/pipeline-fetch.ts).
     // A Worker secret: `wrangler secret put NUXT_SEC_CONTACT_EMAIL`.
     secContactEmail: '',
     // Bearer the mini's GDELT and relay jobs (scripts/gdelt-search.ts, scripts/relay-fetch.ts)
@@ -570,7 +570,7 @@ export default defineNuxtConfig({
     // is read. `wrangler secret put NUXT_GDELT_TOKEN`; 32+ chars.
     gdeltToken: '',
     // OpenRouter API key for the usage-rankings dataset (the demand-share axis,
-    // layers/core/server/pipeline/fetch.ts). Sent as a bearer to openrouter.ai/api/v1/datasets/*
+    // layers/core/server/utils/pipeline-fetch.ts). Sent as a bearer to openrouter.ai/api/v1/datasets/*
     // only. Empty = that source is recorded 'skipped' every tick and the panel
     // says "not configured"; nothing is fetched anonymously. The hourly latency
     // probes (layers/reliability/server/pipeline/probes/) spend this key's credit on

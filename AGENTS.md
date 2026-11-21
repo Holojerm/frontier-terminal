@@ -123,7 +123,7 @@ restart. The rest are in [`.claude/docs/gotchas.md`](.claude/docs/gotchas.md).
 ├── shared/                 # Auto-imported in BOTH app/ and server/ (Nuxt 4 `shared/`)
 │   ├── types/              # Cross-cutting type augmentation (runtime config)
 │   └── utils/              # site.ts (URL identity), schema.ts (JSON-LD builders), fleet-manifest.ts
-│                           # (fleet.json shape), license.ts; terminal-types.ts etc. are in the layers
+│                           # (fleet.json shape), license.ts; the API shapes are in each layer's shared/types/
 ├── sources.yaml            # Source registry — axis, diff mechanism, include/exclude verdict per source
 ├── fixtures/               # Captured source bytes + manifest.json (fetch times) — parsers test offline
 ├── test/                   # core vitest units; test/a11y + test/csp are the Playwright browser suites

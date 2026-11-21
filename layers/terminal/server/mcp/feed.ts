@@ -13,7 +13,7 @@ import {
   RELIABILITY_DAYS,
 } from '../../../reliability/shared/utils/terminal-reliability'
 import manifest from '~~/fleet.json'
-import { json, READ_ONLY, PROVENANCE, type McpKit } from '#layers/core/server/mcp/kit'
+import { json, READ_ONLY, PROVENANCE, type McpKit } from '#layers/core/server/utils/mcp-kit'
 
 export function registerFeedTools({ server, deps }: McpKit): void {
   server.registerTool(

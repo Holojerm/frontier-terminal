@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'vitest'
 
-import { VendorMdPricingOutput } from '#layers/core/server/pipeline/contracts'
+import { VendorMdPricingOutput } from '#layers/core/server/utils/contracts'
 import { parseAlibabaPricingHtml } from '../../../pricing/server/pipeline/parsers/pricing/alibaba-pricing'
 import { parseDeepseekPricingMd } from '../../../pricing/server/pipeline/parsers/pricing/deepseek-pricing'
 import { parseMoonshotModelsMd } from '../../../pricing/server/pipeline/parsers/pricing/moonshot-models'

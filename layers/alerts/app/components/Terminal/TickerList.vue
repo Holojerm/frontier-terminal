@@ -6,7 +6,7 @@
 
 import { readableEdgarNames } from '#layers/core/shared/utils/terminal-format'
 import { alertPath } from '../../../../core/shared/utils/terminal-tiers'
-import type { AlertView } from '../../../shared/utils/terminal-types/alerts'
+import type { AlertView } from '../../../shared/types/alerts'
 
 defineProps<{ alerts: AlertView[] }>()
 

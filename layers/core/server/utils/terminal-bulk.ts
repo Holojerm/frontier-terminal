@@ -45,7 +45,7 @@ import {
 } from '#shared/utils/license'
 
 import { LICENSED_BUCKET } from '../../shared/utils/institutional'
-import type { PipelineDb } from '../pipeline/store'
+import type { PipelineDb } from './pipeline-store'
 import { SCHEMA_VERSION, tableChangedAfter } from './data-schema'
 import { ARCHIVED_EXPORTS, EXPORT_TABLES } from '#server/registries/export-tables'
 import { EXPORT_PAGE_SIZE, type ExportTable } from './terminal-export-views'

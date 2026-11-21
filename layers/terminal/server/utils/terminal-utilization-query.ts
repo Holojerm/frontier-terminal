@@ -7,10 +7,10 @@
 import { inArray } from 'drizzle-orm'
 
 import type { UtilizationData } from '#layers/compute/shared/utils/compute-views'
-import type { RecipeCitation } from '#layers/core/shared/utils/terminal-types/common'
+import type { RecipeCitation } from '#layers/core/shared/types/common'
 
 import * as tables from '#server/db/schema'
-import type { PipelineDb } from '#layers/core/server/pipeline/store'
+import type { PipelineDb } from '#layers/core/server/utils/pipeline-store'
 import { gpuState, median } from '#layers/compute/server/recipes/gpu-series'
 import {
   SEC_CRWV_ACTIVE_POWER,

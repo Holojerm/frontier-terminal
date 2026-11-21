@@ -6,7 +6,7 @@
 import { DESCRIPTION_MAX } from '#shared/utils/seo-bounds'
 import { readableEdgarNames } from '#layers/core/shared/utils/terminal-format'
 import { alertTier } from '../../../../core/shared/utils/terminal-tiers'
-import type { AlertDetailData } from '../../../shared/utils/terminal-types/alerts'
+import type { AlertDetailData } from '../../../shared/types/alerts'
 
 const stamps = useStamps()
 

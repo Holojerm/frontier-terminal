@@ -17,7 +17,7 @@ import {
 } from '../../companies/server/exposure/guidance-alerts'
 import { runFiledFacts } from '../../companies/server/exposure/ingest'
 import type { StoredFact } from '../../companies/server/exposure/series'
-import type { FetchOutcome, FetchSource } from '#layers/core/server/pipeline/fetch'
+import type { FetchOutcome, FetchSource } from '#layers/core/server/utils/pipeline-fetch'
 import { alertTerms } from '../server/pipeline/track-record/terms'
 import type { StoredGuidance } from '../../companies/server/utils/terminal-ground-truth-guidance'
 import { fixtureText, provenanceOf } from '#layers/core/test/pipeline/fixtures'

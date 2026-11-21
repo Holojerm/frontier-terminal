@@ -6,16 +6,16 @@
 // sweep empty in the browser suites fails a unit test first.
 
 import { runFiledFacts, type FiledFactsReport } from '../../../companies/server/exposure/ingest'
-import type { FetchOutcome, SourceFetcher } from '#layers/core/server/pipeline/fetch'
-import type { RawReader, RawStore } from '#layers/core/server/pipeline/raw'
-import type { LockRetry, LockStore } from '#layers/core/server/pipeline/lock'
+import type { FetchOutcome, SourceFetcher } from '#layers/core/server/utils/pipeline-fetch'
+import type { RawReader, RawStore } from '#layers/core/server/utils/pipeline-raw'
+import type { LockRetry, LockStore } from '#layers/core/server/utils/pipeline-lock'
 import {
   manifestFixtures,
   type ManifestFixture,
-} from '#layers/core/server/pipeline/parsers/fixture-provenance'
+} from '#layers/core/server/utils/fixture-provenance'
 import { runPoll, type PollOutcome } from '#layers/core/server/pipeline/poll'
-import type { FetchSource } from '#layers/core/server/pipeline/sources'
-import type { PipelineDb } from '#layers/core/server/pipeline/store'
+import type { FetchSource } from '#layers/core/server/utils/pipeline-sources'
+import type { PipelineDb } from '#layers/core/server/utils/pipeline-store'
 import { runPowerSiteReads, type PowerReadReport } from '#layers/compute/server/power/ingest'
 import { runPrintReads, type PrintReadReport } from '#layers/compute/server/prints/ingest'
 import {

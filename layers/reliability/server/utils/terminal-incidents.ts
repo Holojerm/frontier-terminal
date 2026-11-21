@@ -2,15 +2,15 @@
 // from before the live lanes (terminal-incident-archive.ts).
 
 import { count, eq, max } from 'drizzle-orm'
-import type { LabId, SourceRef } from '../../../core/shared/utils/terminal-types/common'
+import type { LabId, SourceRef } from '../../../core/shared/types/common'
 import type {
   IncidentProviderView,
   IncidentView,
   IncidentsData,
-} from '../../shared/utils/terminal-types/incidents'
+} from '../../shared/types/incidents'
 
 import * as tables from '#server/db/schema'
-import type { PipelineDb } from '#layers/core/server/pipeline/store'
+import type { PipelineDb } from '#layers/core/server/utils/pipeline-store'
 import { byString, parseJson, str, type Json } from '#layers/core/server/utils/terminal-json'
 import {
   INCIDENT_SOURCES,

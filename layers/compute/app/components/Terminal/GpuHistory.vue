@@ -7,7 +7,7 @@
 // drawn at its lower end and printed in full in the table under the charts.
 
 import { gpuHour, sharePct, dayLabel } from '#layers/core/shared/utils/terminal-format'
-import type { GpuHistoryView, SpotShare } from '../../../shared/utils/terminal-types/gpu-prices'
+import type { GpuHistoryView, SpotShare } from '../../../shared/types/gpu-prices'
 import type { Citation, TableColumn } from '#layers/core/app/types/terminal-ui'
 
 const props = defineProps<{ history: GpuHistoryView; sources?: Citation[] }>()

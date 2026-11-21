@@ -1,8 +1,8 @@
 import { and, desc, eq, gte, inArray } from 'drizzle-orm'
 import { z } from 'zod'
 
-import type { LabId } from '#layers/core/shared/utils/terminal-types/common'
-import type { ModelClassId } from '../../../shared/utils/terminal-types/prices'
+import type { LabId } from '#layers/core/shared/types/common'
+import type { ModelClassId } from '../../../shared/types/prices'
 
 import * as tables from '#server/db/schema'
 import { catalogDescription } from '../parsers/pricing/anthropic-models-overview'
@@ -14,12 +14,12 @@ import {
   type ClassEntry,
 } from '../../utils/terminal-classes'
 import { effectiveClassMap } from '../class-map'
-import type { SourceRunRow } from '#layers/core/server/pipeline/contracts'
-import type { RawReader } from '#layers/core/server/pipeline/raw'
+import type { SourceRunRow } from '#layers/core/server/utils/contracts'
+import type { RawReader } from '#layers/core/server/utils/pipeline-raw'
 import { MODEL_FLOOR_RULE } from '#layers/core/server/utils/terminal-asof'
 import { basisOnPage, flattenMdLinks } from '../recommendations'
 import { cardDescriptions, cardOwners, type CardDescriptions } from './page-cards'
-import type { PipelineDb } from '#layers/core/server/pipeline/store'
+import type { PipelineDb } from '#layers/core/server/utils/pipeline-store'
 import { judgeReview } from '#layers/core/server/pipeline/judge/review'
 
 // The judge's second job: re-mapping a like-for-like matrix cell whose vendor

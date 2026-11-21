@@ -1,4 +1,4 @@
-import type { ChangeRow } from '#layers/core/server/pipeline/contracts'
+import type { ChangeRow } from '#layers/core/server/utils/contracts'
 import type { JudgeAlert } from './alerts'
 
 // Grounding check for the judge lane — the deterministic enforcement of the

@@ -5,7 +5,7 @@ import { beforeEach, describe, expect, it } from 'vitest'
 
 import * as schema from '~~/server/db/schema'
 import { PRINT_TABLES } from '../server/export-tables/prints'
-import type { FetchOutcome, SourceFetcher } from '#layers/core/server/pipeline/fetch'
+import type { FetchOutcome, SourceFetcher } from '#layers/core/server/utils/pipeline-fetch'
 import { KCS, KCS_BOARD_DOC, readKcs } from '../server/prints/ingest'
 import {
   hasFigures,

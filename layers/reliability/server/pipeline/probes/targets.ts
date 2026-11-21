@@ -10,7 +10,7 @@
 // of one hop in front of every lab and no reading for a lab OpenRouter serves
 // only through third parties.
 
-import type { LabId } from '../../../../core/shared/utils/terminal-types/common'
+import type { LabId } from '../../../../core/shared/types/common'
 
 export const PROBE_ROUTE = 'openrouter'
 export const PROBE_ENDPOINT = 'https://openrouter.ai/api/v1/chat/completions'

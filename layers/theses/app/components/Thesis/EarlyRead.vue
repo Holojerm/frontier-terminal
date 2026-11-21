@@ -4,7 +4,7 @@
 // number: nothing here enters a reading or sets the claim's status.
 
 import { earlyReadLines } from '../../../shared/utils/thesis-format'
-import type { PressEarlyRead } from '../../../shared/utils/thesis-types'
+import type { PressEarlyRead } from '../../../../press/shared/types/ground-truth'
 
 const props = defineProps<{ read: PressEarlyRead }>()
 

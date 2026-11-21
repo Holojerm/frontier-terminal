@@ -24,7 +24,7 @@ import type { Task, TaskEvent, TaskResult } from 'nitropack/types'
 import * as tables from '#server/db/schema'
 import { logEvent } from '#server/utils/log'
 import { recordOpsEvent } from '#server/utils/ops'
-import type { PipelineDb } from '../pipeline/store'
+import type { PipelineDb } from './pipeline-store'
 
 /** Spooled once per run that throws; the detail names the task. */
 export const TASK_FAILED_KIND = 'task_failed'

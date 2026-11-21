@@ -5,7 +5,7 @@
 
 import { recordDetections, type DetectionReport, type RawReader } from './acceptance'
 import { rollSourceRuns, type RollupReport } from './rollup'
-import type { PipelineDb } from '#layers/core/server/pipeline/store'
+import type { PipelineDb } from '#layers/core/server/utils/pipeline-store'
 
 export interface ReliabilityDeps {
   raw: RawReader

@@ -2,8 +2,8 @@ import {
   AshbyJobsOutput,
   registerParser,
   type Provenance,
-} from '#layers/core/server/pipeline/contracts'
-import { fixtureProvenance } from '#layers/core/server/pipeline/parsers/fixture-provenance'
+} from '#layers/core/server/utils/contracts'
+import { fixtureProvenance } from '#layers/core/server/utils/fixture-provenance'
 import { compareByJobId } from './common'
 
 // OpenAI job board via Ashby's posting API. Department and team are inline

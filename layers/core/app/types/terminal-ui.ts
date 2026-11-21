@@ -1,7 +1,7 @@
 // Prop shapes shared by the Terminal primitives and the pages that feed them
 // (DESIGN.md › Terminal primitives).
 
-import type { Prov } from '../../shared/utils/terminal-types/common'
+import type { Prov } from '../../shared/types/common'
 
 /** A citation: the URL read and when, and optionally which feed it was. */
 export interface Citation extends Prov {

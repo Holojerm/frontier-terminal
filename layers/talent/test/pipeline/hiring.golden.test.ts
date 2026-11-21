@@ -6,7 +6,7 @@ import {
   GreenhouseJobsOutput,
   contentHash,
   jobKey,
-} from '#layers/core/server/pipeline/contracts'
+} from '#layers/core/server/utils/contracts'
 import { parseAnthropicGreenhouse } from '../../server/pipeline/parsers/hiring/anthropic-greenhouse'
 import { parseGoogleCareers } from '../../server/pipeline/parsers/hiring/google-careers'
 import { parseMistralAshby } from '../../server/pipeline/parsers/hiring/mistral-ashby'

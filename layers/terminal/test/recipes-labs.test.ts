@@ -9,7 +9,7 @@ import {
   GITHUB_TOKEN_UNSET,
   createFetcher,
   needsGithubToken,
-} from '#layers/core/server/pipeline/fetch'
+} from '#layers/core/server/utils/pipeline-fetch'
 import { parseCsv } from '#layers/core/server/recipes/csv'
 import { extractSites, extractTimelines } from '#layers/compute/server/recipes/epoch-data-centers'
 import {

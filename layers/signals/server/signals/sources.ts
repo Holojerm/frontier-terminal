@@ -15,7 +15,7 @@ import {
   archivedPriceEvents,
 } from '#layers/pricing/server/utils/terminal-price-archive'
 import { PRIMARY_PLACEMENT } from '../../../reliability/server/pipeline/probes/placement'
-import type { PipelineDb } from '#layers/core/server/pipeline/store'
+import type { PipelineDb } from '#layers/core/server/utils/pipeline-store'
 import { KCS } from '#layers/compute/server/prints/ingest'
 import { shiftPeriod } from '#layers/compute/server/prints/parse'
 import type { QueryContext } from '#layers/core/server/utils/terminal-db'

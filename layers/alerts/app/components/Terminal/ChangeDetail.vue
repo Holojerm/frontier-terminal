@@ -5,7 +5,7 @@
 // whole record rather than the diff alone — a reader checking the claim
 // needs the fields the headline did not mention as much as the ones it did.
 
-import type { ChangeDetailView } from '../../../shared/utils/terminal-types/alerts'
+import type { ChangeDetailView } from '../../../shared/types/alerts'
 import type { TableColumn } from '#layers/core/app/types/terminal-ui'
 
 defineProps<{ change: ChangeDetailView }>()

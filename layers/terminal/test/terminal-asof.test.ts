@@ -3,12 +3,12 @@ import { drizzle } from 'drizzle-orm/d1'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import * as schema from '~~/server/db/schema'
-import type { SourceFetcher } from '#layers/core/server/pipeline/fetch'
-import { contentHash } from '#layers/core/server/pipeline/contracts'
+import type { SourceFetcher } from '#layers/core/server/utils/pipeline-fetch'
+import { contentHash } from '#layers/core/server/utils/contracts'
 import { runRefresh } from '../../core/server/pipeline/refresh'
-import type { RawStore } from '#layers/core/server/pipeline/raw'
-import { includeSources } from '#layers/core/server/pipeline/sources'
-import { insertRows } from '#layers/core/server/pipeline/store'
+import type { RawStore } from '#layers/core/server/utils/pipeline-raw'
+import { includeSources } from '#layers/core/server/utils/pipeline-sources'
+import { insertRows } from '#layers/core/server/utils/pipeline-store'
 import {
   AS_OF_ROUTES,
   AsOfInstant,

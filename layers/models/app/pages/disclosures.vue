@@ -6,7 +6,7 @@
 // summary of this.
 
 import { labName } from '#layers/core/shared/utils/lab-names'
-import type { DisclosureView, DisclosuresData } from '../../shared/utils/terminal-types/disclosures'
+import type { DisclosureView, DisclosuresData } from '../../shared/types/disclosures'
 import type { TableColumn } from '#layers/core/app/types/terminal-ui'
 
 definePageMeta({

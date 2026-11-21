@@ -3,7 +3,7 @@
 // thesis recipes audited on 2026-11-04. Every figure carries the URL it was
 // read from and when, like the lab panels.
 
-import type { LabId, RecipeCitation } from '../../../core/shared/utils/terminal-types/common'
+import type { LabId, RecipeCitation } from '../../../core/shared/types/common'
 
 /** One ISO week (Monday to Sunday, UTC) of a daily count, summed. */
 export interface AdoptionWeek {

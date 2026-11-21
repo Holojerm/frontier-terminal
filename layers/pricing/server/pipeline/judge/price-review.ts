@@ -3,7 +3,7 @@ import { z } from 'zod'
 
 import * as tables from '#server/db/schema'
 import { recordOpsEvent } from '#server/utils/ops'
-import { contentHash, PriceRow, type EntityRow } from '#layers/core/server/pipeline/contracts'
+import { contentHash, PriceRow, type EntityRow } from '#layers/core/server/utils/contracts'
 import { diff, repeatChangeId } from '#layers/core/server/pipeline/diff'
 import { normalizePrice } from '../normalize'
 import {
@@ -11,8 +11,8 @@ import {
   currentEntities,
   repeatedChangeIds,
   type PipelineDb,
-} from '#layers/core/server/pipeline/store'
-import type { RawReader } from '#layers/core/server/pipeline/raw'
+} from '#layers/core/server/utils/pipeline-store'
+import type { RawReader } from '#layers/core/server/utils/pipeline-raw'
 import { judgeReview } from '#layers/core/server/pipeline/judge/review'
 
 // The judge's fallback for a price list whose parser is failing. A vendor

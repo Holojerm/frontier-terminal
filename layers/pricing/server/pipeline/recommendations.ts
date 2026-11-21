@@ -3,7 +3,7 @@ import {
   RecommendationRow,
   type ChangeRow,
   type Provenance,
-} from '#layers/core/server/pipeline/contracts'
+} from '#layers/core/server/utils/contracts'
 import type { LaneOpsEvent } from '#layers/core/server/pipeline/lanes'
 import { cardDescriptions, cardOwners, foldQuotes } from './judge/page-cards'
 

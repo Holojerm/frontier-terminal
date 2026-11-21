@@ -3,7 +3,7 @@ import { drizzle } from 'drizzle-orm/d1'
 import { beforeEach, describe, expect, it } from 'vitest'
 
 import * as schema from '~~/server/db/schema'
-import type { RevenuePeriod } from '../../companies/shared/utils/terminal-types/revenue'
+import type { RevenuePeriod } from '../../companies/shared/types/revenue'
 import { queryContext } from '#layers/core/server/utils/terminal-db'
 import {
   filedFigures,

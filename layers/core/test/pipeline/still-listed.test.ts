@@ -3,14 +3,14 @@ import { drizzle } from 'drizzle-orm/d1'
 import { beforeEach, describe, expect, it } from 'vitest'
 
 import * as schema from '~~/server/db/schema'
-import { ChangeRow, contentHash } from '#layers/core/server/pipeline/contracts'
+import { ChangeRow, contentHash } from '#layers/core/server/utils/contracts'
 import {
   falseDelisting,
   slugPattern,
   stillListedRemovals,
 } from '../../server/pipeline/judge/still-listed'
 import { submitJudgeRun } from '../../server/pipeline/judge/submit'
-import { insertRows } from '#layers/core/server/pipeline/store'
+import { insertRows } from '#layers/core/server/utils/pipeline-store'
 
 // A model one page of a lab drops while another page still lists it is not
 // delisted. The scenario is 2026-11-09: Anthropic's models overview dropped

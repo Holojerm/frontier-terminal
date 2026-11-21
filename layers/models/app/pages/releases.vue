@@ -4,7 +4,7 @@
 // first sight of a page, not a lab's announcement, so its rows are
 // excluded and the count of them is stated.
 
-import type { ReleasesData } from '../../shared/utils/terminal-types/releases'
+import type { ReleasesData } from '../../shared/types/releases'
 
 definePageMeta({
   publicPage: {

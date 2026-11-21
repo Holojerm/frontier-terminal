@@ -4,11 +4,11 @@ import * as tables from '#server/db/schema'
 import type { ClassEntry } from '#layers/pricing/server/utils/terminal-classes'
 import { effectiveClassMap } from '#layers/pricing/server/pipeline/class-map'
 import { laneFor } from '#server/registries/lanes'
-import { withPollLock } from '#layers/core/server/pipeline/lock'
-import { manifestFixtures } from '#layers/core/server/pipeline/parsers/fixture-provenance'
+import { withPollLock } from '#layers/core/server/utils/pipeline-lock'
+import { manifestFixtures } from '#layers/core/server/utils/fixture-provenance'
 import type { PollDeps } from '#layers/core/server/pipeline/poll'
 import { runRefresh, type RefreshReport } from '#layers/core/server/pipeline/refresh'
-import { includeSources, type FetchSource } from '#layers/core/server/pipeline/sources'
+import { includeSources, type FetchSource } from '#layers/core/server/utils/pipeline-sources'
 
 // The launch tripwire, every five minutes: fetch each lab's model catalog,
 // parse it in memory, and compare the parsed rows with the stored ones. Only

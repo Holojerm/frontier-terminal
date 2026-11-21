@@ -1,5 +1,5 @@
 // Read-only query layer over the pipeline tables — what every terminal page
-// renders. The UI never writes: layers/core/server/pipeline/store.ts › insertRows() is
+// renders. The UI never writes: layers/core/server/utils/pipeline-store.ts › insertRows() is
 // the only write path.
 //
 // Drizzle/D1 queries over those tables, shaped by one structural fact the
@@ -22,7 +22,7 @@
 
 import { and, eq, inArray, max, min, sql } from 'drizzle-orm'
 import { isSetLane } from '#server/registries/set-lanes'
-import type { Prov, ProviderId, Stamp } from '../../shared/utils/terminal-types/common'
+import type { Prov, ProviderId, Stamp } from '../../shared/types/common'
 import type {
   CoverageData,
   RecipeCoverage,
@@ -30,15 +30,15 @@ import type {
   SourceCoverage,
   SourceRunStamp,
   TableCounts,
-} from '../../shared/utils/terminal-types/coverage'
+} from '../../shared/types/coverage'
 
 import * as tables from '#server/db/schema'
 import { READ_RUN_STATUSES } from '../db/tables/columns'
-import { manifestFixtures } from '../pipeline/parsers/fixture-provenance'
+import { manifestFixtures } from './fixture-provenance'
 import { QUERY_CONTEXT_BLOCKS, type QueryContextBlocks } from '#server/registries/query-context'
 import { RECIPES } from '#server/registries/recipes'
 import { countedTotals, countsByKey } from './row-counts'
-import type { PipelineDb } from '../pipeline/store'
+import type { PipelineDb } from './pipeline-store'
 import type { DataFreshness } from '#server/utils/seo'
 import { EXPORT_TABLES } from '#server/registries/export-tables'
 import { historyRule } from './terminal-export-history'

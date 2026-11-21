@@ -3,7 +3,7 @@ import { drizzle } from 'drizzle-orm/d1'
 import { beforeEach, describe, expect, it } from 'vitest'
 
 import * as schema from '~~/server/db/schema'
-import type { ProspectusOutput } from '#layers/core/server/pipeline/contracts'
+import type { ProspectusOutput } from '#layers/core/server/utils/contracts'
 import { diff } from '#layers/core/server/pipeline/diff'
 import {
   normalizeOfferings,
@@ -20,7 +20,7 @@ import { docLines, docText, figure } from '../../server/pipeline/parsers/sec/pro
 import { riskFactorChanges } from '../../server/pipeline/parsers/sec/prospectus-risk-factors'
 import { parseProspectusShares } from '../../server/pipeline/parsers/sec/prospectus-shares'
 import { prospectusFloorAlerts } from '../../server/pipeline/prospectus-floor'
-import { insertRows } from '#layers/core/server/pipeline/store'
+import { insertRows } from '#layers/core/server/utils/pipeline-store'
 import { terminalStamps } from '#layers/core/server/utils/terminal-cache'
 import { queryContext } from '#layers/core/server/utils/terminal-db'
 import { EXPORT_TABLES } from '#server/registries/export-tables'

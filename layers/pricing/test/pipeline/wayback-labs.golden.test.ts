@@ -4,9 +4,9 @@ import {
   VendorMdPricingOutput,
   contentHash,
   type PriceRow,
-} from '#layers/core/server/pipeline/contracts'
+} from '#layers/core/server/utils/contracts'
 import { eraById } from '../../server/pipeline/archive/eras'
-import { fixtureProvenance } from '#layers/core/server/pipeline/parsers/fixture-provenance'
+import { fixtureProvenance } from '#layers/core/server/utils/fixture-provenance'
 import { fixtureText } from '#layers/core/test/pipeline/fixtures'
 
 // Golden tests for the archive eras added after the first backfill: the

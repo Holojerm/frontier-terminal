@@ -3,14 +3,14 @@ import { drizzle } from 'drizzle-orm/d1'
 import { beforeEach, describe, expect, it } from 'vitest'
 
 import * as schema from '~~/server/db/schema'
-import { contentHash } from '#layers/core/server/pipeline/contracts'
+import { contentHash } from '#layers/core/server/utils/contracts'
 import {
   OPENROUTER_KEY_UNSET,
   createFetcher,
   needsOpenRouterKey,
   type FetchOutcome,
   type SourceFetcher,
-} from '#layers/core/server/pipeline/fetch'
+} from '#layers/core/server/utils/pipeline-fetch'
 import { pendingChanges } from '#layers/core/server/pipeline/judge/pending'
 import { asOfFromDetail } from '../../../adoption/server/pipeline/as-of'
 import { providerOfOpenRouterId } from '../../../reliability/server/pipeline/parsers/openrouter'
@@ -20,8 +20,8 @@ import {
   runRefresh,
   type RefreshDeps,
 } from '../../../core/server/pipeline/refresh'
-import type { RawStore } from '#layers/core/server/pipeline/raw'
-import { includeSources } from '#layers/core/server/pipeline/sources'
+import type { RawStore } from '#layers/core/server/utils/pipeline-raw'
+import { includeSources } from '#layers/core/server/utils/pipeline-sources'
 import { queryMovement } from '../../../alerts/server/utils/terminal-alerts'
 import { fixtureText, manifest, provenanceOf } from '#layers/core/test/pipeline/fixtures'
 

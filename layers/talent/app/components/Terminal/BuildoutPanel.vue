@@ -6,7 +6,7 @@
 // The line chart (full page) draws the cluster per day across the boards.
 
 import { boardLabel, count, signed, dayLabel } from '#layers/core/shared/utils/terminal-format'
-import type { ClusterSeries, HiringHistoryData } from '../../../shared/utils/terminal-types/hiring'
+import type { ClusterSeries, HiringHistoryData } from '../../../shared/types/hiring'
 
 const stamps = useStamps()
 

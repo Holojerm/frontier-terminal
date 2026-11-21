@@ -4,8 +4,8 @@
 import { and, eq, min } from 'drizzle-orm'
 
 import * as tables from '#server/db/schema'
-import type { ReleasesData } from '../../shared/utils/terminal-types/releases'
-import type { PipelineDb } from '#layers/core/server/pipeline/store'
+import type { ReleasesData } from '../../shared/types/releases'
+import type { PipelineDb } from '#layers/core/server/utils/pipeline-store'
 import {
   loadBaselineInstants,
   sourceIdForUrl,

@@ -19,7 +19,7 @@ import { inArray } from 'drizzle-orm'
 import type { CompanyId } from '#layers/core/shared/utils/companies'
 
 import * as tables from '#server/db/schema'
-import type { PipelineDb } from '#layers/core/server/pipeline/store'
+import type { PipelineDb } from '#layers/core/server/utils/pipeline-store'
 import type { Recipe } from '#layers/core/server/recipes/contract'
 import { NPM_CONTROL_RECIPES, NPM_LAB_RECIPES, NPM_WRANGLER } from './npm-downloads'
 import { PYPI_LAB_RECIPES } from './pypi-downloads'

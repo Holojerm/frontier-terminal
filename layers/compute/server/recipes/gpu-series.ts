@@ -6,7 +6,7 @@
 import { and, desc, eq, lte, max } from 'drizzle-orm'
 
 import * as tables from '#server/db/schema'
-import type { PipelineDb } from '#layers/core/server/pipeline/store'
+import type { PipelineDb } from '#layers/core/server/utils/pipeline-store'
 import { gpuPricePayload, type GpuModel } from './gpu-prices'
 import { GPU_RECIPES } from './gpu-recipes'
 

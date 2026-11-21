@@ -10,10 +10,10 @@ import { inArray } from 'drizzle-orm'
 import type { CompanyId } from '#layers/core/shared/utils/companies'
 import type { AdoptionData, AgentPrWeek } from '../../shared/utils/adoption-views'
 import { LAB_OF_NAME } from '#layers/core/shared/utils/lab-names'
-import type { LabId, RecipeCitation } from '#layers/core/shared/utils/terminal-types/common'
+import type { LabId, RecipeCitation } from '#layers/core/shared/types/common'
 
 import * as tables from '#server/db/schema'
-import type { PipelineDb } from '#layers/core/server/pipeline/store'
+import type { PipelineDb } from '#layers/core/server/utils/pipeline-store'
 import { PROVIDER_ORDER } from '#layers/core/server/utils/terminal-sources'
 import { GITHUB_AGENT_RECIPES } from '../recipes/github-agent-prs'
 import {

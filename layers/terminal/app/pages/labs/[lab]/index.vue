@@ -15,19 +15,17 @@ import { labLede } from '../../../../shared/utils/terminal-ledes'
 import type { TableColumn } from '#layers/core/app/types/terminal-ui'
 import type { ListedData } from '../../../../shared/utils/listed'
 import type { ThesesData, ThesisView } from '../../../../../theses/shared/utils/thesis-types'
-import type {
-  AlertsData,
-  DisclosuresData,
-  GroundTruthData,
-  HiringHistoryData,
-  IncidentsData,
-  PricesData,
-  ProbesData,
-  RankingsData,
-  ReleasesData,
-  RevenueData,
-  SpendData,
-} from '../../../../shared/utils/terminal-types'
+import type { AlertsData } from '../../../../../alerts/shared/types/alerts'
+import type { DisclosuresData } from '../../../../../models/shared/types/disclosures'
+import type { GroundTruthData } from '../../../../../press/shared/types/ground-truth'
+import type { HiringHistoryData } from '../../../../../talent/shared/types/hiring'
+import type { IncidentsData } from '../../../../../reliability/shared/types/incidents'
+import type { PricesData } from '../../../../../pricing/shared/types/prices'
+import type { ProbesData } from '../../../../../reliability/shared/types/probes'
+import type { RankingsData } from '../../../../../adoption/shared/types/rankings'
+import type { ReleasesData } from '../../../../../models/shared/types/releases'
+import type { RevenueData } from '../../../../../companies/shared/types/revenue'
+import type { SpendData } from '../../../../../adoption/shared/types/spend'
 import type { LimitsData } from '#layers/pricing/shared/utils/limits'
 import type { PayData } from '../../../../../talent/shared/utils/pay'
 import type { AdoptionData } from '#layers/adoption/shared/utils/adoption-views'

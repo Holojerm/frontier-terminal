@@ -22,14 +22,14 @@ import {
   type SourceReliability,
   type StalePeriod,
 } from '../../shared/utils/terminal-reliability'
-import type { ProviderId, SourceAxis } from '../../../core/shared/utils/terminal-types/common'
+import type { ProviderId, SourceAxis } from '../../../core/shared/types/common'
 
 import * as tables from '#server/db/schema'
-import { manifestFixtures } from '#layers/core/server/pipeline/parsers/fixture-provenance'
+import { manifestFixtures } from '#layers/core/server/utils/fixture-provenance'
 import { filingIndexUrl, releasedAt } from '../pipeline/reliability/acceptance'
 import { ROLLUP_NAME, addDays, dayOf } from '../pipeline/reliability/rollup'
 import { statedIntervalMinutes } from '#layers/core/server/pipeline/scopes'
-import type { PipelineDb } from '#layers/core/server/pipeline/store'
+import type { PipelineDb } from '#layers/core/server/utils/pipeline-store'
 import type { QueryContext } from '#layers/core/server/utils/terminal-db'
 import {
   PROVIDER_ORDER,

@@ -1,4 +1,4 @@
-import { GreenhouseJobsOutput, type Provenance } from '#layers/core/server/pipeline/contracts'
+import { GreenhouseJobsOutput, type Provenance } from '#layers/core/server/utils/contracts'
 import { TransientParseError } from '#layers/core/server/pipeline/lanes'
 
 // Shared helpers for the hiring lane. Deterministic: no clocks, no

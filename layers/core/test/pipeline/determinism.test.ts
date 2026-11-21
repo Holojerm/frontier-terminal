@@ -5,7 +5,7 @@ import {
   parserOutputSchemas,
   registeredParsers,
   type ParserId,
-} from '#layers/core/server/pipeline/contracts'
+} from '#layers/core/server/utils/contracts'
 import '../../../../server/registries/parsers'
 import { fixtureText, manifest } from '#layers/core/test/pipeline/fixtures'
 

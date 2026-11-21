@@ -13,8 +13,8 @@
 import { eq } from 'drizzle-orm'
 
 import * as tables from '#server/db/schema'
-import type { SourceRights } from '../../shared/utils/terminal-types/common'
-import type { PipelineDb } from '../pipeline/store'
+import type { SourceRights } from '../../shared/types/common'
+import type { PipelineDb } from './pipeline-store'
 import { DERIVED_TERMS_FROM, derivedTemplateOf, type SourceRegistry } from './terminal-sources'
 
 /** A snapshot id: `<source_id>:<fetched_at>`. */

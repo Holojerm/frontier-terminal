@@ -13,7 +13,7 @@
 // cannot leak settings into each other.
 
 import { isLab } from '../../shared/utils/lab-names'
-import type { LabId } from '../../shared/utils/terminal-types/common'
+import type { LabId } from '../../shared/types/common'
 import {
   UTC_STYLE,
   absoluteStamp,

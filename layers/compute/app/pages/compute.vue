@@ -6,7 +6,7 @@
 // /power; MOVED forwards their old anchors there.
 
 import type { UtilizationData } from '../../shared/utils/compute-views'
-import type { GpuPricesData } from '../../shared/utils/terminal-types/gpu-prices'
+import type { GpuPricesData } from '../../shared/types/gpu-prices'
 
 definePageMeta({
   publicPage: {

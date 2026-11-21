@@ -1,5 +1,5 @@
-import type { FetchSource } from './sources'
-import type { PipelineDb } from './store'
+import type { FetchSource } from '../utils/pipeline-sources'
+import type { PipelineDb } from '../utils/pipeline-store'
 
 // Sources the store derives for itself: a URL template audited in
 // sources.yaml (`derived_sources`) filled with a key the store already holds.

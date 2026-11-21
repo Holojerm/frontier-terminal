@@ -5,7 +5,7 @@ import { recipeRunsStamp } from '#layers/core/server/utils/terminal-db'
 import { ADOPTION_RECIPE_IDS, queryAdoption } from '../utils/terminal-adoption'
 import { SERIES_DAYS, SHARE_WINDOW_DAYS, queryRankings } from '../utils/terminal-rankings'
 import { querySpend } from '../utils/terminal-spend'
-import { json, READ_ONLY, PROVENANCE, type McpKit } from '#layers/core/server/mcp/kit'
+import { json, READ_ONLY, PROVENANCE, type McpKit } from '#layers/core/server/utils/mcp-kit'
 
 export function registerDemandTools({ server, deps }: McpKit): void {
   server.registerTool(

@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest'
 import azure from '~~/fixtures/recipes/gpu-azure.json?raw'
 import coreweave from '~~/fixtures/recipes/gpu-coreweave.html?raw'
 
-import type { RevenuePeriod } from '../../companies/shared/utils/terminal-types/revenue'
+import type { RevenuePeriod } from '../../companies/shared/types/revenue'
 import { detailRows, earlyReadLines, earlyReadSummary } from '../shared/utils/thesis-format'
 import type { StoredFact } from '../../companies/server/exposure/series'
 import {

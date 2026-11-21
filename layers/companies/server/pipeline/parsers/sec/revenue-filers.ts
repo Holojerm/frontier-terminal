@@ -1,4 +1,4 @@
-import type { Provider } from '#layers/core/server/pipeline/contracts'
+import type { Provider } from '#layers/core/server/utils/contracts'
 import type { CikWhitelist } from './whitelist'
 
 // Which lab a revenue filer's facts belong to, read from the revenue_filers

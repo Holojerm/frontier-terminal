@@ -6,7 +6,8 @@
 // list, the monthly counts from before the live feeds, from archived copies.
 
 import { labName } from '#layers/core/shared/utils/lab-names'
-import type { IncidentView, IncidentsData, ProbesData } from '../../shared/utils/terminal-types'
+import type { IncidentView, IncidentsData } from '../../../reliability/shared/types/incidents'
+import type { ProbesData } from '../../../reliability/shared/types/probes'
 import type { LimitsData } from '#layers/pricing/shared/utils/limits'
 import type { TableColumn } from '#layers/core/app/types/terminal-ui'
 

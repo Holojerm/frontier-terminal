@@ -17,7 +17,7 @@ import {
 import { FOREIGN_FILERS } from '../../../companies/server/calls/actuals'
 import { curatedCalls } from '../../../companies/server/calls/curated'
 import { LISTED_BOARDS } from '../../../talent/shared/utils/listed-hiring'
-import type { LabId } from '../../../core/shared/utils/terminal-types/common'
+import type { LabId } from '../../../core/shared/types/common'
 import type {
   SignalEntityKind,
   SignalFrequency,

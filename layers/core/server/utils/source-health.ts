@@ -1,8 +1,8 @@
 import { and, count, desc, eq, gte, gt, min, ne } from 'drizzle-orm'
 
 import * as tables from '#server/db/schema'
-import type { SourceHealth, SourceRunStamp } from '../../shared/utils/terminal-types/coverage'
-import type { PipelineDb } from '../pipeline/store'
+import type { SourceHealth, SourceRunStamp } from '../../shared/types/coverage'
+import type { PipelineDb } from './pipeline-store'
 
 // Whether a source is degraded, for the coverage panel. The last check's
 // badge says how one poll ended, which hides the two ways a source goes bad

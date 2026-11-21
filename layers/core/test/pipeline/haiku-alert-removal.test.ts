@@ -4,8 +4,8 @@ import { beforeEach, describe, expect, it } from 'vitest'
 
 import * as schema from '~~/server/db/schema'
 import migration from '~~/server/db/migrations/0051_remove_haiku_prompt_length_alerts.sql?raw'
-import { AlertRow } from '../../server/pipeline/contracts'
-import { insertRows } from '../../server/pipeline/store'
+import { AlertRow } from '../../server/utils/contracts'
+import { insertRows } from '../../server/utils/pipeline-store'
 
 // Migration 0051 deletes the two 2026-10-07 launch alerts for "models" that
 // were Anthropic's prompt-length price bands for claude-haiku-5-5, read as

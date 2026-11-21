@@ -6,24 +6,25 @@
 
 import { alertLabs } from '../../../alerts/shared/utils/terminal-labs'
 import { LAB_DISPLAY, LABS, labPath } from '../../../core/shared/utils/lab-names'
+import type { AlertView } from '../../../alerts/shared/types/alerts'
+import type { LabId } from '../../../core/shared/types/common'
 import type {
-  AlertView,
-  LabId,
   ClusterSeries,
   HiringHistoryData,
   HiringHistoryProvider,
+} from '../../../talent/shared/types/hiring'
+import type {
   IncidentProviderView,
   IncidentsData,
-  MatrixCell,
-  PricesData,
-  ProviderShare,
-  RankingsData,
+} from '../../../reliability/shared/types/incidents'
+import type { MatrixCell, PricesData } from '../../../pricing/shared/types/prices'
+import type { ProviderShare, RankingsData } from '../../../adoption/shared/types/rankings'
+import type {
   RevenueData,
   RevenuePeriod,
   RevenueProviderView,
-  SpendData,
-  SpendProviderView,
-} from './terminal-types'
+} from '../../../companies/shared/types/revenue'
+import type { SpendData, SpendProviderView } from '../../../adoption/shared/types/spend'
 
 /**
  * The lab pages, in the shape `definePageMeta({ publicPage })` produces for a

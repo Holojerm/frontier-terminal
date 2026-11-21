@@ -12,7 +12,7 @@ import type {
   TrackRecordData,
   TrackRecordRow,
   TrackRecordTally,
-} from '../../../shared/utils/terminal-types/track-record'
+} from '../../../shared/types/track-record'
 import type { TableColumn } from '#layers/core/app/types/terminal-ui'
 
 defineProps<{ record: TrackRecordData }>()

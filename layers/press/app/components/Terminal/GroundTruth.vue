@@ -21,10 +21,10 @@ import type {
   GroundTruthReport,
   GroundTruthResolution,
   GroundTruthWaiting,
-} from '../../../shared/utils/terminal-types/ground-truth'
-import type { LabId } from '../../../../core/shared/utils/terminal-types/common'
-import type { ReportedMetric } from '../../../shared/utils/terminal-types/reported'
-import type { TrackRecordTally } from '../../../shared/utils/terminal-types/track-record'
+} from '../../../shared/types/ground-truth'
+import type { LabId } from '../../../../core/shared/types/common'
+import type { ReportedMetric } from '../../../shared/types/reported'
+import type { TrackRecordTally } from '../../../shared/types/track-record'
 import type { TableColumn } from '#layers/core/app/types/terminal-ui'
 
 const props = defineProps<{ truth: GroundTruthData; lab?: LabId }>()

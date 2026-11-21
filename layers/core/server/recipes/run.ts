@@ -7,15 +7,19 @@
 import { and, desc, eq, lt, max, min, sql } from 'drizzle-orm'
 
 import * as tables from '#server/db/schema'
-import { contentHash, contentHashOfText } from '#layers/core/server/pipeline/contracts'
-import type { SourceFetcher } from '#layers/core/server/pipeline/fetch'
+import { contentHash, contentHashOfText } from '#layers/core/server/utils/contracts'
+import type { SourceFetcher } from '#layers/core/server/utils/pipeline-fetch'
 import {
   isRateLimitRun,
   rateLimitAlertDue,
   RECIPE_RATE_LIMIT_ALERT_AFTER_MS,
 } from '#layers/core/server/pipeline/rate-limit'
-import type { RawStore } from '#layers/core/server/pipeline/raw'
-import { chunk, D1_MAX_BOUND_PARAMS, type PipelineDb } from '#layers/core/server/pipeline/store'
+import type { RawStore } from '#layers/core/server/utils/pipeline-raw'
+import {
+  chunk,
+  D1_MAX_BOUND_PARAMS,
+  type PipelineDb,
+} from '#layers/core/server/utils/pipeline-store'
 import { recordOpsEvent } from '#server/utils/ops'
 import type { Observation, Recipe } from '#layers/core/server/recipes/contract'
 import { RECIPES } from '#server/registries/recipes'

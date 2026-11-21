@@ -19,8 +19,8 @@ import { inArray } from 'drizzle-orm'
 
 import * as tables from '#server/db/schema'
 import { recordOpsEvent } from '#server/utils/ops'
-import { isSecHost, type SourceFetcher } from '#layers/core/server/pipeline/fetch'
-import { runStatements, type PipelineDb } from '#layers/core/server/pipeline/store'
+import { isSecHost, type SourceFetcher } from '#layers/core/server/utils/pipeline-fetch'
+import { runStatements, type PipelineDb } from '#layers/core/server/utils/pipeline-store'
 import { comparable, pageText } from '#layers/core/server/utils/quote-match'
 import { currentTies, seedHandTies } from './store'
 

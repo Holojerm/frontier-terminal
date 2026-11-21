@@ -4,7 +4,7 @@ import { beforeEach, describe, expect, it } from 'vitest'
 
 import * as schema from '~~/server/db/schema'
 import tiesJson from '../server/curated/print-ties.json'
-import type { FetchOutcome, SourceFetcher } from '#layers/core/server/pipeline/fetch'
+import type { FetchOutcome, SourceFetcher } from '#layers/core/server/utils/pipeline-fetch'
 import { ACCTON_REVENUE, runPrintReads, TSMC_6K, TWSE_REVENUE } from '../server/prints/ingest'
 import {
   parseAcctonRevenue,

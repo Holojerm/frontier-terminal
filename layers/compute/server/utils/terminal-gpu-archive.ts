@@ -9,7 +9,7 @@
 import { asc, eq } from 'drizzle-orm'
 
 import { gpuProviderName } from '#layers/core/shared/utils/companies'
-import type { ArchivedGpuPoint, GpuArchiveView } from '../../shared/utils/terminal-types/gpu-prices'
+import type { ArchivedGpuPoint, GpuArchiveView } from '../../shared/types/gpu-prices'
 
 import * as tables from '#server/db/schema'
 import {
@@ -17,7 +17,7 @@ import {
   GPU_ARCHIVE_NOT_COVERED,
   GPU_ARCHIVE_UNTIL,
 } from '../pipeline/archive/gpu-eras'
-import type { PipelineDb } from '#layers/core/server/pipeline/store'
+import type { PipelineDb } from '#layers/core/server/utils/pipeline-store'
 import { gpuMedian, type GpuObservation } from '../recipes/gpu-series'
 import { GPU_MODELS, gpuPricePayload } from '../recipes/gpu-prices'
 import { archiveSourceId } from '#layers/core/server/utils/archive-floor'

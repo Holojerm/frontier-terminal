@@ -20,8 +20,8 @@ import type {
   GroundTruthDealFiled,
   GroundTruthDealMeasure,
   GroundTruthDealTally,
-} from '../../shared/utils/terminal-types/ground-truth'
-import type { LabId } from '../../../core/shared/utils/terminal-types/common'
+} from '../../shared/types/ground-truth'
+import type { LabId } from '../../../core/shared/types/common'
 
 import { labName } from '#layers/core/shared/utils/lab-names'
 import { FILER_NAMES, filingUrl, type StoredFact } from '../../../companies/server/exposure/series'

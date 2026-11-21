@@ -4,7 +4,7 @@
 // DESIGN.md › Never convey state by color alone: every badge pairs its color
 // with an icon and a word.
 
-import type { AlertView, ChangeView } from '../../shared/utils/terminal-types/alerts'
+import type { AlertView, ChangeView } from '../../shared/types/alerts'
 
 export const CHANGE_BADGE = {
   added: { color: 'success', icon: 'i-lucide-plus' },

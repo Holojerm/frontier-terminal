@@ -4,7 +4,7 @@
 
 import { labName } from '../../../core/shared/utils/lab-names'
 import { longDate, pricePhrase } from '../../../core/shared/utils/terminal-format'
-import type { PriceHistoryData, PricePoint } from './terminal-types/prices'
+import type { PriceHistoryData, PricePoint } from '../types/prices'
 
 const isPriced = (p: PricePoint) =>
   p.kind !== 'removed' && (p.input_per_mtok !== null || p.output_per_mtok !== null)

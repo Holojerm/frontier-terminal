@@ -18,7 +18,7 @@ import {
 import { GRID_AREAS } from '#layers/compute/shared/utils/grid-load'
 import { PRINT_ENTITIES } from '#layers/compute/shared/utils/prints'
 import { labName } from '#layers/core/shared/utils/lab-names'
-import type { PipelineDb } from '#layers/core/server/pipeline/store'
+import type { PipelineDb } from '#layers/core/server/utils/pipeline-store'
 import { forwardCallViews } from '../signals/forward-calls'
 import { SIGNALS, sourceLabel } from '../signals/registry'
 import { latestRun, type SeriesCoverage } from '../signals/run'

@@ -10,7 +10,7 @@ import {
   READ_ONLY,
   PROVENANCE,
   type McpKit,
-} from '#layers/core/server/mcp/kit'
+} from '#layers/core/server/utils/mcp-kit'
 
 export function registerRateLimitTools({ server, deps }: McpKit): void {
   server.registerTool(

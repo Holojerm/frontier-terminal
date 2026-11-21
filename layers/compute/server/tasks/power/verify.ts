@@ -5,7 +5,7 @@
 
 import { db } from '@nuxthub/db'
 
-import { createFetcher } from '#layers/core/server/pipeline/fetch'
+import { createFetcher } from '#layers/core/server/utils/pipeline-fetch'
 import { verifyHandTies } from '../../power/verify'
 import { withHeartbeat } from '#layers/core/server/utils/task-heartbeat'
 

@@ -6,7 +6,7 @@ import {
   entityKey,
   entityView,
   filing,
-  filingKey,
+  filingKeyDoc,
   list,
   none,
   partsView,
@@ -100,7 +100,7 @@ export const FILING_TABLES = {
     'prospectus_statements',
     'Every line of the statement of operations in a lab’s own registration filing (S-1, S-1/A). One row per filing, period, and line, with the line verbatim, a standard key where we have one, and the value in USD, shares, or USD per share. Null means the filing printed a dash. Interim periods are unaudited.',
     'statement',
-    filingKey('statement:<cik>:<accession_no>:<start>:<end>'),
+    filingKeyDoc('statement:<cik>:<accession_no>:<start>:<end>'),
     {
       start: { type: 'date', meaning: 'First day of the period.' },
       end: { type: 'date', meaning: 'Last day of the period.' },
@@ -146,7 +146,7 @@ export const FILING_TABLES = {
     'prospectus_commitments',
     'Contractual commitments printed in a lab’s registration filing. That covers the contractual-obligations table in MD&A (management’s discussion and analysis), the purchase-commitment schedule in the commitments note, and the one-figure totals, as of each date stated. One row per schedule line and year bucket, with bucket “Total” for the line’s total. approximate marks a figure the filing calls approximate, and statement quotes its sentence.',
     'commitment',
-    filingKey('commitment:<accession_no>:<schedule>:<as_of, or undated>'),
+    filingKeyDoc('commitment:<accession_no>:<schedule>:<as_of, or undated>'),
     {
       schedule: {
         type: 'text',
@@ -199,7 +199,7 @@ export const FILING_TABLES = {
     'prospectus_concentration',
     'Customers at or above 10% of revenue or of accounts receivable, from a lab’s registration filing. One row per filing, basis, customer, and period or balance date, with customers named as the filing names them. A null pct is the filing’s “*”, which means under 10% (not zero).',
     'concentration',
-    filingKey('concentration:<accession_no>:<basis>'),
+    filingKeyDoc('concentration:<accession_no>:<basis>'),
     {
       basis: { type: 'text', meaning: 'revenue or accounts_receivable.' },
       customer: { type: 'text', meaning: 'The customer as the filing names it (“Customer A”).' },
@@ -238,7 +238,7 @@ export const FILING_TABLES = {
     'prospectus_shares',
     'Share counts from a lab’s registration filing. Each row of “The Offering” (shares offered, and each class outstanding after the offering, with the underwriters’ option where stated), plus the pre-offering counts it’s based on. Null while the filing leaves a count blank.',
     'shares',
-    filingKey('shares:<accession_no>'),
+    filingKeyDoc('shares:<accession_no>'),
     {
       measure: {
         type: 'text',
@@ -289,7 +289,7 @@ export const FILING_TABLES = {
     'prospectus_risk_factors',
     'Every risk-factor heading in a lab’s registration filing, verbatim and in order. Each is compared with the same filer’s previous filing and marked unchanged, added, reworded (previous holds the earlier words), or removed. A removed heading is one the previous filing printed and this one doesn’t, listed after this filing’s own.',
     'risk_factors',
-    filingKey('risk_factors:<accession_no>'),
+    filingKeyDoc('risk_factors:<accession_no>'),
     {
       section: verbatim('The “Risks Related to …” subsection the heading sits under'),
       heading: verbatim('The risk-factor heading'),

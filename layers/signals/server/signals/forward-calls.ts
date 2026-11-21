@@ -12,7 +12,7 @@ import type {
   ForwardInput,
   ForwardMethod,
 } from '../../shared/utils/signals'
-import type { RevenueData } from '../../../companies/shared/utils/terminal-types/revenue'
+import type { RevenueData } from '../../../companies/shared/types/revenue'
 import {
   flowSum,
   instantOf,
@@ -22,13 +22,13 @@ import {
 } from '../../../companies/server/calls/actuals'
 import { conceptFacts } from '../../../companies/server/calls/ingest'
 import { filingUrl } from '../../../companies/server/exposure/series'
-import { contentHash } from '#layers/core/server/pipeline/contracts'
+import { contentHash } from '#layers/core/server/utils/contracts'
 import {
   chunk,
   rowsPerStatement,
   runStatements,
   type PipelineDb,
-} from '#layers/core/server/pipeline/store'
+} from '#layers/core/server/utils/pipeline-store'
 import { filedFigures } from '../../../press/server/utils/terminal-ground-truth'
 import { REGISTERED_CALLS } from './forward-calls-registered'
 import { conceptsOf, forwardFiler } from './forward-filers'

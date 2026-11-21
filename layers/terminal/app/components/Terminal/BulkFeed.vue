@@ -15,7 +15,7 @@ import {
 } from '#shared/utils/license'
 import { REQUEST_BUDGETS } from '#layers/core/shared/utils/institutional'
 import { count } from '#layers/core/shared/utils/terminal-format'
-import type { SchemaChangelogEntry } from '../../../shared/utils/terminal-types'
+import type { SchemaChangelogEntry } from '../../../../core/shared/types/coverage'
 
 defineProps<{
   schemaVersion?: string

@@ -10,7 +10,7 @@ import type {
   GroundTruthDeal,
   GroundTruthDealMeasure,
   GroundTruthDeals,
-} from '../../../shared/utils/terminal-types/ground-truth'
+} from '../../../shared/types/ground-truth'
 import type { TableColumn } from '#layers/core/app/types/terminal-ui'
 
 const props = defineProps<{ deals: GroundTruthDeals; tolerancePct: number }>()

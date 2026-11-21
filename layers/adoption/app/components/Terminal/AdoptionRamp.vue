@@ -7,7 +7,7 @@
 
 import { grouped } from '#layers/core/shared/utils/terminal-format'
 import type { AdoptionData } from '../../../shared/utils/adoption-views'
-import type { LabId } from '#layers/core/shared/utils/terminal-types/common'
+import type { LabId } from '#layers/core/shared/types/common'
 import type { TableColumn } from '#layers/core/app/types/terminal-ui'
 
 const props = defineProps<{

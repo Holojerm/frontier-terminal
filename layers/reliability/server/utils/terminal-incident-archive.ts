@@ -13,11 +13,8 @@
 
 import { eq } from 'drizzle-orm'
 
-import type {
-  IncidentArchiveLab,
-  IncidentArchiveView,
-} from '../../shared/utils/terminal-types/incidents'
-import type { LabId } from '../../../core/shared/utils/terminal-types/common'
+import type { IncidentArchiveLab, IncidentArchiveView } from '../../shared/types/incidents'
+import type { LabId } from '../../../core/shared/types/common'
 
 import * as tables from '#server/db/schema'
 import { ARCHIVE_FROM } from '#layers/core/server/utils/archive-floor'
@@ -27,7 +24,7 @@ import {
   STATUS_ARCHIVE_NOT_COVERED,
   STATUS_LIVE_FROM,
 } from '../pipeline/archive/status-eras'
-import type { PipelineDb } from '#layers/core/server/pipeline/store'
+import type { PipelineDb } from '#layers/core/server/utils/pipeline-store'
 import { byString } from '#layers/core/server/utils/terminal-json'
 import { PROVIDER_DISPLAY } from '#layers/core/server/utils/terminal-sources'
 

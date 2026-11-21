@@ -14,7 +14,7 @@ import {
 } from '../../companies/server/exposure/guidance'
 import { runFiledFacts } from '../../companies/server/exposure/ingest'
 import type { StoredFact } from '../../companies/server/exposure/series'
-import type { FetchOutcome, FetchSource } from '#layers/core/server/pipeline/fetch'
+import type { FetchOutcome, FetchSource } from '#layers/core/server/utils/pipeline-fetch'
 import { figureHeadline } from '../server/pipeline/reported/figures'
 import {
   applyFigureReadings,

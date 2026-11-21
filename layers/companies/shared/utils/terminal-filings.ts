@@ -5,8 +5,8 @@
 // cannot disagree about a number, and the sitemap enumerates exactly the
 // filings a page exists for.
 
-import type { LabId, SourceRef } from '../../../core/shared/utils/terminal-types/common'
-import type { RevenueData, RevenueFilerView, RevenuePeriod } from './terminal-types/revenue'
+import type { LabId, SourceRef } from '../../../core/shared/types/common'
+import type { RevenueData, RevenueFilerView, RevenuePeriod } from '../types/revenue'
 
 export interface FilingPeriod extends RevenuePeriod {
   /** The later filing whose value for the same period the revenue panel shows instead; null when this one is shown. */

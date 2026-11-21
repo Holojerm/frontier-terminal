@@ -5,7 +5,7 @@ import {
   EdgarSubmissionsOutput,
   VendorMdPricingOutput,
   modelKey,
-} from '#layers/core/server/pipeline/contracts'
+} from '#layers/core/server/utils/contracts'
 import {
   FROM_NOTE,
   parseAnthropicModelsOverviewMd,

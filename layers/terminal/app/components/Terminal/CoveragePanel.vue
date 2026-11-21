@@ -12,8 +12,8 @@ import type {
   RecipeCoverage,
   SourceCoverage,
   SourceHealth,
-  SourceRights,
-} from '../../../shared/utils/terminal-types'
+} from '../../../../core/shared/types/coverage'
+import type { SourceRights } from '../../../../core/shared/types/common'
 import type { TableColumn } from '#layers/core/app/types/terminal-ui'
 
 defineProps<{ coverage: CoverageData }>()
