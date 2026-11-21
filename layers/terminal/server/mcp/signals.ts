@@ -9,7 +9,7 @@ export function registerSignalTools({ server, deps }: McpKit): void {
     {
       title: 'Signal scorecard: each series against the stocks it should lead',
       description:
-        'For every series the site registers (npm and PyPI downloads, the Ramp AI Index, OpenRouter share, GPU prices, latency-probe strain, open roles, launches, price cuts, filed revenue against press reports): ' +
+        'For every series the site registers (npm and PyPI downloads, the Ramp AI Index, OpenRouter share, GPU prices, latency-probe strain, open roles, launches, price cuts, filed revenue against press reports, grid load where the lab sites are, ERCOT large loads): ' +
         'the entity it measures, the tickers it is expected to lead, and per ticker and horizon (1, 5, 20, 60 trading days) an in-sample and a held-out (newest third) statistic. ' +
         'lead_lag: the correlation between the series’ change each period and the ticker’s return less SPY’s from the first session after the figure was public. ' +
         'event: the mean of that abnormal return from the close before each event. status thin means under min_sample and carries no number: say there is not enough history. ' +

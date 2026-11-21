@@ -150,6 +150,8 @@ describe('the table registry', () => {
       'supplier_passages',
       'power_site_ties',
       'signal_results',
+      'grid_load_days',
+      'ercot_large_load_facts',
     ])
     expect(exportTable('entities')).toBeNull()
     expect(exportTable('rankings_daily')).toBeNull()

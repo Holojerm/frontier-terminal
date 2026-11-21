@@ -330,6 +330,16 @@ export const SCHEMA_RELEASES: readonly SchemaRelease[] = [
       signal_results: { note: 'New table.' },
     },
   },
+  {
+    version: '1.21.0',
+    date: '2026-11-21',
+    summary:
+      'Grid load where the lab sites are. grid_load_days has EIA-930’s adjusted hourly demand summed per balancing authority and local day, from 2018, for the authorities that hold a lab site. ercot_large_load_facts has ERCOT’s own large-load figures (approved to energize, the sum of observed monthly peaks, the large-load queue), one row per figure per report, with its sentence. /api/grid-load and get_grid_load derive monthly and weekly averages with the change on a year before. The dictionary’s sources gain grid_load_sources.',
+    tables: {
+      grid_load_days: { note: 'New table.' },
+      ercot_large_load_facts: { note: 'New table.' },
+    },
+  },
 ]
 
 export const SCHEMA_VERSION = SCHEMA_RELEASES.at(-1)!.version

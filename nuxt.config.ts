@@ -198,6 +198,9 @@ const securityHeaders = {
 //   29 5 * * TUE — power:verify re-reads each utility, regulator and company page
 //                the power-sites table cites and spools an ops event for a quote
 //                that is gone (layers/terminal/server/power/verify.ts).
+//   53 */6     — power:grid-load streams EIA-930's six-month demand files and reads
+//                ERCOT's large-load reports (layers/terminal/server/power/grid-load.ts),
+//                alone in its invocation for the long downloads.
 const SCHEDULED_TASKS: Record<string, string[]> = {
   '*/30 * * * *': ['ops:watch', 'poll:edgar'],
   '0 */6 * * *': ['poll:survey'],
@@ -211,6 +214,7 @@ const SCHEDULED_TASKS: Record<string, string[]> = {
   '29 5 * * TUE': ['power:verify'],
   '40 6 * * *': ['signals:prices'],
   '10 7 * * *': ['signals:run'],
+  '53 */6 * * *': ['power:grid-load'],
 }
 
 /**

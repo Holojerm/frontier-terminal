@@ -38,6 +38,7 @@ import { HISTORY_TABLES } from '../export-tables/history'
 import { CLAIM_TABLES } from '../export-tables/theses'
 import { PRESS_TABLES } from '../export-tables/press'
 import { RECIPE_TABLES } from '../export-tables/recipes'
+import { GRID_LOAD_TABLES } from '../export-tables/grid-load'
 import { EXPOSURE_TABLES } from '../export-tables/exposure'
 import { REFERENCE_TABLES } from '../export-tables/reference'
 import { SIGNAL_TABLES } from '../export-tables/signals'
@@ -63,6 +64,7 @@ export const EXPORT_TABLES: Readonly<Record<string, ExportTable>> = {
   ...EXPOSURE_TABLES,
   ...REFERENCE_TABLES,
   ...SIGNAL_TABLES,
+  ...GRID_LOAD_TABLES,
 }
 
 export const EXPORT_TABLE_NAMES = Object.keys(EXPORT_TABLES)

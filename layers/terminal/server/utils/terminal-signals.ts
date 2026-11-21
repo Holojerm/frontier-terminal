@@ -13,6 +13,7 @@ import {
   type SignalStat,
   type SignalsData,
 } from '../../shared/utils/signals'
+import { GRID_AREAS } from '../../shared/utils/grid-load'
 import { labName } from '../../shared/utils/terminal-labs'
 import type { PipelineDb } from '../pipeline/store'
 import { scoreForwardCalls } from '../signals/forward-calls'
@@ -44,7 +45,9 @@ const statOf = (row: typeof tables.signalResults.$inferSelect | undefined): Sign
     : { status: 'thin', n: 0, estimate: null, t_stat: null, p_value: null }
 
 function entityLabel(kind: string, id: string): string {
-  return kind === 'lab' ? labName(id) : id
+  if (kind === 'lab') return labName(id)
+  if (kind === 'grid') return GRID_AREAS.find((a) => a.ba === id)?.short ?? id
+  return id
 }
 
 export async function querySignals(db: PipelineDb, ctx: QueryContext): Promise<SignalsData> {

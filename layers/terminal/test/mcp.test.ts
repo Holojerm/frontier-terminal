@@ -186,6 +186,7 @@ describe('tools/list', () => {
       'get_disclosures',
       'get_exposure',
       'get_gpu_prices',
+      'get_grid_load',
       'get_ground_truth',
       'get_hiring',
       'get_hiring_history',
@@ -241,6 +242,9 @@ describe('tools/list', () => {
       expect(t.description, t.name).toContain('source_url')
     }
     expect(tools.find((t) => t.name === 'get_datacenters')!.description).toContain('never sum')
+    expect(tools.find((t) => t.name === 'get_grid_load')!.description).toContain(
+      'never a utilization rate',
+    )
     expect(tools.find((t) => t.name === 'get_reported')!.description).toContain('get_revenue')
   })
 
@@ -256,6 +260,7 @@ describe('tools/list', () => {
       'get_utilization',
       'get_datacenters',
       'get_power_sites',
+      'get_grid_load',
       'get_reported',
       'get_adoption',
       'get_rate_limits',
