@@ -131,7 +131,7 @@ const sites = computed(() =>
         v-if="utilization.benchmark_rounds"
         id="benchmark-rounds"
         title="Benchmark speed, round over round"
-        :note="`MLPerf Inference tokens per second per accelerator in ${utilization.benchmark_rounds.rounds.join(' and ')}, for each accelerator with results in more than one round.`"
+        note="MLPerf Inference tokens per second per accelerator."
       >
         <TerminalBenchmarkRounds :rounds="utilization.benchmark_rounds" />
       </TerminalPanel>

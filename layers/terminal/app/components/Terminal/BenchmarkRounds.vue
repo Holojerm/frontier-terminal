@@ -43,13 +43,13 @@ const roundKeys = computed(() => props.rounds.rounds.map((_, i) => `round${i}`))
 const leftOut = computed(() => {
   const chips = props.rounds.accelerators_left_out
   const mixed = props.rounds.mixed_results
-  const chipText = `${count(chips)} ${chips === 1 ? 'accelerator has' : 'accelerators have'} no like-for-like result in another round`
-  const mixedText = `${count(mixed)} ${mixed === 1 ? 'result' : 'results'} from systems that mix accelerators`
-  if (chips && mixed)
-    return `${chipText} and ${chips === 1 ? 'is' : 'are'} left out, as are ${mixedText}.`
-  if (chips) return `${chipText} and ${chips === 1 ? 'is' : 'are'} left out.`
-  if (mixed) return `${mixedText} ${mixed === 1 ? 'is' : 'are'} left out.`
-  return ''
+  const parts = [
+    chips
+      ? `${count(chips)} ${chips === 1 ? 'accelerator' : 'accelerators'} in one round only`
+      : '',
+    mixed ? `${count(mixed)} mixed-chip ${mixed === 1 ? 'result' : 'results'}` : '',
+  ].filter(Boolean)
+  return parts.length ? `Left out: ${parts.join(', ')}.` : ''
 })
 </script>
 
@@ -85,15 +85,9 @@ const leftOut = computed(() => {
       </template>
     </TerminalTable>
 
-    <p class="text-xs text-muted">
-      Each row compares systems of one size: the same accelerator, at the same count, in every
-      round. {{ leftOut }}
-    </p>
+    <p class="text-xs text-muted">Same accelerator count in each round. {{ leftOut }}</p>
 
-    <TerminalSources
-      :sources="rounds.sources"
-      :caveats="[{ text: rounds.method, label: 'method' }]"
-    >
+    <TerminalSources :sources="rounds.sources">
       <span>Apache 2.0, MLCommons</span>
     </TerminalSources>
     <p class="text-xs text-toned">{{ rounds.footnote }}</p>
