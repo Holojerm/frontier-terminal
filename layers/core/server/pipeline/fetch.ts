@@ -1,3 +1,4 @@
+import { activeRelay, isRelayed, relayedOutcome, type RelayStore } from './relay'
 import type { FetchSource } from './sources'
 
 // Fetch stage (boundary table: DETERMINISTIC). An HTTP GET against an
@@ -83,6 +84,8 @@ export interface FetcherOptions extends UserAgentOptions {
   fetch?: typeof globalThis.fetch
   sleep?: (ms: number) => Promise<void>
   attempts?: number
+  /** Where relayed hosts are read from; defaults to the one the Worker registered (relay.ts). */
+  relay?: RelayStore | null
 }
 
 export const FETCH_ATTEMPTS = 3
@@ -206,6 +209,8 @@ export function createFetcher(options: FetcherOptions): SourceFetcher {
   const attempts = options.attempts ?? FETCH_ATTEMPTS
 
   return async (source) => {
+    const relay = isRelayed(source.url) ? (options.relay ?? activeRelay()) : null
+    if (relay) return relayedOutcome(relay, source.url)
     const userAgent = userAgentFor(source.url, options)
     if (userAgent === null) return { ok: false, status: null, detail: SEC_CONTACT_UNSET }
 

@@ -234,12 +234,14 @@ Each of these has a full contract in its own doc — this is the one-line versio
   is the depth axis of this project; never trade it for a feature.
 - **Errors** — `<UAlert>` on the client, `createError({ statusCode })` on the
   server, never a raw error message to a user. → [`patterns.md`](.claude/docs/patterns.md)
-- **Public API** — every `/api/*` route is public and read-only, with four bearer-gated
+- **Public API** — every `/api/*` route is public and read-only, with five bearer-gated
   exceptions: `/api/fleet` (portfolio dashboard), `/api/judge/*` (the judge routine, a
   writer — `layers/core/server/utils/judge-auth.ts`), `/api/ops/events` (the ops-triage
   routine's read of the ops spool, `NUXT_OPS_TOKEN`) and `/api/gdelt/*` (the Mac mini job
   that reads GDELT's 15-minute GKG files and posts back the rows naming a tracked lab, filer
-  or model family, the other writer, `NUXT_GDELT_TOKEN`). No session; a route that takes input validates it
+  or model family, the other writer, `NUXT_GDELT_TOKEN`) and `/api/relay/*` (the mini's relay
+  job, same token: it fetches the hosts that refuse Workers' egress and posts the bytes back,
+  `layers/core/server/pipeline/relay.ts`). No session; a route that takes input validates it
   with Zod and calls `rateLimit()` (`rateLimitTerminal()` on the public product routes).
   Licensees may send an owner-issued API key (`Authorization: Bearer ftk_…`, `bun run keys:issue`;
   commercial licensing is paused, so no page, llms.txt line or API message advertises keys):
