@@ -18,7 +18,7 @@
 // runs after that re-read the newest round alone (a correction to it still
 // lands). A new round is a new line in MLPERF_ROUNDS, added by hand with its
 // fixture. A round older than the newest stored is never read: adding one
-// means clearing this recipe's rows, as migration 0060 did.
+// means clearing this recipe's rows, as migration 0061 did.
 
 import type { Observation, Recipe } from './contract'
 
