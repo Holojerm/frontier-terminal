@@ -1,0 +1,338 @@
+{
+ "_comment": "Short excerpts of 2018-2022 earnings exhibits on EDGAR, as our reader cut them into sentences: each the outlook sentences of one release and the lead-in before them, or one sentence the rule must not take. Fetched 2026-11-21.",
+ "calls": [
+  {
+   "ticker": "NVDA",
+   "call_date": "2018-05-10",
+   "fy_end_month": 1,
+   "source_url": "https://www.sec.gov/Archives/edgar/data/1045810/000104581018000052/q1fy19pr.htm",
+   "note": "spelled-out band; GAAP and non-GAAP, respectively",
+   "sentences": [
+    {
+     "text": "Revenue is expected to be $3.10 billion, plus or minus two percent.",
+     "page": null,
+     "at_ms": null,
+     "speaker": null
+    },
+    {
+     "text": "GAAP and non-GAAP gross margins are expected to be 63.3 percent and 63.5 percent, respectively, plus or minus 50 basis points.",
+     "page": null,
+     "at_ms": null,
+     "speaker": null
+    }
+   ]
+  },
+  {
+   "ticker": "AMZN",
+   "call_date": "2018-04-26",
+   "fy_end_month": 12,
+   "source_url": "https://www.sec.gov/Archives/edgar/data/1018724/000101872418000070/amzn-20180331xex991.htm",
+   "note": "the comparison base is not the period",
+   "sentences": [
+    {
+     "text": "Second Quarter 2018 Guidance",
+     "page": null,
+     "at_ms": null,
+     "speaker": null
+    },
+    {
+     "text": "Net sales are expected to be between $51.0 billion and $54.0 billion, or to grow between 34% and 42% compared with second quarter 2017.",
+     "page": null,
+     "at_ms": null,
+     "speaker": null
+    }
+   ]
+  },
+  {
+   "ticker": "QCOM",
+   "call_date": "2018-04-25",
+   "fy_end_month": 9,
+   "source_url": "https://www.sec.gov/Archives/edgar/data/804328/000172894918000038/qcom032518erex991.htm",
+   "note": "outlook table: label, result, guidance",
+   "sentences": [
+    {
+     "text": "The following table summarizes GAAP and Non-GAAP guidance based on the current outlook.",
+     "page": null,
+     "at_ms": null,
+     "speaker": null
+    },
+    {
+     "text": "The Non-GAAP outlook presented below is consistent with the presentation of Non-GAAP results included elsewhere herein.",
+     "page": null,
+     "at_ms": null,
+     "speaker": null
+    },
+    {
+     "text": "Qualcomm’s Business Outlook Summary and Reconciliation",
+     "page": null,
+     "at_ms": null,
+     "speaker": null
+    },
+    {
+     "text": "Q3 FY17",
+     "page": null,
+     "at_ms": null,
+     "speaker": null
+    },
+    {
+     "text": "Results (1)",
+     "page": null,
+     "at_ms": null,
+     "speaker": null
+    },
+    {
+     "text": "Current Guidance",
+     "page": null,
+     "at_ms": null,
+     "speaker": null
+    },
+    {
+     "text": "Q3 FY18 Estimates (2) (3)",
+     "page": null,
+     "at_ms": null,
+     "speaker": null
+    },
+    {
+     "text": "Revenues",
+     "page": null,
+     "at_ms": null,
+     "speaker": null
+    },
+    {
+     "text": "$5.4B",
+     "page": null,
+     "at_ms": null,
+     "speaker": null
+    },
+    {
+     "text": "$4.8B - $5.6B",
+     "page": null,
+     "at_ms": null,
+     "speaker": null
+    }
+   ]
+  },
+  {
+   "ticker": "AAOI",
+   "call_date": "2018-05-08",
+   "fy_end_month": 12,
+   "source_url": "https://www.sec.gov/Archives/edgar/data/1158114/000168316818001233/applied_ex9901.htm",
+   "note": "outlook list under a lead-in",
+   "sentences": [
+    {
+     "text": "Second Quarter 2018 Business Outlook (+)",
+     "page": null,
+     "at_ms": null,
+     "speaker": null
+    },
+    {
+     "text": "For the second quarter of 2018, the company currently expects:",
+     "page": null,
+     "at_ms": null,
+     "speaker": null
+    },
+    {
+     "text": "&middot;",
+     "page": null,
+     "at_ms": null,
+     "speaker": null
+    },
+    {
+     "text": "Revenue in the range of $75 million to $81 million.",
+     "page": null,
+     "at_ms": null,
+     "speaker": null
+    },
+    {
+     "text": "&middot;",
+     "page": null,
+     "at_ms": null,
+     "speaker": null
+    },
+    {
+     "text": "Non-GAAP gross margin in the range of 39.5% to 41%.",
+     "page": null,
+     "at_ms": null,
+     "speaker": null
+    }
+   ]
+  },
+  {
+   "ticker": "BE",
+   "call_date": "2021-05-05",
+   "fy_end_month": 12,
+   "source_url": "https://www.sec.gov/Archives/edgar/data/1664703/000166470321000041/ex991be1q21financialresults.htm",
+   "note": "outlook table, label and amount apart",
+   "sentences": [
+    {
+     "text": "2021 Outlook",
+     "page": null,
+     "at_ms": null,
+     "speaker": null
+    },
+    {
+     "text": "We announced the following outlook for the full year of 2021:",
+     "page": null,
+     "at_ms": null,
+     "speaker": null
+    },
+    {
+     "text": "Revenue:",
+     "page": null,
+     "at_ms": null,
+     "speaker": null
+    },
+    {
+     "text": "$950 million - $1 billion",
+     "page": null,
+     "at_ms": null,
+     "speaker": null
+    },
+    {
+     "text": "Non-GAAP Gross Margin*:",
+     "page": null,
+     "at_ms": null,
+     "speaker": null
+    },
+    {
+     "text": "~25%",
+     "page": null,
+     "at_ms": null,
+     "speaker": null
+    }
+   ]
+  },
+  {
+   "ticker": "CLS",
+   "call_date": "2018-04-27",
+   "fy_end_month": 12,
+   "source_url": "https://www.sec.gov/Archives/edgar/data/1030894/000162828018005183/exhibit991-pressreleaseand.htm",
+   "note": "a year inside a date",
+   "sentences": [
+    {
+     "text": "Second Quarter 2018 Outlook",
+     "page": null,
+     "at_ms": null,
+     "speaker": null
+    },
+    {
+     "text": "For the quarter ending June 30, 2018, we anticipate revenue to be in the range of $1.575 billion to $1.675 billion, non-IFRS selling, general and administrative expenses (SG&A) to be in the range of $51.0 million to $53.0 million, non-IFRS operating margin to be 3.2% at the mid-point of our revenue range and non-IFRS adjusted EPS guidance range, and non-IFRS adjusted EPS to be in the range of $0.25 to $0.31.",
+     "page": null,
+     "at_ms": null,
+     "speaker": null
+    }
+   ]
+  },
+  {
+   "ticker": "MRVL",
+   "call_date": "2021-06-07",
+   "fy_end_month": 1,
+   "source_url": "https://www.sec.gov/Archives/edgar/data/1835632/000183563221000005/q122_8kx512021ex-991.htm",
+   "note": "+/- band",
+   "sentences": [
+    {
+     "text": "•Net revenue is expected to be $1.065 billion +/- 3%.",
+     "page": null,
+     "at_ms": null,
+     "speaker": null
+    }
+   ]
+  },
+  {
+   "ticker": "INTC",
+   "call_date": "2021-04-22",
+   "fy_end_month": 12,
+   "source_url": "https://www.sec.gov/Archives/edgar/data/50863/000005086321000017/q121_earningsrelease.htm",
+   "note": "a basis per figure",
+   "sentences": [
+    {
+     "text": "▪Raising full-year 2021 guidance.",
+     "page": null,
+     "at_ms": null,
+     "speaker": null
+    },
+    {
+     "text": "Now expecting GAAP revenue of $77.0 billion and non-GAAP revenue of $72.5 billion; GAAP EPS of $4.00 and non-GAAP EPS of $4.60.1",
+     "page": null,
+     "at_ms": null,
+     "speaker": null
+    }
+   ]
+  },
+  {
+   "ticker": "HPE",
+   "call_date": "2021-06-01",
+   "fy_end_month": 10,
+   "source_url": "https://www.sec.gov/Archives/edgar/data/1645590/000164559021000038/ex-991x4302021x8kng.htm",
+   "note": "a multi-year target",
+   "sentences": [
+    {
+     "text": "We remain on track to achieve our full year and 3-year revenue growth CAGR target of 8% to 12%.",
+     "page": null,
+     "at_ms": null,
+     "speaker": null
+    }
+   ]
+  },
+  {
+   "ticker": "WMB",
+   "call_date": "2021-05-03",
+   "fy_end_month": 12,
+   "source_url": "https://www.sec.gov/Archives/edgar/data/107263/000010726321000011/wmb_20210331xer.htm",
+   "note": "growth capex is part of capex",
+   "sentences": [
+    {
+     "text": "The company is keeping intact 2021 growth capex guidance between $1 billion to $1.2 billion.",
+     "page": null,
+     "at_ms": null,
+     "speaker": null
+    }
+   ]
+  },
+  {
+   "ticker": "COHR",
+   "call_date": "2018-05-01",
+   "fy_end_month": 6,
+   "source_url": "https://www.sec.gov/Archives/edgar/data/820318/000117184318003217/exh_991.htm",
+   "note": "backlog now, not a guide",
+   "sentences": [
+    {
+     "text": "Overall, with our consolidated book to bill ratio at 1.13 and our record backlog of $442 million, we expect our fourth quarter to be a good finish to the year.”",
+     "page": null,
+     "at_ms": null,
+     "speaker": null
+    }
+   ]
+  },
+  {
+   "ticker": "PNW",
+   "call_date": "2021-05-05",
+   "fy_end_month": 12,
+   "source_url": "https://www.sec.gov/Archives/edgar/data/764622/000076462221000030/a1q2021earningsdeck.htm",
+   "note": "kilowatt-hour sales, not revenue",
+   "sentences": [
+    {
+     "text": "Key Drivers & Guidance Firs t Quarter 20214 As of May 5, 2021 • Retail customer growth about 1.5-2.5% • Weather-normalized retail electricity sales growth of 1.0-2.0% on average 2021 – 2023 Guidance 2021 Key Drivers • EPS guidance pending APS rate case conclusion • Retail customer growth about 1.5-2.5% • Weather-normalized retail electricity sales growth of 0.5%-1.5% • Transmission revenue • Operations and maintenance • Depreciation and amortization • Interest rates • AFUDC • Pension & OPEB",
+     "page": null,
+     "at_ms": null,
+     "speaker": null
+    }
+   ]
+  },
+  {
+   "ticker": "AMD",
+   "call_date": "2021-04-27",
+   "fy_end_month": 12,
+   "source_url": "https://www.sec.gov/Archives/edgar/data/2488/000000248821000054/amdq121financialresultss.htm",
+   "note": "slide columns",
+   "sentences": [
+    {
+     "text": "Refer to Diluted Share Count overview in the Appendices Q2 2021 FY 2021 Revenue ~$3.6 Billion+/- $100 Million Growth of ~50% y/y Gross Margin % ~47% ~47% Operating Expenses Operating Expenses/Revenue % ~$900 Million ~26% Interest Expense, Taxes and Other ~$130 Million -- Effective Tax Rate 15% of pre-tax income 15% of pre-tax income Cash Tax Rate ~3% of pre-tax income ~3% of pre-tax income Diluted Share Count&sup2; ~1.23 billion shares ~1.24 billion shares FINANCIAL OUTLOOK – NON-GAAP&sup1;",
+     "page": null,
+     "at_ms": null,
+     "speaker": null
+    }
+   ]
+  }
+ ]
+}

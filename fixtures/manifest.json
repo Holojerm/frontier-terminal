@@ -2497,6 +2497,52 @@
       "note": "Excerpts of company-posted transcripts and remarks (LSEG, FactSet and S&P files among them), never a whole transcript."
     },
     {
+      "path": "fixtures/calls/qcom-submissions.json",
+      "source_id": "call-edgar-submissions",
+      "source_url": "https://data.sec.gov/submissions/CIK0000804328.json",
+      "fetched_at": "2026-11-21T14:23:00Z",
+      "http_status": 200,
+      "raw_bytes": 159995,
+      "trim": "filings.recent cut to its two newest earnings 8-Ks and the five fields the parser reads; filings.files whole"
+    },
+    {
+      "path": "fixtures/calls/qcom-submissions-001.json",
+      "source_id": "call-edgar-submissions",
+      "source_url": "https://data.sec.gov/submissions/CIK0000804328-submissions-001.json",
+      "fetched_at": "2026-11-21T14:23:30Z",
+      "http_status": 200,
+      "raw_bytes": 314935,
+      "trim": "6 of 2,004 filings kept: earnings 8-Ks from November 2017 to July 2018, a 10-Q and an 8-K without item 2.02"
+    },
+    {
+      "path": "fixtures/calls/tsm-6k-index-2021.htm",
+      "source_id": "call-edgar-index",
+      "source_url": "https://www.sec.gov/Archives/edgar/data/1046179/000156459021018896/0001564590-21-018896-index.html",
+      "fetched_at": "2026-11-21T14:37:00Z",
+      "http_status": 200,
+      "raw_bytes": 11661,
+      "trim": "the accession line and the document table kept; the EDGAR page chrome dropped"
+    },
+    {
+      "path": "fixtures/calls/exhibit-excerpts-2018-2022.json",
+      "source_id": "call-edgar-exhibit",
+      "source_url": "https://www.sec.gov/Archives/edgar/data/1045810/000104581018000052/q1fy19pr.htm",
+      "fetched_at": "2026-11-21T14:20:00Z",
+      "http_status": 200,
+      "raw_bytes": 0,
+      "trim": "per release (13 of them, 2018 to 2021) only its outlook sentences and their lead-in, or the one sentence the rule must not take, as the reader cut them; each release's own URL is in the file"
+    },
+    {
+      "path": "fixtures/calls/msft-fy19-q3-transcript.docx.b64",
+      "source_id": "call-transcripts-company",
+      "source_url": "https://cdn-dynmedia-1.microsoft.com/is/content/microsoftcorp/TranscriptFY19Q3",
+      "fetched_at": "2026-11-21T14:45:00Z",
+      "http_status": 200,
+      "raw_bytes": 42408,
+      "trim": "base64 of the Word file rebuilt with 12 paragraphs of the outlook only, from “Now let’s move to next quarter’s outlook”; the rest of the transcript dropped",
+      "note": "An excerpt of the company's transcript, never the whole file."
+    },
+    {
       "path": "fixtures/listed-hiring/coreweave-greenhouse.json",
       "source_id": "listed-coreweave-greenhouse",
       "source_url": "https://boards-api.greenhouse.io/v1/boards/coreweave/departments",

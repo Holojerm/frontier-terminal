@@ -39,6 +39,19 @@ export const USD_PER_HOUR = Object.values(RATE_PER_HOUR).reduce((a, b) => a + b,
  */
 export const MONTHLY_SPEND_CAP_USD = 10
 
+/**
+ * The owner's one-time ceiling for transcribing the replays of calls held
+ * since 2018 (2026-11-21): about 210 hours. It is its own basis, so the
+ * backfill never spends the monthly cap that new calls need.
+ */
+export const BACKFILL_SPEND_CAP_USD = 75
+/** A call held before this is the backfill's; one since, the month's. */
+export const BACKFILL_BEFORE = '2025-10-01'
+
+export type SpendBasis = 'monthly' | 'backfill'
+export const spendBasis = (callDate: string): SpendBasis =>
+  callDate < BACKFILL_BEFORE ? 'backfill' : 'monthly'
+
 /** Model families the labs ship, spelled as a speaker says them. */
 const MODEL_FAMILIES = [
   'ChatGPT',
@@ -122,7 +135,8 @@ export function transcriptRequest(audioUrl: string, c: AudioCompany): Record<str
     disfluencies: false,
     speaker_labels: true,
     speaker_options: {
-      min_speakers_expected: speakers.length + 2,
+      // The list holds a company's past executives too; three of them speak on a call at most.
+      min_speakers_expected: Math.min(speakers.length, 3) + 2,
       max_speakers_expected: speakers.length + 14,
     },
     speech_understanding: {
@@ -177,6 +191,31 @@ export function mp3Kbps(head: Uint8Array): number | null {
 
 /** Seconds of audio a file of `bytes` holds at `kbps`. */
 export const audioSeconds = (bytes: number, kbps: number) => (bytes * 8) / (kbps * 1000)
+
+/** A WAV file's bytes per second from its RIFF header, or null (Amazon posted its replays so until 2024). */
+export function wavByteRate(head: Uint8Array): number | null {
+  const tag = (at: number) => String.fromCharCode(...head.subarray(at, at + 4))
+  const u32 = (at: number) =>
+    (head[at]! | (head[at + 1]! << 8) | (head[at + 2]! << 16) | (head[at + 3]! << 24)) >>> 0
+  if (head.length < 12 || tag(0) !== 'RIFF' || tag(8) !== 'WAVE') return null
+  // Chunks in order; a JUNK or bext chunk may come before "fmt ".
+  for (let at = 12; at + 20 <= head.length;) {
+    const size = u32(at + 4)
+    if (tag(at) === 'fmt ') {
+      const rate = u32(at + 16)
+      return rate > 0 ? rate : null
+    }
+    at += 8 + size + (size & 1)
+  }
+  return null
+}
+
+/** A replay's length from its size and its head: a WAV's byte rate, an MP3's bitrate, else the bound below. */
+export function replaySeconds(head: Uint8Array, bytes: number): number {
+  const wav = wavByteRate(head)
+  if (wav) return bytes / wav
+  return audioSeconds(bytes, mp3Kbps(head) ?? FALLBACK_KBPS)
+}
 
 /** What a transcript of `seconds` costs at the rates above. */
 export const costOf = (seconds: number) => (seconds / 3600) * USD_PER_HOUR

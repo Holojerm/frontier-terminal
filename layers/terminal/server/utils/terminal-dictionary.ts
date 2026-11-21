@@ -99,7 +99,7 @@ const AS_OF_CUT: Readonly<Record<string, string>> = {
   filed_text_facts:
     'Rows whose filing date is before the UTC day of as_of. A figure counts from the day after its filing, whenever we read it, so this table answers as_of back to 2023-10.',
   filed_guidance:
-    'Rows whose release or call was filed or held before the UTC day of as_of. A figure counts from the day after it was stated, whenever we read it, so this table answers as_of back to 2024 for the release capex and to October 2025 for the calls.',
+    'Rows whose release or call was filed or held before the UTC day of as_of. A figure counts from the day after it was stated, whenever we read it, so this table answers as_of back to 2024 for the release capex and to 2018 for the calls.',
   guidance_resolutions:
     'Rows with first_seen_at at or before as_of: a guided figure as settled by what we held then.',
   forward_calls:
@@ -405,7 +405,8 @@ export const TABLE_META: Readonly<Record<string, TableMeta>> = {
       'Release capex every 30 minutes with the filed-facts read. Call documents hourly, up to eight a run; a replay the run after AssemblyAI finishes it.',
     event: 'filed',
     knowledge: 'filed',
-    start: 'Release capex from 2024-01-01; the calls of the 45 listed companies from October 2025.',
+    start:
+      'Release capex from 2024-01-01; the calls of the 45 listed companies from 2018, as each company’s filings and posted files reach.',
     joins: [byTicker, byCik],
     feeds: ['filed_facts', 'calls'],
   },
@@ -414,7 +415,7 @@ export const TABLE_META: Readonly<Record<string, TableMeta>> = {
     cadence: 'Hourly, once the guided period’s 10-Q or 10-K is in XBRL.',
     event: 'filed',
     knowledge: 'first_seen_at',
-    start: 'Guidance from calls held from October 2025.',
+    start: 'Guidance from calls held from 2018, as each company’s filings and posted files reach.',
     joins: [byTicker],
     feeds: ['filed_facts'],
   },
@@ -424,7 +425,7 @@ export const TABLE_META: Readonly<Record<string, TableMeta>> = {
       'Hourly: new EDGAR exhibits for three companies a run, and every curated document once.',
     event: 'call_date',
     knowledge: 'first_seen_at',
-    start: 'Calls held from October 2025.',
+    start: 'Calls held from 2018, as each company’s filings and posted files reach.',
     joins: [byTicker],
     feeds: ['calls', 'filed_facts'],
   },
