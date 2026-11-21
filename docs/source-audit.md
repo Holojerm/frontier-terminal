@@ -1013,6 +1013,44 @@ What management guided on each call (capex, revenue, a segment or AI line, gross
 
 **Verdict.** Include.
 
+## Addendum, 2026-11-21: earnings-call guidance back to 2018
+
+The owner approved backfilling the call guidance to calls held from 2018, AssemblyAI spend included, because the guidance surprise series needs many quarters before /signals can grade it. Same rules as the addendum above: only files a company links publicly from its own results or event page, nothing behind registration, nothing from Q4, Notified, Chorus Call or YouTube players, and a host that refuses our client is a gap.
+
+**How the older files were found.** By hand, once, from the results or event page that links each file: the live page, a Wayback Machine capture of it when the live page no longer reaches back, or on a Q4-hosted site the feed that page renders from. Every file was then fetched with our own client. The page a row links to is the company's own page, never the capture.
+
+**EDGAR.** Every earnings 8-K (item 2.02) and 6-K since 2018-01-01, from the submissions feed and the paged files it names for older filings: 2,094 filings and 2,254 exhibits for the 45 companies in a local run against EDGAR. Spot checks of 2018 to 2022 releases changed the rule where old layouts broke it: an outlook list under a lead-in ("the company currently expects:"), a table row whose guidance column is its last cell, a band spelled out or written "+/-", GAAP and non-GAAP margins given "respectively", the quarter a figure is compared against, a year inside a date, and figures that are not one period's guide (a multi-year CAGR, growth capex, today's backlog, a utility's kilowatt-hour sales, a slide's columns). Fixtures: `fixtures/calls/exhibit-excerpts-2018-2022.json`. Four filer quirks: Marvell (before April 2021) and Broadcom (before April 2018) filed under earlier CIKs, which are read; Nebius's CIK was Yandex's until July 2024 and TeraWulf's was IKONICS's until December 2021, so neither is read before then; DTE Gas's own releases under DTE Energy's CIK are skipped; TSMC's 6-Ks before October 2019 carry the release in the 6-K itself, with no exhibit, so nothing is read from them.
+
+**Company files, depth reached.** Read 2026-11-21.
+
+| Company | Reached | Kind | Why not further |
+| --- | --- | --- | --- |
+| META, HPE, DTE | Q4 2017 call (Jan–Feb 2018) | Transcript | Complete. |
+| MSFT | Q2 FY2018 (Jan 2018) | Transcript | Complete: Word files on Microsoft's CDN until January 2022, its transcript pages since. |
+| DELL | Q1 FY2019 (Jun 2018) | Transcript | Q4 FY2018's link points at a file that is gone. |
+| QCOM | Q4 FY2018 (Nov 2018) | Transcript | Qualcomm posted none for the three calls before. |
+| GOOGL | Q1 2022 | Transcript | Older files were on the retired abc.xyz static site and answer 404. |
+| CIEN | FQ1 2022 | Transcript | Older files were on a retired IR file host and answer 404. |
+| AMD | Q4 2023 | Transcript | AMD's results page links none for 2020 to 2023; its 2018 files are gone. |
+| NVDA | Q1 FY2026 (May 2025) | Transcript | NVIDIA posted none before; its CFO commentary on EDGAR carries the outlook back to 2018. |
+| CRWV, GEV, HUT | First call as a listed company (2025, 2024, 2024) | Transcript | Complete. |
+| SMCI | FQ2 FY2020 | Remarks, 3 transcripts | No call files during the 2018–2019 restatement. No Q&A in the remarks. |
+| INTC | Q4 2017 call (Jan 2018) | Audio to Q1 2021, remarks from Q3 2021 | Q2 2021 has only a registration-gated webcast. |
+| CORZ | Q1 2026 | Remarks | Earlier calls only on Chorus Call. |
+| AEP | Q4 2017 call (Jan 2018) | Audio | Complete. |
+| AMZN | Q1 2020 | Audio (WAV until 2024) | Q2 2021 and every call before 2020 have no replay file linked. |
+| CLS, HUT (audio) | — | — | Celestica linked call MP3s from 2019 to 2023 and Hut 8 from 2018 to 2025, but both hosts now refuse our client (403); not worked around. |
+
+The other 24 post no transcript and no media file we may read, as the addendum above lists; their EDGAR exhibits are their whole record.
+
+**Our PDF reader.** FactSet's and LSEG's transcripts draw each page's text inside a form XObject, which the reader didn't follow; it does now, which also decodes the Bloomberg NVIDIA file the addendum above lists as unreadable. Two Qualcomm files from 2022 and Hut 8's Q4 2023 file still yield no text.
+
+**AssemblyAI.** The backfill has a one-time ceiling of $75 (`BACKFILL_SPEND_CAP_USD`), its own basis apart from the $10 monthly cap: a call held before 2025-10-01 is the backfill's. `scripts/calls-audio-backfill.ts` costed each replay from its size and header before sending it, newest first, and wrote each job id back to `curated/earnings-calls.json`; the Worker collects the transcripts. Sent 2026-11-21: 66 replays (31 AEP, 21 Amazon, 14 Intel), 61.3 hours, $21.46 billed, same model and features as the calls since October 2025. Amazon's four replays since October 2025 are left to the Worker under the monthly cap.
+
+**What a local run against live sources found.** 2,207 statements from 40 companies, 1,699 of them from calls held before October 2025 (35 companies), against 108 from 18 companies in production; 1,209 score against later XBRL facts, 1,043 of them from the backfill, with periods back to the first quarter of 2018 for calendar and fiscal-year filers alike (NVIDIA, Marvell, Broadcom, Ciena, Dell, HPE, Qualcomm, Coherent, Lumentum, Fabrinet). By source: 1,560 from exhibits, 444 from transcripts, 142 from remarks, 61 from our machine transcripts.
+
+**Verdict.** Include, unchanged; `sources.yaml` › `call_sources` records the depth and the ceiling.
+
 ## Addendum, 2026-11-21: hiring at the listed companies
 
 Checked to see whether the listed companies around the labs post their open roles somewhere we may read. The hypothesis the signals harness tests: data-center operations, site and construction hiring comes two to three quarters before megawatts are energized, and before revenue at the neoclouds and miners. So the boards that matter most are the hosts': neoclouds, miners turning host, and the hyperscalers' data-center teams.
