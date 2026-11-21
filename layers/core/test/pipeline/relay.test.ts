@@ -5,40 +5,12 @@ import {
   RELAY_PENDING,
   isRelayed,
   putRelayCopy,
-  relayStore,
   wantedUrls,
 } from '../../server/pipeline/relay'
+import { relayMemory as memory } from './relay-memory'
 
 const MISTRAL = 'https://status.mistral.ai/api/v2/incidents.json'
 const APP = { appUrl: 'https://frontier-terminal.example', secContactEmail: '' }
-
-/** R2 and KV as maps, with the methods the relay calls. */
-function memory() {
-  const objects = new Map<string, Uint8Array>()
-  const keys = new Map<string, string>()
-  const blob = {
-    get: async (key: string) => {
-      const b = objects.get(key)
-      return b
-        ? {
-            arrayBuffer: async () => b.slice().buffer as ArrayBuffer,
-            text: async () => new TextDecoder().decode(b),
-          }
-        : null
-    },
-    put: async (key: string, body: string | Uint8Array) => {
-      objects.set(key, typeof body === 'string' ? new TextEncoder().encode(body) : body)
-    },
-  }
-  const kv = {
-    get: async (key: string) => keys.get(key) ?? null,
-    set: async (key: string, value: string) => {
-      keys.set(key, value)
-    },
-    keys: async (base = '') => [...keys.keys()].filter((k) => k.startsWith(base)),
-  }
-  return { blob, kv, store: relayStore(blob, kv) }
-}
 
 const never = (async () => {
   throw new Error('the network was called')
@@ -49,6 +21,7 @@ describe('the relay', () => {
   it('covers only the hosts that refuse Workers', () => {
     expect(isRelayed(MISTRAL)).toBe(true)
     expect(isRelayed('https://www.ercot.com/committees/board')).toBe(true)
+    expect(isRelayed('https://www.customs.go.kr/streamdocs/v4/documents/1/texts')).toBe(true)
     expect(isRelayed('https://status.openai.com/api/v2/incidents.json')).toBe(false)
     expect(isRelayed('not a url')).toBe(false)
   })
@@ -93,6 +66,46 @@ describe('the relay', () => {
     expect(await fetcher(source)).toMatchObject({ ok: false, detail: /older than 6h/ })
     await put(429, 0)
     expect(await fetcher(source)).toMatchObject({ ok: false, status: 429, detail: /HTTP 429/ })
+  })
+
+  it('takes a URL that is done off the job’s list and drops its copy, so a later ask waits', async () => {
+    const m = memory()
+    const fetcher = createFetcher({ ...APP, fetch: never, relay: m.store })
+    await fetcher(source)
+    await putRelayCopy(m.blob, {
+      url: MISTRAL,
+      status: 200,
+      fetched_at: new Date(Date.now() - RELAY_MAX_AGE_MS - 60_000).toISOString(),
+      body: new TextEncoder().encode('{}'),
+      contentType: 'application/json',
+    })
+    await m.store.done([MISTRAL])
+    expect(await wantedUrls(m.kv)).toEqual([])
+    expect(m.objects.size).toBe(0)
+    // Not the old copy's "older than 6h": there is none.
+    expect(await fetcher(source)).toMatchObject({ detail: RELAY_PENDING, skipped: true })
+    expect(await wantedUrls(m.kv)).toEqual([MISTRAL])
+  })
+
+  it('writes a URL’s list entry once a day, not on every ask', async () => {
+    const m = memory()
+    await m.store.want(MISTRAL)
+    const [key] = [...m.keys.keys()]
+    const first = m.keys.get(key!)
+    await m.store.want(MISTRAL)
+    expect(m.keys.get(key!)).toBe(first)
+
+    const old = new Date(Date.now() - 25 * 3_600_000).toISOString()
+    m.keys.set(key!, JSON.stringify({ url: MISTRAL, asked_at: old }))
+    await m.store.want(MISTRAL)
+    expect(m.keys.get(key!)).not.toContain(old)
+
+    // An entry from before entries carried their time: listed, then rewritten.
+    m.keys.set(key!, JSON.stringify(MISTRAL))
+    expect(await wantedUrls(m.kv)).toEqual([MISTRAL])
+    await m.store.want(MISTRAL)
+    expect(JSON.parse(m.keys.get(key!)!)).toMatchObject({ url: MISTRAL })
+    expect(await wantedUrls(m.kv)).toEqual([MISTRAL])
   })
 
   it('leaves other hosts on the network', async () => {
