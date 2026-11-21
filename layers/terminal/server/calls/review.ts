@@ -43,7 +43,7 @@ const JudgeGuidanceStatement = z.strictObject({
   bound: z.enum(BOUNDS),
   low: z.number().positive(),
   high: z.number().positive(),
-  fiscal_year: z.number().int().min(2025).max(2032),
+  fiscal_year: z.number().int().min(2018).max(2032),
   fiscal_quarter: z.number().int().min(1).max(4).nullable(),
   quote: z.string().min(10).max(400),
 })
