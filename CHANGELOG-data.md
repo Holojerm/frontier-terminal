@@ -23,7 +23,7 @@ is smaller than its changes need. `bun run schema:lock` rewrites the lock only
 when the newest release in `layers/terminal/server/utils/data-schema.ts` says
 exactly which columns changed.
 
-## 1.14.0 (2026-11-21)
+## 1.15.0 (2026-11-21)
 
 OpenAI moved its misalignment reports from alignment.openai.com to
 openai.com/safety-alignment/misalignment-reports/, and its index stopped
@@ -37,6 +37,19 @@ report's own page still prints both:
 - `disclosure_timelines.disclosed_on` is also read from a "First posted"
   line, which most report pages now print, and `lines` drops "Last updated"
   as it drops "Report updated".
+
+## 1.14.0 (2026-11-21)
+
+`/api/adoption` gains `weekly` on each `downloads` and `agent_prs` entry: the
+total per ISO week (Monday to Sunday, UTC, keyed by its Monday) over every
+day we have stored, oldest week first. It runs through the newest week whose
+Sunday is on record, so the week still running is left out. `days` says how
+many of the week's days are stored, and `partial` is true when one is
+missing, so its `total` covers fewer days. An `agent_prs` week is also
+`retrospective` when any of its days was counted later, from the pull
+requests that still existed then. npm history starts 540 days before our
+first read and PyPI history 180 days before it. The MCP tool `get_adoption`
+returns it too. No table columns changed.
 
 ## 1.13.0 (2026-11-20)
 
