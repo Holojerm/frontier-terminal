@@ -231,7 +231,7 @@
       "fetched_at": "2026-08-25T11:10:43Z",
       "http_status": 200,
       "raw_bytes": 383405,
-      "trim": "jobs filtered to exactly the ids kept in the departments fixture trim (59 of 536) so the department join is fixture-complete. meta kept verbatim (total reflects the untrimmed board). Live board was 536 roles vs 537 at audit time — normal drift. Each job’s `metadata` removed (2026-11-04): it named people (xAI’s Team Lead), and the pipeline redacts it before storage (layers/terminal/server/pipeline/redact.ts).",
+      "trim": "jobs filtered to exactly the ids kept in the departments fixture trim (59 of 536) so the department join is fixture-complete. meta kept verbatim (total reflects the untrimmed board). Live board was 536 roles vs 537 at audit time — normal drift. Each job’s `metadata` removed (2026-11-04): it named people (xAI’s Team Lead), and the pipeline redacts it before storage (layers/talent/server/pipeline/redact.ts).",
       "note": "The jobs endpoint carries no department field; department comes only from the /departments join."
     },
     {
@@ -241,7 +241,7 @@
       "fetched_at": "2026-08-25T11:10:43Z",
       "http_status": 200,
       "raw_bytes": 385396,
-      "trim": "all departments kept (id/name/parent_id/child_ids intact); each embedded jobs list trimmed to first 3 full job objects. Each job’s `metadata` removed (2026-11-04): it named people (xAI’s Team Lead), and the pipeline redacts it before storage (layers/terminal/server/pipeline/redact.ts)."
+      "trim": "all departments kept (id/name/parent_id/child_ids intact); each embedded jobs list trimmed to first 3 full job objects. Each job’s `metadata` removed (2026-11-04): it named people (xAI’s Team Lead), and the pipeline redacts it before storage (layers/talent/server/pipeline/redact.ts)."
     },
     {
       "path": "fixtures/hiring/xai-greenhouse.json",
@@ -250,7 +250,7 @@
       "fetched_at": "2026-08-25T23:08:17Z",
       "http_status": 200,
       "raw_bytes": 264125,
-      "trim": "jobs filtered to exactly the ids kept in the departments fixture trim (42 of 255) so the department join is fixture-complete. meta kept verbatim (total reflects the untrimmed board). Live board was 255 roles vs 262 at audit time — normal drift. Each job’s `metadata` removed (2026-11-04): it named people (xAI’s Team Lead), and the pipeline redacts it before storage (layers/terminal/server/pipeline/redact.ts).",
+      "trim": "jobs filtered to exactly the ids kept in the departments fixture trim (42 of 255) so the department join is fixture-complete. meta kept verbatim (total reflects the untrimmed board). Live board was 255 roles vs 262 at audit time — normal drift. Each job’s `metadata` removed (2026-11-04): it named people (xAI’s Team Lead), and the pipeline redacts it before storage (layers/talent/server/pipeline/redact.ts).",
       "note": "Every row carries company_name 'SpaceXAI' — entity-blended SpaceX/xAI board; this caveat must ship visibly wherever the data surfaces. The jobs endpoint carries no department field; department comes only from the /departments join."
     },
     {
@@ -260,7 +260,7 @@
       "fetched_at": "2026-08-25T23:08:17Z",
       "http_status": 200,
       "raw_bytes": 266512,
-      "trim": "all 26 departments kept (id/name/parent_id/child_ids intact); each embedded jobs list trimmed to first 3 full job objects. 16 departments carry jobs; the untrimmed payload maps all 255 board jobs. Each job’s `metadata` removed (2026-11-04): it named people (xAI’s Team Lead), and the pipeline redacts it before storage (layers/terminal/server/pipeline/redact.ts).",
+      "trim": "all 26 departments kept (id/name/parent_id/child_ids intact); each embedded jobs list trimmed to first 3 full job objects. 16 departments carry jobs; the untrimmed payload maps all 255 board jobs. Each job’s `metadata` removed (2026-11-04): it named people (xAI’s Team Lead), and the pipeline redacts it before storage (layers/talent/server/pipeline/redact.ts).",
       "note": "Join table for xai-greenhouse. Department names are the evidence for the SpaceXAI caveat: the set is xAI-shaped (Data Center 121, Human Data 36, Engineering 23, …) with no aerospace/launch function."
     },
     {
@@ -1489,7 +1489,7 @@
       "http_status": 200,
       "raw_bytes": 36896,
       "trim": "head, scripts, styles, noscript, svg and comments removed; every opening, its link and its department markup kept, 36896 -> 25823 bytes; the era parser gives the same counts on the raw capture",
-      "note": "Internet Archive capture of https://boards.greenhouse.io/openai taken 20230710223640 (era openai-greenhouse-2023, layers/terminal/server/pipeline/archive/hiring-eras.ts). source_url is the capture; fetched_at is when we read it back."
+      "note": "Internet Archive capture of https://boards.greenhouse.io/openai taken 20230710223640 (era openai-greenhouse-2023, layers/talent/server/pipeline/archive/hiring-eras.ts). source_url is the capture; fetched_at is when we read it back."
     },
     {
       "path": "fixtures/hiring/wayback/openai-ashby-2025-07.html",
@@ -1499,7 +1499,7 @@
       "http_status": 200,
       "raw_bytes": 292969,
       "trim": "the page reduced to its window.__appData script, and that to jobBoard.teams (id, name, parentTeamId) and each posting’s id, department, team and isListed, 292969 -> 68431 bytes; the era parser gives the same counts on the raw capture",
-      "note": "Internet Archive capture of https://jobs.ashbyhq.com/openai taken 20250724103653 (era openai-ashby-2024, layers/terminal/server/pipeline/archive/hiring-eras.ts). source_url is the capture; fetched_at is when we read it back."
+      "note": "Internet Archive capture of https://jobs.ashbyhq.com/openai taken 20250724103653 (era openai-ashby-2024, layers/talent/server/pipeline/archive/hiring-eras.ts). source_url is the capture; fetched_at is when we read it back."
     },
     {
       "path": "fixtures/hiring/wayback/openai-ashby-2026-08.html",
@@ -1509,7 +1509,7 @@
       "http_status": 200,
       "raw_bytes": 301126,
       "trim": "the page reduced to its window.__appData script, and that to jobBoard.teams (id, name, parentTeamId) and each posting’s id, department, team and isListed, 301126 -> 78333 bytes; the era parser gives the same counts on the raw capture",
-      "note": "Internet Archive capture of https://jobs.ashbyhq.com/openai taken 20260819103654 (era openai-ashby-2024, layers/terminal/server/pipeline/archive/hiring-eras.ts). source_url is the capture; fetched_at is when we read it back."
+      "note": "Internet Archive capture of https://jobs.ashbyhq.com/openai taken 20260819103654 (era openai-ashby-2024, layers/talent/server/pipeline/archive/hiring-eras.ts). source_url is the capture; fetched_at is when we read it back."
     },
     {
       "path": "fixtures/hiring/wayback/anthropic-lever-2023-07.html",
@@ -1519,7 +1519,7 @@
       "http_status": 200,
       "raw_bytes": 369876,
       "trim": "head, scripts, styles, noscript, svg and comments removed; every opening, its link and its department markup kept, 369876 -> 40683 bytes; the era parser gives the same counts on the raw capture",
-      "note": "Internet Archive capture of https://jobs.lever.co/Anthropic taken 20230709181316 (era anthropic-lever-2023, layers/terminal/server/pipeline/archive/hiring-eras.ts). source_url is the capture; fetched_at is when we read it back."
+      "note": "Internet Archive capture of https://jobs.lever.co/Anthropic taken 20230709181316 (era anthropic-lever-2023, layers/talent/server/pipeline/archive/hiring-eras.ts). source_url is the capture; fetched_at is when we read it back."
     },
     {
       "path": "fixtures/hiring/wayback/anthropic-greenhouse-2024-06.html",
@@ -1529,7 +1529,7 @@
       "http_status": 200,
       "raw_bytes": 59877,
       "trim": "head, scripts, styles, noscript, svg and comments removed; every opening, its link and its department markup kept, 59877 -> 48086 bytes; the era parser gives the same counts on the raw capture",
-      "note": "Internet Archive capture of https://boards.greenhouse.io/anthropic taken 20240614214605 (era anthropic-greenhouse-2024, layers/terminal/server/pipeline/archive/hiring-eras.ts). source_url is the capture; fetched_at is when we read it back."
+      "note": "Internet Archive capture of https://boards.greenhouse.io/anthropic taken 20240614214605 (era anthropic-greenhouse-2024, layers/talent/server/pipeline/archive/hiring-eras.ts). source_url is the capture; fetched_at is when we read it back."
     },
     {
       "path": "fixtures/hiring/wayback/anthropic-departments-2024-06.json",
@@ -1539,7 +1539,7 @@
       "http_status": 200,
       "raw_bytes": 71531,
       "trim": "each job cut to its id (titles, locations, metadata dropped); every department and every job id kept, 71531 -> 6904 bytes; the era parser gives the same counts on the raw capture",
-      "note": "Internet Archive capture of https://boards-api.greenhouse.io/v1/boards/anthropic/departments taken 20240613205232 (era anthropic-departments-api, layers/terminal/server/pipeline/archive/hiring-eras.ts). source_url is the capture; fetched_at is when we read it back."
+      "note": "Internet Archive capture of https://boards-api.greenhouse.io/v1/boards/anthropic/departments taken 20240613205232 (era anthropic-departments-api, layers/talent/server/pipeline/archive/hiring-eras.ts). source_url is the capture; fetched_at is when we read it back."
     },
     {
       "path": "fixtures/hiring/wayback/anthropic-job-boards-2025-09.html",
@@ -1549,7 +1549,7 @@
       "http_status": 200,
       "raw_bytes": 599038,
       "trim": "the page reduced to its window.__remixContext script, and that to jobPosts (count, page, total, total_pages, and each role’s id and department), 599038 -> 4915 bytes; the era parser gives the same counts on the raw capture",
-      "note": "Internet Archive capture of https://job-boards.greenhouse.io/anthropic taken 20250902161436 (era anthropic-job-boards-2025, layers/terminal/server/pipeline/archive/hiring-eras.ts). source_url is the capture; fetched_at is when we read it back."
+      "note": "Internet Archive capture of https://job-boards.greenhouse.io/anthropic taken 20250902161436 (era anthropic-job-boards-2025, layers/talent/server/pipeline/archive/hiring-eras.ts). source_url is the capture; fetched_at is when we read it back."
     },
     {
       "path": "fixtures/hiring/wayback/xai-greenhouse-2025-02.html",
@@ -1559,7 +1559,7 @@
       "http_status": 200,
       "raw_bytes": 41951,
       "trim": "head, scripts, styles, noscript, svg and comments removed; every opening, its link and its department markup kept, 41951 -> 30153 bytes; the era parser gives the same counts on the raw capture",
-      "note": "Internet Archive capture of https://boards.greenhouse.io/xai taken 20250206172319 (era xai-greenhouse-2023, layers/terminal/server/pipeline/archive/hiring-eras.ts). source_url is the capture; fetched_at is when we read it back."
+      "note": "Internet Archive capture of https://boards.greenhouse.io/xai taken 20250206172319 (era xai-greenhouse-2023, layers/talent/server/pipeline/archive/hiring-eras.ts). source_url is the capture; fetched_at is when we read it back."
     },
     {
       "path": "fixtures/hiring/wayback/xai-jobs-2025-02.json",
@@ -1569,7 +1569,7 @@
       "http_status": 200,
       "raw_bytes": 35119,
       "trim": "each job cut to its id and company_name; every job and meta kept, 35119 -> 3895 bytes; the era parser gives the same counts on the raw capture",
-      "note": "Internet Archive capture of https://boards-api.greenhouse.io/v1/boards/xai/jobs taken 20250201175326 (era xai-jobs-api-2023, layers/terminal/server/pipeline/archive/hiring-eras.ts). source_url is the capture; fetched_at is when we read it back."
+      "note": "Internet Archive capture of https://boards-api.greenhouse.io/v1/boards/xai/jobs taken 20250201175326 (era xai-jobs-api-2023, layers/talent/server/pipeline/archive/hiring-eras.ts). source_url is the capture; fetched_at is when we read it back."
     },
     {
       "path": "fixtures/hiring/wayback/xai-job-boards-2025-09.html",
@@ -1579,7 +1579,7 @@
       "http_status": 200,
       "raw_bytes": 536890,
       "trim": "the page reduced to its window.__remixContext script, and that to jobPosts (count, page, total, total_pages, and each role’s id and department), 536890 -> 4501 bytes; the era parser gives the same counts on the raw capture",
-      "note": "Internet Archive capture of https://job-boards.greenhouse.io/xai taken 20250901235524 (era xai-job-boards-2025, layers/terminal/server/pipeline/archive/hiring-eras.ts). source_url is the capture; fetched_at is when we read it back."
+      "note": "Internet Archive capture of https://job-boards.greenhouse.io/xai taken 20250901235524 (era xai-job-boards-2025, layers/talent/server/pipeline/archive/hiring-eras.ts). source_url is the capture; fetched_at is when we read it back."
     },
     {
       "path": "fixtures/hiring/wayback/mistral-lever-2025-08.html",
@@ -1589,7 +1589,7 @@
       "http_status": 200,
       "raw_bytes": 401359,
       "trim": "head, scripts, styles, noscript, svg and comments removed; every opening, its link and its department markup kept, 401359 -> 59761 bytes; the era parser gives the same counts on the raw capture",
-      "note": "Internet Archive capture of https://jobs.lever.co/mistral taken 20250807224411 (era mistral-lever-2023, layers/terminal/server/pipeline/archive/hiring-eras.ts). source_url is the capture; fetched_at is when we read it back."
+      "note": "Internet Archive capture of https://jobs.lever.co/mistral taken 20250807224411 (era mistral-lever-2023, layers/talent/server/pipeline/archive/hiring-eras.ts). source_url is the capture; fetched_at is when we read it back."
     },
     {
       "path": "fixtures/hiring/wayback/mistral-ashby-2026-09.html",
@@ -1599,7 +1599,7 @@
       "http_status": 200,
       "raw_bytes": 99196,
       "trim": "the page reduced to its window.__appData script, and that to jobBoard.teams (id, name, parentTeamId) and each posting’s id, department, team and isListed, 99196 -> 26063 bytes; the era parser gives the same counts on the raw capture",
-      "note": "Internet Archive capture of https://jobs.ashbyhq.com/mistral.ai taken 20260917150519 (era mistral-ashby-2026, layers/terminal/server/pipeline/archive/hiring-eras.ts). source_url is the capture; fetched_at is when we read it back."
+      "note": "Internet Archive capture of https://jobs.ashbyhq.com/mistral.ai taken 20260917150519 (era mistral-ashby-2026, layers/talent/server/pipeline/archive/hiring-eras.ts). source_url is the capture; fetched_at is when we read it back."
     },
     {
       "path": "fixtures/hiring/wayback/deepmind-greenhouse-2025-03.html",
@@ -1609,7 +1609,7 @@
       "http_status": 200,
       "raw_bytes": 28550,
       "trim": "head, scripts, styles, noscript, svg and comments removed; every opening, its link and its department markup kept, 28550 -> 16987 bytes; the era parser gives the same counts on the raw capture",
-      "note": "Internet Archive capture of https://boards.greenhouse.io/deepmind taken 20250315181538 (era deepmind-greenhouse-2023, layers/terminal/server/pipeline/archive/hiring-eras.ts). source_url is the capture; fetched_at is when we read it back."
+      "note": "Internet Archive capture of https://boards.greenhouse.io/deepmind taken 20250315181538 (era deepmind-greenhouse-2023, layers/talent/server/pipeline/archive/hiring-eras.ts). source_url is the capture; fetched_at is when we read it back."
     },
     {
       "path": "fixtures/hiring/wayback/deepmind-job-boards-2025-07.html",
@@ -1619,7 +1619,7 @@
       "http_status": 200,
       "raw_bytes": 405746,
       "trim": "the page reduced to its window.__remixContext script, and that to jobPosts (count, page, total, total_pages, and each role’s id and department), 405746 -> 4533 bytes; the era parser gives the same counts on the raw capture",
-      "note": "Internet Archive capture of https://job-boards.greenhouse.io/deepmind taken 20250702184842 (era deepmind-job-boards-2025, layers/terminal/server/pipeline/archive/hiring-eras.ts). source_url is the capture; fetched_at is when we read it back."
+      "note": "Internet Archive capture of https://job-boards.greenhouse.io/deepmind taken 20250702184842 (era deepmind-job-boards-2025, layers/talent/server/pipeline/archive/hiring-eras.ts). source_url is the capture; fetched_at is when we read it back."
     },
     {
       "path": "fixtures/recipes/sec-googl-api-tokens-search.json",

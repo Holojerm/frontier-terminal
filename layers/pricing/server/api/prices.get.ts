@@ -1,7 +1,7 @@
 // GET /api/prices — the full catalog (one row per SKU key, newest revision,
 // delta vs. the previous one) and the like-for-like matrix built over it.
 // `as_of` rebuilds the catalog from the change log as it stood then; before
-// our first snapshot, from the Internet Archive backfill (terminal-archive.ts).
+// our first snapshot, from the Internet Archive backfill (terminal-price-archive.ts).
 
 import { queryPrices } from '../utils/terminal-prices'
 import { serveTerminal, terminalDb } from '#layers/core/server/utils/terminal-handler'

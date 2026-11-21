@@ -16,7 +16,7 @@ import {
 } from '#layers/compute/shared/utils/prints'
 import { FOREIGN_FILERS } from '../calls/actuals'
 import { curatedCalls } from '../calls/curated'
-import { LISTED_BOARDS } from '../../shared/utils/listed-hiring'
+import { LISTED_BOARDS } from '../../../talent/shared/utils/listed-hiring'
 import type { LabId } from '../../shared/utils/terminal-types'
 import type {
   SignalEntityKind,

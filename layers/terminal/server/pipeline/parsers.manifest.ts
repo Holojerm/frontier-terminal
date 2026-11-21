@@ -2,12 +2,8 @@
 // here (side-effect registration) — the determinism test iterates exactly
 // this registry. The judge lane never registers; it goes through the
 // agent-output gate instead.
-// Hiring
-import './parsers/hiring/openai-ashby'
-import './parsers/hiring/anthropic-greenhouse'
-import './parsers/hiring/xai-greenhouse'
-import './parsers/hiring/mistral-ashby'
-import './parsers/hiring/google-careers'
+// Hiring (the talent layer's own manifest)
+import '#layers/talent/server/pipeline/parsers.manifest'
 // Vendor-md pricing/catalog (the pricing layer's own manifest) + EDGAR
 import '#layers/pricing/server/pipeline/parsers.manifest'
 import './parsers/sec/edgar-fts'

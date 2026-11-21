@@ -16,7 +16,7 @@
 // (a changelog entry, say) not yet rated, so it can be non-empty when
 // `changes` is empty. `hiring` gives, per lab with job changes pending, the
 // board and department sizes and which moves clear the materiality floor
-// that POST /api/judge/alerts enforces (layers/terminal/server/pipeline/hiring-floor.ts).
+// that POST /api/judge/alerts enforces (layers/talent/server/pipeline/hiring-floor.ts).
 // `track_record_review` lists, per material alert, the press articles and
 // newsroom posts found around it that still need a same-event rating
 // (layers/terminal/server/pipeline/track-record/review.ts); like
@@ -55,7 +55,7 @@ import { db } from '@nuxthub/db'
 import judgePrompt from 'raw:../../pipeline/judge/judge-explain.prompt.md'
 import sourcesYaml from 'raw:~~/sources.yaml'
 
-import { hiringBoards } from '../../pipeline/hiring-floor'
+import { hiringBoards } from '../../../../talent/server/pipeline/hiring-floor'
 import { classMapReview } from '#layers/pricing/server/pipeline/judge/class-map'
 import { blobRawReader } from '#layers/core/server/pipeline/raw'
 import { filingReview } from '../../pipeline/judge/filing-review'
@@ -73,7 +73,7 @@ import { supplierReview } from '../../suppliers/review'
 import { trackRecordReview } from '../../pipeline/track-record/review'
 import { claimReview, flagshipMap } from '../../theses/verdicts'
 import { requireJudgeToken } from '#layers/core/server/utils/judge-auth'
-import { parseDepartmentClusters } from '../../utils/terminal-clusters'
+import { parseDepartmentClusters } from '../../../../talent/server/utils/terminal-clusters'
 
 export default defineEventHandler(async (event) => {
   await rateLimit(event, { name: 'judge', limit: 30, windowSeconds: 60 })

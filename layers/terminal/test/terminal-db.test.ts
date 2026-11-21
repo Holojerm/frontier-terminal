@@ -23,7 +23,7 @@ import {
 } from '../server/utils/terminal-alerts'
 import { buildMatrix, queryPrices } from '../../pricing/server/utils/terminal-prices'
 import { queryContext, queryCoverage, sourceReads } from '#layers/core/server/utils/terminal-db'
-import { queryHiring } from '../server/utils/terminal-hiring'
+import { queryHiring } from '../../talent/server/utils/terminal-hiring'
 import { queryIncidents } from '../server/utils/terminal-incidents'
 import { fieldDiff, fieldTable } from '#layers/core/server/utils/terminal-json'
 import { fixtureText, manifest } from '#layers/core/test/pipeline/fixtures'

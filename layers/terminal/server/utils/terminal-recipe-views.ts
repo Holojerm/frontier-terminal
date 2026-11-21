@@ -1,21 +1,20 @@
 // The read side of the recipes audited on 2026-11-04: each query turns
 // recipe_observations into one panel's payload (layers/terminal/shared/utils/recipe-views.ts;
-// Epoch AI's data centers are the compute layer's, terminal-datacenters.ts, and
-// the rate limits the pricing layer's, terminal-limits.ts).
+// Epoch AI's data centers are the compute layer's, terminal-datacenters.ts,
+// the rate limits the pricing layer's, terminal-limits.ts, and posted pay the
+// talent layer's, terminal-pay.ts).
 // Every figure keeps the URL it was read from and when; a recipe with no
 // stored rows yet yields an empty entry, never a guess.
 
 import { inArray } from 'drizzle-orm'
 
-import { companyName, type CompanyId } from '#layers/core/shared/utils/companies'
+import type { CompanyId } from '#layers/core/shared/utils/companies'
 import {
   humanizeConcept,
   type AdoptionData,
   type AgentPrWeek,
   type ParentFact,
   type ParentsData,
-  type PayCell,
-  type PayData,
 } from '../../shared/utils/recipe-views'
 import { LAB_OF_NAME } from '#layers/core/shared/utils/lab-names'
 import type { RecipeCitation } from '#layers/core/shared/utils/terminal-types/common'
@@ -39,10 +38,10 @@ import {
   type SeriesPoint,
 } from '../theses/download-series'
 import { NPM_CONTROL_RECIPES, NPM_LAB_RECIPES } from '../theses/recipes/npm-downloads'
-import { PAY_RECIPES } from '../theses/recipes/pay-bands'
 import { PYPI_LAB_RECIPES } from '../theses/recipes/pypi-downloads'
 import { RAMP_AI_INDEX } from '../theses/recipes/ramp-ai-index'
 import { LIMIT_RECIPE_IDS } from '#layers/pricing/server/utils/terminal-limits'
+import { PAY_RECIPE_IDS } from '#layers/talent/server/utils/terminal-pay'
 
 type Row = typeof tables.recipeObservations.$inferSelect
 
@@ -322,66 +321,6 @@ function derivedWindows(
   return { weekly: weeklyRatio(num, den, weekScale), last: at(through), prior: at(prior) }
 }
 
-// ── Posted pay ──────────────────────────────────────────────────────────────
-
-export const PAY_CAVEAT =
-  'The median midpoint of each posted US annual salary band. Bands are posted ranges, not offers, and leave out equity, which is the larger part of pay at these labs. We map departments by hand for each board and leave out sales (Anthropic posts on-target earnings, OpenAI base pay). So compare each cell with itself over time instead of comparing labs. xAI and Mistral post no usable pay.'
-
-const PAY_LABELS: Record<string, string> = {
-  all: 'All roles',
-  research: 'Research',
-  swe: 'Software engineering',
-}
-
-export async function queryPay(db: PipelineDb): Promise<PayData> {
-  const rows = await rowsOf(
-    db,
-    PAY_RECIPES.map((r) => r.id),
-  )
-  const boards = PAY_RECIPES.flatMap((recipe) => {
-    if (!isLab(recipe.company)) return []
-    const rs = rows.filter((r) => r.recipe_id === recipe.id && r.value !== null)
-    const dates = [...new Set(rs.map((r) => r.date))].sort()
-    const date = dates.at(-1)
-    if (!date) return []
-    const previous = dates.at(-2) ?? null
-    const now = rs.filter((r) => r.date === date)
-    const cells: PayCell[] = now.map((r) => {
-      const p = payloadOf(r) as {
-        n: number
-        p25: number
-        p75: number
-        departments: string[] | null
-      }
-      const prev = previous ? rs.find((x) => x.date === previous && x.key === r.key) : undefined
-      return {
-        key: r.key,
-        label: PAY_LABELS[r.key] ?? r.key,
-        median: r.value!,
-        p25: p.p25,
-        p75: p.p75,
-        n: p.n,
-        departments: p.departments,
-        previous: prev ? { date: prev.date, median: prev.value! } : null,
-      }
-    })
-    const roles = (payloadOf(now[0]!) as { roles_on_board?: number }).roles_on_board ?? 0
-    return [
-      {
-        recipe_id: recipe.id,
-        lab: recipe.company,
-        date,
-        roles_on_board: roles,
-        cells: cells.sort(
-          (a, b) => Object.keys(PAY_LABELS).indexOf(a.key) - Object.keys(PAY_LABELS).indexOf(b.key),
-        ),
-        source: cite(recipe.id, `${companyName(recipe.company)} job board`, newestRow(now)!),
-      },
-    ]
-  })
-  return { as_of: asOf(rows), boards, caveat: PAY_CAVEAT }
-}
-
 // ── Parents' filings ────────────────────────────────────────────────────────
 
 export const PARENTS_CAVEAT =
@@ -480,6 +419,6 @@ export const VIEW_RECIPES = {
     ...GITHUB_AGENT_RECIPES,
   ].map((r) => r.id),
   limits: LIMIT_RECIPE_IDS,
-  pay: PAY_RECIPES.map((r) => r.id),
+  pay: PAY_RECIPE_IDS,
   parents: INVESTEE_RECIPES.map((r) => r.id),
 } as const

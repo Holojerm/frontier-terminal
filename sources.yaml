@@ -2547,7 +2547,7 @@ archive_sources:
       total and per department label: no title, posting text, location or
       person. Taken once per backfill run: one capture per board URL per week,
       2023-01 to the day the live lane began reading each lab's board
-      (layers/terminal/server/pipeline/archive/hiring-eras.ts). Read
+      (layers/talent/server/pipeline/archive/hiring-eras.ts). Read
       2026-11-05.
     rights: not-cleared
     caveats: >-
@@ -2749,7 +2749,7 @@ identifier_sources:
 # `exclude`. The matched departments ship beside every cluster count so a
 # reader can see exactly which labels were summed. The judge prompt
 # (layers/terminal/server/pipeline/judge/judge-explain.prompt.md) names the same terms;
-# layers/terminal/test/terminal-clusters.test.ts fails when the two drift.
+# layers/talent/test/terminal-clusters.test.ts fails when the two drift.
 
 # Hyperscaler filings read for their filed XBRL facts: capex, remaining
 # performance obligations, and what Microsoft and Amazon tag on OpenAI and
@@ -3439,8 +3439,8 @@ call_sources:
 
 
 # The listed companies' job boards behind /api/hiring/listed
-# (layers/terminal/server/listed-hiring/, LISTED_BOARDS and LISTED_CUTS in
-# layers/terminal/shared/utils/listed-hiring.ts). Read daily at 04:00 UTC,
+# (layers/talent/server/listed-hiring/, LISTED_BOARDS and LISTED_CUTS in
+# layers/talent/shared/utils/listed-hiring.ts). Read daily at 04:00 UTC,
 # one request per board. Every candidate is here, read or cut, with its terms
 # and robots.txt as read 2026-11-21 (docs/source-audit.md, "Listed-company
 # hiring").

@@ -199,7 +199,7 @@ const securityHeaders = {
 //                accepted run to IndexNow (server/utils/indexnow.ts).
 //              — hiring:listed reads the listed companies' job boards, one request
 //                each, and streams Google's from the careers lane's archived copy
-//                (layers/terminal/server/listed-hiring/read.ts).
+//                (layers/talent/server/listed-hiring/read.ts).
 //   29 5 * * TUE — power:verify re-reads each utility, regulator and company page
 //                the power-sites table cites and spools an ops event for a quote
 //                that is gone (layers/compute/server/power/verify.ts).

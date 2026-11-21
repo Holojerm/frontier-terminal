@@ -182,7 +182,7 @@ enabled = true
 #   "0 13 * * MON"  theses:digest — the weekly thesis digest email (layers/terminal/server/theses/digest.ts)
 #                   social:digest — queues the weekly what-moved thread
 #                   alerts:hiring-rollup — one hiring alert per lab for the week
-#                   just ended (layers/terminal/server/pipeline/hiring-rollup.ts)
+#                   just ended (layers/talent/server/pipeline/hiring-rollup.ts)
 #   "0 4 * * *"     seo:indexnow — submits changed sitemap URLs to IndexNow (server/utils/indexnow.ts)
 #   "41 * * * *"    events:sweep — the EVENTS queue's backstop: the social and webhook
 #                   outboxes and the press briefs (see [[queues]] below)
