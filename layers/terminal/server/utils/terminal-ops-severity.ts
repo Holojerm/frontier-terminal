@@ -99,6 +99,13 @@ export const TERMINAL_OPS_SEVERITY: Record<string, OpsKindPolicy> = {
     action:
       'Production failed its post-deploy smoke test. Open the run linked in the detail for the failing check.',
   },
+  // gdelt:dispatch (pipeline/track-record/dispatch.ts): the workflow's GitHub
+  // schedule still starts the job, but only a few times a day.
+  gdelt_dispatch_failed: {
+    severity: 'warning',
+    action:
+      'GitHub refused the half-hourly start of the GDELT search workflow, so only its unreliable GitHub schedule runs it. A 401 or 403 in the detail means NUXT_GITHUB_DISPATCH_TOKEN expired or lacks Actions: read and write on this repository; issue a new one and `wrangler secret put` it.',
+  },
   poll_skipped: {
     severity: 'warning',
     action:
