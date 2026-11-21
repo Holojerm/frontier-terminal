@@ -3,7 +3,7 @@
 // and the one number behind it. Everything else an alert carries — the
 // explanation, the rule that fired it, the cited rows, the source — is on
 // the permalink, one click from the headline. Lab and axis are read off the
-// cited rows (layers/terminal/shared/utils/terminal-labs.ts), so a row that cites nothing
+// cited rows (layers/alerts/shared/utils/terminal-labs.ts), so a row that cites nothing
 // says so with a dash rather than a guess. "When" is one form down the
 // column: the absolute stamp. A relative age that turned absolute past a day
 // made the column switch forms partway down.
@@ -17,7 +17,7 @@ import {
 } from '../../../shared/utils/terminal-labs'
 import { LAB_DISPLAY } from '#layers/core/shared/utils/lab-names'
 import { alertPath } from '../../../../core/shared/utils/terminal-tiers'
-import type { AlertView } from '../../../shared/utils/terminal-types'
+import type { AlertView } from '../../../shared/utils/terminal-types/alerts'
 import type { TableColumn } from '#layers/core/app/types/terminal-ui'
 
 const props = defineProps<{

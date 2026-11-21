@@ -3,7 +3,7 @@
 // critical); `?include=info` adds the minor changes (`?include=ticker`, the
 // old name, still does) and `?tier=critical` narrows it to critical alerts.
 // Asking for both is a 400: they pull in opposite directions. Same cached
-// payloads as /api/alerts; layers/terminal/server/utils/terminal-feed.ts owns the document.
+// payloads as /api/alerts; layers/alerts/server/utils/terminal-feed.ts owns the document.
 
 import { z } from 'zod'
 

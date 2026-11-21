@@ -93,7 +93,7 @@ needs a dictionary entry. Classify it in `EXPORT_HISTORY`, add a release in
 ### 8. Alerts
 
 Either the dataset sits on an alert axis (`AXIS_DISPLAY`, `AXIS_PATH` and `ENTITY_AXIS` in
-`layers/terminal/shared/utils/terminal-labs.ts`) with a rule or judge step that raises it, or
+`layers/alerts/shared/utils/terminal-labs.ts`) with a rule or judge step that raises it, or
 it gets an `alerts` waiver saying why not.
 
 ### 9. The surfaces gate

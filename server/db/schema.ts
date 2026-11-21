@@ -82,6 +82,7 @@ export * from '../../layers/reliability/server/db/schema'
 export * from '../../layers/social/server/db/schema'
 export * from '../../layers/companies/server/db/schema'
 export * from '../../layers/press/server/db/schema'
+export * from '../../layers/alerts/server/db/schema'
 
 // Rate-limit counters: one row per caller, endpoint and window, moved by one
 // atomic statement (server/utils/rate-limit.ts). `bucket` is a hash, so no

@@ -45,7 +45,7 @@ export const DOMAIN_LAYERS = {
       // Its queries (the reported figures, the track record, the ground truth and the press early
       // read), which the lab page, the tear sheet, the alerts tools, the theses and the signals read.
       'server/utils/',
-      // The press notes, which the shell's event fan-out composes and sends.
+      // The press notes, which the alerts layer's event fan-out composes and sends.
       'server/pipeline/press.ts',
       // The GKG file clock and the oldest unread file, which the shell's freshness reads.
       'server/pipeline/track-record/gkg.ts',
@@ -146,6 +146,19 @@ export const DOMAIN_LAYERS = {
       'server/pipeline/parsers.manifest.ts',
     ],
   },
+  alerts: {
+    // Supporting: the feed may read any domain. The social posts read the class map in effect
+    // (pricing); the get_track_record tool and the press notes' send are press's.
+    uses: ['core', 'pricing', 'press'],
+    public: [
+      // The confirmed-subscriber count the shell's fleet counters report, and the subscriber
+      // fan-out and stale-pending purge the shell's theses:digest task runs.
+      'server/utils/subscribers.ts',
+      'server/utils/subscriber-mail.ts',
+      // The overview strip and the alert slimming the home page and the lab page apply.
+      'app/utils/overview-strip.ts',
+    ],
+  },
   terminal: {
     uses: [
       'core',
@@ -157,6 +170,7 @@ export const DOMAIN_LAYERS = {
       'adoption',
       'models',
       'press',
+      'alerts',
     ],
   },
 } satisfies LayerTable

@@ -32,13 +32,13 @@ import {
   signingKeyId,
   signingKeyRefusal,
   WEBHOOK_ID_SHAPE,
-} from '../layers/terminal/server/utils/webhook-sign'
-import { addressRefusal, webhookUrlRefusal } from '../layers/terminal/server/utils/webhook-url'
+} from '../layers/alerts/server/utils/webhook-sign'
+import { addressRefusal, webhookUrlRefusal } from '../layers/alerts/server/utils/webhook-url'
 import {
   exampleWebhookPayload,
   isWebhookSeverity,
   WEBHOOK_SEVERITIES,
-} from '../layers/terminal/shared/utils/webhooks'
+} from '../layers/alerts/shared/utils/webhooks'
 import { fail, lit, parseArgs, runSql, type Row } from './lib/d1-cli'
 
 const where = (remote: boolean) => (remote ? 'production' : 'the local database')
