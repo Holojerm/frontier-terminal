@@ -55,6 +55,10 @@ const PAD = computed(() => ({ l: 56, r: endFits.value ? END_ROOM : 20, t: 12, b:
 // Series slot → ink. Fixed by position so a filtered series never repaints
 // the survivors.
 const INK = ['text-primary', 'text-highlighted', 'text-muted'] as const
+// Past the three inks a series keeps the last one and is told apart by its
+// stroke: dashed, then dotted.
+const DASHES = ['6 4', '2 3'] as const
+const dashOf = (k: number) => (k < INK.length ? undefined : DASHES[(k - INK.length) % 2])
 
 const times = computed(() => props.x.map((v) => Date.parse(v)))
 
@@ -206,6 +210,7 @@ const readout = computed(() => {
     label: (props.pointLabel ?? props.xLabel)(props.x[i]!),
     rows: props.series.map((s, k) => ({
       ink: INK[k] ?? INK[2],
+      dash: dashOf(k),
       label: s.label,
       value: s.values[i] ?? null,
     })),
@@ -219,7 +224,15 @@ const readout = computed(() => {
       <span v-for="(s, k) in series" :key="s.id" class="inline-flex items-center gap-1.5">
         <span :class="INK[k] ?? INK[2]" aria-hidden="true">
           <svg width="16" height="6" viewBox="0 0 16 6" class="block">
-            <line x1="0" y1="3" x2="16" y2="3" stroke="currentColor" stroke-width="2" />
+            <line
+              x1="0"
+              y1="3"
+              x2="16"
+              y2="3"
+              stroke="currentColor"
+              stroke-width="2"
+              :stroke-dasharray="dashOf(k)"
+            />
           </svg>
         </span>
         {{ s.label }}
@@ -303,7 +316,13 @@ const readout = computed(() => {
           fill="none"
           stroke="currentColor"
         >
-          <path :d="paths[k]" stroke-width="2" stroke-linejoin="round" stroke-linecap="round" />
+          <path
+            :d="paths[k]"
+            stroke-width="2"
+            stroke-linejoin="round"
+            :stroke-linecap="dashOf(k) ? 'butt' : 'round'"
+            :stroke-dasharray="dashOf(k)"
+          />
           <template v-if="lastPoint(s)">
             <circle
               :cx="lastPoint(s)!.x"
@@ -363,7 +382,15 @@ const readout = computed(() => {
         <p v-for="r in readout.rows" :key="r.label" class="flex items-center gap-2">
           <span :class="r.ink" aria-hidden="true">
             <svg width="12" height="4" viewBox="0 0 12 4" class="block">
-              <line x1="0" y1="2" x2="12" y2="2" stroke="currentColor" stroke-width="2" />
+              <line
+                x1="0"
+                y1="2"
+                x2="12"
+                y2="2"
+                stroke="currentColor"
+                stroke-width="2"
+                :stroke-dasharray="r.dash"
+              />
             </svg>
           </span>
           <span class="font-mono text-highlighted">{{
