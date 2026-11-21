@@ -8,11 +8,11 @@
 import { blob } from '@nuxthub/blob'
 import { db } from '@nuxthub/db'
 
-import { createFetcher, userAgentFor } from '../../pipeline/fetch'
+import { createFetcher, userAgentFor } from '#layers/core/server/pipeline/fetch'
 import { runErcotLargeLoads } from '../../power/ercot-large-loads'
 import { runGridLoad } from '../../power/grid-load'
 import { recordOpsEvent } from '#server/utils/ops'
-import { withHeartbeat } from '../../utils/task-heartbeat'
+import { withHeartbeat } from '#layers/core/server/utils/task-heartbeat'
 
 const task = defineTask({
   meta: {

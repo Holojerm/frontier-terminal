@@ -1,4 +1,4 @@
-// The EVENTS queue's producer wiring and consumer (layers/terminal/server/utils/events.ts
+// The EVENTS queue's producer wiring and consumer (layers/core/server/utils/events.ts
 // says what the queue is for; event-consumer.ts routes a batch).
 //
 // Producer: emitEvent() sends through `globalThis.__env__.EVENTS`, which
@@ -14,7 +14,11 @@
 // wrangler.toml pins with `queue_consumer_wait_for_wait_until`. Do not remove
 // that flag. The same shape as the template's email-queue consumer.
 
-import { EVENTS_QUEUE_BINDING, setEventSender, type EventSender } from '../utils/events'
+import {
+  EVENTS_QUEUE_BINDING,
+  setEventSender,
+  type EventSender,
+} from '#layers/core/server/utils/events'
 import { handleEventBatch, type QueueBatchLike } from '../utils/event-consumer'
 import { eventDeps } from '../utils/event-runtime'
 

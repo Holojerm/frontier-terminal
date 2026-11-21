@@ -30,7 +30,7 @@ import {
 } from '../../shared/utils/grid-load'
 import type { PowerSitesData } from '../../shared/utils/power-sites'
 import curated from '../curated/grid-areas.json'
-import type { PipelineDb } from '../pipeline/store'
+import type { PipelineDb } from '#layers/core/server/pipeline/store'
 import { queryPowerSites } from '../utils/terminal-recipe-views'
 import { ercotFactsStored, ercotReportCount } from './ercot-large-loads'
 import { gridLoadDays, gridLoadFilesRead } from './grid-load'

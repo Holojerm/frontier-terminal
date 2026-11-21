@@ -77,16 +77,18 @@ Every number shows or links to its source URL and fetch time.
 
 Register a tool in its domain's file under `layers/terminal/server/mcp/` that calls
 `deps.serve('<dataset>', …)` with the route's cache name. Give it literal `title`,
-`description` and `annotations: READ_ONLY`. Update the `tools/list` test in
-`layers/terminal/test/mcp.test.ts` and `INSTRUCTIONS` in `layers/terminal/server/utils/mcp.ts`.
+`description` and `annotations: READ_ONLY`. A new domain file gets its line in `MCP_TOOLS`
+(`server/registries/mcp-tools.ts`). Update the `tools/list` test in
+`layers/terminal/test/mcp.test.ts` and `MCP_INSTRUCTIONS` in the same registry file.
 
 ### 7. Export
 
-Add the table to its domain's record under `layers/terminal/server/export-tables/` with a
-builder from `layers/terminal/server/utils/terminal-export-views.ts` (`plainTable`,
+Add the table to its domain's record under `layers/terminal/server/export-tables/` (a new
+record file gets its line in `server/registries/export-tables.ts`) with a
+builder from `layers/core/server/utils/terminal-export-views.ts` (`plainTable`,
 `entityView`, `staticTable` for a hand-read table that ships with the build). Each column
 needs a dictionary entry. Classify it in `EXPORT_HISTORY`, add a release in
-`layers/terminal/server/utils/data-schema.ts`, and run `bun run schema:lock`.
+`layers/core/server/utils/data-schema.ts`, and run `bun run schema:lock`.
 
 ### 8. Alerts
 
@@ -111,7 +113,7 @@ one-line reason (`.claude/docs/surfaces.md`). Then `bun run ci:fast` while itera
 - [ ] Table and migration, or entity rows
 - [ ] Query function, route with Zod, `rateLimitTerminal()` and `serveTerminal()`
 - [ ] Axis page, plus lab page and tear sheet if per lab, plus home figure if headline
-- [ ] MCP tool on the same cache name, `tools/list` test and `INSTRUCTIONS` updated
+- [ ] MCP tool on the same cache name, `tools/list` test and `MCP_INSTRUCTIONS` updated
 - [ ] Export table, dictionary, `EXPORT_HISTORY`, `schema:lock`
 - [ ] Alert axis, or an `alerts` waiver
 - [ ] `bun run surfaces:check` passes with no new `not yet:` waiver you could have closed

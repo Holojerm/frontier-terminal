@@ -1,5 +1,5 @@
 // Cron task: the hourly backstop for the EVENTS queue
-// (layers/terminal/server/utils/events.ts). It runs the same fan-out and both
+// (layers/core/server/utils/events.ts). It runs the same fan-out and both
 // drains a message would (event-work.ts › sweepEvents), so an alert whose
 // `alerts.new` was never sent (no binding, a queue error) or a drain chain
 // that broke is picked up within the hour. An unconfigured outbox is skipped
@@ -11,7 +11,7 @@ import { logEvent } from '#server/utils/log'
 
 import { sweepEvents } from '../../utils/event-work'
 import { eventDeps } from '../../utils/event-runtime'
-import { withHeartbeat } from '../../utils/task-heartbeat'
+import { withHeartbeat } from '#layers/core/server/utils/task-heartbeat'
 
 interface CloudflareTaskContext {
   cloudflare?: { env?: Record<string, unknown> }

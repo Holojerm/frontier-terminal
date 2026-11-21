@@ -1,4 +1,4 @@
-import type { Prov, ProviderId, Stamp } from './common'
+import type { Prov, ProviderId, Stamp } from '#layers/core/shared/utils/terminal-types/common'
 
 /** A SKU first listed after a source's baseline: an `added` change on a model row. */
 export interface ReleaseView extends Prov {

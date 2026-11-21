@@ -1,9 +1,13 @@
 import { describe, expect, it } from 'vitest'
 
-import { includeSources } from '../server/pipeline/sources'
-import { RECIPES } from '../server/theses/recipes/registry'
-import { SOURCE_LABELS, labelOf, readSourceRegistry } from '../server/utils/terminal-sources'
-import { fixtureText, manifest } from './pipeline/fixtures'
+import { includeSources } from '#layers/core/server/pipeline/sources'
+import { RECIPES } from '#server/registries/recipes'
+import {
+  SOURCE_LABELS,
+  labelOf,
+  readSourceRegistry,
+} from '#layers/core/server/utils/terminal-sources'
+import { fixtureText, manifest } from '#layers/core/test/pipeline/fixtures'
 
 // The UI reads caveats straight out of sources.yaml. These tests pin that
 // the narrow reader recovers the audit's words intact, and that the one

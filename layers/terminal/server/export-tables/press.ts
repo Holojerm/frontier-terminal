@@ -1,7 +1,11 @@
-// The press side: track-record candidates and verdicts, reported figures. Part of EXPORT_TABLES (utils/terminal-export.ts), which fixes the order.
+// The press side: track-record candidates and verdicts, reported figures. Part of EXPORT_TABLES (server/registries/export-tables.ts), which fixes the order.
 
 import * as tables from '#server/db/schema'
-import { plainTable, byColumn, type ExportTable } from '../utils/terminal-export-views'
+import {
+  plainTable,
+  byColumn,
+  type ExportTable,
+} from '#layers/core/server/utils/terminal-export-views'
 
 export const PRESS_TABLES = {
   track_record_candidates: plainTable(

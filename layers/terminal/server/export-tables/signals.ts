@@ -1,11 +1,11 @@
 // The signals harness's statistics and the forward calls. Part of EXPORT_TABLES
-// (utils/terminal-export.ts), which fixes the order. Statistics only:
+// (server/registries/export-tables.ts), which fixes the order. Statistics only:
 // market_bars, the prices behind them, is licensed for internal use and has no export.
 
 import { lte } from 'drizzle-orm'
 
 import * as tables from '#server/db/schema'
-import { plainTable, type ExportTable } from '../utils/terminal-export-views'
+import { plainTable, type ExportTable } from '#layers/core/server/utils/terminal-export-views'
 
 export const SIGNAL_TABLES = {
   signal_results: plainTable(

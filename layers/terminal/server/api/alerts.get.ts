@@ -14,8 +14,8 @@ import { LABS } from '../../shared/utils/terminal-lab-summary'
 import { ALERT_TIER_FILTERS, tierFilterOf } from '../../shared/utils/terminal-tiers'
 
 import { parseAlertCursor, queryAlerts } from '../utils/terminal-alerts'
-import { serveTerminal, terminalDb } from '../utils/terminal-handler'
-import { rateLimitTerminal } from '../utils/api-access'
+import { serveTerminal, terminalDb } from '#layers/core/server/utils/terminal-handler'
+import { rateLimitTerminal } from '#layers/core/server/utils/api-access'
 
 const querySchema = z.object({
   limit: z.coerce.number().int().min(1).max(500).default(200),

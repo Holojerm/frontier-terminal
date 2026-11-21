@@ -4,8 +4,8 @@
 // from the Internet Archive's copies of each feed before the live lanes began.
 
 import { incidentArchiveStamp, queryIncidents } from '../utils/terminal-incidents'
-import { serveTerminal, terminalDb } from '../utils/terminal-handler'
-import { rateLimitTerminal } from '../utils/api-access'
+import { serveTerminal, terminalDb } from '#layers/core/server/utils/terminal-handler'
+import { rateLimitTerminal } from '#layers/core/server/utils/api-access'
 
 export default defineEventHandler(async (event) => {
   await rateLimitTerminal(event, { name: 'incidents', limit: 60, windowSeconds: 60 })

@@ -9,8 +9,8 @@ import sourcesYaml from 'raw:~~/sources.yaml'
 
 import * as tables from '#server/db/schema'
 import { DIGEST_DAYS, type DigestInput } from '../theses/digest'
-import { terminalStamps } from './terminal-cache'
-import { queryContext } from './terminal-db'
+import { terminalStamps } from '#layers/core/server/utils/terminal-cache'
+import { queryContext } from '#layers/core/server/utils/terminal-db'
 import { queryTheses } from './terminal-theses'
 
 export async function loadDigestInput(

@@ -1,22 +1,21 @@
 // XBRL facts public filers report, the capex guidance their earnings releases print, and the
 // exposure series and dependency graph built on the facts. Part of EXPORT_TABLES
-// (utils/terminal-export.ts), which fixes the order.
+// (server/registries/export-tables.ts), which fixes the order.
 
 import { lt, lte } from 'drizzle-orm'
 import { buildSeries } from '../exposure/series'
 import { dependencyEdges } from '../utils/terminal-dependencies'
 import { filedBefore, filedFactsAt } from '../utils/terminal-exposure'
-import { PointInTimeError } from '../utils/terminal-asof'
+import { PointInTimeError } from '#layers/core/server/utils/terminal-asof'
 import * as tables from '#server/db/schema'
-import type { PipelineDb } from '../pipeline/store'
+import type { PipelineDb } from '#layers/core/server/pipeline/store'
 import {
   CIK,
-  exposureView,
   plainTable,
   type ColumnDocs,
   type ExportTable,
   type Row,
-} from '../utils/terminal-export-views'
+} from '#layers/core/server/utils/terminal-export-views'
 
 const DEPENDENCY_DOCS = {
   edge_id: {
@@ -589,3 +588,67 @@ export const EXPOSURE_TABLES = {
   ),
   dependency_edges: dependencyView(null),
 } satisfies Record<string, ExportTable>
+
+/**
+ * Every exposure series point (layers/terminal/server/exposure/series.ts),
+ * built in memory from filed_facts: a few thousand facts at most. As of T it
+ * is built from the facts filed before T's UTC day.
+ */
+export function exposureView(name: string, description: string, docs: ColumnDocs): ExportTable {
+  const columns = Object.keys(docs)
+  const build = async (db: PipelineDb, at: string | null): Promise<Row[]> => {
+    const facts = await db
+      .select()
+      .from(tables.filedFacts)
+      .where(at ? lt(tables.filedFacts.filed, filedBefore(at)) : undefined)
+    return buildSeries(facts).flatMap((s) =>
+      s.points.map((p) => ({
+        series_id: s.id,
+        ticker: s.ticker,
+        filer: s.filer,
+        group: s.group,
+        label: s.label,
+        concept: s.concept,
+        dims: s.dims,
+        kind: s.kind,
+        unit: s.unit,
+        start: p.start,
+        end: p.end,
+        value: p.value,
+        derived: p.derived,
+        less_start: p.less?.start ?? null,
+        less_end: p.less?.end ?? null,
+        less_value: p.less?.value ?? null,
+        less_accession_no: p.less?.accession_no ?? null,
+        accession_no: p.accession_no,
+        form: p.form,
+        filed: p.filed,
+        filing_url: p.filing_url,
+        source_url: p.source_url,
+        fetched_at: p.fetched_at,
+      })),
+    )
+  }
+  const view = (at: string | null): ExportTable => ({
+    name,
+    description,
+    columns,
+    docs,
+    async page(db, after, limit) {
+      const rows = await build(db, at)
+      const from =
+        after === null
+          ? 0
+          : rows.findIndex((r) => r.series_id === after.series_id && r.end === after.end) + 1
+      return rows.slice(from, from + limit)
+    },
+    count: async (db) => (await build(db, at)).length,
+    at: (_db, instant) =>
+      at === null
+        ? Promise.resolve(view(instant))
+        : Promise.reject(new PointInTimeError('already a point-in-time view')),
+    asOfRefusal: null,
+    pointInTime: 'cut',
+  })
+  return view(null)
+}

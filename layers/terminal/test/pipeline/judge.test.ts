@@ -3,26 +3,27 @@ import { drizzle } from 'drizzle-orm/d1'
 import { beforeEach, describe, expect, it } from 'vitest'
 
 import * as schema from '~~/server/db/schema'
-import { AlertRow, ChangeRow, contentHash } from '../../server/pipeline/contracts'
-import { diff } from '../../server/pipeline/diff'
-import { buildAlertRows, gateJudgeSubmission } from '../../server/pipeline/judge/contract'
-import { groundAlerts, groundingFailure } from '../../server/pipeline/judge/grounding'
+import { AlertRow, ChangeRow, contentHash } from '#layers/core/server/pipeline/contracts'
+import { diff } from '#layers/core/server/pipeline/diff'
+import { buildAlertRows } from '#layers/core/server/pipeline/judge/alerts'
+import { gateJudgeSubmission } from '../../server/pipeline/judge/contract'
+import { groundAlerts, groundingFailure } from '#layers/core/server/pipeline/judge/grounding'
 import {
   isTimestampOnlyChange,
   isUntrackedFilingChange,
   JUDGE_CHANGE_LIMIT,
   offerCount,
   pendingChanges,
-} from '../../server/pipeline/judge/pending'
+} from '#layers/core/server/pipeline/judge/pending'
 import { submitJudgeRun } from '../../server/pipeline/judge/submit'
 import { judgeFreshnessCheck } from '../../server/pipeline/judge/watchdog'
-import { checkFreshness, freshnessMarkerKey } from '../../server/utils/freshness'
-import type { LockStore } from '../../server/pipeline/lock'
+import { checkFreshness, freshnessMarkerKey } from '#layers/core/server/utils/freshness'
+import type { LockStore } from '#layers/core/server/pipeline/lock'
 import { normalizeJobs, normalizePrices } from '../../server/pipeline/normalize'
 import { parseXaiGreenhouse } from '../../server/pipeline/parsers/hiring/xai-greenhouse'
 import { parseXaiModelsMd } from '../../server/pipeline/parsers/pricing/xai-models'
-import { insertRows } from '../../server/pipeline/store'
-import { verifyJudgeToken } from '../../server/utils/judge-auth'
+import { insertRows } from '#layers/core/server/pipeline/store'
+import { verifyJudgeToken } from '#layers/core/server/utils/judge-auth'
 import injection from './canned/judge-explain.injection.synthetic.txt?raw'
 import inventedNumber from './canned/judge-explain.invented-number.synthetic.txt?raw'
 import live from './canned/judge-explain.live.txt?raw'
@@ -30,7 +31,7 @@ import malformed from './canned/judge-explain.malformed.synthetic.txt?raw'
 import silence from './canned/judge-explain.silence.synthetic.txt?raw'
 import smuggledFields from './canned/judge-explain.smuggled-fields.synthetic.txt?raw'
 import unknownChangeId from './canned/judge-explain.unknown-change-id.synthetic.txt?raw'
-import { fixtureText, provenanceOf } from './fixtures'
+import { fixtureText, provenanceOf } from '#layers/core/test/pipeline/fixtures'
 
 // The judge lane against a real D1. Done-bar: the pending selection offers
 // only what has not been judged and is not a re-stamped job row; canned

@@ -10,8 +10,8 @@
 
 import { queryGroundTruth } from '../utils/terminal-ground-truth'
 import { reportedStamp } from '../utils/terminal-reported'
-import { serveTerminal, terminalDb } from '../utils/terminal-handler'
-import { rateLimitTerminal } from '../utils/api-access'
+import { serveTerminal, terminalDb } from '#layers/core/server/utils/terminal-handler'
+import { rateLimitTerminal } from '#layers/core/server/utils/api-access'
 import { labQuerySchema } from '../utils/terminal-lab-cuts'
 
 export default defineEventHandler(async (event) => {

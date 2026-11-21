@@ -6,8 +6,8 @@
 // prints:read (layers/terminal/server/prints/).
 
 import { printsStamp } from '../prints/store'
-import { rateLimitTerminal } from '../utils/api-access'
-import { serveTerminal, terminalDb } from '../utils/terminal-handler'
+import { rateLimitTerminal } from '#layers/core/server/utils/api-access'
+import { serveTerminal, terminalDb } from '#layers/core/server/utils/terminal-handler'
 import { queryPrints } from '../utils/terminal-prints'
 
 export default defineEventHandler(async (event) => {

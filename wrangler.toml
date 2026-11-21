@@ -80,7 +80,7 @@ bucket_name = "frontier-terminal-bulk-licensed"
 #     Adding a second limiter means picking a different number here.
 # One block per budget in use, because a block enforces exactly one. The first
 # is NATIVE_LIMITER in server/utils/rate-limit.ts; every other is registered with
-# registerNativeLimiter() (layers/terminal/server/utils/rate-limits.ts) under the
+# registerNativeLimiter() (layers/core/server/utils/rate-limits.ts) under the
 # same name and the same two numbers, and no two may share a (limit, period) pair.
 #
 # 30/60s: the two writers — /export/* and /api/judge/*.
@@ -105,7 +105,7 @@ namespace_id = "1402"
 simple = { limit = 60, period = 60 }
 
 # 600/60s and 1200/60s: licensee API keys, research and systematic tier
-# (KEYED_READ_LIMITERS in layers/terminal/server/utils/rate-limits.ts). Counted
+# (KEYED_READ_LIMITERS in layers/core/server/utils/rate-limits.ts). Counted
 # per key, not per IP. Namespaces from scripts/ratelimit-namespace.ts over
 # "frontier-terminal-key-600" and "frontier-terminal-key-1200".
 [[ratelimits]]
@@ -187,7 +187,7 @@ enabled = true
 #   "41 * * * *"    events:sweep — the EVENTS queue's backstop: the social and webhook
 #                   outboxes and the press briefs (see [[queues]] below)
 #                   bulk:build —the bulk feed's gzipped CSVs and Parquet files in R2, built once a
-#                   UTC day and resumed hourly (layers/terminal/server/utils/terminal-bulk.ts)
+#                   UTC day and resumed hourly (layers/core/server/utils/terminal-bulk.ts)
 #                   prints:read — the Taiwan monthly revenue feeds, TSMC's revenue 6-Ks and
 #                   Korea Customs Service's export releases (layers/terminal/server/prints/ingest.ts)
 #   "29 5 * * TUE"  power:verify — re-reads each utility, regulator and company page the
@@ -223,7 +223,7 @@ crons = [
 
 # ─── EVENTS queue ────────────────────────────────────────────────────────────
 # Alert delivery is driven by messages, not a timer
-# (layers/terminal/server/utils/events.ts): writing an alert emits `alerts.new`,
+# (layers/core/server/utils/events.ts): writing an alert emits `alerts.new`,
 # the consumer offers it to the social and webhook outboxes and the press
 # briefs, then schedules each outbox's drain at its earliest due row. The
 # queue carries triggers only; the outbox tables stay the record, so a lost
@@ -332,15 +332,15 @@ NUXT_INDEXNOW_KEY = "fe2738e740b8c6b06a20d76ab1877559"
 #                                (scripts/gdelt-search.ts); the same value is the repo secret
 #                                GDELT_TOKEN and the mini's ~/agent-jobs/.gdelt-token. 32+ chars. Unset = those routes 404, no GDELT file is read.
 #   NUXT_SEC_CONTACT_EMAIL       contact address sec.gov's fair-access policy requires in
-#                                the User-Agent (layers/terminal/server/pipeline/fetch.ts). Unset = the
+#                                the User-Agent (layers/core/server/pipeline/fetch.ts). Unset = the
 #                                EDGAR sources are skipped as 'failed', never fetched
 #                                anonymously. A secret because it is a personal address.
 #   NUXT_JUDGE_TOKEN             bearer the judge routine presents to /api/judge/*
-#                                (layers/terminal/server/utils/judge-auth.ts). 32+ chars. Unset = those
+#                                (layers/core/server/utils/judge-auth.ts). 32+ chars. Unset = those
 #                                routes 404 and no judge exists.
 #   NUXT_OPENROUTER_API_KEY      bearer for openrouter.ai/api/v1/datasets/* — the usage
 #                                rankings behind the demand-share panel
-#                                (layers/terminal/server/pipeline/fetch.ts). Unset = that source is
+#                                (layers/core/server/pipeline/fetch.ts). Unset = that source is
 #                                recorded 'skipped' each tick, never fetched anonymously.
 #                                Also pays for the hourly latency probes
 #                                (layers/terminal/server/pipeline/probes/), which need credit on

@@ -1,5 +1,5 @@
 import { MODEL_CLASS_MAP, type ClassEntry } from '../utils/terminal-classes'
-import { RecommendationRow, type Provenance } from './contracts'
+import { RecommendationRow, type Provenance } from '#layers/core/server/pipeline/contracts'
 import { cardDescriptions, cardOwners, foldQuotes } from './judge/page-cards'
 
 // The drift check on the like-for-like matrix. The class map is editorial and

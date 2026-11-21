@@ -21,7 +21,7 @@ import {
   type ProbePlacement,
 } from '../pipeline/probes/placement'
 import { runProbes, type ProbeRunReport } from '../pipeline/probes/run'
-import type { PipelineDb } from '../pipeline/store'
+import type { PipelineDb } from '#layers/core/server/pipeline/store'
 
 /** Spooled once per run in which a probe was refused for a reason of ours. */
 export const PROBE_SETUP_FAILED_KIND = 'probe_setup_failed'

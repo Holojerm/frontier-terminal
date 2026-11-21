@@ -1,6 +1,10 @@
-import { CareersFeedJobsOutput, registerParser, type Provenance } from '../../contracts'
+import {
+  CareersFeedJobsOutput,
+  registerParser,
+  type Provenance,
+} from '#layers/core/server/pipeline/contracts'
 import { decodeEntities } from '../disclosures/html-text'
-import { fixtureProvenance } from '../fixture-provenance'
+import { fixtureProvenance } from '#layers/core/server/pipeline/parsers/fixture-provenance'
 import { compareByJobId } from './common'
 
 // google-careers — the job feed Google's careers site publishes for

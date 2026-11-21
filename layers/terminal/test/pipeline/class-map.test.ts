@@ -5,7 +5,7 @@ import { beforeEach, describe, expect, it } from 'vitest'
 
 import * as schema from '~~/server/db/schema'
 import { effectiveClassMap, overlayClassMap } from '../../server/pipeline/class-map'
-import type { SourceFetcher } from '../../server/pipeline/fetch'
+import type { SourceFetcher } from '#layers/core/server/pipeline/fetch'
 import {
   basisNamesModel,
   classMapReview,
@@ -17,12 +17,12 @@ import { cardDescriptions, cardOwners } from '../../server/pipeline/judge/page-c
 import { submitJudgeRun } from '../../server/pipeline/judge/submit'
 import { recommendationRows } from '../../server/pipeline/recommendations'
 import { runRefresh, type RawStore } from '../../server/pipeline/refresh'
-import { terminalStamps } from '../../server/utils/terminal-cache'
+import { terminalStamps } from '#layers/core/server/utils/terminal-cache'
 import { MODEL_FLOOR_RULE } from '../../server/pipeline/model-floor'
 import { CLASS_GAPS, CLASS_MAP_SOURCES, MODEL_CLASS_MAP } from '../../server/utils/terminal-classes'
-import { queryContext } from '../../server/utils/terminal-db'
+import { queryContext } from '#layers/core/server/utils/terminal-db'
 import { queryPrices } from '../../server/utils/terminal-prices'
-import { fixtureText, manifest } from './fixtures'
+import { fixtureText, manifest } from '#layers/core/test/pipeline/fixtures'
 
 // The judge re-mapping a price-matrix cell. Pure halves first, then the whole
 // path against the workerd D1 and R2: a real poll of the committed Anthropic

@@ -1,14 +1,14 @@
 import { and, eq, inArray } from 'drizzle-orm'
 
 import * as tables from '#server/db/schema'
-import type { ChangeRow } from '../contracts'
-import type { PipelineDb } from '../store'
-import type { AlertGroundingRejection } from './grounding'
-import type { JudgeAlert } from './contract'
+import type { ChangeRow } from '#layers/core/server/pipeline/contracts'
+import type { PipelineDb } from '#layers/core/server/pipeline/store'
+import type { AlertGroundingRejection } from '#layers/core/server/pipeline/judge/grounding'
+import type { JudgeAlert } from '#layers/core/server/pipeline/judge/alerts'
 
 // A model that one page of a lab stopped listing while another page of the
 // same lab still lists it has not been delisted. Each catalog is a set lane
-// (lane-removals.ts), so a row that leaves the page is logged as `removed`,
+// (server/registries/set-lanes.ts), so a row that leaves the page is logged as `removed`,
 // and a removal reads like a withdrawal. On 2026-11-09 Anthropic's models
 // overview dropped claude-fable-5-1 from its table when claude-fable-5-2
 // launched. The pricing page still listed it at the same prices, and the

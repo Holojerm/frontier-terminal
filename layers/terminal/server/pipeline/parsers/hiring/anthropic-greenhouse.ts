@@ -1,5 +1,9 @@
-import { GreenhouseJobsOutput, registerParser, type Provenance } from '../../contracts'
-import { fixtureProvenance } from '../fixture-provenance'
+import {
+  GreenhouseJobsOutput,
+  registerParser,
+  type Provenance,
+} from '#layers/core/server/pipeline/contracts'
+import { fixtureProvenance } from '#layers/core/server/pipeline/parsers/fixture-provenance'
 import { parseGreenhouseBoard } from './common'
 
 // Anthropic job board via Greenhouse. The jobs endpoint carries NO

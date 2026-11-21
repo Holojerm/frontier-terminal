@@ -15,7 +15,7 @@ import {
   asOfErrors,
   PROVENANCE,
   type McpKit,
-} from './kit'
+} from '#layers/core/server/mcp/kit'
 
 export function registerFilingTools({ server, deps, read }: McpKit): void {
   server.registerTool(

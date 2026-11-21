@@ -4,10 +4,10 @@ import {
   GooglePricingAgentOutput,
   GooglePricingOutput,
   parseAgentOutput,
-} from '../../server/pipeline/contracts'
+} from '#layers/core/server/pipeline/contracts'
 import injectionTranscript from './canned/google-pricing.injection.synthetic.txt?raw'
 import liveTranscript from './canned/google-pricing.live.txt?raw'
-import { provenanceOf } from './fixtures'
+import { provenanceOf } from '#layers/core/test/pipeline/fixtures'
 
 // Agent-output gate: the lanes where a model reads external content. Canned
 // good output passes; every malformed variant is rejected whole, with no

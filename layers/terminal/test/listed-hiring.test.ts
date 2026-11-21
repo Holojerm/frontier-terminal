@@ -13,8 +13,8 @@ import { queryListedHiring } from '../server/listed-hiring/query'
 import { EMPTIED_BOARD_FLOOR, readListedBoard, runListedHiring } from '../server/listed-hiring/read'
 import { SIGNALS } from '../server/signals/registry'
 import { createLoader } from '../server/signals/sources'
-import { queryContext } from '../server/utils/terminal-db'
-import { readListedHiringSources } from '../server/utils/terminal-sources'
+import { queryContext } from '#layers/core/server/utils/terminal-db'
+import { readListedHiringSources } from '#layers/core/server/utils/terminal-sources'
 import {
   LISTED_BOARDS,
   LISTED_CUTS,
@@ -23,7 +23,7 @@ import {
   weeklyCounts,
   type ListedBoard,
 } from '../shared/utils/listed-hiring'
-import { fixtureText } from './pipeline/fixtures'
+import { fixtureText } from '#layers/core/test/pipeline/fixtures'
 
 // Hiring at the listed companies: the classifier, the four board readers
 // against their captured bytes, the daily read's point-in-time store, and

@@ -5,10 +5,10 @@ import { beforeEach, describe, expect, it } from 'vitest'
 
 import * as schema from '~~/server/db/schema'
 import migration from '~~/server/db/migrations/0050_correct_google_launch_prices.sql?raw'
-import { AlertRow, ChangeRow } from '../../server/pipeline/contracts'
+import { AlertRow, ChangeRow } from '#layers/core/server/pipeline/contracts'
 import { addedModels, modelFloorAlert } from '../../server/pipeline/model-floor'
-import { insertRows } from '../../server/pipeline/store'
-import { fixtureText } from './fixtures'
+import { insertRows } from '#layers/core/server/pipeline/store'
+import { fixtureText } from '#layers/core/test/pipeline/fixtures'
 
 // A launch alert's price is the model's list price. Until 2026-11-11 the
 // model-floor rule priced it off the untiered row, else the first row parsed;

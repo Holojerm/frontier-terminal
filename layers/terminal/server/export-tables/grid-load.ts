@@ -1,7 +1,11 @@
-// Grid load where the lab sites are: EIA-930 days and ERCOT's large-load figures. Part of EXPORT_TABLES (utils/terminal-export.ts), which fixes the order.
+// Grid load where the lab sites are: EIA-930 days and ERCOT's large-load figures. Part of EXPORT_TABLES (server/registries/export-tables.ts), which fixes the order.
 
 import * as tables from '#server/db/schema'
-import { byColumn, plainTable, type ExportTable } from '../utils/terminal-export-views'
+import {
+  byColumn,
+  plainTable,
+  type ExportTable,
+} from '#layers/core/server/utils/terminal-export-views'
 
 export const GRID_LOAD_TABLES = {
   grid_load_days: plainTable(

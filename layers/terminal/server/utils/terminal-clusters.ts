@@ -13,7 +13,7 @@
 
 import type { ClusterSeries, DeptSeries } from '../../shared/utils/terminal-types'
 
-import { byString } from './terminal-json'
+import { byString } from '#layers/core/server/utils/terminal-json'
 
 export interface DepartmentCluster {
   id: string

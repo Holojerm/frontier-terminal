@@ -15,7 +15,7 @@ import {
   xaiArchived,
 } from '../server/pipeline/parsers/status/wayback-status'
 import { incidentArchiveSeries, type StatusCopy } from '../server/utils/terminal-incident-archive'
-import { readArchiveSources } from '../server/utils/terminal-sources'
+import { readArchiveSources } from '#layers/core/server/utils/terminal-sources'
 import sourcesYaml from '~~/sources.yaml?raw'
 
 // The archived status feeds' pure half: the era windows, the readers' rules

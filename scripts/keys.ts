@@ -23,8 +23,8 @@ import {
   hashApiKey,
   isApiKeyTier,
   keyRefusal,
-} from '../layers/terminal/server/utils/api-key-token'
-import { USAGE_PREFIX } from '../layers/terminal/server/utils/api-key-usage'
+} from '../layers/core/server/utils/api-key-token'
+import { USAGE_PREFIX } from '../layers/core/server/utils/api-key-usage'
 import { liveGrantCount, revokeGrants } from './bulk-grant'
 import { ROOT, fail, lit, parseArgs, runSql } from './lib/d1-cli'
 

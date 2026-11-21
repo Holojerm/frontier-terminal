@@ -9,7 +9,7 @@ import * as tables from '#server/db/schema'
 import type { ExtensionDb } from '#server/utils/extensions'
 
 import { launchCoverage } from '../pipeline/launch-watch'
-import { countedTotals } from './row-counts'
+import { countedTotals } from '#layers/core/server/utils/row-counts'
 import { countConfirmed } from './subscribers'
 
 export async function collectTerminalCounters(

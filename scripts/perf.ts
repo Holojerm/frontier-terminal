@@ -5,7 +5,7 @@
 // mid-tier-phone profile, so the numbers are a first visit's, not a
 // repeat visitor's. Reports the median of --runs per route, plus what the
 // server said about the document: x-html-cache (hit/miss) and Server-Timing
-// (layers/terminal/server/utils/server-timing.ts) — a long TTFB is only
+// (layers/core/server/utils/server-timing.ts) — a long TTFB is only
 // actionable once you know which stage it was spent in.
 //
 // Real visitors on this site almost always miss the HTML cache: it is per data

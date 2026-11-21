@@ -21,7 +21,7 @@
 import { and, eq, gte, lt, lte, max, sql } from 'drizzle-orm'
 
 import * as tables from '#server/db/schema'
-import type { PipelineDb } from '../store'
+import type { PipelineDb } from '#layers/core/server/pipeline/store'
 import { GKG_SLOT_MS, gkgStamp, stampIso } from './gkg'
 import { mentionVocabulary, normalizeText, termsInVocabulary, type SearchTerms } from './terms'
 import { WINDOW_DAYS, type TrackWindow } from './window'

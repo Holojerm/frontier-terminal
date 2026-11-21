@@ -26,7 +26,11 @@ import { deployDriftCheck } from '../pipeline/deploy-watch'
 import { judgeFreshnessCheck } from '../pipeline/judge/watchdog'
 import { GKG_READY_MS, stampIso } from '../pipeline/track-record/gkg'
 import { oldestUnread } from '../pipeline/track-record/search'
-import { heartbeatLoader, taskHeartbeatCheck, type FreshnessCheck } from './freshness'
+import {
+  heartbeatLoader,
+  taskHeartbeatCheck,
+  type FreshnessCheck,
+} from '#layers/core/server/utils/freshness'
 import { ENTITY_IDENTIFIERS, type EntityIdentifier } from './terminal-identifiers'
 
 const HOUR_MS = 60 * 60 * 1000
@@ -64,7 +68,7 @@ export const SOCIAL_POST_SILENCE_MS = HOUR_MS
 
 /**
  * The social outbox is drained by EVENTS queue messages and the hourly
- * events:sweep (layers/terminal/server/utils/events.ts), and its sender lives in
+ * events:sweep (layers/core/server/utils/events.ts), and its sender lives in
  * the vendored social layer, which records no heartbeat. Its own rows are the
  * evidence: a due post still queued past the limit is the stall, whichever
  * path should have sent it.

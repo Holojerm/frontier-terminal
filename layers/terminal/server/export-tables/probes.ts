@@ -1,4 +1,4 @@
-// The hourly latency probes we send each lab, and the daily strain reading rolled from them. Part of EXPORT_TABLES (utils/terminal-export.ts), which fixes the order.
+// The hourly latency probes we send each lab, and the daily strain reading rolled from them. Part of EXPORT_TABLES (server/registries/export-tables.ts), which fixes the order.
 
 import * as tables from '#server/db/schema'
 import {
@@ -7,7 +7,7 @@ import {
   renamedColumns,
   type ColumnDoc,
   type ExportTable,
-} from '../utils/terminal-export-views'
+} from '#layers/core/server/utils/terminal-export-views'
 
 const LAB: ColumnDoc = {
   type: 'text',

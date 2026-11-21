@@ -1,4 +1,4 @@
-import type { LabId, Prov, Stamp } from './common'
+import type { LabId, Prov, Stamp } from '#layers/core/shared/utils/terminal-types/common'
 import type { ReportedHeadline, ReportedMetric } from './reported'
 import type { TrackRecordTally } from './track-record'
 

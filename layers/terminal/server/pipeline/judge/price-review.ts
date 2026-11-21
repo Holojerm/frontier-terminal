@@ -3,10 +3,15 @@ import { z } from 'zod'
 
 import * as tables from '#server/db/schema'
 import { recordOpsEvent } from '#server/utils/ops'
-import { contentHash, PriceRow, type EntityRow } from '../contracts'
-import { diff, repeatChangeId } from '../diff'
+import { contentHash, PriceRow, type EntityRow } from '#layers/core/server/pipeline/contracts'
+import { diff, repeatChangeId } from '#layers/core/server/pipeline/diff'
 import { normalizePrice } from '../normalize'
-import { applyDiff, currentEntities, repeatedChangeIds, type PipelineDb } from '../store'
+import {
+  applyDiff,
+  currentEntities,
+  repeatedChangeIds,
+  type PipelineDb,
+} from '#layers/core/server/pipeline/store'
 import type { RawReader } from './class-map'
 
 // The judge's fallback for a price list whose parser is failing. A vendor

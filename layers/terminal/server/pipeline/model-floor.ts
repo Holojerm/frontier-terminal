@@ -3,8 +3,13 @@ import { and, eq, inArray, lt, sql } from 'drizzle-orm'
 import { LAB_DISPLAY } from '../../shared/utils/terminal-labs'
 
 import * as tables from '#server/db/schema'
-import { AlertRow, PriceRow, contentHash, type ChangeRow } from './contracts'
-import type { PipelineDb } from './store'
+import {
+  AlertRow,
+  PriceRow,
+  contentHash,
+  type ChangeRow,
+} from '#layers/core/server/pipeline/contracts'
+import type { PipelineDb } from '#layers/core/server/pipeline/store'
 
 // The model-floor rule: a model slug no vendor catalog in the store has
 // listed before always alerts, with no model in the loop.

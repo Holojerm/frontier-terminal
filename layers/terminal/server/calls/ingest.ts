@@ -29,11 +29,11 @@ import { and, asc, desc, eq, inArray, isNull, lt, ne, sql } from 'drizzle-orm'
 
 import * as tables from '#server/db/schema'
 import { recordOpsEvent } from '#server/utils/ops'
-import { contentHash, contentHashOfText } from '../pipeline/contracts'
-import type { SourceFetcher } from '../pipeline/fetch'
+import { contentHash, contentHashOfText } from '#layers/core/server/pipeline/contracts'
+import type { SourceFetcher } from '#layers/core/server/pipeline/fetch'
 import type { RawReader } from '../pipeline/judge/class-map'
 import type { RawStore } from '../pipeline/refresh'
-import { chunk, D1_MAX_BOUND_PARAMS, type PipelineDb } from '../pipeline/store'
+import { chunk, D1_MAX_BOUND_PARAMS, type PipelineDb } from '#layers/core/server/pipeline/store'
 import {
   actualFor,
   conceptUrl,

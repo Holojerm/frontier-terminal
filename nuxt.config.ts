@@ -176,12 +176,12 @@ const securityHeaders = {
 //                store, and yields on the half-hour ticks above.
 //              — cache:warm re-renders the public pages once per (build, poll
 //                stamp) so readers hit warm KV payloads
-//                (layers/terminal/server/utils/cache-warm.ts).
+//                (layers/core/server/utils/cache-warm.ts).
 //   0 13 * * MON — weekly thesis digest email, and social:digest queues the
 //                weekly what-moved thread. alerts:hiring-rollup writes one
 //                hiring alert per lab for the week that just ended.
 //   41 * * * * — events:sweep, the backstop for the EVENTS queue
-//                (layers/terminal/server/utils/events.ts): the social and webhook
+//                (layers/core/server/utils/events.ts): the social and webhook
 //                outboxes and the press briefs are driven by queue messages
 //                emitted when alerts are written, not by a timer, and this
 //                catches any message that was lost.
@@ -561,20 +561,16 @@ export default defineNuxtConfig({
     pressEmailFrom: '',
     // SEC fair-access policy requires a contact email in the User-Agent of
     // every request to sec.gov hosts. Empty = the EDGAR sources are skipped
-    // with a 'failed' run, never fetched anonymously (layers/terminal/server/pipeline/fetch.ts).
+    // with a 'failed' run, never fetched anonymously (layers/core/server/pipeline/fetch.ts).
     // A Worker secret: `wrangler secret put NUXT_SEC_CONTACT_EMAIL`.
     secContactEmail: '',
-    // Bearer the judge routine presents to /api/judge/* (layers/terminal/server/utils/judge-auth.ts).
-    // Unset = those routes 404 and no judge exists. Same shape and floor as the
-    // fleet token; a Worker secret: `wrangler secret put NUXT_JUDGE_TOKEN`.
-    judgeToken: '',
     // Bearer the GDELT job (scripts/gdelt-search.ts) presents to
     // /api/gdelt/* (layers/terminal/server/utils/gdelt-auth.ts). The same value is the
     // repository secret GDELT_TOKEN and the mini's ~/agent-jobs/.gdelt-token. Unset = those routes 404 and no GDELT file
     // is read. `wrangler secret put NUXT_GDELT_TOKEN`; 32+ chars.
     gdeltToken: '',
     // OpenRouter API key for the usage-rankings dataset (the demand-share axis,
-    // layers/terminal/server/pipeline/fetch.ts). Sent as a bearer to openrouter.ai/api/v1/datasets/*
+    // layers/core/server/pipeline/fetch.ts). Sent as a bearer to openrouter.ai/api/v1/datasets/*
     // only. Empty = that source is recorded 'skipped' every tick and the panel
     // says "not configured"; nothing is fetched anonymously. The hourly latency
     // probes (layers/terminal/server/pipeline/probes/) spend this key's credit on

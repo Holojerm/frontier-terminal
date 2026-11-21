@@ -4,11 +4,11 @@ import { beforeEach, describe, expect, it } from 'vitest'
 
 import * as schema from '~~/server/db/schema'
 import migration from '~~/server/db/migrations/0053_correct_google_reworded_sentence_alert.sql?raw'
-import { AlertRow, ChangeRow } from '../../server/pipeline/contracts'
+import { AlertRow, ChangeRow } from '#layers/core/server/pipeline/contracts'
 import { requotedKey } from '../../server/pipeline/judge/class-map'
-import { corpusOf, groundingFailure } from '../../server/pipeline/judge/grounding'
+import { corpusOf, groundingFailure } from '#layers/core/server/pipeline/judge/grounding'
 import { clampRoutineAlerts } from '../../server/pipeline/judge/severity-gates'
-import { insertRows } from '../../server/pipeline/store'
+import { insertRows } from '#layers/core/server/pipeline/store'
 
 // On 2026-11-18 Google cut the last clause of gemini-4-hydrogen's card. The
 // drift check reported the quoted sentence gone, and the judge's alert read

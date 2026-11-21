@@ -1,4 +1,8 @@
-import { CommitmentRow, type CommitmentLine, type Provenance } from '../../contracts'
+import {
+  CommitmentRow,
+  type CommitmentLine,
+  type Provenance,
+} from '#layers/core/server/pipeline/contracts'
 import type { RegistrationTarget } from './filing-index'
 import {
   DATE_PATTERN,

@@ -1,7 +1,7 @@
 // The power table's cache key: Epoch's runs and the stored ties and documents.
 
-import type { PipelineDb } from '../pipeline/store'
-import { recipeRunsStamp } from '../utils/terminal-db'
+import type { PipelineDb } from '#layers/core/server/pipeline/store'
+import { recipeRunsStamp } from '#layers/core/server/utils/terminal-db'
 import { VIEW_RECIPES } from '../utils/terminal-recipe-views'
 import { powerTiesStamp } from './store'
 

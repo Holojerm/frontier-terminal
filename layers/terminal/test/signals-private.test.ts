@@ -12,8 +12,8 @@ import { SURFACE_WAIVERS } from '~~/surfaces.waivers'
 import { addDays } from '../server/signals/market'
 import { runSignals } from '../server/signals/run'
 import { SIGNALS } from '../server/signals/registry'
-import { queryContext } from '../server/utils/terminal-db'
-import { EXPORT_TABLES } from '../server/utils/terminal-export'
+import { queryContext } from '#layers/core/server/utils/terminal-db'
+import { EXPORT_TABLES } from '#server/registries/export-tables'
 import { querySignals } from '../server/utils/terminal-signals'
 
 const db = drizzle(env.DB, { schema })

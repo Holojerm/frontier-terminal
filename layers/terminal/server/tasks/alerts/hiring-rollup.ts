@@ -7,7 +7,7 @@ import sourcesYaml from 'raw:~~/sources.yaml'
 
 import { writeHiringRollups } from '../../pipeline/hiring-rollup'
 import { parseDepartmentClusters } from '../../utils/terminal-clusters'
-import { withHeartbeat } from '../../utils/task-heartbeat'
+import { withHeartbeat } from '#layers/core/server/utils/task-heartbeat'
 
 const task = defineTask({
   meta: {

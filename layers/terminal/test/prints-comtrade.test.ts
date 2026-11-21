@@ -4,7 +4,7 @@ import { drizzle } from 'drizzle-orm/d1'
 import { beforeEach, describe, expect, it } from 'vitest'
 
 import * as schema from '~~/server/db/schema'
-import type { FetchOutcome, SourceFetcher } from '../server/pipeline/fetch'
+import type { FetchOutcome, SourceFetcher } from '#layers/core/server/pipeline/fetch'
 import {
   COMTRADE,
   comtradeAvailabilityUrl,
@@ -16,10 +16,10 @@ import { readComtrade } from '../server/prints/ingest'
 import { storeObservations } from '../server/prints/store'
 import { SIGNALS } from '../server/signals/registry'
 import { createLoader } from '../server/signals/sources'
-import { queryContext } from '../server/utils/terminal-db'
-import { readPrintSources } from '../server/utils/terminal-sources'
+import { queryContext } from '#layers/core/server/utils/terminal-db'
+import { readPrintSources } from '#layers/core/server/utils/terminal-sources'
 import { queryPrints } from '../server/utils/terminal-prints'
-import { fixtureText } from './pipeline/fixtures'
+import { fixtureText } from '#layers/core/test/pipeline/fixtures'
 
 // UN Comtrade's Korea HS 8542 months on the committed bytes: getDA (four of
 // its 156 months) and the preview for each. Then the reader against a fake

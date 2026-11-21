@@ -13,11 +13,11 @@ import {
   type ClassEntry,
 } from '../../utils/terminal-classes'
 import { effectiveClassMap } from '../class-map'
-import type { SourceRunRow } from '../contracts'
+import type { SourceRunRow } from '#layers/core/server/pipeline/contracts'
 import { MODEL_FLOOR_RULE } from '../model-floor'
 import { basisOnPage, flattenMdLinks } from '../recommendations'
 import { cardDescriptions, cardOwners, type CardDescriptions } from './page-cards'
-import type { PipelineDb } from '../store'
+import type { PipelineDb } from '#layers/core/server/pipeline/store'
 
 // The judge's second job: re-mapping a like-for-like matrix cell whose vendor
 // sentence has left the page. The rule is the one terminal-classes.ts states

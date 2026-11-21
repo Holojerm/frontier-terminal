@@ -1,4 +1,4 @@
-import type { FilingRow } from '../../contracts'
+import type { FilingRow } from '#layers/core/server/pipeline/contracts'
 import { isPeriodicForm, isS1FloorForm } from './forms'
 
 // The two deterministic significance rules (boundary table, judge row): an

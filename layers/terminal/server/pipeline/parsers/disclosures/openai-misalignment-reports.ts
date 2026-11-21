@@ -3,8 +3,8 @@ import {
   registerParser,
   type DisclosureRow,
   type Provenance,
-} from '../../contracts'
-import { fixtureProvenance } from '../fixture-provenance'
+} from '#layers/core/server/pipeline/contracts'
+import { fixtureProvenance } from '#layers/core/server/pipeline/parsers/fixture-provenance'
 
 // openai-misalignment-reports — https://openai.com/safety-alignment/misalignment-reports/
 //

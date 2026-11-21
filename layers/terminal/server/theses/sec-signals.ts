@@ -4,8 +4,8 @@
 
 import type { LabId, RevenuePeriod } from '../../shared/utils/terminal-types'
 
-import type { PipelineDb } from '../pipeline/store'
-import { queryContext } from '../utils/terminal-db'
+import type { PipelineDb } from '#layers/core/server/pipeline/store'
+import { queryContext } from '#layers/core/server/utils/terminal-db'
 import { queryRevenue } from '../utils/terminal-revenue'
 import type { SignalDeps, SignalReading } from './signals'
 

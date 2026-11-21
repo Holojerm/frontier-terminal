@@ -24,8 +24,8 @@ import {
   type StoredFact,
   type StoredTextFact,
 } from '../exposure/series'
-import type { PipelineDb } from '../pipeline/store'
-import type { QueryContext } from './terminal-db'
+import type { PipelineDb } from '#layers/core/server/pipeline/store'
+import type { QueryContext } from '#layers/core/server/utils/terminal-db'
 
 export const EXPOSURE_METHOD =
   'filed facts: every XBRL fact filed before the UTC day of as_of, each quarter from the newest of those filings. A fact counts from the day after its filing date, whenever we read it, so source_url and fetched_at can postdate as_of.'

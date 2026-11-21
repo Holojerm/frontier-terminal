@@ -8,8 +8,8 @@
 
 import { powerSitesStamp } from '../power/stamp'
 import { suppliersStamp } from '../suppliers/store'
-import { rateLimitTerminal } from '../utils/api-access'
-import { serveTerminal, terminalDb } from '../utils/terminal-handler'
+import { rateLimitTerminal } from '#layers/core/server/utils/api-access'
+import { serveTerminal, terminalDb } from '#layers/core/server/utils/terminal-handler'
 import { labQuerySchema, listedForLab } from '../utils/terminal-lab-cuts'
 import { queryListed } from '../utils/terminal-listed'
 

@@ -2,14 +2,14 @@ import { and, desc, eq, inArray, like } from 'drizzle-orm'
 import { z } from 'zod'
 
 import * as tables from '#server/db/schema'
-import { emitEvent } from '../../utils/events'
-import { AlertRow, contentHash, type ProspectusPart } from '../contracts'
+import { emitEvent } from '#layers/core/server/utils/events'
+import { AlertRow, contentHash, type ProspectusPart } from '#layers/core/server/pipeline/contracts'
 import { archivesCik, cellText, registrationTarget } from '../parsers/sec/filing-index'
 import { coverName } from '../parsers/sec/prospectus'
 import { MONTHS, docLines, docText } from '../parsers/sec/prospectus-doc'
 import { PROSPECTUS_FLOOR_RULE, freshRegistrationKey, usd } from '../prospectus-floor'
 import { amountsIn } from '../reported/figures'
-import { insertRows, type PipelineDb } from '../store'
+import { insertRows, type PipelineDb } from '#layers/core/server/pipeline/store'
 import type { RawReader } from './class-map'
 
 // The judge's fallback for a registration filing the parser could not fully

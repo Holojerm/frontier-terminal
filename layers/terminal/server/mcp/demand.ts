@@ -1,11 +1,11 @@
 // Demand: OpenRouter share, implied spend, GPU rental prices, and adoption.
 
-import { recipeRunsStamp } from '../utils/terminal-db'
+import { recipeRunsStamp } from '#layers/core/server/utils/terminal-db'
 import { gpuRunsStamp, queryGpuPrices } from '../utils/terminal-gpu'
 import { queryAdoption, VIEW_RECIPES } from '../utils/terminal-recipe-views'
 import { SERIES_DAYS, SHARE_WINDOW_DAYS, queryRankings } from '../utils/terminal-rankings'
 import { querySpend } from '../utils/terminal-spend'
-import { json, READ_ONLY, PROVENANCE, type McpKit } from './kit'
+import { json, READ_ONLY, PROVENANCE, type McpKit } from '#layers/core/server/mcp/kit'
 
 export function registerDemandTools({ server, deps }: McpKit): void {
   server.registerTool(

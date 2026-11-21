@@ -7,10 +7,17 @@ import { suppliersStamp } from '../suppliers/store'
 import { querySuppliers } from '../utils/terminal-suppliers'
 import { queryListed } from '../utils/terminal-listed'
 import { queryParents, VIEW_RECIPES } from '../utils/terminal-recipe-views'
-import { recipeRunsStamp } from '../utils/terminal-db'
+import { recipeRunsStamp } from '#layers/core/server/utils/terminal-db'
 import { queryExposure } from '../utils/terminal-exposure'
 import { identifiersPayload } from '../utils/terminal-identifiers'
-import { json, READ_ONLY, AsOfSchema, asOfErrors, PROVENANCE, type McpKit } from './kit'
+import {
+  json,
+  READ_ONLY,
+  AsOfSchema,
+  asOfErrors,
+  PROVENANCE,
+  type McpKit,
+} from '#layers/core/server/mcp/kit'
 
 export function registerExposureTools({ server, deps, read }: McpKit): void {
   server.registerTool(

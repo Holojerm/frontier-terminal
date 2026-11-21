@@ -7,28 +7,33 @@ import type { H3Event } from 'h3'
 import sourcesYaml from 'raw:~~/sources.yaml'
 
 import { HISTORY_LICENSE, PAID_LICENSE, licenseSplit } from '#shared/utils/license'
-import { cacheControlFor, rateLimitTerminal } from './api-access'
-import { SCHEMA_VERSION, SCHEMA_VERSION_HEADER } from './data-schema'
-import { PointInTimeError, assertKnowable } from './terminal-asof'
-import { headResponse } from './head-response'
+import { cacheControlFor, rateLimitTerminal } from '#layers/core/server/utils/api-access'
+import { SCHEMA_VERSION, SCHEMA_VERSION_HEADER } from '#layers/core/server/utils/data-schema'
+import { PointInTimeError, assertKnowable } from '#layers/core/server/utils/terminal-asof'
+import { headResponse } from '#layers/core/server/utils/head-response'
 import { DICTIONARY_NAME, dataDictionary, dictionaryCsv } from './terminal-dictionary'
-import { ARCHIVED_EXPORTS, EXPORT_TABLES, exportTable, WITHDRAWN_EXPORTS } from './terminal-export'
+import {
+  ARCHIVED_EXPORTS,
+  EXPORT_TABLES,
+  exportTable,
+  WITHDRAWN_EXPORTS,
+} from '#server/registries/export-tables'
 import {
   LICENSE_COLUMN,
   licenseHeaders,
   licenseWindow,
   parseExportQuery,
   sampleOf,
-} from './terminal-export-history'
+} from '#layers/core/server/utils/terminal-export-history'
 import {
   csvChunks,
   jsonChunks,
   jsonEnvelopeChunks,
   parseExportPath,
   streamOf,
-} from './terminal-export-format'
-import { exportFilter, type ExportTable } from './terminal-export-views'
-import { terminalDb } from './terminal-handler'
+} from '#layers/core/server/utils/terminal-export-format'
+import { exportFilter, type ExportTable } from '#layers/core/server/utils/terminal-export-views'
+import { terminalDb } from '#layers/core/server/utils/terminal-handler'
 
 const CONTENT_TYPES = {
   csv: 'text/csv; charset=utf-8',

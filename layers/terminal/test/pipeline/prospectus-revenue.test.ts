@@ -8,8 +8,8 @@ import {
   registrationDocuments,
   registrationFilings,
 } from '../../server/pipeline/derived'
-import type { SourceFetcher } from '../../server/pipeline/fetch'
-import { derivedKeyOf, laneFor } from '../../server/pipeline/lanes'
+import type { SourceFetcher } from '#layers/core/server/pipeline/fetch'
+import { derivedKeyOf, laneFor } from '#server/registries/lanes'
 import {
   REGISTRATION_FIXTURE,
   archivesCik,
@@ -21,12 +21,12 @@ import { parseProspectusRevenue } from '../../server/pipeline/parsers/sec/prospe
 import { filingReview } from '../../server/pipeline/judge/filing-review'
 import { submitJudgeRun } from '../../server/pipeline/judge/submit'
 import { runRefresh, type RawStore } from '../../server/pipeline/refresh'
-import { includeSources } from '../../server/pipeline/sources'
-import { terminalStamps } from '../../server/utils/terminal-cache'
-import { queryContext } from '../../server/utils/terminal-db'
+import { includeSources } from '#layers/core/server/pipeline/sources'
+import { terminalStamps } from '#layers/core/server/utils/terminal-cache'
+import { queryContext } from '#layers/core/server/utils/terminal-db'
 import { queryRevenue } from '../../server/utils/terminal-revenue'
-import { labelOf } from '../../server/utils/terminal-sources'
-import { fixtureText, manifest, provenanceOf } from './fixtures'
+import { labelOf } from '#layers/core/server/utils/terminal-sources'
+import { fixtureText, manifest, provenanceOf } from '#layers/core/test/pipeline/fixtures'
 
 // Revenue from a lab's own S-1 when the filing tags no financial XBRL: the
 // filing index locates the prospectus, and the prospectus's audited

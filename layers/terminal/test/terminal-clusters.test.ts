@@ -6,7 +6,7 @@ import {
   inCluster,
   parseDepartmentClusters,
 } from '../server/utils/terminal-clusters'
-import { fixtureText } from './pipeline/fixtures'
+import { fixtureText } from '#layers/core/test/pipeline/fixtures'
 
 // The buildout cluster is named once, in sources.yaml, and read by two
 // consumers that never see each other: the query layer (this module) and

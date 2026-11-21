@@ -4,7 +4,7 @@ import { beforeEach, describe, expect, it } from 'vitest'
 
 import * as schema from '~~/server/db/schema'
 import curated from '../server/curated/suppliers.json'
-import type { FetchOutcome, SourceFetcher } from '../server/pipeline/fetch'
+import type { FetchOutcome, SourceFetcher } from '#layers/core/server/pipeline/fetch'
 import { contains, figureWritten, supplierExcerpts } from '../server/suppliers/excerpts'
 import { periodOf, runSupplierReads, supplierDocuments } from '../server/suppliers/ingest'
 import { applySupplierReadings, checkPassage, supplierReview } from '../server/suppliers/review'

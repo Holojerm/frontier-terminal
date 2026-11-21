@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { isSetLane } from '../../server/pipeline/lane-removals'
-import { LANES, laneFor } from '../../server/pipeline/lanes'
+import { isSetLane } from '#server/registries/set-lanes'
+import { LANES, laneFor } from '#server/registries/lanes'
 
 describe('isSetLane', () => {
   it('agrees with every registered lane', () => {

@@ -1,4 +1,4 @@
-import { OfferingRow, type Provenance } from '../../contracts'
+import { OfferingRow, type Provenance } from '#layers/core/server/pipeline/contracts'
 import { cellText, type RegistrationTarget } from './filing-index'
 
 // The offering terms on a registration filing's cover — the facing page and

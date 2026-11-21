@@ -12,7 +12,7 @@
 import { writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 
-import { userAgentFor } from '../layers/terminal/server/pipeline/fetch'
+import { userAgentFor } from '../layers/core/server/pipeline/fetch'
 import { ARCHIVE_UNTIL } from '../layers/terminal/server/pipeline/archive/eras'
 import {
   RELEASE_NOTE_FIXTURES,

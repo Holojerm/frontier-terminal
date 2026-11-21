@@ -5,8 +5,8 @@
 // what the store held at that instant: every table behind it is append-only.
 
 import { queryTrackRecord } from '../utils/terminal-track-record'
-import { serveTerminal, terminalDb } from '../utils/terminal-handler'
-import { rateLimitTerminal } from '../utils/api-access'
+import { serveTerminal, terminalDb } from '#layers/core/server/utils/terminal-handler'
+import { rateLimitTerminal } from '#layers/core/server/utils/api-access'
 
 export default defineEventHandler(async (event) => {
   await rateLimitTerminal(event, { name: 'track-record', limit: 60, windowSeconds: 60 })

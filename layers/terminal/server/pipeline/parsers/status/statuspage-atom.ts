@@ -1,4 +1,8 @@
-import { StatuspageIncidentsOutput, type IncidentRow, type Provenance } from '../../contracts'
+import {
+  StatuspageIncidentsOutput,
+  type IncidentRow,
+  type Provenance,
+} from '#layers/core/server/pipeline/contracts'
 import { decodeEntities, textOf } from '../disclosures/html-text'
 
 // Statuspage's Atom incident history (/history.atom). Read where robots.txt

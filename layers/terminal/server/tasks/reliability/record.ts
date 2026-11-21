@@ -7,7 +7,7 @@ import { db } from '@nuxthub/db'
 
 import { recordOpsEvent } from '#server/utils/ops'
 import { runReliabilityRecord } from '../../pipeline/reliability/record'
-import { withHeartbeat } from '../../utils/task-heartbeat'
+import { withHeartbeat } from '#layers/core/server/utils/task-heartbeat'
 
 const task = defineTask({
   meta: {

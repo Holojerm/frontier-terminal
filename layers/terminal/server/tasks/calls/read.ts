@@ -8,10 +8,10 @@ import { db } from '@nuxthub/db'
 
 import { runCallReads } from '../../calls/ingest'
 import { blobRawReader } from '../../pipeline/judge/class-map'
-import { createFetcher, userAgentFor } from '../../pipeline/fetch'
+import { createFetcher, userAgentFor } from '#layers/core/server/pipeline/fetch'
 import { blobRawStore } from '../../pipeline/poll'
 import { paceSec } from '../../pipeline/sec-pace'
-import { withHeartbeat } from '../../utils/task-heartbeat'
+import { withHeartbeat } from '#layers/core/server/utils/task-heartbeat'
 
 const task = defineTask({
   meta: {

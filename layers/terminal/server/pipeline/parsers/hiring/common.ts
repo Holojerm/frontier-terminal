@@ -1,4 +1,4 @@
-import { GreenhouseJobsOutput, type Provenance } from '../../contracts'
+import { GreenhouseJobsOutput, type Provenance } from '#layers/core/server/pipeline/contracts'
 
 // Shared helpers for the hiring lane. Deterministic: no clocks, no
 // randomness, no locale-sensitive compares.

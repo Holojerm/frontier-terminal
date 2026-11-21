@@ -12,7 +12,7 @@ import {
   fetchMainHead,
   parseRefAdvertisement,
 } from '../server/pipeline/deploy-watch'
-import type { LockStore } from '../server/pipeline/lock'
+import type { LockStore } from '#layers/core/server/pipeline/lock'
 import {
   FRESHNESS_CHECK_FAILED_KIND,
   checkFreshness,
@@ -23,7 +23,7 @@ import {
   taskHeartbeatCheck,
   taskMaxAgeMs,
   type FreshnessCheck,
-} from '../server/utils/freshness'
+} from '#layers/core/server/utils/freshness'
 import {
   TASK_CHECK_OVERRIDES,
   freshnessChecks,
@@ -32,8 +32,12 @@ import {
   listingStatusCheckOf,
   socialOutboxFreshnessCheck,
 } from '../server/utils/terminal-freshness'
-import { TERMINAL_OPS_SEVERITY } from '../server/utils/terminal-ops-severity'
-import { TASK_FAILED_KIND, recordHeartbeat, withHeartbeat } from '../server/utils/task-heartbeat'
+import { TERMINAL_OPS_SEVERITY } from '#layers/core/server/utils/terminal-ops-severity'
+import {
+  TASK_FAILED_KIND,
+  recordHeartbeat,
+  withHeartbeat,
+} from '#layers/core/server/utils/task-heartbeat'
 
 // The freshness checks (server/utils/freshness.ts): the coverage gate that
 // keeps every scheduled task and every producer off the Worker under one rule,
@@ -82,7 +86,7 @@ describe('coverage: every part of the pipeline has a freshness check', () => {
     expect(
       file!.source,
       `${file!.path} must end in \`export default withHeartbeat(task)\` ` +
-        '(layers/terminal/server/utils/task-heartbeat.ts), or have an entry in TASK_CHECK_OVERRIDES ' +
+        '(layers/core/server/utils/task-heartbeat.ts), or have an entry in TASK_CHECK_OVERRIDES ' +
         '(layers/terminal/server/utils/terminal-freshness.ts) that says why not',
     ).toMatch(/^export default withHeartbeat\(task\)$/m)
   })

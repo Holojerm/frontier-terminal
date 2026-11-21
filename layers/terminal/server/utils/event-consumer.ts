@@ -9,7 +9,7 @@
 
 import { logEvent } from '#server/utils/log'
 
-import { EventMessageSchema, type EventType } from './events'
+import { EventMessageSchema, type EventType } from '#layers/core/server/utils/events'
 import { fanOutAlerts, runSocialDrain, runWebhookDrain, type EventDeps } from './event-work'
 
 /** The slice of Cloudflare's `Message` used here. */

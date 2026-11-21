@@ -5,9 +5,9 @@
 // The table is stored in D1 and grows as the suppliers' new filings are read
 // (layers/terminal/server/suppliers/). No `as_of`.
 
-import { rateLimitTerminal } from '../utils/api-access'
+import { rateLimitTerminal } from '#layers/core/server/utils/api-access'
 import { suppliersStamp } from '../suppliers/store'
-import { serveTerminal, terminalDb } from '../utils/terminal-handler'
+import { serveTerminal, terminalDb } from '#layers/core/server/utils/terminal-handler'
 import { querySuppliers } from '../utils/terminal-suppliers'
 
 export default defineEventHandler(async (event) => {

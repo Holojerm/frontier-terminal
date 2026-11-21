@@ -7,7 +7,7 @@ import migration from '~~/server/db/migrations/0049_correct_google_flagship.sql?
 import { effectiveClassMap } from '../../server/pipeline/class-map'
 import { cardDescriptions, cardOwners } from '../../server/pipeline/judge/page-cards'
 import { basisOnPage, flattenMdLinks } from '../../server/pipeline/recommendations'
-import { fixtureText } from './fixtures'
+import { fixtureText } from '#layers/core/test/pipeline/fixtures'
 
 // Migration 0049 re-bases the google:flagship decision the judge wrote on
 // 2026-11-10, which quoted Argon's card for Carbon. The page it now rests on is

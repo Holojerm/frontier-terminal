@@ -1,6 +1,6 @@
 // The feed's own run log, the registries kept in code (the entity registries), and the
 // passages read from filings and pages (suppliers, power-site ties). Part of EXPORT_TABLES
-// (utils/terminal-export.ts), which fixes the order.
+// (server/registries/export-tables.ts), which fixes the order.
 
 import { ENTITY_SECURITIES, ENTITY_SECURITY_COLUMNS } from '../utils/terminal-entities'
 import { ENTITY_IDENTIFIERS, ENTITY_IDENTIFIER_COLUMNS } from '../utils/terminal-identifiers'
@@ -14,7 +14,7 @@ import {
   loggedTotal,
   type ExportTable,
   type Row,
-} from '../utils/terminal-export-views'
+} from '#layers/core/server/utils/terminal-export-views'
 
 /** A plainTable whose JSON-text columns are served parsed, as the in-code table served them. */
 function parsedJson(table: ExportTable, columns: readonly string[]): ExportTable {

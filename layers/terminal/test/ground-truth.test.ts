@@ -4,7 +4,7 @@ import { beforeEach, describe, expect, it } from 'vitest'
 
 import * as schema from '~~/server/db/schema'
 import type { RevenuePeriod } from '../shared/utils/terminal-types'
-import { queryContext } from '../server/utils/terminal-db'
+import { queryContext } from '#layers/core/server/utils/terminal-db'
 import {
   filedFigures,
   queryGroundTruth,
@@ -16,7 +16,7 @@ import {
   waitingOf,
 } from '../server/utils/terminal-ground-truth'
 import type { StoredHeadline } from '../server/utils/terminal-reported'
-import { fixtureText } from './pipeline/fixtures'
+import { fixtureText } from '#layers/core/test/pipeline/fixtures'
 
 // Press reports of a lab's revenue against the figures its filings printed
 // later. The filed rows are Anthropic's, as /api/revenue served them on

@@ -1,4 +1,4 @@
-// Cron task: rebuild the bulk feed's files in R2 (layers/terminal/server/utils/terminal-bulk.ts).
+// Cron task: rebuild the bulk feed's files in R2 (layers/core/server/utils/terminal-bulk.ts).
 // Hourly at :41, so it never shares an invocation with the survey (:00) or the
 // careers (:17) and filings (:47) lanes. A run builds only what isn't built yet today, so most
 // hours it reads the index and stops. A file that fails is spooled for the ops
@@ -13,8 +13,8 @@ import { blob } from '@nuxthub/blob'
 import { db } from '@nuxthub/db'
 
 import { recordOpsEvent } from '#server/utils/ops'
-import { licensedStoreOf, runBulkBuild } from '../../utils/terminal-bulk'
-import { withHeartbeat } from '../../utils/task-heartbeat'
+import { licensedStoreOf, runBulkBuild } from '#layers/core/server/utils/terminal-bulk'
+import { withHeartbeat } from '#layers/core/server/utils/task-heartbeat'
 
 const task = defineTask({
   meta: {

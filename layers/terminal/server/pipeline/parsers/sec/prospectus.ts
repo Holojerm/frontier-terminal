@@ -5,8 +5,8 @@ import {
   type ParserId,
   type ProspectusPart,
   type Provenance,
-} from '../../contracts'
-import { fixtureProvenance } from '../fixture-provenance'
+} from '#layers/core/server/pipeline/contracts'
+import { fixtureProvenance } from '#layers/core/server/pipeline/parsers/fixture-provenance'
 import { archivesCik, cellText, registrationTarget, type RegistrationTarget } from './filing-index'
 import { parseProspectusCommitments } from './prospectus-commitments'
 import { parseProspectusConcentration } from './prospectus-concentration'

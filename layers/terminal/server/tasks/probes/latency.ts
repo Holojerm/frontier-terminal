@@ -21,7 +21,7 @@ import {
   runProbesHere,
   type PinnedProbeResult,
 } from '../../utils/probe-runner'
-import { withHeartbeat } from '../../utils/task-heartbeat'
+import { withHeartbeat } from '#layers/core/server/utils/task-heartbeat'
 
 const task = defineTask({
   meta: {

@@ -19,8 +19,8 @@ import { CALL_COMPANIES, curatedCalls } from '../calls/curated'
 import { CALL_SOURCES } from '../calls/ingest'
 import { daysBetween, periodLabel, reportedQuarter } from '../calls/periods'
 import { filingUrl } from '../exposure/series'
-import type { PipelineDb } from '../pipeline/store'
-import type { QueryContext } from './terminal-db'
+import type { PipelineDb } from '#layers/core/server/pipeline/store'
+import type { QueryContext } from '#layers/core/server/utils/terminal-db'
 import { middle } from './terminal-reported'
 
 export const CALL_GUIDANCE_RULE =

@@ -1,5 +1,5 @@
 // POST /api/judge/alerts — the judge routine's verdicts. Bearer
-// NUXT_JUDGE_TOKEN (layers/terminal/server/utils/judge-auth.ts). The body is gated raw, as
+// NUXT_JUDGE_TOKEN (layers/core/server/utils/judge-auth.ts). The body is gated raw, as
 // text, so the schema check sees exactly what the model produced; what
 // survives it is grounded against the cited change rows as D1 holds them,
 // stamped, and written through the store's one chokepoint
@@ -18,7 +18,7 @@ import sourcesYaml from 'raw:~~/sources.yaml'
 
 import { blobRawReader } from '../../pipeline/judge/class-map'
 import { submitJudgeRun } from '../../pipeline/judge/submit'
-import { requireJudgeToken } from '../../utils/judge-auth'
+import { requireJudgeToken } from '#layers/core/server/utils/judge-auth'
 
 /** 200 alerts of long prose fit in a tenth of this; anything bigger is not a judge output. */
 const MAX_BODY_BYTES = 512 * 1024
@@ -37,10 +37,12 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 413, message: 'Body too large' })
   }
 
+  const nitro = useNitroApp()
   const report = await submitJudgeRun(db, raw, {
     source: 'routine',
     readRaw: blobRawReader(blob),
     sourcesYaml,
+    applied: (ctx) => nitro.hooks.callHook('judge:applied', ctx),
   })
   if (report.gate_rejection) {
     throw createError({

@@ -5,8 +5,8 @@
 // shapes are plain JSON so a KV cache can hold them and a page can render
 // them without a second conversion.
 
-export * from './terminal-types/common'
-export * from './terminal-types/coverage'
+export * from '#layers/core/shared/utils/terminal-types/common'
+export * from '#layers/core/shared/utils/terminal-types/coverage'
 export * from './terminal-types/overview'
 export * from './terminal-types/prices'
 export * from './terminal-types/hiring'

@@ -3,12 +3,12 @@ import { eq } from 'drizzle-orm'
 import * as tables from '#server/db/schema'
 import type { ClassEntry } from '../utils/terminal-classes'
 import { effectiveClassMap } from './class-map'
-import { laneFor } from './lanes'
-import { withPollLock } from './lock'
-import { manifestFixtures } from './parsers/fixture-provenance'
+import { laneFor } from '#server/registries/lanes'
+import { withPollLock } from '#layers/core/server/pipeline/lock'
+import { manifestFixtures } from '#layers/core/server/pipeline/parsers/fixture-provenance'
 import type { PollDeps } from './poll'
 import { runRefresh, type RefreshReport } from './refresh'
-import { includeSources, type FetchSource } from './sources'
+import { includeSources, type FetchSource } from '#layers/core/server/pipeline/sources'
 
 // The launch tripwire, every five minutes: fetch each lab's model catalog,
 // parse it in memory, and compare the parsed rows with the stored ones. Only
@@ -21,7 +21,7 @@ import { includeSources, type FetchSource } from './sources'
 //
 // A quiet tick writes nothing: no snapshot, no source_runs row, no R2
 // object. The terminal's cache key is the newest source_runs stamp
-// (layers/terminal/server/utils/terminal-cache.ts), so a quiet tripwire leaves every cached
+// (layers/core/server/utils/terminal-cache.ts), so a quiet tripwire leaves every cached
 // page valid, and a tripped one invalidates them as any poll does.
 //
 // News and RSS feeds were considered as the trigger and rejected: Anthropic

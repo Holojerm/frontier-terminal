@@ -3,7 +3,7 @@ import { describe, expect, test } from 'vitest'
 import { GPU_ARCHIVE_ERAS, gpuEraById } from '../../server/pipeline/archive/gpu-eras'
 import { gpuRows } from '../../server/pipeline/archive/rows'
 import { captureInstant, sameOriginal } from '../../server/pipeline/archive/wayback'
-import { fixtureText, manifest, provenanceOf } from './fixtures'
+import { fixtureText, manifest, provenanceOf } from '#layers/core/test/pipeline/fixtures'
 
 // Golden tests for the archived GPU price pages (archive/gpu-eras.ts): one
 // Internet Archive capture per layout the live recipes don't read, trimmed as

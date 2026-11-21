@@ -16,7 +16,7 @@ import {
   parseGreenhouseJobsJson,
   parseLeverBoardHtml,
 } from '../server/pipeline/parsers/hiring/wayback-boards'
-import { readArchiveSources } from '../server/utils/terminal-sources'
+import { readArchiveSources } from '#layers/core/server/utils/terminal-sources'
 import sourcesYaml from '~~/sources.yaml?raw'
 
 // The archived job boards' pure half: the era windows, the rules each board

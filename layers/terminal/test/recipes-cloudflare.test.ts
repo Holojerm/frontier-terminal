@@ -10,7 +10,7 @@ import { CLOUDFLARE_THESIS } from '../server/theses/cloudflare'
 import { extractChangelog } from '../server/theses/recipes/cloudflare-changelog'
 import { extractDepartments } from '../server/theses/recipes/greenhouse-departments'
 import { NPM_WRANGLER, extractDownloads } from '../server/theses/recipes/npm-downloads'
-import { RECIPES } from '../server/theses/recipes/registry'
+import { RECIPES } from '#server/registries/recipes'
 import { extractQuarterlyRevenue } from '../server/theses/recipes/sec-revenue'
 import { yoyGrowth } from '../server/theses/recipe-signals'
 

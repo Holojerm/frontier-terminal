@@ -12,7 +12,7 @@ import {
 } from '../app/utils/tear-sheet'
 import type { ListedData } from '../shared/utils/listed'
 import { cellDelta, priceCitation } from '../app/utils/price-display'
-import { PROVIDER_ORDER } from '../server/utils/terminal-sources'
+import { PROVIDER_ORDER } from '#layers/core/server/utils/terminal-sources'
 import type { ExposureData } from '../shared/utils/terminal-exposure'
 import { LABS, TEAR_SHEET_PAGES } from '../shared/utils/terminal-lab-summary'
 import type {

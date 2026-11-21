@@ -9,13 +9,13 @@ import { gpuProviderName } from '../../shared/utils/companies'
 import type { GpuHistoryView, GpuPricesData } from '../../shared/utils/terminal-types'
 
 import * as tables from '#server/db/schema'
-import type { PipelineDb } from '../pipeline/store'
-import { gpuMedian, gpuState, type GpuObservation } from '../theses/compute-signals'
+import type { PipelineDb } from '#layers/core/server/pipeline/store'
+import { gpuMedian, gpuState, type GpuObservation } from '../theses/recipes/gpu-series'
 import { GPU_MODELS, gpuPricePayload } from '../theses/recipes/gpu-prices'
-import { GPU_RECIPES } from '../theses/recipes/registry'
-import { recipeRunsStamp, type QueryContext } from './terminal-db'
+import { GPU_RECIPES } from '../theses/recipes/gpu-recipes'
+import { recipeRunsStamp, type QueryContext } from '#layers/core/server/utils/terminal-db'
 import { queryGpuArchive } from './terminal-gpu-archive'
-import { byString } from './terminal-json'
+import { byString } from '#layers/core/server/utils/terminal-json'
 import { SPOT_QUORUM, spotRead } from './terminal-utilization'
 
 export const GPU_PRICES_METHOD =

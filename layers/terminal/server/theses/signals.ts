@@ -11,10 +11,10 @@ import { companyName, type CompanyId } from '../../shared/utils/companies'
 import type { HiringHistoryData, LabId } from '../../shared/utils/terminal-types'
 import type { ClaimDef, SignalSpec, ValueFormat } from '../../shared/utils/thesis-types'
 
-import type { PipelineDb } from '../pipeline/store'
+import type { PipelineDb } from '#layers/core/server/pipeline/store'
 import { rankingObservations, type RankingObservation } from '../utils/terminal-rankings'
 import { splitPermaslug, catalogRows, summarizeSpend } from '../utils/terminal-spend'
-import { PROVIDER_ORDER } from '../utils/terminal-sources'
+import { PROVIDER_ORDER } from '#layers/core/server/utils/terminal-sources'
 import { capexGuidanceShortfalls, gpuSpotToOnDemand, probePeakToOffpeak } from './capacity-signals'
 import {
   clusterRolesAcrossLabs,

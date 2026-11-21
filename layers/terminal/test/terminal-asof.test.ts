@@ -3,11 +3,11 @@ import { drizzle } from 'drizzle-orm/d1'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import * as schema from '~~/server/db/schema'
-import type { SourceFetcher } from '../server/pipeline/fetch'
-import { contentHash } from '../server/pipeline/contracts'
+import type { SourceFetcher } from '#layers/core/server/pipeline/fetch'
+import { contentHash } from '#layers/core/server/pipeline/contracts'
 import { runRefresh, type RawStore } from '../server/pipeline/refresh'
-import { includeSources } from '../server/pipeline/sources'
-import { insertRows } from '../server/pipeline/store'
+import { includeSources } from '#layers/core/server/pipeline/sources'
+import { insertRows } from '#layers/core/server/pipeline/store'
 import {
   AS_OF_ROUTES,
   AsOfInstant,
@@ -16,17 +16,17 @@ import {
   entitiesAt,
   judgeCutoffAt,
   pollStampAt,
-} from '../server/utils/terminal-asof'
-import { isCacheableDocument } from '../server/utils/html-cache'
-import { terminalCacheKey, terminalStamps } from '../server/utils/terminal-cache'
+} from '#layers/core/server/utils/terminal-asof'
+import { isCacheableDocument } from '#layers/core/server/utils/html-cache'
+import { terminalCacheKey, terminalStamps } from '#layers/core/server/utils/terminal-cache'
 import { queryAlerts } from '../server/utils/terminal-alerts'
-import { queryContext, type QueryContext } from '../server/utils/terminal-db'
+import { queryContext, type QueryContext } from '#layers/core/server/utils/terminal-db'
 import { queryHiring, queryHiringHistory } from '../server/utils/terminal-hiring'
 import { queryPriceHistory, queryPrices } from '../server/utils/terminal-prices'
-import { collect, csvChunks, jsonChunks } from '../server/utils/terminal-export-format'
-import { exportTable } from '../server/utils/terminal-export'
+import { collect, csvChunks, jsonChunks } from '#layers/core/server/utils/terminal-export-format'
+import { exportTable } from '#server/registries/export-tables'
 import { queryRevenue } from '../server/utils/terminal-revenue'
-import { fixtureText, manifest } from './pipeline/fixtures'
+import { fixtureText, manifest } from '#layers/core/test/pipeline/fixtures'
 
 // Point-in-time reads. The golden property: a query asked `as_of` an instant
 // returns what the same query returned live at that instant, after the store

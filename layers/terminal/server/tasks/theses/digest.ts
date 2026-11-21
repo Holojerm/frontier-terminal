@@ -15,7 +15,7 @@ import { getOwnerMailer } from '../../utils/owner-mail'
 import { subscribeConfig } from '../../utils/subscribe-config'
 import { sendSubscriberDigest } from '../../utils/subscriber-mail'
 import { purgeStalePending } from '../../utils/subscribers'
-import { withHeartbeat } from '../../utils/task-heartbeat'
+import { withHeartbeat } from '#layers/core/server/utils/task-heartbeat'
 
 interface CloudflareTaskContext {
   cloudflare?: { env?: Record<string, unknown> }

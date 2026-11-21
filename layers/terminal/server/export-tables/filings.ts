@@ -1,4 +1,4 @@
-// SEC filers, filed revenue, and the parts of registration filings. Part of EXPORT_TABLES (utils/terminal-export.ts), which fixes the order.
+// SEC filers, filed revenue, and the parts of registration filings. Part of EXPORT_TABLES (server/registries/export-tables.ts), which fixes the order.
 
 import { riskFactorChanges } from '../pipeline/parsers/sec/prospectus-risk-factors'
 import {
@@ -15,7 +15,7 @@ import {
   verbatim,
   type Sections,
   type ExportTable,
-} from '../utils/terminal-export-views'
+} from '#layers/core/server/utils/terminal-export-views'
 
 export const FILING_TABLES = {
   filers: entityView(

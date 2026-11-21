@@ -9,9 +9,9 @@ import metaFeed from '~~/fixtures/recipes/newsroom-meta.xml?raw'
 import mistralFeed from '~~/fixtures/recipes/newsroom-mistral.xml?raw'
 import openaiFeed from '~~/fixtures/recipes/newsroom-openai.xml?raw'
 import * as schema from '~~/server/db/schema'
-import { contentHash, type ChangeRow } from '../server/pipeline/contracts'
+import { contentHash, type ChangeRow } from '#layers/core/server/pipeline/contracts'
 import { submitJudgeRun } from '../server/pipeline/judge/submit'
-import { insertRows } from '../server/pipeline/store'
+import { insertRows } from '#layers/core/server/pipeline/store'
 import {
   GKG_FROM,
   gkgSlots,
@@ -53,10 +53,10 @@ import {
   searchState,
   trackWindow,
 } from '../server/pipeline/track-record/window'
-import { NEWSROOM_FROM, extractNewsroom } from '../server/theses/recipes/newsrooms'
-import { queryContext } from '../server/utils/terminal-db'
+import { NEWSROOM_FROM, extractNewsroom } from '../server/pipeline/track-record/newsrooms'
+import { queryContext } from '#layers/core/server/utils/terminal-db'
 import { queryTrackRecord, sideOf, tally } from '../server/utils/terminal-track-record'
-import { fixtureText } from './pipeline/fixtures'
+import { fixtureText } from '#layers/core/test/pipeline/fixtures'
 
 // The track record: deterministic search terms from the cited change rows,
 // the window around the saw-it time, the GDELT GKG and newsroom readers, the

@@ -25,17 +25,17 @@ import {
   LICENSE_WINDOW_DAYS,
 } from '#shared/utils/license'
 import { parseCikWhitelistBlock } from '../pipeline/parsers/sec/whitelist'
-import { SCHEMA_VERSION, schemaChangelog } from './data-schema'
-import { ALERTS_METHOD } from './terminal-asof'
+import { SCHEMA_VERSION, schemaChangelog } from '#layers/core/server/utils/data-schema'
+import { ALERTS_METHOD } from '#layers/core/server/utils/terminal-asof'
 import {
   AS_OF_VERIFIED,
   AS_OF_VERIFIED_DOC,
   asOfColumns,
   type ExportTable,
-} from './terminal-export-views'
-import { EXPORT_TABLES } from './terminal-export'
-import { LICENSE_COLUMN, historyRule } from './terminal-export-history'
-import { csvLine } from './terminal-export-format'
+} from '#layers/core/server/utils/terminal-export-views'
+import { EXPORT_TABLES } from '#server/registries/export-tables'
+import { LICENSE_COLUMN, historyRule } from '#layers/core/server/utils/terminal-export-history'
+import { csvLine } from '#layers/core/server/utils/terminal-export-format'
 import { JOINING_NOTE } from './terminal-identifiers'
 import {
   readArchiveSources,
@@ -47,7 +47,7 @@ import {
   readPrintSources,
   readCallSources,
   readSourceRegistry,
-} from './terminal-sources'
+} from '#layers/core/server/utils/terminal-sources'
 
 /** Served at /export/dictionary.json and .csv; no export table may take the name. */
 export const DICTIONARY_NAME = 'dictionary'

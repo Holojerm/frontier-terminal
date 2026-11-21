@@ -4,15 +4,15 @@ import { beforeAll, describe, expect, it, vi } from 'vitest'
 
 import * as schema from '~~/server/db/schema'
 import { fillFromFixtures, type FixtureFillReport } from '../server/dev/fixture-fill'
-import type { LockStore } from '../server/pipeline/lock'
+import type { LockStore } from '#layers/core/server/pipeline/lock'
 import type { RawStore } from '../server/pipeline/refresh'
-import { queryContext } from '../server/utils/terminal-db'
+import { queryContext } from '#layers/core/server/utils/terminal-db'
 import { queryDependencies } from '../server/utils/terminal-dependencies'
 import { queryExposure } from '../server/utils/terminal-exposure'
 import { queryGroundTruth } from '../server/utils/terminal-ground-truth'
 import { queryProspectus } from '../server/utils/terminal-prospectus'
 import { queryRevenue } from '../server/utils/terminal-revenue'
-import { fixtureText } from './pipeline/fixtures'
+import { fixtureText } from '#layers/core/test/pipeline/fixtures'
 
 // The offline fill, as dev:fixtures and the browser suites run it. The suites
 // sweep whatever the fill stores, so a page whose rows the fill stops reaching

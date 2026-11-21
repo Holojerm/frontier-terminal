@@ -9,7 +9,7 @@ import { kv } from '@nuxthub/kv'
 import manifest from '~~/fleet.json'
 
 import { recordDeployChecks } from '../../pipeline/reliability/deploys'
-import { withHeartbeat } from '../../utils/task-heartbeat'
+import { withHeartbeat } from '#layers/core/server/utils/task-heartbeat'
 
 const task = defineTask({
   meta: {

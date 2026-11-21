@@ -35,8 +35,8 @@ import type {
 } from '../../shared/utils/recipe-views'
 
 import * as tables from '#server/db/schema'
-import type { PipelineDb } from '../pipeline/store'
-import { gpuState, median, type GpuObservation } from '../theses/compute-signals'
+import type { PipelineDb } from '#layers/core/server/pipeline/store'
+import { gpuState, median, type GpuObservation } from '../theses/recipes/gpu-series'
 import { SEC_CRWV_ACTIVE_POWER, SEC_GOOGL_API_TOKENS } from '../theses/recipes/earnings-releases'
 import { EPOCH_CHIP_TYPES, EPOCH_CHIP_USERS } from '../theses/recipes/epoch-chip-users'
 import { EPOCH_DATA_CENTERS } from '../theses/recipes/epoch-data-centers'
@@ -47,9 +47,9 @@ import {
   mlperfFootnote,
   mlperfRoundsFootnote,
 } from '../theses/recipes/mlperf-inference'
-import { GPU_RECIPES } from '../theses/recipes/registry'
+import { GPU_RECIPES } from '../theses/recipes/gpu-recipes'
 import { SEC_REVENUE_CRWV } from '../theses/recipes/sec-revenue'
-import { sourceReads, type QueryContext } from './terminal-db'
+import { sourceReads, type QueryContext } from '#layers/core/server/utils/terminal-db'
 import {
   rankingObservations,
   rankingsAsOf,

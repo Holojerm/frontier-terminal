@@ -1,4 +1,4 @@
-// What each EVENTS message does (layers/terminal/server/utils/events.ts says
+// What each EVENTS message does (layers/core/server/utils/events.ts says
 // why the queue exists). Every dependency is passed in, so
 // layers/terminal/test/events.test.ts drives the whole thing against workerd's D1
 // with fakes for Buffer, the webhook sender, the mail binding and the queue.
@@ -25,9 +25,9 @@ import {
 } from '../pipeline/press'
 import type { MailMessage } from './resend'
 import { enqueueCriticalAlerts, enqueueLaunchAlerts } from '../pipeline/social'
-import type { PipelineDb } from '../pipeline/store'
-import { delaySecondsUntil, scheduleDrain } from './events'
-import type { CacheStore } from './terminal-cache'
+import type { PipelineDb } from '#layers/core/server/pipeline/store'
+import { delaySecondsUntil, scheduleDrain } from '#layers/core/server/utils/events'
+import type { CacheStore } from '#layers/core/server/utils/terminal-cache'
 import {
   drainWebhookDeliveries,
   enqueueWebhookDeliveries,

@@ -1,12 +1,12 @@
 import { recordOpsEvent } from '#server/utils/ops'
-import type { PollScope } from './contracts'
-import { withPollLock, type LockRetry, type LockStore } from './lock'
-import { manifestFixtures } from './parsers/fixture-provenance'
+import type { PollScope } from '#layers/core/server/pipeline/contracts'
+import { withPollLock, type LockRetry, type LockStore } from '#layers/core/server/pipeline/lock'
+import { manifestFixtures } from '#layers/core/server/pipeline/parsers/fixture-provenance'
 import { runRefresh, type RawStore, type RefreshDeps, type RefreshReport } from './refresh'
 import { isRegistrationSource, isSurveyInstant, sourceIdsForScope } from './scopes'
 import { deriveSources } from './derived'
-import { includeSources } from './sources'
-import { sourcesWithGoodRun } from './store'
+import { includeSources } from '#layers/core/server/pipeline/sources'
+import { sourcesWithGoodRun } from '#layers/core/server/pipeline/store'
 
 // What a poll task does, minus the bindings: decide whether this tick is
 // ours, take the lock, resolve the scope, run the refresh, say one line about
