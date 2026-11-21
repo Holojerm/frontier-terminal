@@ -5,7 +5,7 @@
 // test, and the corrections log. Every figure comes from /api/reliability,
 // which computes it from stored records (terminal-reliability.ts).
 
-import { count } from '../../../shared/utils/terminal-format'
+import { count, percent } from '../../../shared/utils/terminal-format'
 import { LAB_DISPLAY } from '../../../shared/utils/terminal-labs'
 import {
   durationLabel,
@@ -30,7 +30,7 @@ const pct = (t: RunTally | null) =>
     ? 'Building'
     : t.runs === 0
       ? 'None yet'
-      : `${(Math.floor((t.good / t.runs) * 1000) / 10).toLocaleString('en-US', { maximumFractionDigits: 1 })}%`
+      : percent(Math.floor((t.good / t.runs) * 1000) / 10)
 
 const every = (minutes: number) => (minutes >= 60 ? `${minutes / 60} h` : `${minutes} min`)
 

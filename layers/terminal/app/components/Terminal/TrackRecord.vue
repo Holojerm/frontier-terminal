@@ -5,6 +5,7 @@
 // the judge rated a candidate the same event, so an unrated alert says so
 // instead of guessing.
 
+import { trimmed } from '../../../shared/utils/terminal-format'
 import { LAB_DISPLAY } from '../../../shared/utils/terminal-labs'
 import { alertPath } from '../../../shared/utils/terminal-tiers'
 import type {
@@ -19,8 +20,7 @@ defineProps<{ record: TrackRecordData }>()
 const stamps = useStamps()
 
 /** '+3.2 h' when we saw it first, '−5 h' when the press did. */
-const leadLabel = (h: number) =>
-  `${h > 0 ? '+' : h < 0 ? '−' : '±'}${Math.abs(h).toLocaleString('en-US', { maximumFractionDigits: 1 })} h`
+const leadLabel = (h: number) => `${h > 0 ? '+' : h < 0 ? '−' : '±'}${trimmed(Math.abs(h))} h`
 
 const labsOf = (row: TrackRecordRow) =>
   row.providers

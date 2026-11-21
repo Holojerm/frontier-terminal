@@ -5,6 +5,7 @@
 // reports, so the chart never gates a number. `labs` narrows both to one lab
 // beside the any-AI line, for the lab pages.
 
+import { grouped } from '../../../shared/utils/terminal-format'
 import type { AdoptionData } from '../../../shared/utils/recipe-views'
 import type { LabId } from '../../../shared/utils/terminal-types'
 import type { TableColumn } from '../../types/terminal-ui'
@@ -15,7 +16,7 @@ const props = defineProps<{
   labs?: LabId[]
 }>()
 
-const pct = (v: number) => `${v.toFixed(1)}%`
+const pct = (v: number) => `${grouped(v, 1)}%`
 const monthLabel = (m: string) =>
   new Date(`${m}T00:00:00Z`).toLocaleString('en-US', {
     month: 'short',
@@ -54,7 +55,7 @@ const rows = computed(() =>
       change:
         now === null || year === null
           ? '—'
-          : `${now - year >= 0 ? '+' : '−'}${Math.abs(now - year).toFixed(1)}`,
+          : `${now - year >= 0 ? '+' : '−'}${grouped(Math.abs(now - year), 1)}`,
     }
   }),
 )

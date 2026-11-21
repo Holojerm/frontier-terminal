@@ -3,6 +3,7 @@
 // labeled report with its result, then the filed figures a deal can be held
 // to. A report no filed figure settles is listed with the reason, never scored.
 
+import { roundBillions, signedPercent } from '../../../shared/utils/terminal-format'
 import { LAB_DISPLAY } from '../../../shared/utils/terminal-labs'
 import type {
   DealMetric,
@@ -23,18 +24,12 @@ const METRIC_LABEL: Record<DealMetric, string> = {
   commitment_total: 'All of the lab’s commitments',
 }
 
-const billions = (n: number) =>
-  `$${(n / 1e9).toLocaleString('en-US', { maximumFractionDigits: 1 })}B`
-
-const pct = (n: number) =>
-  `${n > 0 ? '+' : n < 0 ? '−' : '±'}${Math.abs(n).toLocaleString('en-US', { minimumFractionDigits: 1, maximumFractionDigits: 1 })}%`
-
 const resultText = (d: GroundTruthDeal) => {
   switch (d.state) {
     case 'matched':
-      return `Matched, ${pct(d.error_pct!)}`
+      return `Matched, ${signedPercent(d.error_pct!)}`
     case 'missed':
-      return `Missed, ${pct(d.error_pct!)}`
+      return `Missed, ${signedPercent(d.error_pct!)}`
     case 'restated':
       return 'Already filed, not scored'
     case 'open':
@@ -46,7 +41,7 @@ const resultText = (d: GroundTruthDeal) => {
 
 const filedText = (d: GroundTruthDeal) =>
   d.filed
-    ? `${d.filed.label}, ${d.filed.period}: ${billions(d.filed.value)}. ${d.filed.filer} ${d.filed.form}, filed ${d.filed.first_filed}.`
+    ? `${d.filed.label}, ${d.filed.period}: ${roundBillions(d.filed.value)}. ${d.filed.filer} ${d.filed.form}, filed ${d.filed.first_filed}.`
     : ''
 
 const compareText = (m: GroundTruthDealMeasure) =>

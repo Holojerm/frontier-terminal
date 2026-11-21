@@ -7,7 +7,7 @@
 // gate a number.
 
 import { LAB_DISPLAY } from '../../../shared/utils/terminal-labs'
-import { sharePct } from '../../../shared/utils/terminal-format'
+import { percent, sharePct } from '../../../shared/utils/terminal-format'
 import type { ProviderId, RankingsData } from '../../../shared/utils/terminal-types'
 import type { TableColumn } from '../../types/terminal-ui'
 
@@ -26,7 +26,7 @@ const last = computed(() => weeks.value.at(-1) ?? null)
 const monthLabel = (d: string) => `${MONTHS[Number(d.slice(5, 7)) - 1]} ’${d.slice(2, 4)}`
 const weekLabel = (d: string) => `Week of ${stamps.date(d)}`
 // Ticks fall on 12.5% steps when the top is 50%; one decimal, dropped when zero.
-const tickPct = (v: number) => `${Number((v * 100).toFixed(1))}%`
+const tickPct = (v: number) => percent(v * 100)
 
 const yMax = computed(() =>
   Math.max(0, ...weeks.value.flatMap((w) => LABS.map((p) => w.share[p] ?? 0))),

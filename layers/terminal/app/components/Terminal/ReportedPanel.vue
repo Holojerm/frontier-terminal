@@ -4,6 +4,7 @@
 // the newest report and a median per quarter for figures given as fact, then
 // every recent headline, talks and forecasts included.
 
+import { count } from '../../../shared/utils/terminal-format'
 import { LAB_DISPLAY } from '../../../shared/utils/terminal-labs'
 import type {
   ReportedBasis,
@@ -73,7 +74,7 @@ const status = computed(() => {
   const c = props.reported.coverage
   const files = c.files_read + c.files_waiting
   return [
-    `We’ve read ${c.files_read.toLocaleString('en-US')} of ${files.toLocaleString('en-US')} GDELT files since ${stamps.date(c.from)} for these headlines.`,
+    `We’ve read ${count(c.files_read)} of ${count(files)} GDELT files since ${stamps.date(c.from)} for these headlines.`,
     c.unread
       ? `${c.unread} ${c.unread === 1 ? 'headline waits' : 'headlines wait'} to be read.`
       : '',

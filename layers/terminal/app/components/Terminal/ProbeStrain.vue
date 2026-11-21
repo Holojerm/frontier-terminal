@@ -4,7 +4,7 @@
 // limited or failed, over the trailing window of complete days. A lab with no
 // reading yet, or none possible, is a row that says why.
 
-import { pctLabel } from '../../../shared/utils/terminal-format'
+import { grouped, pctLabel } from '../../../shared/utils/terminal-format'
 import type { ProbeLabView, ProbesData } from '../../../shared/utils/terminal-types'
 import type { TableColumn } from '../../types/terminal-ui'
 
@@ -32,7 +32,7 @@ const columns = computed<TableColumn[]>(() => [
 /** The model id without the router's vendor prefix. */
 const modelName = (id: string) => id.slice(id.indexOf('/') + 1)
 
-const speed = (tps: number | null) => (tps === null ? null : tps.toFixed(1))
+const speed = (tps: number | null) => (tps === null ? null : grouped(tps, 1))
 
 /** A ratio of 0.8 reads as −20%: slower in working hours. */
 const ratioLabel = (ratio: number | null) => (ratio === null ? null : pctLabel((ratio - 1) * 100))
@@ -104,7 +104,7 @@ function gapOf(lab: ProbeLabView): { title: string; reason: string } {
           {{ speed(l.latest.tokens_per_second) ?? '?' }} tokens/s<template
             v-if="l.latest.ttft_ms !== null"
           >
-            · first token {{ (l.latest.ttft_ms / 1000).toFixed(1) }}s</template
+            · first token {{ grouped(l.latest.ttft_ms / 1000, 1) }}s</template
           >
         </span>
         <span v-else class="text-warning">{{ OUTCOME[l.latest.outcome] ?? l.latest.outcome }}</span>

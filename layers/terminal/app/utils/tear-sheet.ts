@@ -16,13 +16,16 @@ import type {
 import {
   UTC_STYLE,
   compactUsd,
-  datedStamp,
   count,
+  datedStamp,
   money,
+  percent,
   periodLabel,
   ppLabel,
+  preciseUsd,
   sharePct,
   signed,
+  signedPercent,
   type StampStyle,
 } from '../../shared/utils/terminal-format'
 import { listedGroup, listedTieText, type ListedData } from '../../shared/utils/listed'
@@ -256,13 +259,6 @@ function revenueScopeLine(view: RevenueProviderView | null): string | null {
 
 const plural = (n: number, one: string, many = `${one}s`) => `${count(n)} ${n === 1 ? one : many}`
 
-/** '+0.9%' above the filed figure, '−0.9%' below. */
-const signedPct = (n: number) =>
-  `${n > 0 ? '+' : n < 0 ? '−' : '±'}${Math.abs(n).toLocaleString('en-US', { minimumFractionDigits: 1, maximumFractionDigits: 1 })}%`
-
-/** Two decimals in billions, so $17.00B filed beside $16.85B reported shows the gap. */
-const preciseUsd = (n: number) => (Math.abs(n) >= 1e9 ? `$${(n / 1e9).toFixed(2)}B` : compactUsd(n))
-
 /** The tallies as sentences a printed page can carry. */
 function truthSummary(t: SheetTruthInput, display: string): string[] {
   const r = t.tally
@@ -270,7 +266,7 @@ function truthSummary(t: SheetTruthInput, display: string): string[] {
     r.reports > 0 && r.median_abs_error_pct !== null
       ? [
           `${plural(r.reports, 'press report')} stated ${display}’s revenue before a filing printed it, across ${plural(r.periods, 'filed figure')}.`,
-          `The median report was ${r.median_abs_error_pct.toLocaleString('en-US', { maximumFractionDigits: 1 })}% off${
+          `The median report was ${percent(r.median_abs_error_pct)} off${
             r.median_lead_days === null
               ? '.'
               : `, and the first report came a median ${plural(r.median_lead_days, 'day')} before the filing.`
@@ -402,7 +398,7 @@ export function buildTearSheet(
     filed: preciseUsd(r.filed.val),
     reports: r.reports,
     median: preciseUsd(r.median),
-    error: signedPct(r.error_pct),
+    error: signedPercent(r.error_pct),
     ref: cite(r.filed, `${r.filed.form} filed ${r.filed.first_filed}`),
   }))
   const stored = ti ? ti.tally.reports + ti.tally.open + ti.deals.reports + ti.waiting : 0

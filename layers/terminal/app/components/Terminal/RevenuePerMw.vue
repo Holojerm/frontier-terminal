@@ -4,13 +4,11 @@
 // its own list prices: a floor with no upper bound, because filings don't
 // separate contract discount from idle capacity.
 
-import { compactUsd, count } from '../../../shared/utils/terminal-format'
+import { compactUsd, count, sharePct } from '../../../shared/utils/terminal-format'
 import type { UtilizationData } from '../../../shared/utils/recipe-views'
 import type { TableColumn } from '../../types/terminal-ui'
 
 const props = defineProps<{ coreweave: NonNullable<UtilizationData['coreweave']> }>()
-
-const pct = (n: number) => `${(n * 100).toFixed(1)}%`
 
 const columns: TableColumn[] = [
   { key: 'quarter', label: 'Quarter' },
@@ -35,7 +33,7 @@ const rows = computed(() =>
     <p v-if="coreweave.floor" class="text-sm text-muted">
       {{ coreweave.floor.quarter }} revenue was
       <span class="font-mono text-highlighted">
-        {{ pct(coreweave.floor.share.low) }}–{{ pct(coreweave.floor.share.high) }}
+        {{ sharePct(coreweave.floor.share.low) }}–{{ sharePct(coreweave.floor.share.high) }}
       </span>
       of what its active power would bill at CoreWeave’s on-demand list prices. Treat it as a floor
       on how much of that capacity was sold.
