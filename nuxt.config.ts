@@ -190,6 +190,8 @@ const securityHeaders = {
 //                (layers/terminal/server/pipeline/reliability/), and
 //                reliability:deploys, which reads its deploy smoke results
 //                from GitHub.
+//              — prints:read, the Taiwan monthly revenue feeds and TSMC's revenue 6-Ks
+//                (layers/terminal/server/prints/ingest.ts).
 //   7 * * * *  — probes:latency, layers/terminal/server/tasks/probes/latency.ts: one
 //                timed streaming request per lab, alone in its invocation so no
 //                other task's requests queue in front of a probe.
@@ -208,7 +210,13 @@ const SCHEDULED_TASKS: Record<string, string[]> = {
   '47 */6 * * *': ['poll:filings'],
   '*/5 * * * *': ['poll:tripwire', 'cache:warm', 'track-record:search'],
   '0 13 * * MON': ['theses:digest', 'social:digest', 'alerts:hiring-rollup'],
-  '41 * * * *': ['events:sweep', 'bulk:build', 'reliability:record', 'reliability:deploys'],
+  '41 * * * *': [
+    'events:sweep',
+    'bulk:build',
+    'reliability:record',
+    'reliability:deploys',
+    'prints:read',
+  ],
   '7 * * * *': ['probes:latency'],
   '0 4 * * *': ['seo:indexnow'],
   '29 5 * * TUE': ['power:verify'],

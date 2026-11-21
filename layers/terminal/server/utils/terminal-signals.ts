@@ -14,6 +14,7 @@ import {
   type SignalsData,
 } from '../../shared/utils/signals'
 import { GRID_AREAS } from '../../shared/utils/grid-load'
+import { PRINT_ENTITIES } from '../../shared/utils/prints'
 import { labName } from '../../shared/utils/terminal-labs'
 import type { PipelineDb } from '../pipeline/store'
 import { scoreForwardCalls } from '../signals/forward-calls'
@@ -47,6 +48,7 @@ const statOf = (row: typeof tables.signalResults.$inferSelect | undefined): Sign
 function entityLabel(kind: string, id: string): string {
   if (kind === 'lab') return labName(id)
   if (kind === 'grid') return GRID_AREAS.find((a) => a.ba === id)?.short ?? id
+  if (kind === 'supplier') return PRINT_ENTITIES.find((e) => e.id === id)?.name ?? id
   return id
 }
 

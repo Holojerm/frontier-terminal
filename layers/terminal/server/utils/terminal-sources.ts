@@ -381,6 +381,19 @@ export function readGridLoadSources(sourcesYaml: string): ArchiveSourceEntry[] {
   }))
 }
 
+/** sources.yaml `print_sources`: the feeds, pages and filings the hardware prints and their ties are read from. */
+export function readPrintSources(sourcesYaml: string): IdentifierSourceEntry[] {
+  return readBlock(sourcesYaml.split('\n'), 'print_sources').map((block) => ({
+    id: block.id,
+    url: block.fields.url ?? null,
+    verdict: block.fields.verdict ?? '',
+    terms: block.fields.terms ?? null,
+    rights: rightsOf(block.id, block.fields.rights),
+    license: block.fields.license ?? null,
+    caveat: block.fields.caveats ?? null,
+  }))
+}
+
 /** Every include source and every deliberate cut, as sources.yaml states them. */
 export function readSourceRegistry(sourcesYaml: string): SourceRegistry {
   const lines = sourcesYaml.split('\n')

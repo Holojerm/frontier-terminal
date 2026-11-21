@@ -2127,6 +2127,64 @@
       "raw_bytes": 1603,
       "trim": "none — committed whole; the key went in the X-Api-Key header and the response carries none",
       "note": "ERCO's two days equal the six-month file's adjusted hours summed by Data Date (fixtures/grid-load/eia930-balance-2026-jul-dec.csv): 1670661 and 1667769 MWh."
+    },
+    {
+      "path": "fixtures/prints/twse-t187ap05_L.json",
+      "source_id": "twse-monthly-revenue",
+      "source_url": "https://openapi.twse.com.tw/v1/opendata/t187ap05_L",
+      "fetched_at": "2026-11-21T05:36:05Z",
+      "http_status": 200,
+      "raw_bytes": 611239,
+      "trim": "10 of 1,091 rows kept: the eight tracked companies plus 1101 and 2303, which no parser keeps",
+      "note": "The October 2026 table (資料年月 11510, 出表日期 1151117)."
+    },
+    {
+      "path": "fixtures/prints/tsm-submissions.json",
+      "source_id": "tsmc-revenue-6k-submissions",
+      "source_url": "https://data.sec.gov/submissions/CIK0001046179.json",
+      "fetched_at": "2026-11-21T05:40:29Z",
+      "http_status": 200,
+      "raw_bytes": 162235,
+      "trim": "filings.recent cut to 20 entries (every 6-K since 2026-08-01, the three revenue 6-Ks committed beside it, two Form 4s) and to the six fields the parser reads; filings.files and the header fields but cik and name dropped"
+    },
+    {
+      "path": "fixtures/prints/tsm-revenue-20261110.htm",
+      "source_id": "tsmc-revenue-6k",
+      "source_url": "https://www.sec.gov/Archives/edgar/data/1046179/000104617926000796/tsm-revenue20261110.htm",
+      "fetched_at": "2026-11-21T05:40:35Z",
+      "http_status": 200,
+      "raw_bytes": 88875,
+      "trim": "none — committed whole",
+      "note": "TSMC October 2026 Revenue Report, accepted 2026-11-10T12:01:33Z."
+    },
+    {
+      "path": "fixtures/prints/tsm-revenue-20190410.htm",
+      "source_id": "tsmc-revenue-6k",
+      "source_url": "https://www.sec.gov/Archives/edgar/data/1046179/000119312519102369/d696695d6k.htm",
+      "fetched_at": "2026-11-21T05:42:23Z",
+      "http_status": 200,
+      "raw_bytes": 72275,
+      "trim": "none — committed whole",
+      "note": "TSMC March 2019 Revenue Report: a year-on-year decrease written in parentheses."
+    },
+    {
+      "path": "fixtures/prints/tsm-revenue-20150410.htm",
+      "source_id": "tsmc-revenue-6k",
+      "source_url": "https://www.sec.gov/Archives/edgar/data/1046179/000119312515125178/d906407d6k.htm",
+      "fetched_at": "2026-11-21T05:42:23Z",
+      "http_status": 200,
+      "raw_bytes": 50311,
+      "trim": "none — committed whole",
+      "note": "TSMC March 2015 Revenue Report, the oldest layout the backfill reads."
+    },
+    {
+      "path": "fixtures/prints/accton-monthly.html",
+      "source_id": "accton-monthly-revenue",
+      "source_url": "https://www.accton.com/monthly-merge/",
+      "fetched_at": "2026-11-21T05:44:19Z",
+      "http_status": 200,
+      "raw_bytes": 249063,
+      "trim": "the unit line and the revenue table kept; the WordPress page around them dropped"
     }
   ]
 }

@@ -23,6 +23,18 @@ is smaller than its changes need. `bun run schema:lock` rewrites the lock only
 when the newest release in `layers/terminal/server/utils/data-schema.ts` says
 exactly which columns changed.
 
+## 1.22.0 (2026-11-21)
+
+A new table, `hardware_prints`: the monthly revenue of TSMC, Hon Hai, Quanta,
+Wistron, Wiwynn, Gigabyte, Accton and Delta, each figure as a source first gave
+it. A later, different figure for a month is a new row with the next
+`vintage`, never an overwrite. `first_seen_at` is when our read first held it,
+`published_at` the release time where the source states one (a 6-K's EDGAR
+acceptance), and `due_on` the statutory deadline. TSMC's history from its 6-Ks
+starts in 2015 and Accton's from its own page in July 2023. `/api/prints`
+serves it with each company's sourced ties, and `get_hardware_prints` returns
+the same.
+
 ## 1.21.0 (2026-11-21)
 
 Grid load where the lab sites are. Two new tables:
