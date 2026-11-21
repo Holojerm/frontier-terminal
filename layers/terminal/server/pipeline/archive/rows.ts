@@ -1,35 +1,45 @@
 // One archived capture -> the rows the backfill writes: an archive_captures
 // row (parsed, or skipped with the reason) and the rows it yields, one
 // archived_prices row per SKU a pricing page priced, or the archived_hiring
-// counts a job board listed. Pure: the bytes, the capture and the fetch time
+// counts a job board listed, or the archived_gpu_prices rows a GPU rental
+// price page priced. Pure: the bytes, the capture and the fetch time
 // in, rows out. scripts/wayback-backfill.ts does the fetching and the writing.
 
 import type * as tables from '#server/db/schema'
 import { contentHash, contentHashOfText } from '../contracts'
 import { normalizePrices } from '../normalize'
+import { gpuObservations } from '../../theses/recipes/gpu-prices'
 import type { ArchiveEra } from './eras'
+import type { GpuEra } from './gpu-eras'
 import { liveDepartment, type HiringEra } from './hiring-eras'
 import { captureInstant, captureUrl, type CdxCapture } from './wayback'
 
 export type ArchiveCaptureRow = typeof tables.archiveCaptures.$inferInsert
 export type ArchivedPriceRow = typeof tables.archivedPrices.$inferInsert
 export type ArchivedHiringRow = typeof tables.archivedHiring.$inferInsert
+export type ArchivedGpuPriceRow = typeof tables.archivedGpuPrices.$inferInsert
 
 export const ARCHIVED_BASIS = 'archived'
 
+/** The lab axes, whose archived rows answer an as_of before the live record (terminal-archive.ts). */
 export type ArchiveAxis = 'pricing' | 'hiring'
 
-/** What a capture row needs of its era, pricing or hiring. */
-type EraRef = Pick<ArchiveEra | HiringEra, 'id' | 'provider' | 'url'>
+/** Every axis a capture's rows can go to; gpu (archived_gpu_prices) is per provider, not per lab. */
+export type CaptureAxis = ArchiveAxis | 'gpu'
+
+/** What a capture row needs of its era, on any axis; a GPU era may name its format and end. */
+type EraRef = Pick<ArchiveEra | HiringEra | GpuEra, 'id' | 'provider' | 'url'> &
+  Pick<Partial<GpuEra>, 'ext' | 'end'>
 
 export const captureId = (era: Pick<EraRef, 'id'>, timestamp: string) => `${era.id}:${timestamp}`
 
-const extensionOf = (url: string) =>
-  url.endsWith('.md') ? 'md' : /\/\/(boards-)?api\.|\/v1\/boards\//.test(url) ? 'json' : 'html'
+const extensionOf = ({ url, ext }: EraRef) =>
+  ext ??
+  (url.endsWith('.md') ? 'md' : /\/\/(boards-)?api\.|\/v1\/boards\//.test(url) ? 'json' : 'html')
 
 /** Where the capture's bytes are kept in R2: beside the live raw/ prefix, never inside it. */
 export function archiveRawKey(era: EraRef, timestamp: string): string {
-  return `archive/wayback/${era.id}/${timestamp}.${extensionOf(era.url)}`
+  return `archive/wayback/${era.id}/${timestamp}.${extensionOf(era)}`
 }
 
 /** A capture that yielded no rows, and why. */
@@ -39,7 +49,7 @@ export function skippedCapture(
   fetchedAt: string,
   detail: string,
   stored: { content_hash: string; raw_key: string; bytes: number } | null = null,
-  axis: ArchiveAxis = 'pricing',
+  axis: CaptureAxis = 'pricing',
 ): ArchiveCaptureRow {
   return {
     id: captureId(era, capture.timestamp),
@@ -66,8 +76,9 @@ export function skippedCapture(
  * JSON or markdown body fails its own parse.
  */
 function assertWhole(era: EraRef, text: string) {
-  if (extensionOf(era.url) === 'html' && !/<\/html>/i.test(text.slice(-4096))) {
-    throw new Error('capture is truncated: no closing </html>')
+  const end = era.end ?? /<\/html>/i
+  if (extensionOf(era) === 'html' && !end.test(text.slice(-4096))) {
+    throw new Error(`capture is truncated: no closing ${end.source.replace(/\\/g, '')}`)
   }
 }
 
@@ -197,5 +208,63 @@ export function hiringRows(
       rows: counts.length,
     },
     counts,
+  }
+}
+
+/**
+ * One GPU price page capture -> its archived_gpu_prices rows, validated by
+ * the live recipes' contract (gpu-prices.ts › gpuObservations): the same
+ * keys, the same payload, and the same refusal of a page that prices one
+ * key twice or names no H100 or B200 on-demand price. A throw is a skip with
+ * the reason.
+ */
+export function gpuRows(
+  era: GpuEra,
+  capture: CdxCapture,
+  text: string,
+  bytes: number,
+  fetchedAt: string,
+): { capture: ArchiveCaptureRow; prices: ArchivedGpuPriceRow[] } {
+  const id = captureId(era, capture.timestamp)
+  const captured_at = captureInstant(capture.timestamp)
+  const stored = storedOf(era, capture, text, bytes)
+  let observations
+  try {
+    assertWhole(era, text)
+    observations = gpuObservations(
+      era.provider,
+      era.parse(text, captured_at),
+      captured_at.slice(0, 10),
+    )
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error)
+    return {
+      capture: skippedCapture(era, capture, fetchedAt, message, stored, 'gpu'),
+      prices: [],
+    }
+  }
+  const source_url = captureUrl(capture.timestamp, capture.original)
+  const prices: ArchivedGpuPriceRow[] = observations.map((o) => ({
+    id: contentHash({ capture: id, key: o.key }).slice(0, 32),
+    capture_id: id,
+    provider: era.provider,
+    key: o.key,
+    gpu: String((o.payload as { gpu: string }).gpu),
+    value: o.value!,
+    payload: JSON.stringify(o.payload),
+    captured_at,
+    original_url: capture.original,
+    basis: ARCHIVED_BASIS,
+    source_url,
+    fetched_at: fetchedAt,
+  }))
+  return {
+    capture: {
+      ...skippedCapture(era, capture, fetchedAt, '', stored, 'gpu'),
+      status: 'parsed',
+      detail: null,
+      rows: prices.length,
+    },
+    prices,
   }
 }

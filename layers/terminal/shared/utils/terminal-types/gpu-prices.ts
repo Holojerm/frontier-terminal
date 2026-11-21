@@ -59,9 +59,54 @@ export interface GpuHistoryView {
   method: string
 }
 
+/**
+ * One Internet Archive copy of a provider's price page, read into the
+ * provider's own price per GPU: the median of its counted rows, as the live
+ * median counts it. `at` is when the Archive saw the page (event time);
+ * fetched_at is when we read the copy back, long after.
+ */
+export interface ArchivedGpuPoint extends Prov {
+  at: string
+  basis: 'archived'
+  /** wayback:<era>, the page and layout the copy belongs to (archive/gpu-eras.ts). */
+  source_id: string
+  /** USD per GPU-hour; null where the copy priced no counted row of that GPU. */
+  h100: number | null
+  b200: number | null
+}
+
+/** The price history from before the live recipes began, read from the Internet Archive. */
+export interface GpuArchiveView {
+  /** YYYY-MM-DD, ascending: one a week, from the first copy we read to the day before the live record. */
+  dates: string[]
+  gpus: {
+    gpu: 'H100' | 'B200'
+    /** Per date, the median across providers with a copy that week or the weeks just before; null with none. */
+    median: (number | null)[]
+    providers: number[]
+  }[]
+  /** Each provider's copies we could read, oldest first. */
+  providers: {
+    provider: string
+    provider_name: string
+    points: ArchivedGpuPoint[]
+    /** Copies the backfill considered and couldn't read (archive_captures, axis gpu). */
+    skipped: number
+  }[]
+  /** Stretches with no readable copy, and why. */
+  gaps: { provider: string; provider_name: string; from: string; until: string; reason: string }[]
+  /** Live providers whose archived pages we don't read, and why. */
+  not_covered: { provider: string; provider_name: string; reason: string }[]
+  /** The live record starts here (YYYY-MM-DD); the archived series ends the day before. */
+  live_from: string
+  method: string
+}
+
 export interface GpuPricesData extends Stamp {
   medians: GpuMedianView[]
   history: GpuHistoryView
+  /** Null until the backfill (scripts/wayback-backfill.ts --axis gpu) has run. */
+  archived: GpuArchiveView | null
   prices: GpuPriceView[]
   /** Providers whose newest run failed: none of their prices count today. */
   failed: { provider: string; provider_name: string; detail: string }[]

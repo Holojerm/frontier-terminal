@@ -35,7 +35,7 @@
     "webhooks:remove": "bun run scripts/webhooks.ts remove",
     "webhooks:test": "bun run scripts/webhooks.ts test",
     "backfill:rankings": "bun run scripts/rankings-backfill.ts",
-    "backfill:wayback": "bun run scripts/wayback-backfill.ts",
+    "backfill:wayback": "bun --tsconfig-override=.nuxt/tsconfig.server.json run scripts/wayback-backfill.ts",
     "rename": "bun run scripts/rename.ts",
     "design:check": "bun run scripts/check-design-tokens.ts",
     "brand:generate": "bun run scripts/generate-brand-assets.ts",

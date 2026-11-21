@@ -98,6 +98,8 @@ const AS_OF_CUT: Readonly<Record<string, string>> = {
     'Rows with captured_at at or before as_of: when the Internet Archive saw the page, not when we read the copy (fetched_at, always later). So a backtest gets the page as it stood then, which this site did not hold at the time.',
   archived_hiring:
     'Rows with captured_at at or before as_of: when the Internet Archive saw the board, not when we read the copy (fetched_at, always later). So a backtest gets the board as it stood then, which this site did not hold at the time.',
+  archived_gpu_prices:
+    'Rows with captured_at at or before as_of: when the Internet Archive saw the provider’s price page, not when we read the copy (fetched_at, always later). So a backtest gets the page as it stood then, which this site did not hold at the time.',
   archive_captures:
     'Rows with captured_at at or before as_of: when the Internet Archive saw the page, not when we read the copy.',
   source_runs: 'Rows with started_at at or before as_of.',
@@ -400,13 +402,24 @@ export const TABLE_META: Readonly<Record<string, TableMeta>> = {
     joins: [byProvider],
     feeds: [{ ids: ['wayback-hiring'] }],
   },
+  archived_gpu_prices: {
+    grain:
+      'One row per priced H100 or B200 configuration per Internet Archive copy of a GPU provider’s price page we could read.',
+    cadence: 'Once per backfill run, not on a schedule.',
+    event: 'captured_at',
+    knowledge: 'fetched_at',
+    start:
+      'Archived only. From the oldest copy we could read (Lambda, June 2023). The backfill looks at one copy a week from January 2023 to 2026-11-01, the first day of the live GPU price checks.',
+    joins: [byProvider],
+    feeds: [{ ids: ['wayback-gpu'] }],
+  },
   archive_captures: {
     grain: 'One row per Internet Archive copy the backfill considered.',
     cadence: 'Once per backfill run, not on a schedule.',
     event: 'captured_at',
     knowledge: 'fetched_at',
     start:
-      'Archived only. One copy a week per lab pricing page or job board, from January 2023 to the day we began reading it.',
+      'Archived only. One copy a week per lab pricing page, job board or GPU provider price page, from January 2023 to the day we began reading it.',
     joins: [byProvider],
     feeds: ['archive'],
   },

@@ -185,9 +185,74 @@ export const HISTORY_TABLES = {
     [tables.archivedHiring.captured_at, tables.archivedHiring.id],
     byColumn(tables.archivedHiring.captured_at),
   ),
+  archived_gpu_prices: plainTable(
+    'archived_gpu_prices',
+    'GPU rental price history from before our GPU price checks began: one row per priced configuration per Internet Archive copy of the provider’s own price page that we could read, normalized like the live rows (recipe_observations, gpu-*). source_url is the copy, captured_at when the Archive saw the page, fetched_at when we read the copy. Never mixed into the live tables, the Compute thesis or the alerts.',
+    tables.archivedGpuPrices,
+    {
+      id: {
+        type: 'text',
+        key: true,
+        meaning: 'The first 32 hex characters of the SHA-256 of capture_id and key.',
+      },
+      capture_id: {
+        type: 'text',
+        meaning:
+          'The copy the row was read from: <era>:<14-digit Wayback timestamp>, as in archive_captures.',
+      },
+      provider: {
+        type: 'text',
+        meaning:
+          'The GPU provider: lambda, coreweave, nebius, crusoe, together, digitalocean, verda (DataCrunch until 2025), oracle, or google (Google Cloud).',
+      },
+      key: {
+        type: 'text',
+        meaning:
+          'The configuration: GPU, form factor, label, GPUs per instance, region and config as printed, the same key the live gpu-* recipes store. A page that renamed a row starts a new key.',
+      },
+      gpu: { type: 'text', meaning: 'H100 or B200.' },
+      value: {
+        type: 'number',
+        unit: 'USD per GPU-hour',
+        meaning:
+          'The on-demand price, an instance price divided by its GPUs where the page priced the instance.',
+      },
+      payload: {
+        type: 'json',
+        meaning:
+          'The row as the page printed it, in the live gpu-* payload: provider, gpu, form_factor, counted (false for PCIe and NVL cards, left out of the median), label, gpus_per_instance, instance_usd_per_hour, region, config, and the spot price where the page printed one.',
+      },
+      captured_at: {
+        type: 'timestamp',
+        meaning:
+          'When the Internet Archive captured the page, in UTC: the moment these prices were on it.',
+      },
+      original_url: {
+        type: 'text',
+        meaning: 'The provider’s own price page the Archive captured.',
+      },
+      basis: {
+        type: 'text',
+        meaning: 'Always archived: read from a copy, not observed by this site.',
+      },
+      source_url: {
+        type: 'text',
+        provenance: true,
+        meaning:
+          'The Wayback Machine copy (https://web.archive.org/web/<timestamp>id_/<original_url>).',
+      },
+      fetched_at: {
+        type: 'timestamp',
+        provenance: true,
+        meaning: 'When we read the copy back from the Archive, in UTC.',
+      },
+    },
+    [tables.archivedGpuPrices.captured_at, tables.archivedGpuPrices.id],
+    byColumn(tables.archivedGpuPrices.captured_at),
+  ),
   archive_captures: plainTable(
     'archive_captures',
-    'Every Internet Archive copy the price- and hiring-history backfill considered: read (with how many rows it gave) or skipped, with the reason. A skipped copy gave no rows; nothing on it was guessed.',
+    'Every Internet Archive copy the price-, hiring- and GPU-price-history backfill considered: read (with how many rows it gave) or skipped, with the reason. A skipped copy gave no rows; nothing on it was guessed.',
     tables.archiveCaptures,
     {
       id: {
@@ -198,12 +263,13 @@ export const HISTORY_TABLES = {
       era: {
         type: 'text',
         meaning:
-          'Which shape of the lab’s pricing page or job board the copy is read as (layers/terminal/server/pipeline/archive/eras.ts, hiring-eras.ts).',
+          'Which shape of the lab’s pricing page, job board or GPU provider’s price page the copy is read as (layers/terminal/server/pipeline/archive/eras.ts, hiring-eras.ts, gpu-eras.ts).',
       },
       provider: PROVIDER,
       original_url: {
         type: 'text',
-        meaning: 'The lab’s own pricing page or job board the Archive captured.',
+        meaning:
+          'The lab’s own pricing page or job board, or the GPU provider’s price page, the Archive captured.',
       },
       captured_at: {
         type: 'timestamp',
@@ -212,7 +278,7 @@ export const HISTORY_TABLES = {
       status: {
         type: 'text',
         meaning:
-          'parsed (its rows are in archived_prices or archived_hiring, by axis) or skipped (no rows; detail says why).',
+          'parsed (its rows are in archived_prices, archived_hiring or archived_gpu_prices, by axis) or skipped (no rows; detail says why).',
       },
       detail: {
         type: 'text',
@@ -239,12 +305,13 @@ export const HISTORY_TABLES = {
       },
       rows: {
         type: 'integer',
-        meaning: 'How many rows the copy gave, in archived_prices or archived_hiring (see axis).',
+        meaning:
+          'How many rows the copy gave, in archived_prices, archived_hiring or archived_gpu_prices (see axis).',
       },
       axis: {
         type: 'text',
         meaning:
-          'pricing (a lab’s pricing page; rows in archived_prices) or hiring (a lab’s job board; rows in archived_hiring).',
+          'pricing (a lab’s pricing page; rows in archived_prices), hiring (a lab’s job board; rows in archived_hiring) or gpu (a GPU provider’s price page; rows in archived_gpu_prices).',
       },
       source_url: {
         type: 'text',
