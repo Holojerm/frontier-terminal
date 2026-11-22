@@ -126,6 +126,9 @@ async function readReport(db: PipelineDb, link: ErcotReportLink, deps: ErcotDeps
 export async function runErcotLargeLoads(db: PipelineDb, deps: ErcotDeps): Promise<ErcotRunReport> {
   const links = new Map<string, ErcotReportLink>()
   const listing_failures: string[] = []
+  // A listing waiting on the relay's first copy was not read (2026-11-22's first
+  // relayed run alerted "no report linked" on three such pages).
+  let listings_waiting = 0
   for (const listing of ercotListings(deps.now)) {
     const page = await deps.fetcher({
       source_id: 'ercot-large-loads',
@@ -133,7 +136,8 @@ export async function runErcotLargeLoads(db: PipelineDb, deps: ErcotDeps): Promi
       ext: 'html',
     })
     if (!page.ok) {
-      if (!('skipped' in page)) listing_failures.push(`${listing.url}: ${page.detail}`)
+      if ('skipped' in page) listings_waiting++
+      else listing_failures.push(`${listing.url}: ${page.detail}`)
       continue
     }
     for (const l of ercotReportLinks(page.text, listing.series)) links.set(l.url, l)
@@ -165,7 +169,7 @@ export async function runErcotLargeLoads(db: PipelineDb, deps: ErcotDeps): Promi
     })
   }
   // Every listing read and none linking a report means ERCOT's pages changed shape.
-  if (links.size === 0 && listing_failures.length === 0) {
+  if (links.size === 0 && listing_failures.length === 0 && listings_waiting === 0) {
     await recordOpsEvent(db, {
       kind: 'grid_load_read_failed',
       detail: 'ERCOT large loads: no report linked from the Board or presentations pages',
