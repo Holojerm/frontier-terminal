@@ -8,8 +8,9 @@
 // the document as R2 holds it:
 //   1. the document was offered and is not judged yet;
 //   2. the quote is in the document verbatim and is at most QUOTE_MAX_WORDS words;
-//   3. the quote names the metric and states the guided figure, as the parser
-//      reads it (firstAmount, the same rules);
+//   3. the quote names the metric and states the guided figure in its unit, as the
+//      parser reads it (everyAmount, the same rules): "grow 11% to 12% … or $20.3
+//      billion to $20.6 billion" grounds both a growth statement and a USD one;
 //   4. the period ends after the reported quarter, within three fiscal years;
 //   5. the ticker, dates, source and provenance are set here, never by the model.
 // A statement that fails is dropped, with an ops event. An answered document is judged and
@@ -20,7 +21,7 @@ import { z } from 'zod'
 
 import * as tables from '#server/db/schema'
 import { callCompany, type CallCompany } from './curated'
-import { BOUNDS, firstAmount, METRICS, QUOTE_MAX_WORDS, UNITS, type Statement } from './extract'
+import { BOUNDS, everyAmount, METRICS, QUOTE_MAX_WORDS, UNITS, type Statement } from './extract'
 import { guidanceRows } from './ingest'
 import { fiscalPeriod, reportedQuarter } from './periods'
 import type { DocSentence } from './text'
@@ -161,9 +162,12 @@ export function checkStatement(
   if (quote.split(/\s+/).length > QUOTE_MAX_WORDS)
     return { reason: 'quote-too-long', detail: short }
   if (!METRIC_CUE[s.metric]!.test(quote)) return { reason: 'metric-not-in-quote', detail: s.metric }
-  const amount = firstAmount(quote)
   const near = (a: number, b: number) => Math.abs(a - b) <= Math.max(1e-6, Math.abs(b) * 0.005)
-  if (!amount || !near(amount.low, s.low) || !near(amount.high, s.high)) {
+  const unit = s.unit === 'USD' ? 'USD' : 'percent'
+  const stated = everyAmount(quote).some(
+    (a) => a.unit === unit && near(a.low, s.low) && near(a.high, s.high),
+  )
+  if (!stated) {
     return { reason: 'figure-not-in-quote', detail: `${s.low}..${s.high}` }
   }
   const p = fiscalPeriod(fyEndMonth, s.fiscal_year, s.fiscal_quarter)

@@ -94,9 +94,10 @@ const NUM = String.raw`(\d{1,3}(?:,\d{3})*(?:\.\d+)?|\d+(?:\.\d+)?)`
 const DASH = '[-‐‑‒–—−]'
 const RANGE_SEP = `(?:${DASH}|to|and)`
 const SCALE_WORD = String.raw`(trillion|billion|million|bn|mn|[bm])\b`
+// The amount forms are global: amountsFrom runs each from a given position (lastIndex).
 const MONEY_RANGE = new RegExp(
   String.raw`\$\s?${NUM}\s?(?:${SCALE_WORD})?\s?${RANGE_SEP}\s?(?:US)?\$?\s?${NUM}\s?${SCALE_WORD}`,
-  'i',
+  'gi',
 )
 const PLUS_MINUS = String.raw`(?:plus or\s+(?:m\s?inus|negative)|\+\s?\/\s?-|±)`
 const PLUS_MINUS_RE = new RegExp(PLUS_MINUS, 'i')
@@ -115,23 +116,23 @@ const WORD_NUMBERS: Readonly<Record<string, number>> = {
 const BAND_NUM = String.raw`(\d+(?:\.\d+)?|${Object.keys(WORD_NUMBERS).join('|')})`
 const MONEY_BAND_PCT = new RegExp(
   String.raw`\$\s?${NUM}\s?${SCALE_WORD},?\s*${PLUS_MINUS}\s*${BAND_NUM}\s?(?:%|percent)`,
-  'i',
+  'gi',
 )
 const MONEY_BAND_ABS = new RegExp(
   String.raw`\$\s?${NUM}\s?${SCALE_WORD},?\s*${PLUS_MINUS}\s*\$\s?${NUM}\s?${SCALE_WORD}`,
-  'i',
+  'gi',
 )
-const MONEY_ONE = new RegExp(String.raw`\$\s?${NUM}\s?${SCALE_WORD}`, 'i')
+const MONEY_ONE = new RegExp(String.raw`\$\s?${NUM}\s?${SCALE_WORD}`, 'gi')
 const PCT = String.raw`${NUM}\s?(?:%|percent)`
-const PCT_RANGE = new RegExp(String.raw`${NUM}\s?(?:%|percent)?\s?${RANGE_SEP}\s?${PCT}`, 'i')
-const PCT_BAND = new RegExp(String.raw`${PCT},?\s*${PLUS_MINUS}\s*${NUM}\s?basis points`, 'i')
+const PCT_RANGE = new RegExp(String.raw`${NUM}\s?(?:%|percent)?\s?${RANGE_SEP}\s?${PCT}`, 'gi')
+const PCT_BAND = new RegExp(String.raw`${PCT},?\s*${PLUS_MINUS}\s*${NUM}\s?basis points`, 'gi')
 // "GAAP and non-GAAP gross margins are expected to be 63.3 percent and 63.5
 // percent, respectively, plus or minus 50 basis points": two guides, not a range.
 const RESPECTIVELY = new RegExp(
   String.raw`^${PCT}\s+and\s+${PCT},?\s+respectively(?:,?\s*${PLUS_MINUS}\s*${NUM}\s?basis points)?`,
   'i',
 )
-const PCT_ONE = new RegExp(PCT, 'i')
+const PCT_ONE = new RegExp(PCT, 'gi')
 
 const num = (s: string) => WORD_NUMBERS[s.toLowerCase()] ?? Number(s.replace(/,/g, ''))
 const scale = (s: string | undefined) => (s ? (SCALE[s.toLowerCase()] ?? 1) : 1)
@@ -153,27 +154,33 @@ function boundBefore(text: string, at: number): GuidanceBound {
   return 'about'
 }
 
-/** The first amount in `text`, as the forms above. */
-export function firstAmount(text: string): Amount | null {
+/**
+ * The amounts the forms above find from `from` on: each form's first match, and where the
+ * nearest match of any form ends (so a scan past a match that names no figure still moves).
+ */
+function amountsFrom(text: string, from: number): { found: Amount[]; next: number | null } {
   const found: Amount[] = []
-  const add = (
-    m: RegExpExecArray | null,
-    f: (m: RegExpExecArray) => Omit<Amount, 'at' | 'length'> | null,
-  ) => {
-    const a = m && f(m)
-    if (m && a) found.push({ ...a, at: m.index, length: m[0].length })
+  let next: number | null = null
+  const add = (re: RegExp, f: (m: RegExpExecArray) => Omit<Amount, 'at' | 'length'> | null) => {
+    re.lastIndex = from
+    const m = re.exec(text)
+    if (!m) return
+    const end = m.index + Math.max(1, m[0].length)
+    next = next === null ? end : Math.min(next, end)
+    const a = f(m)
+    if (a) found.push({ ...a, at: m.index, length: m[0].length })
   }
-  add(MONEY_BAND_PCT.exec(text), (m) => {
+  add(MONEY_BAND_PCT, (m) => {
     const mid = num(m[1]!) * scale(m[2])
     const band = num(m[3]!) / 100
     return { unit: 'USD', low: mid * (1 - band), high: mid * (1 + band), bound: 'range' }
   })
-  add(MONEY_BAND_ABS.exec(text), (m) => {
+  add(MONEY_BAND_ABS, (m) => {
     const mid = num(m[1]!) * scale(m[2])
     const band = num(m[3]!) * scale(m[4])
     return { unit: 'USD', low: mid - band, high: mid + band, bound: 'range' }
   })
-  add(MONEY_RANGE.exec(text), (m) => {
+  add(MONEY_RANGE, (m) => {
     const s = scale(m[4])
     const low = num(m[1]!) * (m[2] ? scale(m[2]) : s)
     const high = num(m[3]!) * s
@@ -183,36 +190,67 @@ export function firstAmount(text: string): Amount | null {
     }
     return { unit: 'USD', low, high, bound: 'range' }
   })
-  add(MONEY_ONE.exec(text), (m) => {
+  add(MONEY_ONE, (m) => {
     const v = num(m[1]!) * scale(m[2])
     return { unit: 'USD', low: v, high: v, bound: boundBefore(text, m.index) }
   })
-  add(PCT_BAND.exec(text), (m) => {
+  add(PCT_BAND, (m) => {
     const mid = num(m[1]!)
     const band = num(m[2]!) / 100
     return { unit: 'percent', low: mid - band, high: mid + band, bound: 'range' }
   })
-  add(PCT_RANGE.exec(text), (m) => ({
+  add(PCT_RANGE, (m) => ({
     unit: 'percent',
     low: num(m[1]!),
     high: num(m[2]!),
     bound: 'range',
   }))
-  add(PCT_ONE.exec(text), (m) => {
+  add(PCT_ONE, (m) => {
     // "in the mid-70% range" names no figure.
     if (/\b(?:mid|high|low|upper|lower)[- ]$/i.test(text.slice(Math.max(0, m.index - 6), m.index)))
       return null
     const v = num(m[1]!)
     return { unit: 'percent', low: v, high: v, bound: boundBefore(text, m.index) }
   })
-  if (!found.length) return null
   // The earliest; at the same place, the longest form (a range over its first figure).
   found.sort((a, b) => a.at - b.at || b.length - a.length)
-  const best = found[0]!
+  return { found, next }
+}
+
+/** `a` rounded, or null when it is no figure (a range that runs backwards, or zero). */
+function settled(a: Amount): Amount | null {
   // 8.2 × 1e9 is 8199999999.999999 in floating point: dollars to the dollar, percentages to 1e-4.
-  const round = (v: number) => (best.unit === 'USD' ? Math.round(v) : Math.round(v * 1e4) / 1e4)
-  const amount = { ...best, low: round(best.low), high: round(best.high) }
+  const round = (v: number) => (a.unit === 'USD' ? Math.round(v) : Math.round(v * 1e4) / 1e4)
+  const amount = { ...a, low: round(a.low), high: round(a.high) }
   return amount.high >= amount.low && amount.low > 0 ? amount : null
+}
+
+/** The first amount in `text`, as the forms above. */
+export function firstAmount(text: string): Amount | null {
+  const best = amountsFrom(text, 0).found[0]
+  return best ? settled(best) : null
+}
+
+/**
+ * Every amount in `text`, in order: the first, then the first after it, and so on.
+ * "grow between 11% and 12% … or $20.3 billion to $20.6 billion" is two.
+ */
+export function everyAmount(text: string): Amount[] {
+  const out: Amount[] = []
+  let from = 0
+  while (from < text.length) {
+    const { found, next } = amountsFrom(text, from)
+    const best = found[0]
+    if (!best) {
+      if (next === null) break
+      from = next
+      continue
+    }
+    const a = settled(best)
+    if (a) out.push(a)
+    from = best.at + Math.max(1, best.length)
+  }
+  return out
 }
 
 const ORDINAL: Readonly<Record<string, number>> = {
