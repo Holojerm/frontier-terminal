@@ -24,6 +24,7 @@ import {
   npmBackfill,
   npmRange,
 } from '../../adoption/server/recipes/npm-downloads'
+import { PYPI_FIRST_DAY, PYPI_LAB_RECIPES } from '../../adoption/server/recipes/pypi-downloads'
 import * as tables from '#server/db/schema'
 import { RECIPES } from '#server/registries/recipes'
 import { runRecipes } from '../../core/server/recipes/run'
@@ -71,10 +72,41 @@ const body = (url: string) => {
   return JSON.stringify({ start, end, package: pkg, downloads: days })
 }
 
+// PyPI: pypistats answers its newest 180 days whatever is asked, and ClickPy the
+// window in the query. Flat levels, so the shares are the levels' own.
+const PYPI_LEVEL: Record<string, number> = {
+  openai: 5_000,
+  anthropic: 3_000,
+  'google-genai': 1_000,
+}
+const PYPISTATS_FROM = '2026-05-25'
+/** A day xai-sdk had no downloads: ClickPy has no row for it. */
+const PYPI_GAP = '2025-01-15'
+const pypiRows = (pkg: string, start: string, end: string) => {
+  const data = []
+  for (let n = dayOf(start); n <= dayOf(end); n++) {
+    if (pkg === 'xai-sdk' && dateOf(n) === PYPI_GAP) continue
+    data.push({ category: 'without_mirrors', date: dateOf(n), downloads: PYPI_LEVEL[pkg] ?? 500 })
+  }
+  return data
+}
+const pypiBody = (url: URL) => {
+  if (url.hostname === 'pypistats.org') {
+    const pkg = url.pathname.split('/')[3]!
+    return JSON.stringify({ data: pypiRows(pkg, PYPISTATS_FROM, '2026-11-20'), package: pkg })
+  }
+  const m = /project = '(.+?)' AND date BETWEEN '(.+?)' AND '(.+?)'/.exec(
+    url.searchParams.get('query')!,
+  )!
+  const data = pypiRows(m[1]!, m[2]!, m[3]!)
+  return JSON.stringify({ meta: [], data, rows: data.length })
+}
+
 const NOW = new Date('2026-11-21T06:00:00Z')
 const raw = { put: async (key: string, b: string) => void (await env.BLOB.put(key, b)) }
 const fetcher: SourceFetcher = async (s) => {
-  const text = body(s.url)
+  const url = new URL(s.url)
+  const text = url.hostname === 'api.npmjs.org' ? body(s.url) : pypiBody(url)
   return { ok: true as const, status: 200, text, bytes: text.length }
 }
 const deps = { raw, fetcher, now: () => NOW }
@@ -83,8 +115,9 @@ const deps = { raw, fetcher, now: () => NOW }
 // but past the default 10 s hook timeout on a loaded Workers Builds machine.
 beforeAll(async () => {
   // Twice: each run reads the newest 540 days and walks one window further back.
-  await runRecipes(db, deps, [...NPM_CONTROL_RECIPES, ...NPM_LAB_RECIPES])
-  await runRecipes(db, deps, [...NPM_CONTROL_RECIPES, ...NPM_LAB_RECIPES])
+  const recipes = [...NPM_CONTROL_RECIPES, ...NPM_LAB_RECIPES, ...PYPI_LAB_RECIPES]
+  await runRecipes(db, deps, recipes)
+  await runRecipes(db, deps, recipes)
 }, 120_000)
 
 const row = (date: string, value: number, outage = false): DayRow => ({
@@ -216,6 +249,39 @@ describe('derived series over the store', () => {
         .filter((r) => r.outage)
         .map((r) => r.date),
     ).toEqual([OUTAGE])
+  })
+
+  it('reads PyPI’s older days from ClickPy a window a run, to each package’s first day', async () => {
+    const s = await readDownloadSeries(db)
+    // Two runs: pypistats' 180 days each time, and two 540-day windows before them.
+    expect(s.rows.get('pypi-openai')![0]!.date).toBe(dateOf(dayOf(PYPISTATS_FROM) - 1080))
+    expect(s.rows.get('pypi-google-genai')![0]!.date).toBe(PYPI_FIRST_DAY['pypi-google-genai'])
+    const stored = async (date: string) => {
+      const [row] = await db
+        .select({
+          payload: tables.recipeObservations.payload,
+          source_url: tables.recipeObservations.source_url,
+        })
+        .from(tables.recipeObservations)
+        .where(
+          and(
+            eq(tables.recipeObservations.recipe_id, 'pypi-anthropic'),
+            eq(tables.recipeObservations.date, date),
+          ),
+        )
+      return { payload: row!.payload, host: new URL(row!.source_url).hostname }
+    }
+    // The download log's count for the day, so not marked as counted later; the URL names the source.
+    expect(await stored('2025-01-02')).toEqual({
+      payload: '{}',
+      host: 'sql-clickhouse.clickhouse.com',
+    })
+    expect(await stored(PYPISTATS_FROM)).toEqual({ payload: '{}', host: 'pypistats.org' })
+    // A share needs all five core SDKs: from google-genai's first day, less a day one has no row.
+    const share = seriesById(s, 'pypi-anthropic-share')!
+    expect(share[0]!.date).toBe(PYPI_FIRST_DAY['pypi-google-genai'])
+    expect(share[0]!.value).toBeCloseTo(0.3, 3)
+    expect(share.some((p) => p.date === PYPI_GAP)).toBe(false)
   })
 
   it('gives back each package’s own level once the registry’s growth is divided out', async () => {

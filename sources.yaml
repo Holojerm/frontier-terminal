@@ -1919,101 +1919,242 @@ recipe_sources:
   pypi-openai:
     company: openai
     url: https://pypistats.org/api/packages/openai/overall?mirrors=false
-    format: JSON, pypistats.org overall series, category without_mirrors, one row per day
+    format: JSON, pypistats.org overall series, category without_mirrors, one row per day. Older days come from a ClickPy SQL query that answers in the same shape
     verdict: include
     terms: >-
       pypistats publishes no terms (404) and no robots.txt; its API page
       asks bulk users to query BigQuery instead, which seven packages a day
       is not. The upstream PSF table is CC BY 4.0 (docs.pypi.org/api/bigquery/).
-      Read 2026-11-04.
+      Read 2026-11-04. Days before pypistats' window are read from ClickPy,
+      ClickHouse's public copy of that table, at sql-clickhouse.clickhouse.com
+      as user demo. ClickPy's README (github.com/ClickHouse/clickpy) publishes
+      those credentials for "the public instance" and says it
+      "has quotas applied". The repository's Apache-2.0 license covers the
+      code and states none for the data. The endpoint has no terms page, and
+      its robots.txt answers 401. clickpy.clickhouse.com/robots.txt disallows
+      crawling the web UI apart from a few dashboards; we don't read the web
+      UI. Whether ClickHouse means the instance for this use is not stated
+      anywhere we found. One quota is 20 queries of one shape an hour: our
+      21st answered HTTP 500,
+      "Quota for user `demo` for 3600s has been exceeded: queries_per_normalized_hash = 21/20".
+      The recipes send at most seven every six hours. Read 2026-11-22.
     rights: upstream
     caveats: >-
-      Known mirrors are excluded; CI installs are not. 180 days of history
-      only, so the series starts at the first run.
+      Known mirrors are excluded; CI installs are not. pypistats keeps about
+      six months, and our first read reached back to 2026-04-08. Earlier
+      days are read from ClickPy, back to 2020-01-01. ClickPy has the name
+      from 2018-02-26, but 2018 and 2019 total about 4,100 downloads with
+      days missing, so we start where every day has a row. The two sources
+      disagree on some days. Over the 181 days both held on 2026-11-22 (2026-05-25 to
+      2026-11-21) they matched on 114. On the other 67, ClickPy differed by
+      0.7% on average and 2.4% at most, lower on 48 days and higher on 19.
+      Days before 2026-04-08 can't be compared, since pypistats no longer has
+      them. Each row's source URL says which source it came from. A day with no
+      downloads has no row in ClickPy.
   pypi-anthropic:
     company: anthropic
     url: https://pypistats.org/api/packages/anthropic/overall?mirrors=false
-    format: JSON, pypistats.org overall series, category without_mirrors, one row per day
+    format: JSON, pypistats.org overall series, category without_mirrors, one row per day. Older days come from a ClickPy SQL query that answers in the same shape
     verdict: include
     terms: >-
       pypistats publishes no terms (404) and no robots.txt; its API page
       asks bulk users to query BigQuery instead, which seven packages a day
       is not. The upstream PSF table is CC BY 4.0 (docs.pypi.org/api/bigquery/).
-      Read 2026-11-04.
+      Read 2026-11-04. Days before pypistats' window are read from ClickPy,
+      ClickHouse's public copy of that table, at sql-clickhouse.clickhouse.com
+      as user demo. ClickPy's README (github.com/ClickHouse/clickpy) publishes
+      those credentials for "the public instance" and says it
+      "has quotas applied". The repository's Apache-2.0 license covers the
+      code and states none for the data. The endpoint has no terms page, and
+      its robots.txt answers 401. clickpy.clickhouse.com/robots.txt disallows
+      crawling the web UI apart from a few dashboards; we don't read the web
+      UI. Whether ClickHouse means the instance for this use is not stated
+      anywhere we found. One quota is 20 queries of one shape an hour: our
+      21st answered HTTP 500,
+      "Quota for user `demo` for 3600s has been exceeded: queries_per_normalized_hash = 21/20".
+      The recipes send at most seven every six hours. Read 2026-11-22.
     rights: upstream
     caveats: >-
-      Known mirrors are excluded; CI installs are not. 180 days of history
-      only, so the series starts at the first run.
+      Known mirrors are excluded; CI installs are not. pypistats keeps about
+      six months, and our first read reached back to 2026-04-08. Earlier
+      days are read from ClickPy, back to
+      2023-02-09, the package's first day there. The two sources disagree on
+      some days. Over the 181 days both held on 2026-11-22 (2026-05-25 to
+      2026-11-21) they matched on 114. On the other 67, ClickPy differed by
+      0.7% on average and 2.3% at most, lower on 48 days and higher on 19.
+      Days before 2026-04-08 can't be compared, since pypistats no longer has
+      them. Each row's source URL says which source it came from. A day with no
+      downloads has no row in ClickPy.
   pypi-google-genai:
     company: google
     url: https://pypistats.org/api/packages/google-genai/overall?mirrors=false
-    format: JSON, pypistats.org overall series, category without_mirrors, one row per day
+    format: JSON, pypistats.org overall series, category without_mirrors, one row per day. Older days come from a ClickPy SQL query that answers in the same shape
     verdict: include
     terms: >-
       pypistats publishes no terms (404) and no robots.txt; its API page
       asks bulk users to query BigQuery instead, which seven packages a day
       is not. The upstream PSF table is CC BY 4.0 (docs.pypi.org/api/bigquery/).
-      Read 2026-11-04.
+      Read 2026-11-04. Days before pypistats' window are read from ClickPy,
+      ClickHouse's public copy of that table, at sql-clickhouse.clickhouse.com
+      as user demo. ClickPy's README (github.com/ClickHouse/clickpy) publishes
+      those credentials for "the public instance" and says it
+      "has quotas applied". The repository's Apache-2.0 license covers the
+      code and states none for the data. The endpoint has no terms page, and
+      its robots.txt answers 401. clickpy.clickhouse.com/robots.txt disallows
+      crawling the web UI apart from a few dashboards; we don't read the web
+      UI. Whether ClickHouse means the instance for this use is not stated
+      anywhere we found. One quota is 20 queries of one shape an hour: our
+      21st answered HTTP 500,
+      "Quota for user `demo` for 3600s has been exceeded: queries_per_normalized_hash = 21/20".
+      The recipes send at most seven every six hours. Read 2026-11-22.
     rights: upstream
     caveats: >-
-      Known mirrors are excluded; CI installs are not. 180 days of history
-      only, so the series starts at the first run.
+      Known mirrors are excluded; CI installs are not. pypistats keeps about
+      six months, and our first read reached back to 2026-04-08. Earlier
+      days are read from ClickPy, back to
+      2024-12-10, the package's first day there. The two sources disagree on
+      some days. Over the 181 days both held on 2026-11-22 (2026-05-25 to
+      2026-11-21) they matched on 114. On the other 67, ClickPy differed by
+      0.7% on average and 2.7% at most, lower on 48 days and higher on 19.
+      Days before 2026-04-08 can't be compared, since pypistats no longer has
+      them. Each row's source URL says which source it came from. A day with no
+      downloads has no row in ClickPy.
   pypi-mistralai:
     company: mistral
     url: https://pypistats.org/api/packages/mistralai/overall?mirrors=false
-    format: JSON, pypistats.org overall series, category without_mirrors, one row per day
+    format: JSON, pypistats.org overall series, category without_mirrors, one row per day. Older days come from a ClickPy SQL query that answers in the same shape
     verdict: include
     terms: >-
       pypistats publishes no terms (404) and no robots.txt; its API page
       asks bulk users to query BigQuery instead, which seven packages a day
       is not. The upstream PSF table is CC BY 4.0 (docs.pypi.org/api/bigquery/).
-      Read 2026-11-04.
+      Read 2026-11-04. Days before pypistats' window are read from ClickPy,
+      ClickHouse's public copy of that table, at sql-clickhouse.clickhouse.com
+      as user demo. ClickPy's README (github.com/ClickHouse/clickpy) publishes
+      those credentials for "the public instance" and says it
+      "has quotas applied". The repository's Apache-2.0 license covers the
+      code and states none for the data. The endpoint has no terms page, and
+      its robots.txt answers 401. clickpy.clickhouse.com/robots.txt disallows
+      crawling the web UI apart from a few dashboards; we don't read the web
+      UI. Whether ClickHouse means the instance for this use is not stated
+      anywhere we found. One quota is 20 queries of one shape an hour: our
+      21st answered HTTP 500,
+      "Quota for user `demo` for 3600s has been exceeded: queries_per_normalized_hash = 21/20".
+      The recipes send at most seven every six hours. Read 2026-11-22.
     rights: upstream
     caveats: >-
-      Known mirrors are excluded; CI installs are not. 180 days of history
-      only, so the series starts at the first run.
+      Known mirrors are excluded; CI installs are not. pypistats keeps about
+      six months, and our first read reached back to 2026-04-08. Earlier
+      days are read from ClickPy, back to
+      2023-12-09, the package's first day there. The two sources disagree on
+      some days. Over the 181 days both held on 2026-11-22 (2026-05-25 to
+      2026-11-21) they matched on 115. On the other 66, ClickPy differed by
+      0.7% on average and 2.4% at most, lower on 47 days and higher on 19.
+      Days before 2026-04-08 can't be compared, since pypistats no longer has
+      them. Each row's source URL says which source it came from. A day with no
+      downloads has no row in ClickPy.
   pypi-xai-sdk:
     company: xai
     url: https://pypistats.org/api/packages/xai-sdk/overall?mirrors=false
-    format: JSON, pypistats.org overall series, category without_mirrors, one row per day
+    format: JSON, pypistats.org overall series, category without_mirrors, one row per day. Older days come from a ClickPy SQL query that answers in the same shape
     verdict: include
     terms: >-
       pypistats publishes no terms (404) and no robots.txt; its API page
       asks bulk users to query BigQuery instead, which seven packages a day
       is not. The upstream PSF table is CC BY 4.0 (docs.pypi.org/api/bigquery/).
-      Read 2026-11-04.
+      Read 2026-11-04. Days before pypistats' window are read from ClickPy,
+      ClickHouse's public copy of that table, at sql-clickhouse.clickhouse.com
+      as user demo. ClickPy's README (github.com/ClickHouse/clickpy) publishes
+      those credentials for "the public instance" and says it
+      "has quotas applied". The repository's Apache-2.0 license covers the
+      code and states none for the data. The endpoint has no terms page, and
+      its robots.txt answers 401. clickpy.clickhouse.com/robots.txt disallows
+      crawling the web UI apart from a few dashboards; we don't read the web
+      UI. Whether ClickHouse means the instance for this use is not stated
+      anywhere we found. One quota is 20 queries of one shape an hour: our
+      21st answered HTTP 500,
+      "Quota for user `demo` for 3600s has been exceeded: queries_per_normalized_hash = 21/20".
+      The recipes send at most seven every six hours. Read 2026-11-22.
     rights: upstream
     caveats: >-
-      Known mirrors are excluded; CI installs are not. 180 days of history
-      only, so the series starts at the first run.
+      Known mirrors are excluded; CI installs are not. pypistats keeps about
+      six months, and our first read reached back to 2026-04-08. Earlier
+      days are read from ClickPy, back to
+      2023-12-08, the package's first day there. The two sources disagree on
+      some days. Over the 181 days both held on 2026-11-22 (2026-05-25 to
+      2026-11-21) they matched on 114. On the other 67, ClickPy differed by
+      0.8% on average and 2.8% at most, lower on 47 days and higher on 20.
+      Days before 2026-04-08 can't be compared, since pypistats no longer has
+      them. Each row's source URL says which source it came from. A day with no
+      downloads has no row in ClickPy.
   pypi-claude-agent-sdk:
     company: anthropic
     url: https://pypistats.org/api/packages/claude-agent-sdk/overall?mirrors=false
-    format: JSON, pypistats.org overall series, category without_mirrors, one row per day
+    format: JSON, pypistats.org overall series, category without_mirrors, one row per day. Older days come from a ClickPy SQL query that answers in the same shape
     verdict: include
     terms: >-
       pypistats publishes no terms (404) and no robots.txt; its API page
       asks bulk users to query BigQuery instead, which seven packages a day
       is not. The upstream PSF table is CC BY 4.0 (docs.pypi.org/api/bigquery/).
-      Read 2026-11-04.
+      Read 2026-11-04. Days before pypistats' window are read from ClickPy,
+      ClickHouse's public copy of that table, at sql-clickhouse.clickhouse.com
+      as user demo. ClickPy's README (github.com/ClickHouse/clickpy) publishes
+      those credentials for "the public instance" and says it
+      "has quotas applied". The repository's Apache-2.0 license covers the
+      code and states none for the data. The endpoint has no terms page, and
+      its robots.txt answers 401. clickpy.clickhouse.com/robots.txt disallows
+      crawling the web UI apart from a few dashboards; we don't read the web
+      UI. Whether ClickHouse means the instance for this use is not stated
+      anywhere we found. One quota is 20 queries of one shape an hour: our
+      21st answered HTTP 500,
+      "Quota for user `demo` for 3600s has been exceeded: queries_per_normalized_hash = 21/20".
+      The recipes send at most seven every six hours. Read 2026-11-22.
     rights: upstream
     caveats: >-
-      Known mirrors are excluded; CI installs are not. 180 days of history
-      only, so the series starts at the first run.
+      Known mirrors are excluded; CI installs are not. pypistats keeps about
+      six months, and our first read reached back to 2026-04-08. Earlier
+      days are read from ClickPy, back to
+      2025-09-28, the package's first day there. The two sources disagree on
+      some days. Over the 181 days both held on 2026-11-22 (2026-05-25 to
+      2026-11-21) they matched on 114. On the other 67, ClickPy differed by
+      0.8% on average and 3.2% at most, lower on 48 days and higher on 19.
+      Days before 2026-04-08 can't be compared, since pypistats no longer has
+      them. Each row's source URL says which source it came from. A day with no
+      downloads has no row in ClickPy.
   pypi-openai-agents:
     company: openai
     url: https://pypistats.org/api/packages/openai-agents/overall?mirrors=false
-    format: JSON, pypistats.org overall series, category without_mirrors, one row per day
+    format: JSON, pypistats.org overall series, category without_mirrors, one row per day. Older days come from a ClickPy SQL query that answers in the same shape
     verdict: include
     terms: >-
       pypistats publishes no terms (404) and no robots.txt; its API page
       asks bulk users to query BigQuery instead, which seven packages a day
       is not. The upstream PSF table is CC BY 4.0 (docs.pypi.org/api/bigquery/).
-      Read 2026-11-04.
+      Read 2026-11-04. Days before pypistats' window are read from ClickPy,
+      ClickHouse's public copy of that table, at sql-clickhouse.clickhouse.com
+      as user demo. ClickPy's README (github.com/ClickHouse/clickpy) publishes
+      those credentials for "the public instance" and says it
+      "has quotas applied". The repository's Apache-2.0 license covers the
+      code and states none for the data. The endpoint has no terms page, and
+      its robots.txt answers 401. clickpy.clickhouse.com/robots.txt disallows
+      crawling the web UI apart from a few dashboards; we don't read the web
+      UI. Whether ClickHouse means the instance for this use is not stated
+      anywhere we found. One quota is 20 queries of one shape an hour: our
+      21st answered HTTP 500,
+      "Quota for user `demo` for 3600s has been exceeded: queries_per_normalized_hash = 21/20".
+      The recipes send at most seven every six hours. Read 2026-11-22.
     rights: upstream
     caveats: >-
-      Known mirrors are excluded; CI installs are not. 180 days of history
-      only, so the series starts at the first run.
+      Known mirrors are excluded; CI installs are not. pypistats keeps about
+      six months, and our first read reached back to 2026-04-08. Earlier
+      days are read from ClickPy, back to
+      2025-03-04, the package's first day there. The two sources disagree on
+      some days. Over the 181 days both held on 2026-11-22 (2026-05-25 to
+      2026-11-21) they matched on 114. On the other 67, ClickPy differed by
+      0.7% on average and 2.4% at most, lower on 47 days and higher on 20.
+      Days before 2026-04-08 can't be compared, since pypistats no longer has
+      them. Each row's source URL says which source it came from. A day with no
+      downloads has no row in ClickPy.
   github-prs-claude-code:
     company: anthropic
     url: https://api.github.com/search/issues?q=is:pr "Generated with Claude Code" created:{yesterday}&per_page=1

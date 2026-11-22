@@ -23,6 +23,18 @@ is smaller than its changes need. `bun run schema:lock` rewrites the lock only
 when the newest release in `layers/core/server/utils/data-schema.ts` says
 exactly which columns changed.
 
+## 1.28.3 (2026-11-22)
+
+PyPI downloads go back further. Each package is read back to its first day
+(`anthropic` to 2023-02-09, `openai` to 2020-01-01), where the series began at
+2026-04-08. Days before 2026-04-08 come from ClickPy, ClickHouse's public copy
+of the PyPI downloads dataset, and later days from pypistats as before. Over
+the 181 days both had on 2026-11-22 they matched on 114, and on the rest
+ClickPy differed by under 1% on average and 3.2% at most. `source_url` on each
+row says which one it came from. `recipe_observations` and `download_series`
+gain the older days, and `weekly` on each `/api/adoption` downloads entry is
+longer. No columns changed.
+
 ## 1.28.2 (2026-11-22)
 
 npm downloads go back further. Each lab package is read back to its first

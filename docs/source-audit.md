@@ -1142,3 +1142,47 @@ Registered: `msft-openai-other-income`, `amzn-anthropic-upward-marks` and `googl
 A raised limit or cap is registered as an event series, `limit-raises-anthropic`, dated by a release note that talks about rate limits inside the window, else by the window.
 
 **Verdict: include.** Rights stay `not-cleared` for the archived copies and the release notes; the SEC filings are `ours`.
+
+## Addendum, 2026-11-22: PyPI downloads before pypistats' window
+
+Checked so the seven `pypi-*` series reach back past 2026-04-08, the oldest day pypistats served on our first read. pypistats keeps about six months, and the PSF's own table (`bigquery-public-data.pypi.file_downloads`) needs a Google Cloud account. ClickHouse keeps a public copy of that table for ClickPy (clickpy.clickhouse.com) and answers SQL over HTTP. Everything below was fetched on 2026-11-22 (UTC) with the pipeline's User-Agent.
+
+**The endpoint.** `GET https://sql-clickhouse.clickhouse.com/?user=demo&query=<SQL>` answers 200 JSON, read-only, with no key. The recipe sums `pypi.pypi_downloads_per_day_by_version_by_installer_by_type` by day for one package and one window, leaving out the installers `bandersnatch`, `z3c.pypimirror`, `Artifactory`, `devpi` and the empty one. Leaving out the empty installer is what brings the counts to pypistats' `without_mirrors`. With it, most days run above pypistats. The query names its columns as pypistats does, so one extractor reads both. A day with no downloads has no row.
+
+**Terms, as read.** PyPI states the dataset is CC BY 4.0 (docs.pypi.org/api/bigquery/). ClickPy's README (github.com/ClickHouse/clickpy) publishes the `demo` credentials for "the public instance" and says it "has quotas applied". The repository's license is Apache-2.0, which covers the code. Nothing states a license for the data as ClickHouse serves it. The endpoint has no terms page, and its `robots.txt` answers 401. `clickpy.clickhouse.com/robots.txt` reads `Allow: /$`, a few `Allow: /dashboard/<package>$` lines, then `Disallow: /*?` and `Disallow: /`. That is the web UI, which we don't read. So the reading rests on two things: the data's own CC BY 4.0, and credentials ClickHouse publishes for public use. No page says the instance is meant for a scheduled reader, and none says it isn't. If ClickHouse objects or the quota stops us, the backfill stops and the stored days stay.
+
+**How much we ask.** One query per package per survey tick, for the 540 days before the oldest stored day, until the package's floor is stored. That is seven queries a tick at first, then fewer. `openai` needs five ticks, `anthropic` three and the rest one or two. After that the recipes never call ClickHouse again. A 55-day query for `xai-sdk` read 147,456 rows in about 10 ms, and a 540-day answer is about 50 KB.
+
+**The quota we met.** Testing sent more than 20 queries of this shape inside an hour, and the 21st answered HTTP 500: "Quota for user `demo` for 3600s has been exceeded: queries_per_normalized_hash = 21/20". ClickHouse counts queries that differ only in their literals as one shape, so all seven packages share the 20. Seven a tick, six hours apart, is inside it. The fetcher retries a 5xx twice, so a tick that meets the quota spends more of it and then records `recipe_failed`. The next tick asks again from the same day. Walked by hand on 2026-11-22, `openai`, `anthropic`, `google-genai`, `mistralai` and `xai-sdk` each ended on their floor in the number of ticks above. The quota stopped the walk before `claude-agent-sdk` and `openai-agents`, which need one window each.
+
+**Floors**, each package's first day in ClickPy:
+
+| Recipe | Floor | Note |
+|---|---|---|
+| `pypi-openai` | 2020-01-01 | ClickPy has the name from 2018-02-26. 2018 and 2019 total about 4,100 downloads (1,539 and 2,568) with 29 days missing. Every day from 2020-01-01 has a row. Monthly totals stay under 1,000 until July 2020 |
+| `pypi-anthropic` | 2023-02-09 | One day in 2023 has no row |
+| `pypi-google-genai` | 2024-12-10 | |
+| `pypi-mistralai` | 2023-12-09 | |
+| `pypi-xai-sdk` | 2023-12-08 | 27 days through 2024 have no row |
+| `pypi-claude-agent-sdk` | 2025-09-28 | |
+| `pypi-openai-agents` | 2025-03-04 | |
+
+**The two sources don't fully agree.** Both were read for the 181 days pypistats held on 2026-11-22 (2026-05-25 to 2026-11-21):
+
+| Package | Days identical | Days differing | Mean difference | Largest | ClickPy lower / higher |
+|---|---|---|---|---|---|
+| `openai` | 114 | 67 | 0.71% | 2.42% | 48 / 19 |
+| `anthropic` | 114 | 67 | 0.73% | 2.25% | 48 / 19 |
+| `google-genai` | 114 | 67 | 0.67% | 2.68% | 48 / 19 |
+| `mistralai` | 115 | 66 | 0.70% | 2.36% | 47 / 19 |
+| `xai-sdk` | 114 | 67 | 0.84% | 2.79% | 47 / 20 |
+| `claude-agent-sdk` | 114 | 67 | 0.78% | 3.21% | 48 / 19 |
+| `openai-agents` | 114 | 67 | 0.69% | 2.43% | 47 / 20 |
+
+The differing days are nearly the same dates for every package (the first is 2026-06-06, the last 2026-11-19). Interpretation, marked as such: that points at how each copy loaded those days, and at no one package. We don't know which copy is right on them. Days before 2026-04-08 can't be compared at all, since pypistats no longer has them. So a series changes source at 2026-04-08, and a step of up to about 3% on a day near there could be the source and not the package. Weekly sums smooth most of it.
+
+**What the rows say.** A ClickPy row's `source_url` is the query that returned it, and its `fetched_at` and `first_seen_at` are the day we ran it, so a point-in-time read never sees it earlier. The rows aren't marked `retrospective`. That flag is for a count taken now of what still exists (a GitHub search for a past day). A download log's count for a past day doesn't shrink that way.
+
+**Not checked.** Whether the production Worker can reach `sql-clickhouse.clickhouse.com`. Other hosts have refused Workers egress before (Mistral's status page, ERCOT, Korea Customs). If this one does, each tick records `recipe_failed` for the walk and the pypistats read is unaffected.
+
+**Verdict: include**, as the history behind the pypistats series. Rights stay `upstream`, on the pypistats precedent: the numbers are the PSF dataset's, under CC BY 4.0, and each `pypi-*` entry in `sources.yaml` states the ClickPy reading and its own agreement figures.

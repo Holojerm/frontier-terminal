@@ -1,0 +1,230 @@
+{
+	"meta":
+	[
+		{
+			"name": "category",
+			"type": "String"
+		},
+		{
+			"name": "date",
+			"type": "String"
+		},
+		{
+			"name": "downloads",
+			"type": "UInt32"
+		}
+	],
+
+	"data":
+	[
+		{
+			"category": "without_mirrors",
+			"date": "2023-12-08",
+			"downloads": 193
+		},
+		{
+			"category": "without_mirrors",
+			"date": "2023-12-09",
+			"downloads": 50
+		},
+		{
+			"category": "without_mirrors",
+			"date": "2023-12-10",
+			"downloads": 15
+		},
+		{
+			"category": "without_mirrors",
+			"date": "2023-12-11",
+			"downloads": 6
+		},
+		{
+			"category": "without_mirrors",
+			"date": "2023-12-12",
+			"downloads": 55
+		},
+		{
+			"category": "without_mirrors",
+			"date": "2023-12-13",
+			"downloads": 29
+		},
+		{
+			"category": "without_mirrors",
+			"date": "2023-12-14",
+			"downloads": 3
+		},
+		{
+			"category": "without_mirrors",
+			"date": "2023-12-15",
+			"downloads": 1
+		},
+		{
+			"category": "without_mirrors",
+			"date": "2023-12-16",
+			"downloads": 12
+		},
+		{
+			"category": "without_mirrors",
+			"date": "2023-12-17",
+			"downloads": 2
+		},
+		{
+			"category": "without_mirrors",
+			"date": "2023-12-21",
+			"downloads": 53
+		},
+		{
+			"category": "without_mirrors",
+			"date": "2023-12-22",
+			"downloads": 9
+		},
+		{
+			"category": "without_mirrors",
+			"date": "2023-12-23",
+			"downloads": 11
+		},
+		{
+			"category": "without_mirrors",
+			"date": "2023-12-24",
+			"downloads": 1
+		},
+		{
+			"category": "without_mirrors",
+			"date": "2023-12-27",
+			"downloads": 3
+		},
+		{
+			"category": "without_mirrors",
+			"date": "2023-12-28",
+			"downloads": 5
+		},
+		{
+			"category": "without_mirrors",
+			"date": "2023-12-29",
+			"downloads": 1
+		},
+		{
+			"category": "without_mirrors",
+			"date": "2023-12-30",
+			"downloads": 3
+		},
+		{
+			"category": "without_mirrors",
+			"date": "2024-01-02",
+			"downloads": 1
+		},
+		{
+			"category": "without_mirrors",
+			"date": "2024-01-04",
+			"downloads": 1
+		},
+		{
+			"category": "without_mirrors",
+			"date": "2024-01-07",
+			"downloads": 9
+		},
+		{
+			"category": "without_mirrors",
+			"date": "2024-01-09",
+			"downloads": 4
+		},
+		{
+			"category": "without_mirrors",
+			"date": "2024-01-10",
+			"downloads": 4
+		},
+		{
+			"category": "without_mirrors",
+			"date": "2024-01-11",
+			"downloads": 69
+		},
+		{
+			"category": "without_mirrors",
+			"date": "2024-01-13",
+			"downloads": 14
+		},
+		{
+			"category": "without_mirrors",
+			"date": "2024-01-14",
+			"downloads": 2
+		},
+		{
+			"category": "without_mirrors",
+			"date": "2024-01-15",
+			"downloads": 6
+		},
+		{
+			"category": "without_mirrors",
+			"date": "2024-01-16",
+			"downloads": 7
+		},
+		{
+			"category": "without_mirrors",
+			"date": "2024-01-17",
+			"downloads": 10
+		},
+		{
+			"category": "without_mirrors",
+			"date": "2024-01-18",
+			"downloads": 12
+		},
+		{
+			"category": "without_mirrors",
+			"date": "2024-01-19",
+			"downloads": 14
+		},
+		{
+			"category": "without_mirrors",
+			"date": "2024-01-20",
+			"downloads": 9
+		},
+		{
+			"category": "without_mirrors",
+			"date": "2024-01-22",
+			"downloads": 13
+		},
+		{
+			"category": "without_mirrors",
+			"date": "2024-01-24",
+			"downloads": 2
+		},
+		{
+			"category": "without_mirrors",
+			"date": "2024-01-25",
+			"downloads": 24
+		},
+		{
+			"category": "without_mirrors",
+			"date": "2024-01-26",
+			"downloads": 12
+		},
+		{
+			"category": "without_mirrors",
+			"date": "2024-01-27",
+			"downloads": 8
+		},
+		{
+			"category": "without_mirrors",
+			"date": "2024-01-28",
+			"downloads": 1
+		},
+		{
+			"category": "without_mirrors",
+			"date": "2024-01-29",
+			"downloads": 22
+		},
+		{
+			"category": "without_mirrors",
+			"date": "2024-01-30",
+			"downloads": 13
+		}
+	],
+
+	"rows": 40,
+
+	"statistics":
+	{
+		"elapsed": 0.010198279,
+		"rows_read": 147456,
+		"bytes_read": 653398
+	}
+}
