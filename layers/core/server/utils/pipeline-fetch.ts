@@ -1,4 +1,11 @@
-import { activeRelay, isRelayed, relayedOutcome, type RelayStore } from '../pipeline/relay'
+import {
+  activeRelay,
+  isRelayed,
+  onRefusal,
+  relayedOutcome,
+  relaysOnRefusal,
+  type RelayStore,
+} from '../pipeline/relay'
 import type { FetchSource } from './pipeline-sources'
 
 // Fetch stage (boundary table: DETERMINISTIC): an HTTP GET with retries and the
@@ -182,6 +189,19 @@ export function parseRetryAfter(header: string | null, now: number = Date.now())
 }
 
 /**
+ * GitHub answers its primary and secondary rate limits with a 403 as often as
+ * a 429, marked by Retry-After or an exhausted x-ratelimit-remaining
+ * (docs.github.com, "Rate limits for the REST API"). Such a 403 is the
+ * limiter, not a refusal, so it follows the 429 policy.
+ */
+export function isGithubRateLimit(url: string, response: Response): boolean {
+  if (response.status !== 403 || new URL(url).hostname !== 'api.github.com') return false
+  return (
+    response.headers.has('retry-after') || response.headers.get('x-ratelimit-remaining') === '0'
+  )
+}
+
+/**
  * Build the fetcher the refresh runs with. SEC sources without a contact email
  * are refused (never fetched anonymously) as a 'failed' outcome; a keyed
  * OpenRouter dataset without its key is 'skipped', a config state whose ops
@@ -192,9 +212,7 @@ export function createFetcher(options: FetcherOptions): SourceFetcher {
   const sleep = options.sleep ?? defaultSleep
   const attempts = options.attempts ?? FETCH_ATTEMPTS
 
-  return async (source) => {
-    const relay = isRelayed(source.url) ? (options.relay ?? activeRelay()) : null
-    if (relay) return relayedOutcome(relay, source.url)
+  const direct: SourceFetcher = async (source) => {
     const userAgent = userAgentFor(source.url, options)
     if (userAgent === null) return { ok: false, status: null, detail: SEC_CONTACT_UNSET }
 
@@ -243,15 +261,19 @@ export function createFetcher(options: FetcherOptions): SourceFetcher {
         if (credentialed && response.status >= 300 && response.status < 400) {
           return { ok: false, status: response.status, detail: REDIRECT_REFUSED }
         }
-        if (response.status === 429) {
+        const githubLimit = isGithubRateLimit(source.url, response)
+        if (response.status === 429 || githubLimit) {
           const retryAfterMs = parseRetryAfter(response.headers.get('retry-after'))
+          const notes = [
+            githubLimit ? `GitHub’s ${response.status} rate limit` : null,
+            retryAfterMs === null ? null : `Retry-After ${Math.ceil(retryAfterMs / 1000)}s`,
+          ].filter((note) => note !== null)
           last = {
             ok: false,
             status: 429,
-            detail:
-              retryAfterMs === null
-                ? RATE_LIMITED_DETAIL
-                : `${RATE_LIMITED_DETAIL} (Retry-After ${Math.ceil(retryAfterMs / 1000)}s)`,
+            detail: notes.length
+              ? `${RATE_LIMITED_DETAIL} (${notes.join(', ')})`
+              : RATE_LIMITED_DETAIL,
             ...(retryAfterMs === null ? {} : { retryAfterMs }),
           }
           if (retryAfterMs === null || retryAfterMs > RATE_LIMIT_MAX_INLINE_WAIT_MS) return last
@@ -269,5 +291,12 @@ export function createFetcher(options: FetcherOptions): SourceFetcher {
       }
     }
     return { ...last, detail: `${last.detail} after ${attempts} attempts` }
+  }
+
+  return async (source) => {
+    const relay = options.relay ?? activeRelay()
+    if (relay && isRelayed(source.url)) return relayedOutcome(relay, source.url)
+    const outcome = await direct(source)
+    return relay && relaysOnRefusal(source.url) ? onRefusal(relay, source.url, outcome) : outcome
   }
 }

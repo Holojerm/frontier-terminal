@@ -123,6 +123,45 @@ describe('createFetcher', () => {
     expect(sleeps).toEqual([2000])
   })
 
+  it('reads GitHub’s rate-limit 403 as a 429, and any other GitHub 403 as a refusal', async () => {
+    const SEARCH: FetchSource = {
+      source_id: 'github-prs-jules',
+      url: 'https://api.github.com/search/issues?q=is%3Apr&per_page=1',
+      ext: 'json',
+    }
+    const options = { ...APP, githubToken: 'ghp-test', sleep }
+    const secondary = scripted([
+      new Response('', { status: 403, headers: { 'Retry-After': '60' } }),
+    ])
+    expect(await createFetcher({ ...options, fetch: secondary.fetch })(SEARCH)).toEqual({
+      ok: false,
+      status: 429,
+      detail: 'HTTP 429 (GitHub’s 403 rate limit, Retry-After 60s)',
+      retryAfterMs: 60_000,
+    })
+    const primary = scripted([
+      new Response('', { status: 403, headers: { 'x-ratelimit-remaining': '0' } }),
+    ])
+    expect(await createFetcher({ ...options, fetch: primary.fetch })(SEARCH)).toEqual({
+      ok: false,
+      status: 429,
+      detail: 'HTTP 429 (GitHub’s 403 rate limit)',
+    })
+    const refused = scripted([
+      new Response('', { status: 403, headers: { 'x-ratelimit-remaining': '29' } }),
+    ])
+    expect(await createFetcher({ ...options, fetch: refused.fetch })(SEARCH)).toEqual({
+      ok: false,
+      status: 403,
+      detail: 'HTTP 403',
+    })
+    // Retry-After on another host's 403 is that host's business.
+    const other = scripted([new Response('', { status: 403, headers: { 'Retry-After': '60' } })])
+    expect(await createFetcher({ ...APP, fetch: other.fetch, sleep })(XAI)).toMatchObject({
+      status: 403,
+    })
+  })
+
   it('treats "Retry-After: 0" as no wait beyond the fixed backoff', async () => {
     sleeps.length = 0
     const { fetch, calls } = scripted([

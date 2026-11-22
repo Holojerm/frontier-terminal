@@ -1,6 +1,7 @@
 // The relay: `bun run relay:fetch`, run every 30 minutes on the owner's Mac mini by a
 // launchd job outside this repo (~/agent-jobs/relay-fetch.sh). Some sources' CDNs refuse
-// Cloudflare Workers' egress but answer the mini (layers/core/server/pipeline/relay.ts):
+// Cloudflare Workers' egress, always or for hours at a time, but answer the mini
+// (layers/core/server/pipeline/relay.ts):
 //
 //   1. GET  /api/relay/work  the URLs on those hosts the pipeline asked for lately,
 //                            each with the User-Agent to send (the Worker owns both)

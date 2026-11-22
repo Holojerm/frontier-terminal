@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest'
 import {
   RELAY_MAX_AGE_MS,
   RELAY_PENDING,
+  isRelayHost,
   isRelayed,
   putRelayCopy,
   wantedUrls,
@@ -16,6 +17,16 @@ const never = (async () => {
   throw new Error('the network was called')
 }) as typeof globalThis.fetch
 const source = { source_id: 'mistral-status', url: MISTRAL, ext: 'json' }
+const OPENAI_PAGE = 'https://developers.openai.com/api/docs/models/gpt-5.5.md'
+const openaiPage = { source_id: 'openai-model-md-gpt-5.5', url: OPENAI_PAGE, ext: 'md' }
+const answering = (status: number, body = '') => {
+  let calls = 0
+  const fetch = (async () => {
+    calls++
+    return new Response(body, { status })
+  }) as typeof globalThis.fetch
+  return { fetch, calls: () => calls }
+}
 
 describe('the relay', () => {
   it('covers only the hosts that refuse Workers', () => {
@@ -24,6 +35,9 @@ describe('the relay', () => {
     expect(isRelayed('https://www.customs.go.kr/streamdocs/v4/documents/1/texts')).toBe(true)
     expect(isRelayed('https://status.openai.com/api/v2/incidents.json')).toBe(false)
     expect(isRelayed('not a url')).toBe(false)
+    expect(isRelayed(OPENAI_PAGE)).toBe(false)
+    expect(isRelayHost(OPENAI_PAGE)).toBe(true)
+    expect(isRelayHost('https://status.openai.com/api/v2/incidents.json')).toBe(false)
   })
 
   it('puts a URL on the job’s list and waits, without calling the network', async () => {
@@ -118,5 +132,67 @@ describe('the relay', () => {
     })
     expect(outcome).toMatchObject({ ok: true, text: 'ok' })
     expect(await wantedUrls(m.kv)).toEqual([])
+  })
+
+  describe('on a host relayed only when it refuses the Worker', () => {
+    it('fetches directly and leaves the job’s list alone', async () => {
+      const m = memory()
+      const net = answering(200, '# GPT-5.5')
+      const outcome = await createFetcher({ ...APP, fetch: net.fetch, relay: m.store })(openaiPage)
+      expect(outcome).toMatchObject({ ok: true, text: '# GPT-5.5' })
+      expect(net.calls()).toBe(1)
+      expect(await wantedUrls(m.kv)).toEqual([])
+    })
+
+    it('keeps a 403 a refusal while the job has no copy, and asks it for one', async () => {
+      const m = memory()
+      const net = answering(403)
+      const outcome = await createFetcher({ ...APP, fetch: net.fetch, relay: m.store })(openaiPage)
+      expect(outcome).toEqual({ ok: false, status: 403, detail: `HTTP 403; ${RELAY_PENDING}` })
+      expect(await wantedUrls(m.kv)).toEqual([OPENAI_PAGE])
+    })
+
+    it('serves the job’s copy once the host refuses again', async () => {
+      const m = memory()
+      const fetcher = createFetcher({ ...APP, fetch: answering(403).fetch, relay: m.store })
+      await fetcher(openaiPage)
+      await putRelayCopy(m.blob, {
+        url: OPENAI_PAGE,
+        status: 200,
+        fetched_at: new Date().toISOString(),
+        body: new TextEncoder().encode('# GPT-5.5'),
+        contentType: 'text/markdown',
+      })
+      expect(await fetcher(openaiPage)).toMatchObject({ ok: true, status: 200, text: '# GPT-5.5' })
+    })
+
+    it('takes the URL off the job’s list when the host answers the Worker again', async () => {
+      const m = memory()
+      await createFetcher({ ...APP, fetch: answering(403).fetch, relay: m.store })(openaiPage)
+      await putRelayCopy(m.blob, {
+        url: OPENAI_PAGE,
+        status: 200,
+        fetched_at: new Date().toISOString(),
+        body: new TextEncoder().encode('# old'),
+        contentType: 'text/markdown',
+      })
+      const back = createFetcher({
+        ...APP,
+        fetch: answering(200, '# GPT-5.5').fetch,
+        relay: m.store,
+      })
+      expect(await back(openaiPage)).toMatchObject({ ok: true, text: '# GPT-5.5' })
+      expect(await wantedUrls(m.kv)).toEqual([])
+      expect(m.objects.size).toBe(0)
+    })
+
+    it('passes any other failure through without asking the job', async () => {
+      const m = memory()
+      const outcome = await createFetcher({ ...APP, fetch: answering(404).fetch, relay: m.store })(
+        openaiPage,
+      )
+      expect(outcome).toEqual({ ok: false, status: 404, detail: 'HTTP 404' })
+      expect(await wantedUrls(m.kv)).toEqual([])
+    })
   })
 })

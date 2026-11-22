@@ -6,6 +6,8 @@
 // copy. A copy older than RELAY_MAX_AGE_MS is a failure, so a stopped mini shows
 // on fleet. A URL read once (a release, a report) is taken off the job's list by
 // its reader (`done`), or the job would fetch it every run for RELAY_WANT_TTL_S.
+// A host on RELAY_ON_REFUSAL_HOSTS is fetched directly, and only a 403 asks the
+// job for a copy (pipeline-fetch.ts); the next direct 200 takes the URL off its list.
 // Outside the Worker no store is registered and fetches go out as usual.
 
 import { z } from 'zod'
@@ -15,7 +17,14 @@ import type { FetchOutcome } from '../utils/pipeline-fetch'
 
 const RELAYED_HOSTS: readonly string[] = ['status.mistral.ai', 'www.ercot.com', 'www.customs.go.kr']
 
-/** The slowest relayed readers run six-hourly; the job runs every 30 minutes. */
+/**
+ * Hosts that answer the Worker but turn it away for hours at a time. OpenAI's
+ * docs host 403'd every per-model page on the 00:00 and 06:00 UTC surveys of
+ * 2026-11-22 after ten clean days, while its catalog and pricing pages kept
+ * answering, and let the Worker back by 12:00 (#698).
+ */
+const RELAY_ON_REFUSAL_HOSTS: readonly string[] = ['developers.openai.com']
+
 export const RELAY_MAX_AGE_MS = 6 * 3_600_000
 
 /** How long a URL stays on the job's list after its entry was last written. */
@@ -31,12 +40,27 @@ export const RELAY_MAX_BYTES = 20 * 1024 * 1024
 
 export const RELAY_PENDING = 'relay: no copy from the Mac mini job yet'
 
-export function isRelayed(url: string): boolean {
+function hostIn(hosts: readonly string[], url: string): boolean {
   try {
-    return RELAYED_HOSTS.includes(new URL(url).hostname)
+    return hosts.includes(new URL(url).hostname)
   } catch {
     return false
   }
+}
+
+/** Always read from the job's copy. */
+export function isRelayed(url: string): boolean {
+  return hostIn(RELAYED_HOSTS, url)
+}
+
+/** Fetched directly; the job's copy stands in when the host answers 403. */
+export function relaysOnRefusal(url: string): boolean {
+  return hostIn(RELAY_ON_REFUSAL_HOSTS, url)
+}
+
+/** Whether the job may be sent, and post back, this URL. */
+export function isRelayHost(url: string): boolean {
+  return isRelayed(url) || relaysOnRefusal(url)
 }
 
 export interface RelayCopy {
@@ -50,6 +74,8 @@ export interface RelayStore {
   read(url: string): Promise<RelayCopy | null>
   /** Puts the URL on the job's list (or keeps it there). */
   want(url: string): Promise<void>
+  /** Whether the URL is on the job's list. */
+  wanted(url: string): Promise<boolean>
   /**
    * Takes URLs that have been read for good off the job's list and drops their
    * copies, so asking again later waits for a new copy instead of failing on the old one.
@@ -146,6 +172,9 @@ export function relayStore(blob: RelayBlob, kv: RelayKv): RelayStore {
       const entry = { url, asked_at: new Date().toISOString() }
       await kv.set(wantKey(url), entry, { ttl: RELAY_WANT_TTL_S })
     },
+    async wanted(url) {
+      return (await kv.get(wantKey(url))) != null
+    },
     async done(urls) {
       if (urls.length === 0) return
       for (const url of urls) await kv.del(wantKey(url))
@@ -162,7 +191,7 @@ export async function wantedUrls(kv: RelayKv): Promise<string[]> {
   for (const key of await kv.keys(WANT_PREFIX)) {
     const held = await kv.get(key)
     const url = typeof held === 'string' ? held : Want.safeParse(held).data?.url
-    if (url && isRelayed(url)) urls.push(url)
+    if (url && isRelayHost(url)) urls.push(url)
   }
   return [...new Set(urls)].sort()
 }
@@ -179,6 +208,31 @@ export async function putRelayCopy(
   })
 }
 
+/**
+ * A direct fetch of a RELAY_ON_REFUSAL_HOSTS URL, settled against the job's
+ * copy. A 403 asks for a copy and serves a usable one; without one the 403
+ * stands, with why there is no copy, so the refresh still treats the run as
+ * refused. A direct 2xx takes the URL off the job's list.
+ */
+export async function onRefusal(
+  store: RelayStore,
+  url: string,
+  direct: FetchOutcome,
+): Promise<FetchOutcome> {
+  if (direct.ok) {
+    if (await store.wanted(url)) await store.done([url])
+    return direct
+  }
+  if (direct.status !== 403) return direct
+  const got = await relayedBytes(store, url)
+  if (!got.ok) return { ...direct, detail: `${direct.detail}; ${got.detail}` }
+  return bytesOutcome(got.status, got.body)
+}
+
+function bytesOutcome(status: number, body: Uint8Array): FetchOutcome {
+  return { ok: true, status, text: new TextDecoder().decode(body), bytes: body.byteLength }
+}
+
 /** The relayed copy as the fetcher's outcome. */
 export async function relayedOutcome(store: RelayStore, url: string): Promise<FetchOutcome> {
   const got = await relayedBytes(store, url)
@@ -188,10 +242,5 @@ export async function relayedOutcome(store: RelayStore, url: string): Promise<Fe
       ? { ok: false, status: null, detail: got.detail, skipped: true }
       : { ok: false, status: got.status, detail: got.detail }
   }
-  return {
-    ok: true,
-    status: got.status,
-    text: new TextDecoder().decode(got.body),
-    bytes: got.body.byteLength,
-  }
+  return bytesOutcome(got.status, got.body)
 }
