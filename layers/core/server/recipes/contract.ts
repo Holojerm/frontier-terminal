@@ -56,7 +56,11 @@ export interface Recipe {
    * past day), fetched after this run's own URL, each with the run date
    * `extract` gets. `oldest` is the oldest stored date, null when none. Their
    * rows carry `retrospective: true`, being counted now from what still exists
-   * upstream. The walk stops at the first failure, so it leaves no hole.
+   * upstream, unless the entry says the source keeps the figure as it was on
+   * the day (`retrospective: false`). The walk stops at the first failure, so
+   * it leaves no hole.
    */
-  backfill?(ctx: { oldest: string | null }): { url: string; date: string }[]
+  backfill?(ctx: {
+    oldest: string | null
+  }): { url: string; date: string; retrospective?: boolean }[]
 }

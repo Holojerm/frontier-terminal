@@ -23,6 +23,14 @@ is smaller than its changes need. `bun run schema:lock` rewrites the lock only
 when the newest release in `layers/core/server/utils/data-schema.ts` says
 exactly which columns changed.
 
+## 1.28.2 (2026-11-22)
+
+npm downloads go back further. Each lab package is read back to its first
+release (`@anthropic-ai/sdk` to 2023-01-31), and `openai`, the control
+packages and `wrangler` to 2022-01-01, where the series began at 2025-05-13. `recipe_observations` and `download_series` gain the older days,
+and `weekly` on each `/api/adoption` downloads entry is longer. No columns
+changed.
+
 ## 1.28.1 (2026-11-21)
 
 `/api/overview` and `get_overview` gain `lab_alerts`: each lab's newest notable

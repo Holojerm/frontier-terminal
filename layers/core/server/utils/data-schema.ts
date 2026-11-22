@@ -429,6 +429,12 @@ export const SCHEMA_RELEASES: readonly SchemaRelease[] = [
     summary:
       '/api/overview and get_overview gain lab_alerts: each lab’s newest notable or critical alert, however far back, where alerts holds only the newest ten overall. No columns changed.',
   },
+  {
+    version: '1.28.2',
+    date: '2026-11-22',
+    summary:
+      'npm downloads go back further. Each lab package is read back to its first release (@anthropic-ai/sdk to 2023-01-31), and openai, the control packages and wrangler to 2022-01-01, where the series began at 2025-05-13. recipe_observations and download_series gain the older days, and weekly on each /api/adoption downloads entry is longer. No columns changed.',
+  },
 ]
 
 export const SCHEMA_VERSION = SCHEMA_RELEASES.at(-1)!.version

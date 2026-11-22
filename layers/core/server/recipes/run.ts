@@ -228,7 +228,7 @@ async function runBackfill(
       raw_key,
       url: run.url,
       fetched_at,
-      retrospective: true,
+      retrospective: run.retrospective ?? true,
     })
   }
   return { observations, failure: null, rateLimited: false }

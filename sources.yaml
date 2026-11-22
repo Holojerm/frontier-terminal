@@ -1849,8 +1849,8 @@ recipe_sources:
     rights: upstream
     caveats: >-
       One of five non-AI packages. The lab packages are divided by their
-      median, so registry-wide swings cancel. Read from 2025-05-13, like
-      the lab packages. Whole days of zeros are npm outages and are
+      median, so registry-wide swings cancel. Read from 2022-01-01, like
+      the oldest lab package. Whole days of zeros are npm outages and are
       flagged in the payload.
   npm-control-typescript:
     company: frontier-labs
@@ -1865,8 +1865,8 @@ recipe_sources:
     rights: upstream
     caveats: >-
       One of five non-AI packages. The lab packages are divided by their
-      median, so registry-wide swings cancel. Read from 2025-05-13, like
-      the lab packages. Whole days of zeros are npm outages and are
+      median, so registry-wide swings cancel. Read from 2022-01-01, like
+      the oldest lab package. Whole days of zeros are npm outages and are
       flagged in the payload.
   npm-control-express:
     company: frontier-labs
@@ -1881,8 +1881,8 @@ recipe_sources:
     rights: upstream
     caveats: >-
       One of five non-AI packages. The lab packages are divided by their
-      median, so registry-wide swings cancel. Read from 2025-05-13, like
-      the lab packages. Whole days of zeros are npm outages and are
+      median, so registry-wide swings cancel. Read from 2022-01-01, like
+      the oldest lab package. Whole days of zeros are npm outages and are
       flagged in the payload.
   npm-control-lodash:
     company: frontier-labs
@@ -1897,8 +1897,8 @@ recipe_sources:
     rights: upstream
     caveats: >-
       One of five non-AI packages. The lab packages are divided by their
-      median, so registry-wide swings cancel. Read from 2025-05-13, like
-      the lab packages. Whole days of zeros are npm outages and are
+      median, so registry-wide swings cancel. Read from 2022-01-01, like
+      the oldest lab package. Whole days of zeros are npm outages and are
       flagged in the payload.
   npm-control-axios:
     company: frontier-labs
@@ -1913,8 +1913,8 @@ recipe_sources:
     rights: upstream
     caveats: >-
       One of five non-AI packages. The lab packages are divided by their
-      median, so registry-wide swings cancel. Read from 2025-05-13, like
-      the lab packages. Whole days of zeros are npm outages and are
+      median, so registry-wide swings cancel. Read from 2022-01-01, like
+      the oldest lab package. Whole days of zeros are npm outages and are
       flagged in the payload.
   pypi-openai:
     company: openai
