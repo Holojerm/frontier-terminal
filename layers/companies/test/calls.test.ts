@@ -29,7 +29,13 @@ import {
   olderPages,
   pageFilings,
 } from '../server/calls/edgar'
-import { extractStatements, firstAmount, quoteOf, QUOTE_MAX_WORDS } from '../server/calls/extract'
+import {
+  everyAmount,
+  extractStatements,
+  firstAmount,
+  quoteOf,
+  QUOTE_MAX_WORDS,
+} from '../server/calls/extract'
 import {
   assemblySpend,
   discoverExhibits,
@@ -301,6 +307,19 @@ describe('extractStatements', () => {
         high: 205e9,
       })
     }
+  })
+
+  it('reads every amount in a sentence, in order', () => {
+    expect(
+      everyAmount(
+        'revenue to grow between 11% and 12% in constant currency or $20.3 billion to $20.6 billion, in the mid-70% range, and capex of $5 billion',
+      ).map(({ unit, low, high }) => ({ unit, low, high })),
+    ).toEqual([
+      { unit: 'percent', low: 11, high: 12 },
+      { unit: 'USD', low: 20.3e9, high: 20.6e9 },
+      { unit: 'USD', low: 5e9, high: 5e9 },
+    ])
+    expect(everyAmount('no figure here')).toEqual([])
   })
 })
 
@@ -957,6 +976,35 @@ describe('the judge’s guidance review', () => {
       period_end: '2026-12-31',
     })
     expect(await guidanceReview(db, async (k) => store.get(k) ?? null, now)).toEqual([])
+  })
+
+  it('grounds each figure of a quote that states two, in its own unit', () => {
+    // Microsoft's segment outlook: a growth range, then the dollar range it comes to (#695).
+    const quote =
+      'In Productivity and Business Processes, we expect revenue to grow between 11% and 12% in constant currency or $20.3 billion to $20.6 billion.'
+    const text = `${quote} In Intelligent Cloud, we expect revenue to grow between 19% and 20%.`
+    const base = {
+      metric: 'segment_revenue',
+      segment: 'Productivity and Business Processes',
+      bound: 'range',
+      fiscal_year: 2025,
+      fiscal_quarter: 1,
+      quote,
+    } as const
+    const check = (s: { unit: 'USD' | 'growth_yoy'; low: number; high: number }) =>
+      checkStatement({ ...base, ...s }, text, 6, '2024-06-30')
+    expect(check({ unit: 'USD', low: 20.3e9, high: 20.6e9 })).toBeNull()
+    expect(check({ unit: 'growth_yoy', low: 11, high: 12 })).toBeNull()
+    // Every figure is still checked, and against its own unit.
+    expect(check({ unit: 'USD', low: 20.3e9, high: 20.9e9 })).toMatchObject({
+      reason: 'figure-not-in-quote',
+    })
+    expect(check({ unit: 'USD', low: 11, high: 12 })).toMatchObject({
+      reason: 'figure-not-in-quote',
+    })
+    expect(check({ unit: 'growth_yoy', low: 19, high: 20 })).toMatchObject({
+      reason: 'figure-not-in-quote',
+    })
   })
 
   it('rejects a period that is not ahead of the reported quarter', () => {
