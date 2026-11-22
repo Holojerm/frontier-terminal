@@ -127,6 +127,13 @@ describe('statistics', () => {
     expect(effectiveN(40, 5, 60)).toBe(3)
   })
 
+  it('has no correlation with one value repeated, whatever its mean rounds to', () => {
+    const same = Array.from({ length: 30 }, () => 0.1 + 0.2)
+    const xs = same.map((_, i) => (i * 7) % 5)
+    expect(pearson(xs, same)).toBeNull()
+    expect(pearson(same, xs)).toBeNull()
+  })
+
   it('holds out the newest third', () => {
     const dates = Array.from({ length: 30 }, (_, i) => addDays('2026-01-01', i))
     expect(holdoutFrom(dates)).toBe(dates[20])
@@ -161,6 +168,40 @@ describe('lead-lag', () => {
     expect(week.in.n + week.out.n).toBe(changes.length)
     // 60 sessions from weekly entries: 19 held-out weeks are 1 independent return.
     expect(cells.find((c) => c.horizon === 60)!.out.status).toBe('thin')
+  })
+
+  it('leaves out changes older than the panel, and splits the hold-out over the rest', () => {
+    const dated = Array.from({ length: weeks - 2 }, (_, w) => ({
+      period: addDays('2025-01-06', 7 * w),
+      available: addDays('2025-01-06', 7 * w + 6),
+      x: moves[w + 1]! + ((w * 31) % 7) / 2000,
+    }))
+    // Three years of weekly changes from before the first session.
+    const older = Array.from({ length: 150 }, (_, w) => ({
+      period: addDays('2022-01-03', 7 * w),
+      available: addDays('2022-01-03', 7 * w + 6),
+      x: ((w * 17) % 11) / 100,
+    }))
+    const alone = leadLag(dated, panel, ['TICK'], 'SPY')
+    expect(leadLag([...older, ...dated], panel, ['TICK'], 'SPY')).toEqual(alone)
+    // Every change older than the panel: nothing to test, not 150 copies of one return.
+    const cell = leadLag(older, panel, ['TICK'], 'SPY')[0]!
+    expect(cell.in).toMatchObject({ status: 'thin', n: 0, estimate: null })
+    expect(cell.out).toMatchObject({ status: 'thin', n: 0, estimate: null })
+  })
+
+  it('counts changes made public on one day as one return', () => {
+    // Twelve months a release, three releases in sample: 36 changes on 3 returns.
+    const batched = Array.from({ length: 72 }, (_, m) => ({
+      period: addDays('2025-01-06', m),
+      available: addDays('2025-01-06', 7 * 8 * Math.floor(m / 12) + 6),
+      x: ((m * 37) % 17) / 100,
+    }))
+    const day = leadLag(batched, panel, ['TICK'], 'SPY').find((c) => c.horizon === 1)!
+    expect(day.in.n).toBeGreaterThanOrEqual(MIN_SAMPLE.lead_lag.in)
+    // Three returns leave one degree of freedom, which no p-value here can clear.
+    expect(day.in.status === 'thin' || day.in.p_value! > 0.05).toBe(true)
+    expect(day.out.status).toBe('thin')
   })
 
   it('reads thin under the minimum sample, with no number', () => {
@@ -202,6 +243,16 @@ describe('event study', () => {
     const ins = all.slice(0, 10)
     const expected = ins.reduce((s, e) => s + Math.sign(e.value) * 0.02, 0) / ins.length
     expect(signed.in.estimate!).toBeCloseTo(expected, 6)
+  })
+
+  it('splits the hold-out over the events the panel can date', () => {
+    const older = Array.from({ length: 40 }, (_, i) => ({
+      date: addDays('2023-01-02', i * 9),
+      value: 1,
+    }))
+    expect(eventStudy([...older, ...events], panel, ['TICK'], 'SPY', false)).toEqual(
+      eventStudy(events, panel, ['TICK'], 'SPY', false),
+    )
   })
 
   it('folds same-day events into one', () => {
