@@ -1,4 +1,5 @@
 import { env } from 'cloudflare:test'
+import { and, eq } from 'drizzle-orm'
 import { beforeAll, describe, expect, it } from 'vitest'
 
 import { readNormalizedTrailing } from '../server/theses/download-signals'
@@ -16,11 +17,14 @@ import {
 } from '../../adoption/server/recipes/download-series'
 import {
   NPM_CONTROL_RECIPES,
+  NPM_FIRST_DAY,
   NPM_HISTORY_FROM,
   NPM_LAB_RECIPES,
   extractDownloads,
+  npmBackfill,
   npmRange,
 } from '../../adoption/server/recipes/npm-downloads'
+import * as tables from '#server/db/schema'
 import { RECIPES } from '#server/registries/recipes'
 import { runRecipes } from '../../core/server/recipes/run'
 import { ANTHROPIC_THESIS } from '../server/theses/anthropic'
@@ -78,7 +82,7 @@ const deps = { raw, fetcher, now: () => NOW }
 // Two full recipe runs over 18 months of daily rows: well under a second locally,
 // but past the default 10 s hook timeout on a loaded Workers Builds machine.
 beforeAll(async () => {
-  // Twice: a control's first run reads 540 days from 2025-05-13, its second the rest.
+  // Twice: each run reads the newest 540 days and walks one window further back.
   await runRecipes(db, deps, [...NPM_CONTROL_RECIPES, ...NPM_LAB_RECIPES])
   await runRecipes(db, deps, [...NPM_CONTROL_RECIPES, ...NPM_LAB_RECIPES])
 }, 120_000)
@@ -107,17 +111,23 @@ describe('npm ranges', () => {
     expect(obs.map((o) => o.value)).toEqual([0, 5, 0])
   })
 
-  it('re-reads the whole window, and walks a deep start in 540-day steps', () => {
+  it('re-reads the whole window', () => {
     expect(npmRange(NOW, null)).toEqual({ start: '2025-05-30', end: '2026-11-20' })
     expect(npmRange(NOW, '2026-11-19')).toEqual({ start: '2025-05-30', end: '2026-11-20' })
-    expect(npmRange(NOW, null, NPM_HISTORY_FROM)).toEqual({
-      start: '2025-05-13',
-      end: '2026-11-04',
+  })
+
+  it('walks back one window before the oldest stored day, and stops at the floor', () => {
+    expect(npmBackfill('2025-05-30', NPM_HISTORY_FROM)).toEqual({
+      start: '2023-12-07',
+      end: '2025-05-29',
     })
-    expect(npmRange(NOW, '2026-11-03', NPM_HISTORY_FROM)).toEqual({
-      start: '2025-05-30',
-      end: '2026-11-20',
+    expect(npmBackfill('2022-06-15', NPM_HISTORY_FROM)).toEqual({
+      start: NPM_HISTORY_FROM,
+      end: '2022-06-14',
     })
+    expect(npmBackfill(NPM_HISTORY_FROM, NPM_HISTORY_FROM)).toBeNull()
+    expect(npmBackfill('2021-06-01', NPM_HISTORY_FROM)).toBeNull()
+    expect(npmBackfill(null, NPM_HISTORY_FROM)).toBeNull()
   })
 })
 
@@ -179,9 +189,24 @@ describe('derived series, pure', () => {
 })
 
 describe('derived series over the store', () => {
-  it('reads the controls back to 2025-05-13 and flags the outage day', async () => {
+  it('reads each package a window further back a run, to its first release, and flags the outage day', async () => {
     const s = await readDownloadSeries(db)
-    expect(s.rows.get('npm-control-react')![0]!.date).toBe(NPM_HISTORY_FROM)
+    // Two runs: 540 days to yesterday, then two windows before them.
+    expect(s.rows.get('npm-control-react')![0]!.date).toBe('2022-06-15')
+    expect(s.rows.get('npm-anthropic-sdk')![0]!.date).toBe(NPM_FIRST_DAY['npm-anthropic-sdk'])
+    // Released inside the first window: nothing older to read.
+    expect(s.rows.get('npm-claude-agent-sdk')![0]!.date).toBe('2025-05-30')
+    // npm's own count for the day, so an older day is not marked as counted later.
+    const [old] = await db
+      .select({ payload: tables.recipeObservations.payload })
+      .from(tables.recipeObservations)
+      .where(
+        and(
+          eq(tables.recipeObservations.recipe_id, 'npm-control-react'),
+          eq(tables.recipeObservations.date, '2023-01-02'),
+        ),
+      )
+    expect(old!.payload).toBe('{}')
     expect(s.outage_days).toEqual([OUTAGE])
     expect(s.index.some((p) => p.date === OUTAGE)).toBe(false)
     // The agent SDK's zeros before it was published are not outages.

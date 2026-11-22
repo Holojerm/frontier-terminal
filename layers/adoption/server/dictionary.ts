@@ -9,7 +9,8 @@ export const ADOPTION_DICTIONARY: Readonly<Record<string, DictionaryEntry>> = {
     cadence: 'Rebuilt from recipe_observations on each request.',
     event: 'date',
     knowledge: 'fetched_at',
-    start: 'npm series from 2025-05-13, PyPI shares from the first PyPI day stored.',
+    start:
+      'npm normalized series from each package’s first release (2022-01-01 at the earliest), npm shares from 2025-03-11, PyPI shares from the first PyPI day stored.',
     joins: [{ column: 'company', to: ID }],
     feeds: ['recipes'],
   },
