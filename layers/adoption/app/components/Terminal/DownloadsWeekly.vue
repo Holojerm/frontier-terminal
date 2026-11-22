@@ -1,8 +1,8 @@
 <script setup lang="ts">
 // Complete ISO weeks over every stored day, one chart per package on its own y-axis (levels
 // don't compare; see DownloadsTable). A partial week breaks the line instead of reading as
-// a drop. Each registry's history starts where its API reached, and the line under the
-// charts gives that week.
+// a drop. An npm line starts at the package's first release and a PyPI line where its API
+// reached; the line under the charts gives each registry's first week.
 //
 // `measure`: raw weekly totals, npm ÷ the control basket (normalized), or each core SDK's
 // share of its registry's tracked SDKs. The ratios stay fair on a week missing a day, so

@@ -8,6 +8,7 @@
 // derived series (layers/adoption/server/recipes/download-series.ts) and the probe rollups
 // (pipeline/probes/, probe_days).
 
+import { NPM_FIRST_DAY } from '../../../adoption/server/recipes/npm-downloads'
 import { FOREIGN_FILERS } from '../../../companies/server/calls/actuals'
 import { curatedCalls } from '../../../companies/server/calls/curated'
 
@@ -108,8 +109,11 @@ export const LAB_TICKERS: Readonly<Partial<Record<LabId, readonly string[]>>> = 
 const lab = (id: LabId) => ({ kind: 'lab' as const, id })
 const tickersOf = (id: LabId): readonly string[] => LAB_TICKERS[id] ?? []
 
+/** A share needs every core SDK: the newest of the four on npm is @google/genai. */
+const NPM_SHARE_FROM = NPM_FIRST_DAY['npm-google-genai']
+
 /** npm downloads divided by the non-AI control basket, so a registry-wide swing cancels out. */
-const npm = (recipe: string, labId: LabId, label: string): SignalDef => ({
+const npm = (recipe: keyof typeof NPM_FIRST_DAY, labId: LabId, label: string): SignalDef => ({
   id: recipe,
   label,
   entity: lab(labId),
@@ -120,7 +124,7 @@ const npm = (recipe: string, labId: LabId, label: string): SignalDef => ({
   test: 'lead_lag',
   aggregate: 'sum',
   available_after_days: 1,
-  history_from: '2025-05-13',
+  history_from: NPM_FIRST_DAY[recipe],
 })
 
 /** A lab's core SDK as a share of the tracked labs' core SDKs on one registry. */
@@ -520,10 +524,10 @@ export const SIGNALS: readonly SignalDef[] = [
     'npm-anthropic-sdk',
     'anthropic',
     'Anthropic share of lab SDK npm downloads',
-    '2025-05-13',
+    NPM_SHARE_FROM,
   ),
-  sdkShare('npm-openai', 'openai', 'OpenAI share of lab SDK npm downloads', '2025-05-13'),
-  sdkShare('npm-google-genai', 'google', 'Google share of lab SDK npm downloads', '2025-05-13'),
+  sdkShare('npm-openai', 'openai', 'OpenAI share of lab SDK npm downloads', NPM_SHARE_FROM),
+  sdkShare('npm-google-genai', 'google', 'Google share of lab SDK npm downloads', NPM_SHARE_FROM),
   sdkShare(
     'pypi-anthropic',
     'anthropic',
