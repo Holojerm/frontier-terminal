@@ -128,6 +128,13 @@ export function sharedTerminalStamp<T>(
  */
 export const STAMP_SHARE_WAIT_MS = 1000
 
+/**
+ * Workers' rejection for a promise owned by an ended request. Joiners see this
+ * instead of a hang when the owner was cancelled; on 2026-11-22 it turned one
+ * cancelled read under D1 load into 133 503s across every route in a second.
+ */
+const ENDED_REQUEST = /request that has since ended/
+
 /** The shared read if it lands within `budgetMs`, else this caller's own read. The timer lives in the caller's context, so it always fires. */
 async function joinOrReadOwn<T>(
   shared: Promise<T>,
@@ -140,7 +147,14 @@ async function joinOrReadOwn<T>(
   })
   try {
     const first = await Promise.race([
-      shared.then((value) => ({ late: false as const, value })),
+      shared.then(
+        (value) => ({ late: false as const, value }),
+        (error: unknown) => {
+          if (!(error instanceof Error && ENDED_REQUEST.test(error.message))) throw error
+          if (inFlightStamp?.promise === shared) inFlightStamp = null
+          return { late: true as const }
+        },
+      ),
       late,
     ])
     return first.late ? await read() : first.value

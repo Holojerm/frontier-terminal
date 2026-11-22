@@ -229,6 +229,30 @@ describe('sharedTerminalStamp', () => {
     expect(await sharedTerminalStamp(async () => 't3')).toBe('t3')
   })
 
+  it('reads for itself when the shared read belongs to a request that has ended', async () => {
+    // Workers rejects a joiner awaiting a cancelled request's promise rather
+    // than leaving it pending. That is the owner's failure, not the database's,
+    // so it must not become this caller's 503.
+    let reads = 0
+    const dead = async (): Promise<string> => {
+      throw new Error(
+        'This promise was created by a request that has since ended, so it can never settle.',
+      )
+    }
+    const own = async () => {
+      reads += 1
+      return 'own'
+    }
+
+    const [owner, joiner] = await Promise.allSettled([
+      sharedTerminalStamp(dead),
+      sharedTerminalStamp(own),
+    ])
+    expect(owner.status).toBe('rejected')
+    expect(joiner).toEqual({ status: 'fulfilled', value: 'own' })
+    expect(reads).toBe(1)
+  })
+
   it('does not hang on a read that never settles: waiters time out and read for themselves', async () => {
     // A read owned by a cancelled request never settles in Workers. A caller
     // that joined it must still get a stamp, and the dead slot must not trap
