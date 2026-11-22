@@ -15,7 +15,12 @@
 //
 // Both hold out the newest third of observations by date, so the out-of-sample number is
 // one nobody could have fitted. Returns over h sessions from observations fewer than h
-// sessions apart overlap, so each p-value's sample is shrunk to n × spacing / h.
+// sessions apart overlap, so each p-value's sample is shrunk to n × spacing / h, where n
+// counts the sessions entered: observations made public on one day share one return.
+//
+// An observation older than the panel's first session is left out of both the test and
+// the hold-out split: the panel can't say which session followed it, and a search would
+// hand every such observation the first session's return.
 
 import { addDays, type PricePanel } from './market'
 
@@ -194,6 +199,9 @@ export function pearson(xs: readonly number[], ys: readonly number[]): number | 
     syy += dy * dy
   }
   if (sxx === 0 || syy === 0) return null
+  // One value repeated can leave a rounding residue in its own mean, which reads as a
+  // correlation of 1e-17 instead of none.
+  if (xs.every((v) => v === xs[0]) || ys.every((v) => v === ys[0])) return null
   return sxy / Math.sqrt(sxx * syy)
 }
 
@@ -275,6 +283,16 @@ function spacingOf(entries: readonly number[]): number {
   return median(gaps)
 }
 
+/**
+ * The independent returns behind a set of entries. Observations entered on
+ * the same session share one return (a year of monthly figures published in
+ * one release), so they count once, before overlap is taken out.
+ */
+function independentReturns(entries: readonly number[], h: number): number {
+  const sessions = [...new Set(entries)].sort((a, b) => a - b)
+  return effectiveN(sessions.length, spacingOf(sessions), h)
+}
+
 /** Fewest independent returns a test runs on, once overlap is taken out. */
 const MIN_EFFECTIVE = 3
 
@@ -298,7 +316,10 @@ function correlationStat(
     pairs.map((p) => p.y),
   )
   if (r === null) return thin(n)
-  const nEff = effectiveN(n, spacingOf(pairs.map((p) => p.entry)), h)
+  const nEff = independentReturns(
+    pairs.map((p) => p.entry),
+    h,
+  )
   const df = nEff - 2
   if (nEff < MIN_EFFECTIVE || Math.abs(r) >= 1) return thin(n)
   const t = r * Math.sqrt(df / (1 - r * r))
@@ -320,7 +341,10 @@ function meanStat(
   if (n < min) return thin(n)
   const mean = rows.reduce((s, r) => s + r.car, 0) / n
   const variance = rows.reduce((s, r) => s + (r.car - mean) ** 2, 0) / (n - 1)
-  const nEff = effectiveN(n, spacingOf(rows.map((r) => r.entry)), h)
+  const nEff = independentReturns(
+    rows.map((r) => r.entry),
+    h,
+  )
   if (nEff < MIN_EFFECTIVE || variance <= 0) return thin(n)
   const t = mean / Math.sqrt(variance / nEff)
   return {
@@ -357,7 +381,9 @@ export function leadLag(
   tickers: readonly string[],
   benchmark: string,
 ): CellResult[] {
-  const cut = holdoutFrom(changes.map((c) => c.available))
+  const first = panel.dates[0]
+  const dated = first === undefined ? [] : changes.filter((c) => c.available >= first)
+  const cut = holdoutFrom(dated.map((c) => c.available))
   const cells: CellResult[] = []
   for (const ticker of tickers) {
     for (const h of SIGNAL_HORIZONS) {
@@ -365,7 +391,7 @@ export function leadLag(
         in: [] as { entry: number; x: number; y: number; date: string }[],
         out: [] as { entry: number; x: number; y: number; date: string }[],
       }
-      for (const c of changes) {
+      for (const c of dated) {
         const entry = sessionAfter(panel.dates, c.available)
         const y = abnormalReturn(panel, ticker, benchmark, entry, h)
         if (y === null) continue
@@ -437,7 +463,8 @@ export function eventStudy(
   benchmark: string,
   signed: boolean,
 ): CellResult[] {
-  const days = eventDays(events)
+  // An event needs a close before it, so the panel's first session is too early as well.
+  const days = eventDays(events).filter((e) => sessionBefore(panel.dates, e.date) >= 0)
   const cut = holdoutFrom(days.map((e) => e.date))
   const cells: CellResult[] = []
   for (const ticker of tickers) {
