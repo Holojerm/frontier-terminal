@@ -486,6 +486,36 @@ describe('the ERCOT run and the payload', () => {
     ])
   })
 
+  it('does not call listings still waiting on the relay a changed page', async () => {
+    const waiting: SourceFetcher = async () => ({
+      ok: false,
+      status: null,
+      detail: 'relay: no copy from the Mac mini job yet',
+      skipped: true,
+    })
+    const r = await runErcotLargeLoads(db, {
+      fetcher: waiting,
+      put,
+      fetch,
+      userAgent: 'test',
+      now: NOW,
+    })
+    expect(r).toMatchObject({ listed: 0, read: [], listing_failures: [] })
+    expect(await db.select().from(schema.opsEvents)).toEqual([])
+
+    // Every listing read and none linking a report still alerts.
+    await runErcotLargeLoads(db, {
+      fetcher: async () => ok(''),
+      put,
+      fetch,
+      userAgent: 'test',
+      now: NOW,
+    })
+    expect((await db.select().from(schema.opsEvents)).map((e) => e.detail)).toEqual([
+      'ERCOT large loads: no report linked from the Board or presentations pages',
+    ])
+  })
+
   it('places each lab site in an authority and attaches its tickers', async () => {
     await runErcotLargeLoads(db, { fetcher, put, fetch, userAgent: 'test', now: NOW })
     const rows = ['ERCO', 'MISO', 'PJM', 'NYIS', 'AZPS'].flatMap((ba) =>
