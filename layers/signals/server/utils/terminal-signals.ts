@@ -11,7 +11,7 @@ import { SIGNALS, sourceLabel } from '../signals/registry'
 import { latestRun, type SeriesCoverage } from '../signals/run'
 
 export const SIGNALS_METHOD =
-  'For each series and each ticker it is expected to lead: the correlation between the series’ change each period and the ticker’s return over the next 1, 5, 20 and 60 trading days less SPY’s, measured from the first session after the figure was public. For event series (launches, price cuts, filings), the mean of that abnormal return from the close before each event. The newest third of each series is held out of sample. P-values shrink the sample where returns overlap. Prices are Databento daily closes, split-adjusted, without dividends, used internally and never published.'
+  'For each series and each ticker it is expected to lead: the correlation between the series’ change each period and the ticker’s return over the next 1, 5, 20 and 60 trading days less SPY’s, measured from the first session after the figure was public. For event series (launches, price cuts, filings), the mean of that abnormal return from the close before each event. The newest third of each series is held out of sample. Figures older than the price history are left out, and figures made public on the same day count as one. P-values shrink the sample where returns overlap. Prices are Databento daily closes, split-adjusted, without dividends, used internally and never published.'
 
 export const FORWARD_CALLS_RULE =
   'Each call is dated and holds every method we ran, with its inputs as they stood, and is never edited. It is scored against the 10-Q or 10-K filed after it: each method’s error, and whether the actual landed between the lowest and highest non-control estimate. Research, not investment advice.'
