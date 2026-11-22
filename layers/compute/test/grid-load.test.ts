@@ -470,6 +470,7 @@ describe('the ERCOT run and the payload', () => {
         return body ? { status: 200, fetched_at: new Date().toISOString(), body } : null
       },
       want: async () => {},
+      wanted: async () => false,
     }
     const deps = { fetcher, put, fetch, relay, userAgent: 'test', now: NOW }
     const first = await runErcotLargeLoads(db, deps)

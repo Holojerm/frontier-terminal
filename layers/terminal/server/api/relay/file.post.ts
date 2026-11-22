@@ -4,13 +4,13 @@
 
 import { z } from 'zod'
 
-import { isRelayed, putRelayCopy, RELAY_MAX_BYTES } from '#layers/core/server/pipeline/relay'
+import { isRelayHost, putRelayCopy, RELAY_MAX_BYTES } from '#layers/core/server/pipeline/relay'
 
 /** The job posts each URL as soon as it has it. */
 const FETCHED_AT_SLACK_MS = 15 * 60_000
 
 const Query = z.object({
-  url: z.string().url().max(2_000).refine(isRelayed, 'not a relayed host'),
+  url: z.string().url().max(2_000).refine(isRelayHost, 'not a relayed host'),
   status: z.coerce.number().int().min(100).max(599),
   fetched_at: z.string().datetime(),
 })

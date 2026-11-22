@@ -1337,7 +1337,12 @@ derived_sources:
       each carrying the context window, max output and knowledge cutoff the
       catalog and pricing pages omit, beside the same $/MTok prices. The
       page's own "Model ID" must equal the slug it was derived for, or the
-      source fails rather than storing a page under the wrong SKU.
+      source fails rather than storing a page under the wrong SKU. The host
+      403'd every page on two surveys in a row on 2026-11-22 while the
+      catalog and pricing pages answered, so on a 403 every
+      developers.openai.com source reads the Mac mini relay's copy instead
+      (layers/core/server/pipeline/relay.ts); the first refused run has no
+      copy yet and fails.
   google-model-md:
     url: https://aistudio.google.com/docs/models/{slug}.md
     from: google-priced-model
