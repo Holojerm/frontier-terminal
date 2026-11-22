@@ -5,6 +5,8 @@ import epochTimelines from '~~/fixtures/recipes/epoch-data-center-timelines.csv?
 import githubCount from '~~/fixtures/recipes/github-prs-copilot.json?raw'
 import npmClaudeCode from '~~/fixtures/recipes/npm-claude-code.json?raw'
 import pypiAnthropic from '~~/fixtures/recipes/pypi-anthropic.json?raw'
+import clickpyXai from '~~/fixtures/recipes/pypi-xai-sdk-clickpy.json?raw'
+import manifest from '~~/fixtures/manifest.json'
 import { parseCsv } from '#layers/core/server/recipes/csv'
 import { extractSites, extractTimelines } from '#layers/compute/server/recipes/epoch-data-centers'
 import {
@@ -16,8 +18,11 @@ import {
 } from '../../adoption/server/recipes/github-agent-prs'
 import { NPM_LAB_RECIPES, extractDownloads } from '../../adoption/server/recipes/npm-downloads'
 import {
+  PYPI_FIRST_DAY,
   PYPI_LAB_RECIPES,
+  clickpyUrl,
   extractPypiDownloads,
+  pypiBackfill,
 } from '../../adoption/server/recipes/pypi-downloads'
 import { RECIPES } from '#server/registries/recipes'
 
@@ -52,6 +57,40 @@ describe('package downloads', () => {
     expect(PYPI_LAB_RECIPES.find((r) => r.company === 'xai')!.url({ now: NOW, newest: null })).toBe(
       'https://pypistats.org/api/packages/xai-sdk/overall?mirrors=false',
     )
+  })
+
+  it('walks PyPI back one window before the oldest stored day, and stops at the floor', () => {
+    const floor = PYPI_FIRST_DAY['pypi-openai']
+    expect(pypiBackfill('2026-04-08', floor)).toEqual({ start: '2024-10-15', end: '2026-04-07' })
+    expect(pypiBackfill('2020-03-01', floor)).toEqual({ start: floor, end: '2020-02-29' })
+    expect(pypiBackfill(floor, floor)).toBeNull()
+    expect(pypiBackfill(null, floor)).toBeNull()
+  })
+
+  it('asks ClickPy for the older days, as the download log’s own counts', () => {
+    const xai = PYPI_LAB_RECIPES.find((r) => r.id === 'pypi-xai-sdk')!
+    const window = { start: PYPI_FIRST_DAY['pypi-xai-sdk'], end: '2024-01-31' }
+    // The fixture is the answer to the query the recipe sends.
+    const captured = manifest.fixtures.find((f) => f.path.endsWith('pypi-xai-sdk-clickpy.json'))!
+    expect(clickpyUrl('xai-sdk', window)).toBe(captured.source_url)
+    expect(xai.backfill!({ oldest: '2024-02-01' })).toEqual([
+      { url: captured.source_url, date: '2024-01-31', retrospective: false },
+    ])
+    expect(xai.backfill!({ oldest: PYPI_FIRST_DAY['pypi-xai-sdk'] })).toEqual([])
+    expect(xai.backfill!({ oldest: null })).toEqual([])
+    const sql = new URL(captured.source_url).searchParams.get('query')!
+    expect(sql).toContain("project = 'xai-sdk'")
+    expect(sql).toContain(
+      "installer NOT IN ('bandersnatch', 'z3c.pypimirror', 'Artifactory', 'devpi', '')",
+    )
+  })
+
+  it('reads a ClickPy answer with the pypistats reader, a day without downloads having no row', () => {
+    const obs = extractPypiDownloads(clickpyXai, 'xai-sdk')
+    expect(obs).toHaveLength(40)
+    expect(obs[0]).toEqual({ key: 'xai-sdk', date: '2023-12-08', value: 193, payload: {} })
+    expect(obs.some((o) => o.date === '2023-12-25')).toBe(false)
+    expect(obs.every((o) => o.date >= '2023-12-08' && o.date <= '2024-01-31')).toBe(true)
   })
 })
 

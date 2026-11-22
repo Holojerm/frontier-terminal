@@ -659,6 +659,15 @@
       "trim": "none — committed whole"
     },
     {
+      "path": "fixtures/recipes/pypi-xai-sdk-clickpy.json",
+      "source_id": "pypi-xai-sdk",
+      "source_url": "https://sql-clickhouse.clickhouse.com/?user=demo&query=SELECT%20'without_mirrors'%20AS%20category%2C%20toString(date)%20AS%20date%2C%20toUInt32(sum(count))%20AS%20downloads%20FROM%20pypi.pypi_downloads_per_day_by_version_by_installer_by_type%20WHERE%20project%20%3D%20'xai-sdk'%20AND%20date%20BETWEEN%20'2023-12-08'%20AND%20'2024-01-31'%20AND%20installer%20NOT%20IN%20('bandersnatch'%2C%20'z3c.pypimirror'%2C%20'Artifactory'%2C%20'devpi'%2C%20'')%20GROUP%20BY%20date%20ORDER%20BY%20date%20FORMAT%20JSON",
+      "fetched_at": "2026-11-22T18:06:33Z",
+      "http_status": 200,
+      "raw_bytes": 3755,
+      "trim": "none — committed whole (the 55 days from the package's first; 15 have no row)"
+    },
+    {
       "path": "fixtures/recipes/github-prs-copilot.json",
       "source_id": "github-prs",
       "source_url": "https://api.github.com/search/issues?q=is%3Apr+author%3Aapp%2Fcopilot-swe-agent+created%3A2026-11-02&per_page=1",

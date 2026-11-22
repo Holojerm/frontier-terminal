@@ -9,6 +9,7 @@
 // (pipeline/probes/, probe_days).
 
 import { NPM_FIRST_DAY } from '../../../adoption/server/recipes/npm-downloads'
+import { PYPI_FIRST_DAY } from '../../../adoption/server/recipes/pypi-downloads'
 import { FOREIGN_FILERS } from '../../../companies/server/calls/actuals'
 import { curatedCalls } from '../../../companies/server/calls/curated'
 
@@ -142,7 +143,10 @@ const sdkShare = (recipe: string, labId: LabId, label: string, from: string): Si
   history_from: from,
 })
 
-const pypi = (recipe: string, labId: LabId, label: string): SignalDef => ({
+/** As on npm: the newest of the five core SDKs on PyPI is google-genai. */
+const PYPI_SHARE_FROM = PYPI_FIRST_DAY['pypi-google-genai']
+
+const pypi = (recipe: keyof typeof PYPI_FIRST_DAY, labId: LabId, label: string): SignalDef => ({
   id: recipe,
   label,
   entity: lab(labId),
@@ -153,7 +157,7 @@ const pypi = (recipe: string, labId: LabId, label: string): SignalDef => ({
   test: 'lead_lag',
   aggregate: 'sum',
   available_after_days: 1,
-  history_from: '2026-04-08',
+  history_from: PYPI_FIRST_DAY[recipe],
 })
 
 const ramp = (key: string, labId: LabId, label: string): SignalDef => ({
@@ -532,9 +536,9 @@ export const SIGNALS: readonly SignalDef[] = [
     'pypi-anthropic',
     'anthropic',
     'Anthropic share of lab SDK PyPI downloads',
-    '2026-04-08',
+    PYPI_SHARE_FROM,
   ),
-  sdkShare('pypi-openai', 'openai', 'OpenAI share of lab SDK PyPI downloads', '2026-04-08'),
+  sdkShare('pypi-openai', 'openai', 'OpenAI share of lab SDK PyPI downloads', PYPI_SHARE_FROM),
   pypi('pypi-anthropic', 'anthropic', 'anthropic PyPI downloads'),
   pypi('pypi-claude-agent-sdk', 'anthropic', 'claude-agent-sdk PyPI downloads'),
   pypi('pypi-openai', 'openai', 'openai PyPI downloads'),

@@ -10,7 +10,7 @@ export const ADOPTION_DICTIONARY: Readonly<Record<string, DictionaryEntry>> = {
     event: 'date',
     knowledge: 'fetched_at',
     start:
-      'npm normalized series from each package’s first release (2022-01-01 at the earliest), npm shares from 2025-03-11, PyPI shares from the first PyPI day stored.',
+      'npm normalized series from each package’s first release (2022-01-01 at the earliest), npm shares from 2025-03-11, PyPI shares from 2024-12-10 (days before 2026-04-08 are read from ClickPy, later ones from pypistats).',
     joins: [{ column: 'company', to: ID }],
     feeds: ['recipes'],
   },
