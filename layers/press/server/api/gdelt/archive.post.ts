@@ -8,6 +8,7 @@ import { z } from 'zod'
 
 import { recordArchiveFile } from '../../pipeline/reported/archive'
 import { MAX_FIGURES_PER_FILE } from '../../pipeline/reported/store'
+import { GKG_FIELD_MAX } from '../../pipeline/track-record/gkg'
 
 /** A fetch time this far off the Worker's clock is refused: the job posts each file at once. */
 const FETCHED_AT_SLACK_MS = 15 * 60_000
@@ -20,10 +21,10 @@ const Body = z.object({
   figures: z
     .array(
       z.object({
-        record_id: z.string().min(1).max(100),
-        outlet: z.string().max(300),
-        url: z.string().url().max(2_000),
-        title: z.string().min(1).max(1_000),
+        record_id: z.string().min(1).max(GKG_FIELD_MAX.record_id),
+        outlet: z.string().max(GKG_FIELD_MAX.outlet),
+        url: z.string().url().max(GKG_FIELD_MAX.url),
+        title: z.string().min(1).max(GKG_FIELD_MAX.title),
       }),
     )
     .max(MAX_FIGURES_PER_FILE),
