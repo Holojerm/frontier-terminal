@@ -122,6 +122,18 @@ Entry format: one bullet block per run, appended to `journal/YYYY-MM-DD.md`:
 A no-op run journals `- no action needed (<why>)`. A failed run journals what failed and why;
 never fail silently.
 
+## Bot commands
+
+Mergify acts only on a PR comment in its exact form: `@mergifyio queue`, `@mergifyio requeue` or
+`@mergifyio refresh`, alone in the comment body. `mergifyio` is a bot, not a person, so any rule
+against @-mentioning people does not apply to it: never insert `·`, zero-width characters,
+backticks or anything else into the command. Mergify ignores a garbled command without saying so
+(woolholm#147 sat dequeued for two days after two requeues posted as `·@·m·ergifyio r·equeue`,
+2026-11-21). After posting, read the comment back
+(`gh api repos/<owner>/<repo>/issues/comments/<id> --jq .body`; the id ends the URL that
+`gh pr comment` prints) and post it again if it differs. Journal a requeue only once the comment
+reads exactly right.
+
 ## Escalation
 
 Something needs a human decision (an ambiguous data discrepancy, a security report, an
