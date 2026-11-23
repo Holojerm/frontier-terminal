@@ -80,9 +80,16 @@ function unescapeEntities(s: string): string {
 }
 
 /**
+ * The longest field each /api/gdelt/* route accepts. The parser drops a row past
+ * any of them, so one row no longer refuses its whole file's post: an archive
+ * file held a 1,000+ character "headline" and every run stopped on it.
+ */
+export const GKG_FIELD_MAX = { record_id: 100, outlet: 300, url: 2_000, title: 1_000 } as const
+
+/**
  * One row, or null for a row the track record cannot use: the wrong shape, a
  * DocumentIdentifier that is not a web URL (GDELT also ingests broadcast
- * transcripts and other collections), or no title.
+ * transcripts and other collections), no title, or a field past GKG_FIELD_MAX.
  */
 export function parseGkgRow(line: string): GkgArticle | null {
   const cols = line.split('\t')
@@ -100,7 +107,7 @@ export function parseGkgRow(line: string): GkgArticle | null {
     .split(';')
     .map((n) => n.trim())
     .filter(Boolean)
-  return {
+  const article = {
     record_id: record_id!,
     seen_at: stampIso(date!),
     outlet: outlet!,
@@ -108,6 +115,10 @@ export function parseGkgRow(line: string): GkgArticle | null {
     title: unescapeEntities(title).replace(/\s+/g, ' ').trim(),
     names: [...new Set([...orgs, ...allNames])],
   }
+  for (const [field, max] of Object.entries(GKG_FIELD_MAX)) {
+    if (article[field as keyof typeof GKG_FIELD_MAX].length > max) return null
+  }
+  return article
 }
 
 async function inflateRaw(data: Uint8Array): Promise<Uint8Array> {

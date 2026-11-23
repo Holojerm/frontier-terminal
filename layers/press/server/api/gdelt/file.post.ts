@@ -6,6 +6,7 @@
 
 import { z } from 'zod'
 
+import { GKG_FIELD_MAX } from '../../pipeline/track-record/gkg'
 import { MAX_MENTIONS_PER_FILE } from '../../pipeline/track-record/mentions'
 import { recordGkgFile } from '../../pipeline/track-record/search'
 
@@ -22,10 +23,10 @@ const Body = z.object({
   mentions: z
     .array(
       z.object({
-        record_id: z.string().min(1).max(100),
-        outlet: z.string().max(300),
-        url: z.string().url().max(2_000),
-        title: z.string().min(1).max(1_000),
+        record_id: z.string().min(1).max(GKG_FIELD_MAX.record_id),
+        outlet: z.string().max(GKG_FIELD_MAX.outlet),
+        url: z.string().url().max(GKG_FIELD_MAX.url),
+        title: z.string().min(1).max(GKG_FIELD_MAX.title),
         names: z.array(z.string().min(1).max(100)).min(1).max(50),
       }),
     )
