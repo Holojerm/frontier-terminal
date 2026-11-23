@@ -12,6 +12,7 @@ import {
   GKG_FROM,
   gkgSlots,
   gkgStamp,
+  GKG_FIELD_MAX,
   gkgUrl,
   parseGkgRow,
   stampIso,
@@ -345,6 +346,18 @@ describe('GDELT GKG files', () => {
     expect(cnetRow).toContain('Big Subscription')
     const row = cnetRow.replace('Big Subscription', 'Big &#99999999; &#x110000; &#38; Subscription')
     expect(parseGkgRow(row)?.title).toContain('Big &#99999999; &#x110000; & Subscription')
+  })
+
+  it('drops a row with a field longer than the routes accept', () => {
+    // An archive file's 1,000+ character headline made /api/gdelt/archive refuse the file
+    // on every run for a day and a half.
+    const long = cnetRow.replace('Big Subscription', `Big ${'x'.repeat(GKG_FIELD_MAX.title)}`)
+    expect(parseGkgRow(long)).toBeNull()
+    const atMax = cnetRow.replace(
+      /<PAGE_TITLE>[\s\S]*?<\/PAGE_TITLE>/,
+      `<PAGE_TITLE>${'x'.repeat(GKG_FIELD_MAX.title)}</PAGE_TITLE>`,
+    )
+    expect(parseGkgRow(atMax)?.title).toHaveLength(GKG_FIELD_MAX.title)
   })
 
   it('unzips a file whose local header defers its sizes', async () => {
