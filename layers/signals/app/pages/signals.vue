@@ -69,6 +69,21 @@ const note = computed(() => {
         </template>
       </TerminalPanel>
       <TerminalPanel
+        v-for="family in data.families"
+        :id="family.id"
+        :key="family.id"
+        :title="family.label"
+        note="Predicted before it was run, and corrected as its own family."
+        flush
+      >
+        <TerminalSignalFamily :data="data" :family="family" />
+        <template #foot>
+          A cell holds when its held-out p clears the bar, with the sign the wave predicted and the
+          same sign in sample. The wave bar divides 0.05 by the wave's own tests only; the all-tests
+          bar divides it by every test on this page. Research, not investment advice.
+        </template>
+      </TerminalPanel>
+      <TerminalPanel
         id="forward-calls"
         title="Forward calls"
         :note="callsNote"
