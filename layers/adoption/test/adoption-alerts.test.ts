@@ -11,7 +11,10 @@ const DAY = 86_400_000
 const iso = (ms: number) => new Date(ms).toISOString().slice(0, 10)
 
 /** Complete weeks from Monday 2026-08-31, one per total; the move is the last pair. */
-const weeks = (totals: number[], extra: Partial<{ partial: boolean; retrospective: boolean }> = {}) =>
+const weeks = (
+  totals: number[],
+  extra: Partial<{ partial: boolean; retrospective: boolean }> = {},
+) =>
   totals.map((total, i) => ({
     week: iso(Date.parse('2026-08-31T00:00:00Z') + i * 7 * DAY),
     total,
@@ -47,8 +50,12 @@ describe('the adoption week rule, pure', () => {
   })
 
   it('reads a Ramp month against its own monthly moves, in points', () => {
-    const month = (i: number) => `${2026 + Math.floor((i + 0) / 12)}-${String((i % 12) + 1).padStart(2, '0')}-01`
-    const flat = [40, 40.4, 40.1, 40.6, 40.3, 40.7, 40.5].map((value, i) => ({ month: month(i), value }))
+    const month = (i: number) =>
+      `${2026 + Math.floor((i + 0) / 12)}-${String((i % 12) + 1).padStart(2, '0')}-01`
+    const flat = [40, 40.4, 40.1, 40.6, 40.3, 40.7, 40.5].map((value, i) => ({
+      month: month(i),
+      value,
+    }))
     const up = [...flat, { month: month(7), value: 43.2 }]
     expect(monthMove(up)).toMatchObject({ month: '2026-08-01', before: 40.5 })
     expect(monthMove([...flat, { month: month(7), value: 41.5 }])).toBeNull()
@@ -59,7 +66,13 @@ describe('the adoption week rule, pure', () => {
 
 // ---- over a seeded store ---------------------------------------------------------------
 
-async function seedDays(recipe_id: string, key: string, from: string, days: number, perDay: (i: number) => number) {
+async function seedDays(
+  recipe_id: string,
+  key: string,
+  from: string,
+  days: number,
+  perDay: (i: number) => number,
+) {
   const start = Date.parse(`${from}T00:00:00Z`)
   for (let i = 0; i < days; i++) {
     const date = iso(start + i * DAY)
@@ -90,7 +103,8 @@ describe('the adoption rule over a seeded store', () => {
   })
 
   // Mon 2026-08-31 .. Sun 2026-11-01 is nine weeks; the ninth carries the jump.
-  const jump = (i: number) => (i < 56 ? [100, 104, 99, 103, 98, 102, 105, 100][Math.floor(i / 7)]! : 140) * 1000
+  const jump = (i: number) =>
+    (i < 56 ? [100, 104, 99, 103, 98, 102, 105, 100][Math.floor(i / 7)]! : 140) * 1000
 
   it('writes one alert for the jump, and nothing on a re-run', async () => {
     await seedDays('npm-openai', 'openai', '2026-08-31', 63, jump)
@@ -123,7 +137,16 @@ describe('the adoption rule over a seeded store', () => {
   })
 
   it('writes an alert for a Ramp vendor’s month, once, and only while the release is fresh', async () => {
-    const months = ['2026-03-01', '2026-04-01', '2026-05-01', '2026-06-01', '2026-07-01', '2026-08-01', '2026-09-01', '2026-10-01']
+    const months = [
+      '2026-03-01',
+      '2026-04-01',
+      '2026-05-01',
+      '2026-06-01',
+      '2026-07-01',
+      '2026-08-01',
+      '2026-09-01',
+      '2026-10-01',
+    ]
     const share = [2.0, 2.2, 2.1, 2.4, 2.3, 2.6, 2.7, 5.1]
     for (const [i, date] of months.entries()) {
       await db.insert(schema.recipeObservations).values({

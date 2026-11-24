@@ -16,11 +16,7 @@ import { AlertRow, ChangeRow, contentHash, type Provider } from '../utils/contra
 
 type Json = Record<string, string | number | null>
 
-export type ObservationRule =
-  | 'adoption-floor'
-  | 'datacenter-floor'
-  | 'limits-floor'
-  | 'pay-floor'
+export type ObservationRule = 'adoption-floor' | 'datacenter-floor' | 'limits-floor' | 'pay-floor'
 
 export type ObservationEntity = 'adoption_series' | 'data_center' | 'rate_limit' | 'pay_band'
 
@@ -118,7 +114,9 @@ export async function saidSince(
   const rows = await db
     .select({ after_json: tables.changes.after_json })
     .from(tables.changes)
-    .where(and(eq(tables.changes.entity_key, entity_key), gte(tables.changes.detected_at, sinceIso)))
+    .where(
+      and(eq(tables.changes.entity_key, entity_key), gte(tables.changes.detected_at, sinceIso)),
+    )
   return rows.some((r) => {
     const v = (JSON.parse(r.after_json ?? '{}') as Record<string, unknown>)[field]
     return typeof v === 'number' && Math.sign(v) === Math.sign(direction)
@@ -137,6 +135,7 @@ export function beyondNoise(
 ): boolean {
   const sizes = earlier.map(Math.abs).sort((a, b) => a - b)
   const mid = sizes.length >> 1
-  const typical = sizes.length === 0 ? 0 : sizes.length % 2 ? sizes[mid]! : (sizes[mid - 1]! + sizes[mid]!) / 2
+  const typical =
+    sizes.length === 0 ? 0 : sizes.length % 2 ? sizes[mid]! : (sizes[mid - 1]! + sizes[mid]!) / 2
   return Math.abs(change) >= Math.max(floor, multiple * typical)
 }

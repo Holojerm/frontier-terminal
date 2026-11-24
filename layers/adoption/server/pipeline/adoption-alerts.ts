@@ -135,7 +135,8 @@ export function weeklyFinding(s: SeriesIn, now: Date): Finding | null {
       ? rows.map((r) => ({
           date: r.date,
           value: r.value!,
-          retrospective: (JSON.parse(r.payload) as { retrospective?: unknown }).retrospective === true,
+          retrospective:
+            (JSON.parse(r.payload) as { retrospective?: unknown }).retrospective === true,
         }))
       : dayRows(rows)
           .filter((d) => !d.outage)
@@ -250,7 +251,9 @@ const prevMonth = (month: string) => {
 function weeklySeries(): Omit<SeriesIn, 'rows'>[] {
   const pkg = (r: { id: string; company: string; description: string }, kind: 'npm' | 'PyPI') => ({
     recipe_id: r.id,
-    provider: (r.company in LAB_OF_NAME || r.company === 'frontier-labs' ? r.company : 'other') as Provider,
+    provider: (r.company in LAB_OF_NAME || r.company === 'frontier-labs'
+      ? r.company
+      : 'other') as Provider,
     name: /^Daily \S+ downloads of (\S+),/.exec(r.description)?.[1] ?? r.id,
     kind,
   })

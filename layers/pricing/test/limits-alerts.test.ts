@@ -79,8 +79,12 @@ describe('the rate-limit rule over a seeded store', () => {
     expect(await writeLimitsAlerts(db, now)).toEqual({ written: 1, findings: 1 })
     const [alert] = await db.select().from(schema.alerts)
     expect(alert).toMatchObject({ rule: LIMITS_RULE, severity: 'notable' })
-    expect(alert!.headline).toBe('Anthropic changes Claude A rate limits on 2 tier-and-metric limits (0 up, 2 down)')
-    expect(alert!.explanation).toContain('Tier 4 RPM 4,000 to 2,000; Tier 4 ITPM 2,000,000 to 1,000,000')
+    expect(alert!.headline).toBe(
+      'Anthropic changes Claude A rate limits on 2 tier-and-metric limits (0 up, 2 down)',
+    )
+    expect(alert!.explanation).toContain(
+      'Tier 4 RPM 4,000 to 2,000; Tier 4 ITPM 2,000,000 to 1,000,000',
+    )
     const [change] = await db.select().from(schema.changes)
     expect(change).toMatchObject({ entity_type: 'rate_limit', provider: 'anthropic' })
     expect((await writeLimitsAlerts(db, now)).written).toBe(0)

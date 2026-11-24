@@ -15,10 +15,7 @@ import { inArray } from 'drizzle-orm'
 import * as tables from '#server/db/schema'
 import type { PipelineDb } from '#layers/core/server/utils/pipeline-store'
 import { companyName } from '#layers/core/shared/utils/companies'
-import {
-  writeFindings,
-  type Finding,
-} from '#layers/core/server/pipeline/observation-alerts'
+import { writeFindings, type Finding } from '#layers/core/server/pipeline/observation-alerts'
 import type { Provider } from '#layers/core/server/utils/contracts'
 import { RATE_LIMIT_RECIPES } from '../recipes/rate-limits'
 
@@ -47,7 +44,10 @@ const parts = (r: Row) => {
 }
 
 /** Pure: the limits that moved between two snapshots, grouped by model. */
-export function limitMoves(earlier: readonly Row[], later: readonly Row[]): Map<string, LimitMove[]> {
+export function limitMoves(
+  earlier: readonly Row[],
+  later: readonly Row[],
+): Map<string, LimitMove[]> {
   const before = new Map(earlier.map((r) => [r.key, r]))
   const out = new Map<string, LimitMove[]>()
   for (const r of later) {
@@ -60,7 +60,10 @@ export function limitMoves(earlier: readonly Row[], later: readonly Row[]): Map<
         ? b.value !== r.value
         : b.value !== 0 && (Math.abs(r.value - b.value) / b.value) * 100 >= MOVE_PCT
     if (!moved) continue
-    out.set(model, [...(out.get(model) ?? []), { model, tier, metric, before: b.value, after: r.value }])
+    out.set(model, [
+      ...(out.get(model) ?? []),
+      { model, tier, metric, before: b.value, after: r.value },
+    ])
   }
   return out
 }
@@ -137,7 +140,10 @@ interface LimitsAlertReport {
   findings: number
 }
 
-export async function writeLimitsAlerts(db: PipelineDb, now = new Date()): Promise<LimitsAlertReport> {
+export async function writeLimitsAlerts(
+  db: PipelineDb,
+  now = new Date(),
+): Promise<LimitsAlertReport> {
   const rows = await db
     .select()
     .from(tables.recipeObservations)

@@ -20,7 +20,10 @@ export async function runObservationAlerts(db: PipelineDb, now = new Date()) {
   const report: Record<string, { written: number; findings: number } | null> = {}
   for (const [name, write] of Object.entries(RULES)) {
     report[name] = await write(db, now).catch(async (error: unknown) => {
-      await recordOpsEvent(db, { kind: 'observation_alerts_failed', detail: `${name}: ${String(error)}` })
+      await recordOpsEvent(db, {
+        kind: 'observation_alerts_failed',
+        detail: `${name}: ${String(error)}`,
+      })
       return null
     })
   }

@@ -168,7 +168,14 @@ export async function writePayAlerts(db: PipelineDb, now = new Date()): Promise<
       if (!move) continue
       const entity = `pay_band:${recipe.id}:${key}`
       if (await saidSince(db, entity, since, move.pct, 'pct_change')) continue
-      findings.push(payFinding(recipe, key, move, cell.reduce((a, b) => (b.fetched_at > a.fetched_at ? b : a))))
+      findings.push(
+        payFinding(
+          recipe,
+          key,
+          move,
+          cell.reduce((a, b) => (b.fetched_at > a.fetched_at ? b : a)),
+        ),
+      )
     }
   }
   return { written: await writeFindings(db, findings, now), findings: findings.length }

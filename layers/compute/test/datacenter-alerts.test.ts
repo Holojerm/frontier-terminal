@@ -37,7 +37,9 @@ describe('the data-center rule, pure', () => {
   })
 
   it('does not read a removal or a rename as news, nor a 40 MW swing on a small site as a move', () => {
-    expect(siteChanges([site('Old name', 300), site('S', 40)], [site('New name', 305), site('S', 80)])).toEqual([])
+    expect(
+      siteChanges([site('Old name', 300), site('S', 40)], [site('New name', 305), site('S', 80)]),
+    ).toEqual([])
     expect(siteChanges([site('Gone', 300)], [])).toEqual([])
   })
 })
@@ -75,12 +77,20 @@ describe('the data-center rule over a seeded store', () => {
 
   it('alerts once per changed site, on the compute topic, and not again', async () => {
     await seed('2026-11-18', [site('Abilene', 800), site('Aiken', 70)])
-    await seed('2026-11-23', [site('Abilene', 800), site('Aiken', 130), site('Stargate Michigan', 400)])
+    await seed('2026-11-23', [
+      site('Abilene', 800),
+      site('Aiken', 130),
+      site('Stargate Michigan', 400),
+    ])
     const now = new Date('2026-11-23T12:00:00Z')
     expect(await writeDatacenterAlerts(db, now)).toEqual({ written: 2, findings: 2 })
     const alerts = await db.select().from(schema.alerts)
     expect(alerts.map((a) => [a.rule, a.severity, a.headline]).sort()).toEqual([
-      [DATACENTER_RULE, 'notable', 'Epoch AI adds a 400 MW data center in United States: Stargate Michigan'],
+      [
+        DATACENTER_RULE,
+        'notable',
+        'Epoch AI adds a 400 MW data center in United States: Stargate Michigan',
+      ],
       [DATACENTER_RULE, 'notable', 'Epoch AI raises Aiken to 130 MW from 70 MW (86%)'],
     ])
     const changes = await db.select().from(schema.changes)

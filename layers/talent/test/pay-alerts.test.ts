@@ -20,7 +20,9 @@ describe('the posted-pay rule, pure', () => {
   })
 
   it('does not alert on a cell that flips back and forth, or a move under 5%', () => {
-    const flip = [505, 505, 505, 505, 475, 475, 475, 445, 445, 475, 475, 475, 505, 505].map((n) => n * 1000)
+    const flip = [505, 505, 505, 505, 475, 475, 475, 445, 445, 475, 475, 475, 505, 505].map(
+      (n) => n * 1000,
+    )
     expect(payMove(series(flip), '2026-11-17')).toBeNull()
     expect(payMove(series([...flat, ...Array<number>(7).fill(380_000)]), '2026-11-17')).toBeNull()
   })
@@ -32,7 +34,9 @@ describe('the posted-pay rule, pure', () => {
   })
 
   it('carries the last stored day over a day the recipe stored nothing', () => {
-    const days = series([...flat, ...Array<number>(7).fill(397_500)]).filter((d) => d.date !== '2026-11-15')
+    const days = series([...flat, ...Array<number>(7).fill(397_500)]).filter(
+      (d) => d.date !== '2026-11-15',
+    )
     expect(payMove(days, '2026-11-17')).not.toBeNull()
   })
 })
@@ -47,7 +51,13 @@ async function seed(values: number[], key = 'research') {
       key,
       date,
       value,
-      payload: JSON.stringify({ n: 53, p25: 283_500, p75: 440_000, roles_on_board: 800, departments: ['Research'] }),
+      payload: JSON.stringify({
+        n: 53,
+        p25: 283_500,
+        p75: 440_000,
+        roles_on_board: 800,
+        departments: ['Research'],
+      }),
       raw_key: 'recipes/pay-openai/x.json',
       first_seen_at: `${date}T06:00:00.000Z`,
       source_url: 'https://api.ashbyhq.com/posting-api/job-board/openai?includeCompensation=true',
@@ -63,7 +73,10 @@ describe('the posted-pay rule over a seeded store', () => {
 
   it('alerts once on a lasting move, even as the window slides over it', async () => {
     await seed([...Array<number>(7).fill(370_500), ...Array<number>(10).fill(397_500)])
-    expect(await writePayAlerts(db, new Date('2026-11-17T12:00:00Z'))).toEqual({ written: 1, findings: 1 })
+    expect(await writePayAlerts(db, new Date('2026-11-17T12:00:00Z'))).toEqual({
+      written: 1,
+      findings: 1,
+    })
     const [alert] = await db.select().from(schema.alerts)
     expect(alert).toMatchObject({ rule: PAY_RULE, severity: 'notable' })
     expect(alert!.headline).toBe(

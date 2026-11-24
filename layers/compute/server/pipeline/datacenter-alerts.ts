@@ -15,10 +15,7 @@ import { inArray } from 'drizzle-orm'
 
 import * as tables from '#server/db/schema'
 import type { PipelineDb } from '#layers/core/server/utils/pipeline-store'
-import {
-  writeFindings,
-  type Finding,
-} from '#layers/core/server/pipeline/observation-alerts'
+import { writeFindings, type Finding } from '#layers/core/server/pipeline/observation-alerts'
 import type { Provider } from '#layers/core/server/utils/contracts'
 import { attributedLabs } from '../power/sites'
 import { EPOCH_DATA_CENTERS } from '../recipes/epoch-data-centers'
@@ -95,10 +92,7 @@ const CAVEAT =
   'Epoch AI’s estimates (CC BY 4.0): 80% of power estimates fall within a factor of 1.4, and a change can be a revised estimate as much as a build.'
 
 /** One finding for a change, from the snapshot dates it sits between. */
-export function siteFinding(
-  c: SiteChange,
-  dates: { earlier: string; later: string },
-): Finding {
+export function siteFinding(c: SiteChange, dates: { earlier: string; later: string }): Finding {
   const s = c.site
   const owner = s.owner ? ` Owner: ${s.owner}.` : ''
   const users = s.users ? ` Users: ${s.users}.` : ''
