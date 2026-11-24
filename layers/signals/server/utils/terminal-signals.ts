@@ -6,6 +6,7 @@
 import { count } from 'drizzle-orm'
 
 import * as tables from '#server/db/schema'
+import { familyViews } from '../signals/families'
 import { forwardCallViews } from '../signals/forward-calls'
 import { SIGNALS, sourceLabel } from '../signals/registry'
 import { latestRun, type SeriesCoverage } from '../signals/run'
@@ -91,6 +92,7 @@ export async function querySignals(db: PipelineDb, ctx: QueryContext): Promise<S
   })
 
   const tests = results.filter((r) => r.status === 'ok').length
+  const bonferroniP = tests > 0 ? 0.05 / tests : null
   return {
     as_of: run?.finished_at ?? null,
     computed_at: ctx.now().toISOString(),
@@ -104,11 +106,12 @@ export async function querySignals(db: PipelineDb, ctx: QueryContext): Promise<S
       : null,
     prices_through: run?.prices_through ?? null,
     tests,
-    bonferroni_p: tests > 0 ? 0.05 / tests : null,
+    bonferroni_p: bonferroniP,
     horizons: SIGNAL_HORIZONS,
     min_sample: MIN_SAMPLE,
     holdout: HOLDOUT_FRACTION,
     series,
+    families: familyViews(series, bonferroniP),
     forward_calls: forward,
     forward_rule: FORWARD_CALLS_RULE,
     method: SIGNALS_METHOD,

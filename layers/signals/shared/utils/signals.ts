@@ -141,10 +141,48 @@ export interface SignalsData extends Stamp {
   min_sample: typeof MIN_SAMPLE
   holdout: number
   series: SignalSeriesView[]
+  /** The alpha program's waves, each its own family beside the all-tests bar above. */
+  families: SignalFamilyView[]
   forward_calls: ForwardCallView[]
   forward_rule: string
   method: string
   credit: string
+}
+
+/** One registered cell of a wave: a series, a ticker, a horizon and the sign it predicted. */
+export interface SignalFamilyCell {
+  series: string
+  ticker: string
+  horizon: SignalHorizon
+  direction: 'up' | 'down'
+  /** The run's result for it; null while the series has no cell for that ticker. */
+  cell: SignalCell | null
+}
+
+/**
+ * A wave of the alpha program, corrected as its own family: its hypotheses
+ * were committed before they were run (layers/signals/server/signals/waves.ts).
+ */
+export interface SignalFamilyView {
+  id: string
+  label: string
+  registered: string
+  /** Where the wave is argued, in the repository. */
+  doc: string
+  /** Registered cells' results with enough sample, in and out: the family's divisor. */
+  tests: number
+  bonferroni_p: number | null
+  /** Registered cells that hold at the family's bar in the predicted direction. */
+  holds: number
+  /** Of those, the ones that also hold at the all-tests bar. */
+  holds_all: number
+  cells: SignalFamilyCell[]
+}
+
+/** Holds at `bonferroniP` (as signalCellHolds) with the held-out sign the wave predicted. */
+export function signalFamilyCellHolds(c: SignalFamilyCell, bonferroniP: number | null): boolean {
+  if (!c.cell || !signalCellHolds(c.cell, bonferroniP)) return false
+  return Math.sign(c.cell.out.estimate ?? 0) === (c.direction === 'up' ? 1 : -1)
 }
 
 /** Clears the Bonferroni bar out of sample, with the same sign in sample. */
