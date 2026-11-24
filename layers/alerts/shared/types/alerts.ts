@@ -26,6 +26,10 @@ export interface ChangeView extends Prov {
     | 'guidance'
     | 'guidance_check'
     | 'gpu_price'
+    | 'adoption_series'
+    | 'data_center'
+    | 'rate_limit'
+    | 'pay_band'
   provider: ProviderId
   change_type: 'added' | 'removed' | 'modified'
   detected_at: string
@@ -51,6 +55,10 @@ export interface AlertView extends Prov {
     | 'filed-fact-floor'
     | 'guidance-floor'
     | 'gpu-median-floor'
+    | 'adoption-floor'
+    | 'datacenter-floor'
+    | 'limits-floor'
+    | 'pay-floor'
   created_at: string
   change_ids: string[]
   /** The cited rows, resolved; ids that resolve to nothing are listed in `missing`. */

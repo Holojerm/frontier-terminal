@@ -64,6 +64,8 @@ export const DOMAIN_LAYERS = {
       'server/prints/ingest.ts',
       'server/prints/parse.ts',
       'server/pipeline/gpu-median-floor.ts',
+      // The data-center rule the same tick runs.
+      'server/pipeline/datacenter-alerts.ts',
     ],
   },
   pricing: {
@@ -79,6 +81,8 @@ export const DOMAIN_LAYERS = {
       'server/pipeline/judge/class-map.ts',
       // The archive eras and price and limit events the signals read.
       'server/pipeline/archive/',
+      // The rate-limit rule the survey tick runs.
+      'server/pipeline/limits-alerts.ts',
       // The price formatting the lab readout and the tear sheet share.
       'app/utils/price-display.ts',
     ],
@@ -91,6 +95,8 @@ export const DOMAIN_LAYERS = {
       'server/utils/',
       // The hiring floor the shell's judge alert screen clamps and gates against.
       'server/pipeline/hiring-floor.ts',
+      // The posted-pay rule the survey tick runs.
+      'server/pipeline/pay-alerts.ts',
       // The archive trims the shell's lab, compare and tear-sheet pages apply.
       'app/utils/hiring-archive.ts',
     ],
@@ -119,6 +125,8 @@ export const DOMAIN_LAYERS = {
       // Its recipes and the download series derived from them, which the theses and the
       // signals read.
       'server/recipes/',
+      // The adoption rule the survey tick runs.
+      'server/pipeline/adoption-alerts.ts',
     ],
   },
   models: {

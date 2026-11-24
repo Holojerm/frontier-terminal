@@ -273,6 +273,10 @@ function summarize(entityType: string, payload: Json | null): string {
       .filter((p): p is string => Boolean(p))
       .join(' · ')
   }
+  // The observation rules store the line themselves, built from the same row's figures.
+  if (['adoption_series', 'data_center', 'rate_limit', 'pay_band'].includes(entityType)) {
+    return str(payload.summary) ?? entityType
+  }
   return entityType
 }
 
