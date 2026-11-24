@@ -5,8 +5,9 @@ import { provenance } from './columns'
 // date), the key what the number is of and the date what it is for. Rewritten
 // only when a re-read differs, so fetched_at is the last read. Kept apart from
 // `entities` (these are not the terminal's labs); the lab panels and judge
-// never read it, but the GPU median rule does
-// (layers/compute/server/pipeline/gpu-median-floor.ts).
+// never read it, but the alert rules do: the GPU median
+// (layers/compute/server/pipeline/gpu-median-floor.ts) and the observation rules
+// (layers/core/server/pipeline/observation-alerts.ts).
 export const recipeObservations = sqliteTable(
   'recipe_observations',
   {
