@@ -107,3 +107,23 @@ describe('the storage contract', () => {
     expect(HTML_CLIENT_CACHE_CONTROL).toMatch(/^public/)
   })
 })
+
+describe('the cold-render cap', () => {
+  it('never counts a local server, and counts every real address', () => {
+    for (const ip of [undefined, '127.0.0.1', '::1', '::ffff:127.0.0.1']) {
+      expect(isLocalClient(ip)).toBe(true)
+    }
+    for (const ip of ['213.209.159.133', '2001:db8::1', '10.0.0.1']) {
+      expect(isLocalClient(ip)).toBe(false)
+    }
+  })
+
+  it('answers a 429 that says when to come back and that nothing may store', () => {
+    const refused = refusedRender(42)
+    expect(refused.statusCode).toBe(429)
+    expect(refused.headers['retry-after']).toBe('42')
+    expect(refused.headers['cache-control']).toBe('no-store')
+    // Never storable, so render:response could not cache it even unmarked.
+    expect(isStorableResponse(refused)).toBe(false)
+  })
+})

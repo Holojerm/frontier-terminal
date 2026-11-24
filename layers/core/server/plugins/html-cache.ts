@@ -4,6 +4,8 @@
 // They sit inside the render handler because Nitro applies the `routeRules`
 // headers (CSP, HSTS, securityHeaders in nuxt.config.ts) in a later layer; a
 // middleware that served hits would ship them with no Content-Security-Policy.
+// A render the cache did not answer spends COLD_RENDER_LIMITER first, the per-IP
+// cap that keeps one scraper from overloading D1 for every reader.
 //
 // FAILS OPEN: a missing `caches` binding, a Cache API throw or an unreachable D1
 // falls through to a normal render. `caches` does not exist under Node, so
@@ -46,50 +48,88 @@ function withServerTiming(response: RenderResponse, event: H3Event): void {
   }
 }
 
+/**
+ * Spends one of COLD_RENDER_LIMITER's renders for this IP, or returns the 429 to
+ * send instead. Runs on every render the cache did not answer, query-string
+ * paths included, so a cache-busting parameter does not dodge it. Fails open
+ * like rateLimit(): with D1 down the render fails anyway.
+ */
+async function refuseColdRender(event: H3Event): Promise<RenderResponse | undefined> {
+  const ip = clientIp(event)
+  if (ip === undefined || isLocalClient(ip)) return undefined
+  const { name, limit, windowSeconds } = COLD_RENDER_LIMITER
+  const verdict = await checkRateLimit(
+    { store: d1RateLimitStore(db) },
+    { key: `${name}:${ip}`, limit, windowSeconds },
+  )
+  if (verdict.backend === 'unavailable') {
+    logEvent('warn', 'rate_limit_unavailable', { name, error: verdict.error })
+    return undefined
+  }
+  if (verdict.allowed) return undefined
+  logEvent('warn', 'rate_limited', { name, path: pathForLog(event.path), backend: verdict.backend })
+  return refusedRender(verdict.resetSeconds)
+}
+
+/** Answers the request from the HTML cache when it can; true when it did. */
+async function serveFromCache(
+  ctx: { event: H3Event; response?: RenderResponse },
+  cache: Cache,
+): Promise<boolean> {
+  const event = ctx.event
+  if (!isCacheableDocument({ method: event.method, path: event.path })) return false
+
+  const timings: ServerTiming[] = []
+  event.context.serverTimings = timings
+  event.context.renderStartedAt = Date.now()
+
+  try {
+    // The same composite stamp the KV payloads key on, so a judge run
+    // rotates the HTML too rather than waiting for the next poll.
+    const stamp = await timed(timings, 'stamp', () => sharedTerminalStamp(() => terminalStamps(db)))
+    // Keyed by build as well as poll, so a deploy never serves the last build's HTML.
+    const build = useRuntimeConfig().public.buildSha || 'dev'
+    const key = htmlCacheKey(`/${build}${event.path}`, stamp.key, new Date().getUTCFullYear())
+    // Remembered so render:response stores under the key it missed on,
+    // rather than re-reading a stamp that may have moved mid-render.
+    event.context.htmlCacheKey = key
+
+    const hit = await timed(timings, 'html-cache', () => cache.match(new Request(key)))
+    timings.at(-1)!.desc = hit ? 'hit' : 'miss'
+    if (!hit) return false
+
+    const sidecar = hit.headers.get(HEADER_SIDECAR)
+    event.context.htmlCacheServed = true
+    ctx.response = {
+      body: await hit.text(),
+      statusCode: 200,
+      // The stored Cache-Control is storage policy and stops here: replaying
+      // it would put the staleness back in the browser, where nothing rotates it.
+      headers: {
+        ...((sidecar ? JSON.parse(sidecar) : {}) as Record<string, string>),
+        [CACHE_STATUS]: 'hit',
+        'cache-control': HTML_CLIENT_CACHE_CONTROL,
+      },
+    }
+    return true
+  } catch (error) {
+    console.warn(JSON.stringify({ kind: 'html_cache_read_failed', error: String(error) }))
+    return false
+  }
+}
+
 export default defineNitroPlugin((nitro) => {
   nitro.hooks.hook('render:before', async (ctx: { event: H3Event; response?: RenderResponse }) => {
     const cache = edgeCache()
-    if (!cache) return
-    const event = ctx.event
-    if (!isCacheableDocument({ method: event.method, path: event.path })) return
-
-    const timings: ServerTiming[] = []
-    event.context.serverTimings = timings
-    event.context.renderStartedAt = Date.now()
-
-    try {
-      // The same composite stamp the KV payloads key on, so a judge run
-      // rotates the HTML too rather than waiting for the next poll.
-      const stamp = await timed(timings, 'stamp', () =>
-        sharedTerminalStamp(() => terminalStamps(db)),
-      )
-      // Keyed by build as well as poll, so a deploy never serves the last build's HTML.
-      const build = useRuntimeConfig().public.buildSha || 'dev'
-      const key = htmlCacheKey(`/${build}${event.path}`, stamp.key, new Date().getUTCFullYear())
-      // Remembered so render:response stores under the key it missed on,
-      // rather than re-reading a stamp that may have moved mid-render.
-      event.context.htmlCacheKey = key
-
-      const hit = await timed(timings, 'html-cache', () => cache.match(new Request(key)))
-      timings.at(-1)!.desc = hit ? 'hit' : 'miss'
-      if (!hit) return
-
-      const sidecar = hit.headers.get(HEADER_SIDECAR)
-      event.context.htmlCacheServed = true
-      ctx.response = {
-        body: await hit.text(),
-        statusCode: 200,
-        // The stored Cache-Control is storage policy and stops here: replaying
-        // it would put the staleness back in the browser, where nothing rotates it.
-        headers: {
-          ...((sidecar ? JSON.parse(sidecar) : {}) as Record<string, string>),
-          [CACHE_STATUS]: 'hit',
-          'cache-control': HTML_CLIENT_CACHE_CONTROL,
-        },
-      }
-    } catch (error) {
-      console.warn(JSON.stringify({ kind: 'html_cache_read_failed', error: String(error) }))
-    }
+    if (cache && (await serveFromCache(ctx, cache))) return
+    const refused = await refuseColdRender(ctx.event).catch((error: unknown) => {
+      console.warn(JSON.stringify({ kind: 'cold_render_check_failed', error: String(error) }))
+      return undefined
+    })
+    if (!refused) return
+    // Marks the request answered, so render:response never stores the refusal.
+    ctx.event.context.htmlCacheServed = true
+    ctx.response = refused
   })
 
   nitro.hooks.hook('render:response', (response: RenderResponse, ctx: { event: H3Event }) => {
