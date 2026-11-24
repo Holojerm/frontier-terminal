@@ -23,6 +23,16 @@ is smaller than its changes need. `bun run schema:lock` rewrites the lock only
 when the newest release in `layers/core/server/utils/data-schema.ts` says
 exactly which columns changed.
 
+## 1.30.0 (2026-11-23)
+
+Wave 1 of the alpha program joins the signal scorecard: hyperscaler capex and
+remaining performance obligations from `filed_facts`, each quarter as first
+filed (`capex-hyperscalers-yoy`, `capex-orcl-yoy`, `rpo-msft`, `rpo-googl`,
+`rpo-amzn`, `rpo-orcl`, `rpo-hpe`, `rpo-cien`). `signal_results` gains their
+rows. `/api/signals` and `get_signals` gain `families`: each wave's cells as
+registered before they were run, with its own `bonferroni_p` over those cells,
+beside the all-tests one. No columns changed.
+
 ## 1.29.0 (2026-11-23)
 
 `claim_status_changes` joins the export: the revision trail of every thesis
