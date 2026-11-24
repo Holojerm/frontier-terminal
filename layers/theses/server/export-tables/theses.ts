@@ -1,4 +1,4 @@
-// The thesis claims: measured readings and judged verdicts. Part of EXPORT_TABLES (server/registries/export-tables.ts), which fixes the order.
+// The thesis claims: measured readings, their status changes and judged verdicts. Part of EXPORT_TABLES (server/registries/export-tables.ts), which fixes the order.
 
 import { and, lte } from 'drizzle-orm'
 import * as tables from '#server/db/schema'
@@ -44,6 +44,54 @@ export const CLAIM_TABLES = {
     },
     [tables.claimReadings.claim_id, tables.claimReadings.date],
     'a claim reading is rewritten in place while its data is revised, and the value it replaced is not kept.',
+  ),
+  claim_status_changes: plainTable(
+    'claim_status_changes',
+    'The revision trail of every thesis claim: one row each time its computed status changed, with the status it left and the reason. The newest row per claim is its status now. Rows are never edited.',
+    tables.claimStatusChanges,
+    {
+      id: {
+        type: 'text',
+        key: true,
+        meaning: 'SHA-256 (hex) of claim_id, the new status and changed_at.',
+      },
+      thesis_id: {
+        type: 'text',
+        meaning: 'The thesis the claim belongs to. Its page is /theses/<thesis_id>.',
+      },
+      claim_id: { type: 'text', meaning: 'The claim, unique across theses.' },
+      status: {
+        type: 'text',
+        meaning: 'The status the claim moved to: holding, weakening, broken or unresolved.',
+      },
+      previous_status: {
+        type: 'text',
+        meaning: 'The status it moved from, or null on the claim’s first row.',
+      },
+      reading_date: {
+        type: 'date',
+        meaning:
+          'The data date of the reading the status was computed from (YYYY-MM-DD), or null for a judged claim or a claim with no reading yet.',
+      },
+      reason: { type: 'text', meaning: 'Why the claim has this status, in a sentence.' },
+      changed_at: {
+        type: 'timestamp',
+        meaning: 'When the status change was recorded, in UTC.',
+      },
+      source_url: {
+        type: 'text',
+        provenance: true,
+        meaning: 'The thesis page the status is computed for.',
+      },
+      fetched_at: {
+        type: 'timestamp',
+        provenance: true,
+        meaning: 'When the status change was recorded, in UTC.',
+      },
+    },
+    [tables.claimStatusChanges.changed_at, tables.claimStatusChanges.id],
+    // Append-only and written when it happened, so the cut is its own timestamp.
+    async (_db, at) => lte(tables.claimStatusChanges.changed_at, at),
   ),
   claim_verdicts: plainTable(
     'claim_verdicts',
