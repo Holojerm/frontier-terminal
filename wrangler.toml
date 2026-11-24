@@ -9,6 +9,9 @@
 # read-only site with one Worker, one D1, one KV namespace and two R2 buckets.
 
 name = "frontier-terminal"
+# Pinned: the owner's login sees more than one Cloudflare account, and
+# non-interactive wrangler cannot choose between them.
+account_id = "90394168655e3aff5b5f299c4a213f54"
 compatibility_date = "2025-09-01"
 # `queue_consumer_wait_for_wait_until` pins today's default so a future
 # `compatibility_date` bump cannot flip it. The EVENTS consumer
