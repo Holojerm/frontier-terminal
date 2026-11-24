@@ -4092,13 +4092,19 @@ cut:
   gpu-scaleway:
     verdict: cut (GPU prices not stored)
     reason: >-
-      scaleway.com/en/pricing/gpu/ answers 403 to a non-browser client.
-      Checked 2026-11-02.
+      Held by the owner on 2026-11-23, for three reasons. Bunny Shield
+      answers our declared user agent with a 403 challenge page on some
+      requests (5 of 15 from the Mac mini) and serves plain clients. The
+      terms pages answer 403 to us, so they are unread. Every price is in
+      EUR, and the GPU medians are USD only. The H100 prices sit in the
+      page's __NEXT_DATA__ for fr-par-2 only (about €3.17 per GPU-hour on
+      the 8-GPU SXM machine); there is no B200. Details on issue #718.
+      Checked 2026-11-23.
   gpu-fluidstack-hyperbolic:
     verdict: cut (GPU prices not stored)
     reason: >-
-      fluidstack.io/pricing and hyperbolic.ai/pricing answer 404. Checked
-      2026-11-02.
+      hyperbolic.ai/pricing answers 404. fluidstack.io/pricing answers 429
+      with a Vercel Security Checkpoint challenge page. Checked 2026-11-23.
   gpu-aggregators:
     verdict: cross-check only (nothing stored)
     reason: >-
