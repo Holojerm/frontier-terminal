@@ -296,14 +296,13 @@ export async function applyFigureReadings(
           })
           .onConflictDoNothing()
           .returning({ id: tables.reportedReviews.id })
-    if (written.length === 0) continue
-    if (figures.size) {
-      await db
-        .insert(tables.reportedFigures)
-        .values([...figures.values()])
-        .onConflictDoNothing()
-    }
-    report.inserted += figures.size
+    if (written.length === 0 || figures.size === 0) continue
+    const inserted = await db
+      .insert(tables.reportedFigures)
+      .values([...figures.values()])
+      .onConflictDoNothing()
+      .returning({ id: tables.reportedFigures.id })
+    report.inserted += inserted.length
   }
   return report
 }
