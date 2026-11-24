@@ -93,8 +93,6 @@ export const SURFACE_WAIVERS = {
       'derived: the lab and entity type of each alert’s cited changes; alerts and changes are exported',
     api_keys: 'internal: licensee credentials (hashes)',
     bulk_grants: 'internal: S3 tokens for the licensed bucket',
-    claim_status_changes:
-      'not yet: the thesis revision trail; claim_verdicts and claim_readings are exported',
     class_map_decisions: 'internal: the judge’s overrides of the price matrix class map',
     deploy_checks: 'internal: post-deploy smoke runs, summarized on /api/reliability',
     filed_fact_reads: 'internal: the fetch log behind filed_facts',

@@ -190,6 +190,11 @@ describe('evaluateTheses', () => {
     expect(runs.some((r) => r.changed)).toBe(false)
     const log = await db.select().from(schema.claimStatusChanges)
     expect(log.filter((r) => r.thesis_id === 'anthropic')).toHaveLength(9)
+    // Provenance for the export: the thesis page, and when the change was recorded.
+    for (const r of log) {
+      expect(r.source_url).toBe(`https://frontierterm.com/theses/${r.thesis_id}`)
+      expect(r.fetched_at).toBe(r.changed_at)
+    }
     const after = await db.select().from(schema.claimReadings)
     expect(after.map((r) => r.computed_at)).toEqual(before.map((r) => r.computed_at))
   })

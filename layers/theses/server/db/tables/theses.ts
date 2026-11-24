@@ -38,6 +38,10 @@ export const claimStatusChanges = sqliteTable(
     reading_date: text('reading_date'),
     reason: text('reason').notNull(),
     changed_at: text('changed_at').notNull(),
+    // The thesis page the status is computed for, and when the change was recorded. The
+    // defaults only fill rows that predate the columns (0073 backfills them).
+    source_url: text('source_url').notNull().default(''),
+    fetched_at: text('fetched_at').notNull().default(''),
   },
   (t) => [index('claim_status_changes_claim_idx').on(t.claim_id, t.changed_at)],
 )

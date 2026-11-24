@@ -105,6 +105,7 @@ describe('the table registry', () => {
       'archive_captures',
       'alerts',
       'claim_readings',
+      'claim_status_changes',
       'claim_verdicts',
       'track_record_candidates',
       'track_record_verdicts',
