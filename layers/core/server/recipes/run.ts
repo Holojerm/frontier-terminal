@@ -4,7 +4,7 @@
 // the survey tick before the theses are evaluated, so readings see this
 // tick's data. One recipe failing never stops the others.
 
-import { and, desc, eq, lt, max, min, sql } from 'drizzle-orm'
+import { and, desc, eq, lt, max, sql } from 'drizzle-orm'
 
 import * as tables from '#server/db/schema'
 import { contentHash, contentHashOfText } from '#layers/core/server/utils/contracts'
@@ -182,20 +182,25 @@ async function storeObservations(
   return rows.length
 }
 
-async function oldestDate(db: PipelineDb, recipeId: string): Promise<string | null> {
-  const [row] = await db
-    .select({ at: min(tables.recipeObservations.date) })
+/** Every date the recipe has a row for: the backfill's map of what is still missing. */
+async function storedDates(db: PipelineDb, recipeId: string): Promise<Set<string>> {
+  const rows = await db
+    .selectDistinct({ date: tables.recipeObservations.date })
     .from(tables.recipeObservations)
     .where(eq(tables.recipeObservations.recipe_id, recipeId))
-  return row?.at ?? null
+  return new Set(rows.map((r) => r.date))
 }
+
+const earliest = (dates: ReadonlySet<string>) =>
+  [...dates].reduce<string | null>((min, d) => (min === null || d < min ? d : min), null)
 
 /**
  * The past runs a recipe asks for, after its own run read its source. There
  * is no hash check: two past days can return the same bytes (a zero count)
  * and both are new. Nothing here writes a run row, so the next run's
  * unchanged check still compares against the last live body. Rows are stored
- * as of now, retrospective, and stop at the first failure.
+ * as of now, retrospective unless the entry says otherwise, and stop at the
+ * first failure.
  */
 async function runBackfill(
   db: PipelineDb,
@@ -205,7 +210,8 @@ async function runBackfill(
   let observations = 0
   if (!recipe.backfill) return { observations, failure: null, rateLimited: false }
   const fetched_at = deps.now.toISOString()
-  for (const run of recipe.backfill({ oldest: await oldestDate(db, recipe.id) })) {
+  const stored = await storedDates(db, recipe.id)
+  for (const run of recipe.backfill({ oldest: earliest(stored), stored, now: deps.now })) {
     // The run date, as the recipe's own run would have had it.
     const stop = (why: string, rateLimited = false) => ({
       observations,
@@ -262,12 +268,20 @@ async function failureAlertDue(
   return rateLimitAlertDue(history, startedAt.getTime(), RECIPE_RATE_LIMIT_ALERT_AFTER_MS)
 }
 
+/**
+ * Two passes: every recipe's own run first, then the backfills. Recipes on one
+ * host share its limits, and a limiter that trips partway through a tick
+ * should cost only past days, which the next tick's walk asks for again, never
+ * a recipe's current reading (#699: Jules's daily search came after Claude
+ * Code's and Codex's backfills). A run's row is written in the first pass, so
+ * a tick cut short still records it, and the backfill adds to it.
+ */
 export async function runRecipes(
   db: PipelineDb,
   deps: { raw: RawStore; fetcher: SourceFetcher; now: () => Date },
   recipes: readonly Recipe[] = RECIPES,
 ): Promise<RecipeRunResult[]> {
-  const results: RecipeRunResult[] = []
+  const runs: { recipe: Recipe; id: string; started_at: Date; result: RecipeRunResult }[] = []
   for (const recipe of recipes) {
     const started_at = deps.now()
     const r = await runOne(db, recipe, { ...deps, now: started_at }).catch((error: unknown) => ({
@@ -278,29 +292,9 @@ export async function runRecipes(
       url: '',
       hash: null,
     }))
-    // Only after the source answered its own run: a failed or unconfigured
-    // source would fail every past day the same way.
-    if (r.status === 'ok' || r.status === 'unchanged') {
-      const past = await runBackfill(db, recipe, { ...deps, now: started_at }).catch(
-        (error: unknown) => ({
-          observations: 0,
-          failure: `backfill: ${String(error)}`,
-          rateLimited: false,
-        }),
-      )
-      r.observations += past.observations
-      if (past.failure) {
-        r.detail = past.failure
-        // A 429 is retried by the next tick's walk; anything else is a fault.
-        if (!past.rateLimited)
-          await recordOpsEvent(db, {
-            kind: 'recipe_failed',
-            detail: `${recipe.id}: ${past.failure}`,
-          })
-      }
-    }
+    const id = crypto.randomUUID()
     await db.insert(tables.recipeRuns).values({
-      id: crypto.randomUUID(),
+      id,
       recipe_id: recipe.id,
       started_at: started_at.toISOString(),
       status: r.status,
@@ -312,12 +306,45 @@ export async function runRecipes(
     if (r.status === 'failed' && (await failureAlertDue(db, recipe.id, r, started_at))) {
       await recordOpsEvent(db, { kind: 'recipe_failed', detail: `${recipe.id}: ${r.detail}` })
     }
-    results.push({
-      recipe_id: r.recipe_id,
-      status: r.status,
-      detail: r.detail,
-      observations: r.observations,
+    runs.push({
+      recipe,
+      id,
+      started_at,
+      result: {
+        recipe_id: r.recipe_id,
+        status: r.status,
+        detail: r.detail,
+        observations: r.observations,
+      },
     })
   }
-  return results
+
+  for (const { recipe, id, started_at, result } of runs) {
+    // Only after the source answered its own run: a failed or unconfigured
+    // source would fail every past day the same way.
+    if (!recipe.backfill || (result.status !== 'ok' && result.status !== 'unchanged')) continue
+    const past = await runBackfill(db, recipe, { ...deps, now: started_at }).catch(
+      (error: unknown) => ({
+        observations: 0,
+        failure: `backfill: ${String(error)}`,
+        rateLimited: false,
+      }),
+    )
+    if (past.observations === 0 && !past.failure) continue
+    result.observations += past.observations
+    if (past.failure) {
+      result.detail = past.failure
+      // A 429 is retried by the next tick's walk; anything else is a fault.
+      if (!past.rateLimited)
+        await recordOpsEvent(db, {
+          kind: 'recipe_failed',
+          detail: `${recipe.id}: ${past.failure}`,
+        })
+    }
+    await db
+      .update(tables.recipeRuns)
+      .set({ detail: result.detail?.slice(0, 500) ?? null, observations: result.observations })
+      .where(eq(tables.recipeRuns.id, id))
+  }
+  return runs.map((r) => r.result)
 }

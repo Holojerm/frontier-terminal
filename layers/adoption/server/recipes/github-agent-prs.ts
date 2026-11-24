@@ -5,9 +5,10 @@
 // token from a Worker (the anonymous limit is per IP), so a deploy without
 // NUXT_GITHUB_TOKEN records these as not configured (docs/source-audit.md).
 //
-// A search answers for any past day, so each run also walks back a few days before the
-// oldest stored, down to the agent's public launch. Those counts are taken today, from the
-// PRs that still exist, and the runner labels them retrospective.
+// A search answers for any past day, so each run also asks for a few days it has no count
+// for, newest first, down to the agent's public launch: first any day a failed run left
+// out, then the days before the oldest stored. Those counts are taken now, from the PRs
+// that still exist, and the runner labels them retrospective.
 
 import type { CompanyId } from '#layers/core/shared/utils/companies'
 import type { Observation, Recipe } from '#layers/core/server/recipes/contract'
@@ -20,17 +21,26 @@ const dayAfter = (date: string) => isoDay(dayMs(date) + DAY_MS)
 
 /**
  * Past days fetched per agent per survey tick. Three agents at 1 + 6 searches
- * is 21 a tick, inside the authenticated search limit of 30 a minute; at four
- * ticks a day, Claude Code's 20 months take under four weeks.
+ * is 21 a tick, which the fetcher spaces to stay under the authenticated
+ * search limit of 30 a minute (GITHUB_SEARCH_MIN_INTERVAL_MS); at four ticks a
+ * day, Claude Code's 20 months take under four weeks.
  */
 export const BACKFILL_DAYS_PER_RUN = 6
 
-/** The `n` days before `oldest`, newest first, none before `floor`. */
-export function walkBackDays(oldest: string | null, floor: string, n: number): string[] {
-  if (!oldest) return []
+/**
+ * Up to `n` days with no stored count, newest first, from `through` back to
+ * `floor`. A day a run failed on stays missing, so it is asked for again
+ * rather than walked past.
+ */
+export function missingDays(
+  stored: ReadonlySet<string>,
+  through: string,
+  floor: string,
+  n: number,
+): string[] {
   const days: string[] = []
-  for (let day = dayBefore(oldest); days.length < n && day >= floor; day = dayBefore(day))
-    days.push(day)
+  for (let day = through; days.length < n && day >= floor; day = dayBefore(day))
+    if (!stored.has(day)) days.push(day)
   return days
 }
 
@@ -61,11 +71,17 @@ export function githubPrRecipe(
     ext: 'json',
     // The run's date is the day after the one counted.
     extract: (body, ctx) => extractSearchCount(body, agent, dayBefore(ctx.date)),
-    backfill: ({ oldest }) =>
-      walkBackDays(oldest, launched, BACKFILL_DAYS_PER_RUN).map((day) => ({
+    // From yesterday: a live body identical to the last one (a day with no
+    // PRs) is stored as unchanged, without its day.
+    backfill: ({ stored, now }) => {
+      const yesterday = dayBefore(now.toISOString().slice(0, 10))
+      return missingDays(stored, yesterday, launched, BACKFILL_DAYS_PER_RUN).map((day) => ({
         url: searchUrl(query, day),
         date: dayAfter(day),
-      })),
+        // Read the day after, as the live run reads it.
+        ...(day === yesterday ? { retrospective: false } : {}),
+      }))
+    },
   }
 }
 

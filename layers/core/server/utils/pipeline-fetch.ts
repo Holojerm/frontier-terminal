@@ -82,6 +82,8 @@ export interface FetcherOptions extends UserAgentOptions {
   githubToken?: string
   fetch?: typeof globalThis.fetch
   sleep?: (ms: number) => Promise<void>
+  /** The clock GitHub search pacing reads; Date.now by default. */
+  now?: () => number
   attempts?: number
   /** Where relayed hosts are read from; defaults to the one the Worker registered (relay.ts). */
   relay?: RelayStore | null
@@ -189,17 +191,66 @@ export function parseRetryAfter(header: string | null, now: number = Date.now())
 }
 
 /**
- * GitHub answers its primary and secondary rate limits with a 403 as often as
- * a 429, marked by Retry-After or an exhausted x-ratelimit-remaining
- * (docs.github.com, "Rate limits for the REST API"). Such a 403 is the
- * limiter, not a refusal, so it follows the 429 policy.
+ * Start to start, between two GitHub search calls through one fetcher: 24 a
+ * minute, under the authenticated limit of 30. A survey tick sends 21, and
+ * fired back to back they drew bare 403s (#699), which is how GitHub's
+ * secondary limit answers a burst inside the documented one.
  */
-export function isGithubRateLimit(url: string, response: Response): boolean {
-  if (response.status !== 403 || new URL(url).hostname !== 'api.github.com') return false
+export const GITHUB_SEARCH_MIN_INTERVAL_MS = 2_500
+
+/** The limiter headers GitHub sends, in the order a failure detail names them. */
+const GITHUB_LIMIT_HEADERS = ['retry-after', 'x-ratelimit-remaining', 'x-ratelimit-resource']
+
+/** Long enough for GitHub's own sentence, short enough for a 500-character detail. */
+const GITHUB_MESSAGE_MAX_CHARS = 120
+
+export interface GithubRefusal {
+  /** The limiter headers present, as `name value`. */
+  headers: string[]
+  /** GitHub's `message`, which names a secondary rate limit when that is the cause. */
+  message: string | null
+}
+
+/** What a failed api.github.com answer says about itself, for the failure detail. */
+export async function readGithubRefusal(response: Response): Promise<GithubRefusal> {
+  const headers = GITHUB_LIMIT_HEADERS.flatMap((name) => {
+    const value = response.headers.get(name)
+    return value === null ? [] : [`${name} ${value}`]
+  })
+  let message: string | null = null
+  try {
+    const body = await readCappedBody(response, 16 * 1024)
+    const parsed = body ? (JSON.parse(body.text) as { message?: unknown }) : null
+    if (typeof parsed?.message === 'string' && parsed.message.trim())
+      message = parsed.message.trim().slice(0, GITHUB_MESSAGE_MAX_CHARS)
+  } catch {
+    // Not JSON: the headers are the diagnosis.
+  }
+  return { headers, message }
+}
+
+/**
+ * GitHub answers its primary and secondary rate limits with a 403 as often as
+ * a 429 (docs.github.com, "Rate limits for the REST API"). It marks them with
+ * Retry-After or an exhausted x-ratelimit-remaining, but a secondary limit may
+ * carry neither, and then only its message says so. Such a 403 is the limiter,
+ * not a refusal, so it follows the 429 policy.
+ */
+export function isGithubRateLimit(url: string, status: number, refusal: GithubRefusal): boolean {
+  if (status !== 403 || new URL(url).hostname !== 'api.github.com') return false
   return (
-    response.headers.has('retry-after') || response.headers.get('x-ratelimit-remaining') === '0'
+    refusal.headers.some((h) => h.startsWith('retry-after ') || h === 'x-ratelimit-remaining 0') ||
+    /rate limit/i.test(refusal.message ?? '')
   )
 }
+
+const githubNotes = (refusal: GithubRefusal | null) =>
+  refusal
+    ? [
+        ...refusal.headers.filter((h) => !h.startsWith('retry-after ')),
+        ...(refusal.message ? [`“${refusal.message}”`] : []),
+      ]
+    : []
 
 /**
  * Build the fetcher the refresh runs with. SEC sources without a contact email
@@ -211,6 +262,15 @@ export function createFetcher(options: FetcherOptions): SourceFetcher {
   const doFetch = options.fetch ?? globalThis.fetch
   const sleep = options.sleep ?? defaultSleep
   const attempts = options.attempts ?? FETCH_ATTEMPTS
+  const now = options.now ?? Date.now
+  // Each search reserves its slot before it waits, so concurrent callers queue.
+  let nextGithubSearch = -Infinity
+  const paceGithubSearch = async () => {
+    const at = Math.max(now(), nextGithubSearch)
+    nextGithubSearch = at + GITHUB_SEARCH_MIN_INTERVAL_MS
+    const wait = at - now()
+    if (wait > 0) await sleep(wait)
+  }
 
   const direct: SourceFetcher = async (source) => {
     const userAgent = userAgentFor(source.url, options)
@@ -235,6 +295,7 @@ export function createFetcher(options: FetcherOptions): SourceFetcher {
       if (!token) return { ok: false, status: null, detail: GITHUB_TOKEN_UNSET, skipped: true }
       headers.Authorization = `Bearer ${token}`
       headers.Accept = 'application/vnd.github+json'
+      await paceGithubSearch()
     }
 
     let last: FetchOutcome = { ok: false, status: null, detail: 'no attempt made' }
@@ -261,12 +322,21 @@ export function createFetcher(options: FetcherOptions): SourceFetcher {
         if (credentialed && response.status >= 300 && response.status < 400) {
           return { ok: false, status: response.status, detail: REDIRECT_REFUSED }
         }
-        const githubLimit = isGithubRateLimit(source.url, response)
+        // GitHub's body is read only on a failure, where it is a short JSON
+        // error, so the next 403 says why it came (#699).
+        const refusal =
+          new URL(source.url).hostname === 'api.github.com'
+            ? await readGithubRefusal(response)
+            : null
+        const githubLimit = refusal
+          ? isGithubRateLimit(source.url, response.status, refusal)
+          : false
         if (response.status === 429 || githubLimit) {
           const retryAfterMs = parseRetryAfter(response.headers.get('retry-after'))
           const notes = [
             githubLimit ? `GitHub’s ${response.status} rate limit` : null,
             retryAfterMs === null ? null : `Retry-After ${Math.ceil(retryAfterMs / 1000)}s`,
+            ...githubNotes(refusal),
           ].filter((note) => note !== null)
           last = {
             ok: false,
@@ -284,7 +354,14 @@ export function createFetcher(options: FetcherOptions): SourceFetcher {
           waited = true
           continue
         }
-        last = { ok: false, status: response.status, detail: `HTTP ${response.status}` }
+        const notes = githubNotes(refusal)
+        last = {
+          ok: false,
+          status: response.status,
+          detail: notes.length
+            ? `HTTP ${response.status} (${notes.join(', ')})`
+            : `HTTP ${response.status}`,
+        }
         if (!retryable(response.status)) return last
       } catch (err) {
         last = { ok: false, status: null, detail: `fetch threw: ${String(err)}` }
