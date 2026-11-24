@@ -43,6 +43,33 @@ describe('READ_PATH_LIMITER', () => {
     expect(nativeFor(natives, { limit: 30, windowSeconds: 60 })).toBe(writer)
   })
 
+  it('gives the cold-render budget no native first check, so it is always the exact count', () => {
+    // A native binding counts per machine; the scraper this budget exists for
+    // came in on fresh connections across two colos and was never stopped by one.
+    registerNativeLimiter(READ_PATH_LIMITER)
+    for (const spec of Object.values(KEYED_READ_LIMITERS)) registerNativeLimiter(spec)
+    const natives = Object.fromEntries(getNativeLimiters().map((s) => [s.binding, fake()]))
+    expect(nativeFor(natives, COLD_RENDER_LIMITER)).toBeUndefined()
+  })
+
+  it('refuses the cold render past the budget, on the count alone', async () => {
+    const counts = new Map<string, number>()
+    const store: RateLimitStore = {
+      hit: async (bucket, _expires, cost) => {
+        counts.set(bucket, (counts.get(bucket) ?? 0) + cost)
+        return counts.get(bucket)!
+      },
+    }
+    const { name, limit, windowSeconds } = COLD_RENDER_LIMITER
+    const opts = { key: `${name}:203.0.113.9`, limit, windowSeconds }
+    const now = Date.UTC(2026, 10, 22, 19, 47, 0)
+    for (let i = 0; i < limit; i++) {
+      expect((await checkRateLimit({ store }, opts, now)).allowed).toBe(true)
+    }
+    const over = await checkRateLimit({ store }, opts, now)
+    expect(over).toMatchObject({ allowed: false, backend: 'd1', remaining: 0 })
+  })
+
   it('gives the permalink budget no native first check, whatever is registered', () => {
     registerNativeLimiter(READ_PATH_LIMITER)
     const natives = { [READ_PATH_LIMITER.binding]: fake(), [NATIVE_LIMITER.binding]: fake() }

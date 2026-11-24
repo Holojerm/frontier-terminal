@@ -31,6 +31,22 @@ export const READ_PATH_LIMITER: NativeLimiterSpec = {
 export const PERMALINK_LIMIT = 500
 
 /**
+ * Server renders of a page per IP: HTML cache misses only (plugins/html-cache.ts),
+ * since a hit costs one stamp read and a cold render a dozen D1 reads plus the
+ * page's /api calls.
+ *
+ * The /api budgets above cannot carry this. They run `exact: false` on a native
+ * binding that counts per machine, and a scraper on fresh connections is never
+ * stopped by it: on 2026-11-22 one IP cold-rendered pages at about 4 a second
+ * across two colos and drove D1 into "overloaded" for a minute, failing every
+ * reader's page. So this one is the exact D1 count, one upsert per cold render.
+ *
+ * 120 clears a whole sitemap pass (89 URLs on 2026-11-23) in one window, with
+ * room to grow, and holds one IP to two cold renders a second.
+ */
+export const COLD_RENDER_LIMITER = { name: 'cold-render', limit: 120, windowSeconds: 60 } as const
+
+/**
  * Licensee keys (layers/core/server/utils/api-access.ts), counted per key on
  * their tier's own native binding: at ten or twenty requests a second, a KV
  * counter would overrun KV's one-write-a-second-per-key limit. Each MUST match
