@@ -263,6 +263,35 @@ describe('the figure gate', () => {
     expect((await figureReview(db)).map((r) => r.article_id)).not.toContain(id)
   })
 
+  // #725: the routine read a block of other outlets' headlines on the same
+  // stories as a repeat. A headline it rated, figures or none, never returns.
+  it('retires every headline it reads, figures or none, and ignores a second reading', async () => {
+    await storeAll()
+    const id = articleId(seeks().article.url)
+    const none = (await figureReview(db, 4)).map((r) => r.article_id).filter((a) => a !== id)
+    const body = JSON.stringify({
+      alerts: [],
+      figures: [
+        { article_id: id, figures: [figure({})] },
+        ...none.map((article_id) => ({ article_id, figures: [] })),
+      ],
+      judged_through: NOW.toISOString(),
+      change_ids_seen: [],
+    })
+    const first = await submitJudgeRun(db, body, { now: NOW })
+    expect(first.figures).toEqual({ accepted: none.length + 1, inserted: 1, rejected: [] })
+
+    const rated = new Set([id, ...none])
+    const next = await figureReview(db)
+    expect(next).toHaveLength(articles.length - rated.size)
+    expect(next.filter((r) => rated.has(r.article_id))).toEqual([])
+
+    const again = await submitJudgeRun(db, body, { now: new Date(NOW.getTime() + 3600_000) })
+    expect(again.figures).toEqual({ accepted: 0, inserted: 0, rejected: [] })
+    expect(await db.select().from(schema.reportedReviews)).toHaveLength(rated.size)
+    expect(await db.select().from(schema.reportedFigures)).toHaveLength(1)
+  })
+
   it('takes readings through the judge’s POST body, and refuses a key the contract lacks', async () => {
     await storeAll()
     const id = articleId(seeks().article.url)

@@ -73,11 +73,18 @@ export const entityTypeEnum = z.enum([
   // Written only as the change its alert cites; the prices live in
   // recipe_observations.
   'gpu_price',
+  // The recipe-observation rules (layers/core/server/pipeline/observation-alerts.ts): an adoption
+  // series' week or Ramp month, a data-center site, a model's rate limits, a posted-pay cell. Like
+  // gpu_price, written only as the change an alert cites; the readings live in recipe_observations.
+  'adoption_series',
+  'data_center',
+  'rate_limit',
+  'pay_band',
 ])
 export const changeTypeEnum = z.enum(['added', 'removed', 'modified'])
 export const severityEnum = z.enum(['info', 'notable', 'critical'])
 // The deterministic rules (layers/companies/server/pipeline/filing-floors.ts, prospectus-floor.ts, layers/models/server/pipeline/model-floor.ts,
-// hiring-rollup.ts, gpu-median-floor.ts; layers/companies/server/exposure/alerts.ts, guidance-alerts.ts) and the judge lane.
+// hiring-rollup.ts, gpu-median-floor.ts, observation-alerts.ts; layers/companies/server/exposure/alerts.ts, guidance-alerts.ts) and the judge lane.
 export const alertRuleEnum = z.enum([
   'agent-judge',
   's1-floor',
@@ -89,6 +96,10 @@ export const alertRuleEnum = z.enum([
   'filed-fact-floor',
   'guidance-floor',
   'gpu-median-floor',
+  'adoption-floor',
+  'datacenter-floor',
+  'limits-floor',
+  'pay-floor',
 ])
 // 'skipped': the source needs a credential the deploy does not have, so
 // nothing was attempted. Kept apart from 'failed' so a missing key is a

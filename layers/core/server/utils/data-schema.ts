@@ -450,6 +450,12 @@ export const SCHEMA_RELEASES: readonly SchemaRelease[] = [
       claim_status_changes: { note: 'New table.' },
     },
   },
+  {
+    version: '1.30.0',
+    date: '2026-11-23',
+    summary:
+      'Wave 1 of the alpha program joins the signal scorecard: hyperscaler capex and remaining performance obligations from filed_facts, each quarter as first filed (capex-hyperscalers-yoy, capex-orcl-yoy, rpo-msft, rpo-googl, rpo-amzn, rpo-orcl, rpo-hpe, rpo-cien). signal_results gains their rows. /api/signals and get_signals gain families: each wave’s cells as registered before they were run, with its own bonferroni_p over those cells, beside the all-tests one. No columns changed.',
+  },
 ]
 
 export const SCHEMA_VERSION = SCHEMA_RELEASES.at(-1)!.version
