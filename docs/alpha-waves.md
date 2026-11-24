@@ -2,7 +2,7 @@
 
 ## Summary
 
-The alpha program grades every series the terminal stores against the stocks it should lead (`layers/signals`, `/signals`). The harness and scorecard exist (#686, #704). This doc lists the datasets still to register, in waves, each wave one PR. It is a draft for the owner: nothing below is built until he signs off on the list and the decisions at the end.
+The alpha program grades every series the terminal stores against the stocks it should lead (`layers/signals`, `/signals`). The harness and scorecard exist (#686, #704). This doc lists the datasets still to register, in waves, each wave one PR. The owner approved wave 1 on 2026-11-23 (see [Decisions](#decisions-owner-2026-11-23)); later waves wait on the open decisions at the end.
 
 A graded signal is a test of understanding, not a trade. The scorecard publishes correlations and mean abnormal returns, never prices, and says "research, not investment advice" beside them. Companies under the $10B floor stay out, and no source joins without its terms checked (`docs/source-audit.md`).
 
@@ -25,7 +25,7 @@ From `registry.ts` › `SignalDef` and `sources.ts`:
 - **Tickers in `MARKET_SYMBOLS`.** That list is the listed universe, already cut at the $10B floor. A counterparty outside it is dropped, not added.
 - **A direction and a test.** `lead_lag` correlates each period's change with forward abnormal returns at 1, 5, 20 and 60 sessions; `event` averages the abnormal return after each event, `signed` by its value.
 - **Enough history.** Lead-lag needs 20 periods in sample and 10 out; an event series needs 8 and 4. The newest third is held out.
-- **A short ticker list.** Every cell is a test. The scorecard corrects for all of them at once (999 tests today, Bonferroni bar 5.0e-5), so each wave raises the bar for every series.
+- **A short ticker list.** Every cell is a test. The scorecard corrected for all of them at once (999 tests on 2026-11-23, Bonferroni bar 5.0e-5); from wave 1 each wave is also corrected as its own family (see Decisions).
 
 ## The waves
 
@@ -86,11 +86,14 @@ All three tables were filled as one-off backfills with `rights: not-cleared` (`d
 
 Kalshi, Polymarket, Ornn, AWS Capacity Blocks, Vast.ai, Vercel's leaderboards and Artificial Analysis are cut on their terms (`docs/source-audit.md`). AWS and Azure spot history need a signed-in account. Fastly is under the floor.
 
-## Decisions for the owner
+## Decisions (owner, 2026-11-23)
 
-1. **The list and its order.** Wave 1 first, on SEC facts alone.
-2. **Archived rows in the harness.** May the harness read `basis: archived` rows (hiring, GPU prices, incidents) and the retrospective GitHub counts, publishing only statistics? Wave 2 and part of wave 4 wait on it.
-3. **The test budget.** Every wave raises the bar for all 141 series. Keep one family across the scorecard, or correct per wave?
-4. **NET.** Add Cloudflare to the listed universe (and the Databento pull), so its stored series can be graded?
-5. **What a press "event" is.** The 30-day dedup window, and whether wave 3's pooled counterparty test is worth a harness change.
-6. **The two unsent requests.** TWSE consent and the KCS petition stay his to send; until then their series stay registered and empty.
+- **Wave 1 is approved as written.** Capex growth and remaining performance obligations from stored `filed_facts`, through a new `filed_growth` source kind, tested against NVDA, AVGO, AMD, ANET and each filer's own stock. Quarters are dated at the 10-Q or 10-K, with the understatement caveat kept; wave 4 re-dates them to the release.
+- **Each wave is its own family, registered first.** A wave's hypotheses (series, direction, horizon, tickers) are committed before the code that tests them, and its p-values are corrected within that wave. The scorecard keeps the all-tests bar beside each wave's, so nothing reads better than it is.
+- **Archived rows: decided when wave 2 comes.** Until then the harness reads no `basis: archived` row. The verdicts it turns on: open roles, GPU prices and incidents are `not-cleared` one-off backfills (`docs/source-audit.md`, 2026-11-05, 2026-11-20, 2026-11-21); the GitHub counts are retrospective and `not-cleared` (2026-11-20); Ramp is `not-cleared` (2026-11-11) and already registered.
+
+## Open decisions
+
+1. **NET.** Add Cloudflare to the listed universe (and the Databento pull), so its stored series can be graded?
+2. **What a press "event" is.** The 30-day dedup window, and whether wave 3's pooled counterparty test is worth a harness change.
+3. **The two unsent requests.** TWSE consent and the KCS petition stay the owner's to send; until then their series stay registered and empty.
