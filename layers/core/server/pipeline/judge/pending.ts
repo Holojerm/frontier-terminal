@@ -45,16 +45,20 @@ const TIMESTAMP_FIELDS: Readonly<Record<string, readonly string[]>> = {
  * signal band's counts exclude the same set
  * (layers/alerts/server/utils/terminal-alerts.ts).
  */
-// 'filed_fact', 'guidance', 'guidance_check' and 'gpu_price' changes exist
-// only as citations of rule-based alerts already written
+// 'filed_fact', 'guidance', 'guidance_check', 'gpu_price' and the observation rules'
+// types exist only as citations of rule-based alerts already written
 // (layers/companies/server/exposure/alerts.ts, guidance-alerts.ts,
-// layers/compute/server/pipeline/gpu-median-floor.ts).
+// layers/compute/server/pipeline/gpu-median-floor.ts, layers/core/server/pipeline/observation-alerts.ts).
 export const JUDGE_EXCLUDED_ENTITY_TYPES = [
   'ranking',
   'filed_fact',
   'guidance',
   'guidance_check',
   'gpu_price',
+  'adoption_series',
+  'data_center',
+  'rate_limit',
+  'pay_band',
 ] as const
 
 /** The WHERE fragment that keeps excluded entity types out of a changes query. */

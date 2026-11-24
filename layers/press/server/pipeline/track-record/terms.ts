@@ -205,6 +205,14 @@ function termsOf(change: ChangeRow): SearchTerms | null {
       // and Nebius aren't in it, so a search would be none-found by
       // construction. Not searched until the vocabulary names the providers.
       return null
+    case 'adoption_series':
+    case 'data_center':
+    case 'rate_limit':
+    case 'pay_band':
+      // Package downloads, a site's estimated power, a docs table and a posted band are the
+      // lab's numbers, not a story the press files under one: a search would be none-found by
+      // construction. Not searched.
+      return null
     default:
       return null
   }

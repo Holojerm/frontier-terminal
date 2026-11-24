@@ -5,6 +5,7 @@ import sourcesYaml from 'raw:~~/sources.yaml'
 
 import { runPoll } from '#layers/core/server/pipeline/poll'
 import { writeGpuMedianAlerts } from '#layers/compute/server/pipeline/gpu-median-floor'
+import { runObservationAlerts } from '../../pipeline/observation-alerts'
 import { paceSec } from '#layers/core/server/pipeline/sec-pace'
 import { evaluateTheses } from '../../../../theses/server/theses/evaluate'
 import { runRecipes } from '../../../../core/server/recipes/run'
@@ -52,6 +53,8 @@ const task = defineTask({
           return null
         })
       : null
+    // Adoption, data centers, rate limits and posted pay read the same stored recipes.
+    const observationAlerts = recipes ? await runObservationAlerts(db) : null
     const theses = await evaluateTheses(db, { sourcesYaml, now: () => new Date() }).catch(
       async (error: unknown) => {
         await recordOpsEvent(db, { kind: 'theses_evaluate_failed', detail: String(error) })
@@ -59,7 +62,7 @@ const task = defineTask({
       },
     )
     await warmAfterPoll(context)
-    return { result, recipes, gpuMedians, theses }
+    return { result, recipes, gpuMedians, observationAlerts, theses }
   },
 })
 
