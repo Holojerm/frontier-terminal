@@ -65,7 +65,10 @@ rather than retrying.
      every candidate is rated (up to 20 press articles, so four runs) or one is rated the same
      event. That is not a repeat: a repeat is the same `candidate_id` offered twice.
    - `figure_review`: press headlines that may state a lab's revenue, valuation or funding
-     and still need a reading.
+     and still need a reading. A headline is retired once read, figures or none. One story
+     runs under many outlets' own headlines, each read on its own, and the archive backfill
+     offers them oldest first, so a block can look like the last run's. That is not a
+     repeat: a repeat is the same `article_id` offered twice.
    - `filing_review`: fresh registration filings whose revenue or cover terms the parser
      could not read, with excerpts to read them from. The most time-sensitive block: an entry
      is a lab's IPO filing the terminal has not announced yet.
