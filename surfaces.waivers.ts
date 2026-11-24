@@ -50,24 +50,21 @@ export const SURFACE_WAIVERS = {
   alerts: {
     '/api/call-guidance':
       'not yet: a scored call statement raises no alert; its surprise is a /signals event',
-    '/api/adoption': 'not yet: recipe observations raise no alert',
     '/api/alerts': 'internal: the alert feed itself',
     '/api/alerts/[id]': 'internal: one alert of the feed',
     '/api/coverage': 'internal: source health; a failing source spools an ops event, not an alert',
-    '/api/datacenters': 'not yet: recipe observations raise no alert',
     '/api/dependencies':
       'derived: joins filed exposure facts and prospectus commitments (sec, through /api/prospectus)',
     '/api/grid-load': 'not yet: a load reading raises no alert',
     '/api/ground-truth':
       'derived: scores press reports against filings (revenue axis) and capex guidance against filed capex (exposure axis, guidance-floor)',
     '/api/identifiers': 'internal: reference data, read by hand',
-    '/api/limits': 'not yet: recipe observations raise no alert',
     '/api/listed':
       'derived: joins /api/dependencies, /api/suppliers, /api/power-sites and the /api/prints ties',
     '/api/overview': 'derived: the signal band, built from the alert feed',
     '/api/page-data': 'internal: a page’s hydration payload, not a dataset',
-    '/api/parents': 'not yet: recipe observations raise no alert',
-    '/api/pay': 'not yet: recipe observations raise no alert',
+    '/api/parents':
+      'covered: the facts that move (stake, funding, revenue, receivables, gains, credit lines) are read from the same filings as filed-fact-floor series (exposure axis) and alert there; a second rule on the recipe rows would alert twice',
     '/api/power-sites':
       'not yet: a new tie raises no alert, like a new supplier passage (docs/alerts-expansion.md › 6)',
     '/api/probes': 'not yet: latency strain raises no alert',
