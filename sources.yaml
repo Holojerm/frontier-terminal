@@ -2168,8 +2168,9 @@ recipe_sources:
     rights: not-cleared
     caveats: >-
       Public repositories only. Claude Code adds the footer to PR descriptions by default; users can turn it off, so the count is a floor. The phrase is searched in titles and bodies, so a PR quoting it is counted too. Each agent leaves a different trace,
-      so agents are never compared as shares. Each run also counts the six days
-      before the oldest stored one, back to the agent's public launch
+      so agents are never compared as shares. Each run also counts six days it has no count
+      for, newest first: any day an earlier run missed, then the days before
+      the oldest stored one, back to the agent's public launch
       (2025-02-24). Those counts are taken on the day we fetched them, from the
       pull requests that still exist. A PR deleted or made private since is
       missing, and one in a repository made public since is counted. Their
@@ -2187,8 +2188,9 @@ recipe_sources:
     rights: not-cleared
     caveats: >-
       Public repositories only. A branch-name convention only: no bot author and no trailer by default, so the count includes any branch named codex/ and misses Codex work on other branches. Each agent leaves a different trace,
-      so agents are never compared as shares. Each run also counts the six days
-      before the oldest stored one, back to the agent's public launch
+      so agents are never compared as shares. Each run also counts six days it has no count
+      for, newest first: any day an earlier run missed, then the days before
+      the oldest stored one, back to the agent's public launch
       (2025-05-16). Those counts are taken on the day we fetched them, from the
       pull requests that still exist. A PR deleted or made private since is
       missing, and one in a repository made public since is counted. Their
@@ -2206,8 +2208,9 @@ recipe_sources:
     rights: not-cleared
     caveats: >-
       Public repositories only. Jules opens PRs as its own app by default (changeable since 2026-02-19), so the count is structural rather than opt-in. Each agent leaves a different trace,
-      so agents are never compared as shares. Each run also counts the six days
-      before the oldest stored one, back to the agent's public launch
+      so agents are never compared as shares. Each run also counts six days it has no count
+      for, newest first: any day an earlier run missed, then the days before
+      the oldest stored one, back to the agent's public launch
       (2025-05-20). Those counts are taken on the day we fetched them, from the
       pull requests that still exist. A PR deleted or made private since is
       missing, and one in a repository made public since is counted. Their

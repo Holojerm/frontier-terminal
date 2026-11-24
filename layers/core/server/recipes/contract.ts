@@ -53,14 +53,18 @@ export interface Recipe {
   follow?(body: string, ctx: { newest: string | null }): string
   /**
    * Earlier runs a source can still answer for (a search by date counts any
-   * past day), fetched after this run's own URL, each with the run date
-   * `extract` gets. `oldest` is the oldest stored date, null when none. Their
-   * rows carry `retrospective: true`, being counted now from what still exists
-   * upstream, unless the entry says the source keeps the figure as it was on
-   * the day (`retrospective: false`). The walk stops at the first failure, so
-   * it leaves no hole.
+   * past day), fetched after every recipe's own run, each with the run date
+   * `extract` gets. `oldest` is the oldest stored date, null when none;
+   * `stored` is every stored date, for a walk that also fills the days a
+   * failed run left out; `now` is this run's clock. Their rows carry
+   * `retrospective: true`, being counted now from what still exists upstream,
+   * unless the entry says the source keeps the figure as it was on the day
+   * (`retrospective: false`). The walk stops at the first failure, and the
+   * next run asks for that day again.
    */
   backfill?(ctx: {
     oldest: string | null
+    stored: ReadonlySet<string>
+    now: Date
   }): { url: string; date: string; retrospective?: boolean }[]
 }

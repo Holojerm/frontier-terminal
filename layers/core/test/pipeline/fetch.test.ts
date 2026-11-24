@@ -145,7 +145,7 @@ describe('createFetcher', () => {
     expect(await createFetcher({ ...options, fetch: primary.fetch })(SEARCH)).toEqual({
       ok: false,
       status: 429,
-      detail: 'HTTP 429 (GitHub’s 403 rate limit)',
+      detail: 'HTTP 429 (GitHub’s 403 rate limit, x-ratelimit-remaining 0)',
     })
     const refused = scripted([
       new Response('', { status: 403, headers: { 'x-ratelimit-remaining': '29' } }),
@@ -153,7 +153,7 @@ describe('createFetcher', () => {
     expect(await createFetcher({ ...options, fetch: refused.fetch })(SEARCH)).toEqual({
       ok: false,
       status: 403,
-      detail: 'HTTP 403',
+      detail: 'HTTP 403 (x-ratelimit-remaining 29)',
     })
     // Retry-After on another host's 403 is that host's business.
     const other = scripted([new Response('', { status: 403, headers: { 'Retry-After': '60' } })])

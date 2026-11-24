@@ -10,11 +10,9 @@ import manifest from '~~/fixtures/manifest.json'
 import { parseCsv } from '#layers/core/server/recipes/csv'
 import { extractSites, extractTimelines } from '#layers/compute/server/recipes/epoch-data-centers'
 import {
-  BACKFILL_DAYS_PER_RUN,
   GITHUB_AGENT_RECIPES,
   extractSearchCount,
   githubPrRecipe,
-  walkBackDays,
 } from '../../adoption/server/recipes/github-agent-prs'
 import { NPM_LAB_RECIPES, extractDownloads } from '../../adoption/server/recipes/npm-downloads'
 import {
@@ -30,6 +28,12 @@ import { RECIPES } from '#server/registries/recipes'
 // against fixtures fetched that morning. Golden values are the sources' own.
 
 const NOW = new Date('2026-11-04T06:00:00Z')
+/** A backfill context with only `oldest` stored, as a run on NOW sees it. */
+const past = (oldest: string | null) => ({
+  oldest,
+  stored: new Set(oldest ? [oldest] : []),
+  now: NOW,
+})
 
 describe('package downloads', () => {
   it('reads a scoped npm package day by day', () => {
@@ -73,11 +77,11 @@ describe('package downloads', () => {
     // The fixture is the answer to the query the recipe sends.
     const captured = manifest.fixtures.find((f) => f.path.endsWith('pypi-xai-sdk-clickpy.json'))!
     expect(clickpyUrl('xai-sdk', window)).toBe(captured.source_url)
-    expect(xai.backfill!({ oldest: '2024-02-01' })).toEqual([
+    expect(xai.backfill!(past('2024-02-01'))).toEqual([
       { url: captured.source_url, date: '2024-01-31', retrospective: false },
     ])
-    expect(xai.backfill!({ oldest: PYPI_FIRST_DAY['pypi-xai-sdk'] })).toEqual([])
-    expect(xai.backfill!({ oldest: null })).toEqual([])
+    expect(xai.backfill!(past(PYPI_FIRST_DAY['pypi-xai-sdk']))).toEqual([])
+    expect(xai.backfill!(past(null))).toEqual([])
     const sql = new URL(captured.source_url).searchParams.get('query')!
     expect(sql).toContain("project = 'xai-sdk'")
     expect(sql).toContain(
@@ -112,53 +116,6 @@ describe('GitHub agent pull requests', () => {
     expect(() =>
       extractSearchCount('{"total_count":9,"incomplete_results":true}', 'Test', '2026-11-02'),
     ).toThrow(/incomplete/)
-  })
-
-  it('walks back from the oldest stored day, newest first, never before launch', () => {
-    expect(walkBackDays(null, '2026-10-01', 6)).toEqual([])
-    expect(walkBackDays('2026-11-03', '2026-10-01', 3)).toEqual([
-      '2026-11-02',
-      '2026-11-01',
-      '2026-10-31',
-    ])
-    // Across a month end, and stopping on the floor itself.
-    expect(walkBackDays('2026-03-02', '2026-02-27', 6)).toEqual([
-      '2026-03-01',
-      '2026-02-28',
-      '2026-02-27',
-    ])
-    expect(walkBackDays('2026-10-01', '2026-10-01', 6)).toEqual([])
-    expect(BACKFILL_DAYS_PER_RUN * 3 + 3).toBeLessThanOrEqual(21)
-  })
-
-  it('asks for each past day as the run the day after it would have', () => {
-    const recipe = githubPrRecipe('t', 'openai', 'Test', 'head:codex/', '2026-10-30')
-    const runs = recipe.backfill!({ oldest: '2026-11-02' })
-    expect(runs.map((r) => [decodeURIComponent(r.url), r.date])).toEqual([
-      [
-        'https://api.github.com/search/issues?q=is:pr head:codex/ created:2026-11-01&per_page=1',
-        '2026-11-02',
-      ],
-      [
-        'https://api.github.com/search/issues?q=is:pr head:codex/ created:2026-10-31&per_page=1',
-        '2026-11-01',
-      ],
-      [
-        'https://api.github.com/search/issues?q=is:pr head:codex/ created:2026-10-30&per_page=1',
-        '2026-10-31',
-      ],
-    ])
-    // The run date round-trips to the day its URL searched.
-    expect(recipe.extract(githubCount, { date: runs[0]!.date })[0]!.date).toBe('2026-11-01')
-  })
-
-  it('floors each agent at its public launch', () => {
-    const floor = (id: string, oldest: string) =>
-      GITHUB_AGENT_RECIPES.find((r) => r.id === id)!.backfill!({ oldest }).map((r) => r.date)
-    // The last run asked for is the day after launch, which counts launch day.
-    expect(floor('github-prs-claude-code', '2025-02-26')).toEqual(['2025-02-26', '2025-02-25'])
-    expect(floor('github-prs-codex', '2025-05-17')).toEqual(['2025-05-17'])
-    expect(floor('github-prs-jules', '2025-05-20')).toEqual([])
   })
 
   it('carries one recipe per lab agent, each searching what that agent leaves', () => {
