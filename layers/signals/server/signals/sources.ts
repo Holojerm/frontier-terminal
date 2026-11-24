@@ -13,6 +13,7 @@ import { PRIMARY_PLACEMENT } from '../../../reliability/server/pipeline/probes/p
 import { KCS } from '#layers/compute/server/prints/ingest'
 import { shiftPeriod } from '#layers/compute/server/prints/parse'
 import { readDownloadSeries, seriesById } from '#layers/adoption/server/recipes/download-series'
+import { factsOf, filedGrowth, filerQuarters } from './filed-growth'
 import type { EventPoint, Point } from './harness'
 import type { SignalSource } from './registry'
 
@@ -449,6 +450,27 @@ export function createLoader(deps: LoadDeps) {
             ),
           )
         return { kind: 'points', points: quarterlyGrowth(rows, source.lag_days) }
+      }
+      case 'filed_growth': {
+        const rows = await deps.db
+          .select()
+          .from(tables.filedFacts)
+          .where(
+            and(
+              inArray(
+                tables.filedFacts.ticker,
+                source.filers.map((f) => f.ticker),
+              ),
+              inArray(
+                tables.filedFacts.concept,
+                source.filers.map((f) => f.concept),
+              ),
+            ),
+          )
+        const quarters = factsOf(rows, source.filers).map((facts) =>
+          filerQuarters(facts, source.measure),
+        )
+        return { kind: 'points', points: filedGrowth(quarters, source.versus === 'year' ? 12 : 3) }
       }
       case 'revenue_vs_reported':
         return {

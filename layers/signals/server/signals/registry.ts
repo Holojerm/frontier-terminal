@@ -12,6 +12,8 @@ import { NPM_FIRST_DAY } from '../../../adoption/server/recipes/npm-downloads'
 import { PYPI_FIRST_DAY } from '../../../adoption/server/recipes/pypi-downloads'
 import { FOREIGN_FILERS } from '../../../companies/server/calls/actuals'
 import { curatedCalls } from '../../../companies/server/calls/curated'
+import type { FiledGrowthFiler } from './filed-growth'
+import { FILED_GROWTH_SIGNALS } from './filed-growth-signals'
 
 export type SignalSource =
   /** recipe_observations rows of one recipe and key. */
@@ -66,6 +68,18 @@ export type SignalSource =
   | { kind: 'quarterly_growth'; recipe: string; key: string; lag_days: number }
   /** A published rate limit or spend cap raised: archived copies of the page (archived_rate_limits), then the live limits recipe. */
   | { kind: 'limit_raises'; recipe: string }
+  /**
+   * Filers' total line (filed_facts, no member), each quarter as first filed:
+   * a flow's 3-month figure or a balance at the quarter's end, summed like for
+   * like across filers, as log growth on a year or a quarter before. Public
+   * on the filing date (./filed-growth.ts).
+   */
+  | {
+      kind: 'filed_growth'
+      filers: readonly FiledGrowthFiler[]
+      measure: 'flow' | 'balance'
+      versus: 'year' | 'quarter'
+    }
 
 export interface SignalDef {
   /** Stable: results, exports and links key on it. Never reuse a retired id. */
@@ -686,6 +700,7 @@ export const SIGNALS: readonly SignalDef[] = [
   capexSurprise('META', 'Meta'),
   capexSurprise('ORCL', 'Oracle'),
   ...LISTED_HIRING_SIGNALS,
+  ...FILED_GROWTH_SIGNALS,
 ]
 
 /** Where a series is read from, in the names /data and the exports use. */
@@ -725,5 +740,7 @@ export function sourceLabel(source: SignalSource): string {
       return `archived_rate_limits, then recipe_observations: ${source.recipe}, each limit raised`
     case 'quarterly_growth':
       return `recipe_observations: ${source.recipe} (${source.key}), log change on the quarter, public on its release`
+    case 'filed_growth':
+      return `filed_facts: ${source.filers.map((f) => `${f.ticker} ${f.concept}`).join(', ')}, total, ${source.measure === 'flow' ? '3 months' : 'at quarter end'}, first filed, log change on the ${source.versus}${source.filers.length > 1 ? ', summed like for like' : ''}`
   }
 }

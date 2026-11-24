@@ -110,7 +110,7 @@ const nextDay = (date: string) =>
 
 const PPE = 'us-gaap:PaymentsToAcquirePropertyPlantAndEquipment'
 const RPO = 'us-gaap:RevenueRemainingPerformanceObligation'
-const RPO_START =
+export const RPO_START =
   'us-gaap:RevenueRemainingPerformanceObligationExpectedTimingOfSatisfactionStartDateAxis'
 
 /**
