@@ -23,6 +23,9 @@ with the source URL and fetch time of the read that found it. Alerts come from t
   - `filed-fact-floor`: `layers/companies/server/exposure/alerts.ts`
   - `guidance-floor`: `layers/companies/server/exposure/guidance-alerts.ts`
   - `gpu-median-floor`: `layers/compute/server/pipeline/gpu-median-floor.ts`
+  - `adoption-floor`, `datacenter-floor`, `limits-floor`, `pay-floor`: the recipe-observation rules,
+    below. One writer (`layers/core/server/pipeline/observation-alerts.ts`), one rule file per
+    domain, all run by `layers/terminal/server/pipeline/observation-alerts.ts` on the survey tick.
 - **The judge.** The hourly routine reads `GET /api/judge/pending` (change rows since its last
   run) and sends back severity, headline and explanation. The Worker gates every field
   (`layers/core/server/pipeline/judge/`). It can only lower a severity
@@ -51,6 +54,26 @@ Every new alert source adds its entity type to `ChangeView`
 (`layers/alerts/shared/types/alerts.ts`), an `ENTITY_AXIS` entry and a `termsOf` case, or says
 why it has none. It deletes its `alerts` waivers from the surfaces gate's waiver file in the
 same PR.
+
+## The recipe-observation rules
+
+Built for the five waivers that read "recipe observations raise no alert". Every rule compares the
+newest read of a recipe with the one before, never walks history (so a first run over stored rows
+alerts on nothing), ids hash the rule, entity and period (so a re-run writes nothing twice), and
+writes only `notable`: never `critical`, which posts to X and Bluesky. Each cites one change row of
+its own entity type (`adoption_series`, `data_center`, `rate_limit`, `pay_band`), kept from the
+judge and `not-searchable` in the track record.
+
+| Rule | Axis | Alerts when | Noise it avoids |
+| --- | --- | --- | --- |
+| `adoption-floor` | demand | A complete week of an npm or PyPI lab package, or of a coding agent's public PRs, moves 25% or more and 3 times its median move over the earlier 8 weeks; or a Ramp vendor's month moves 2 points or more and 3 times its monthly median | Partial weeks, retrospective (counted-after-the-fact) weeks, a series under 4 earlier changes, a week under 1,000, a series that has gone quiet |
+| `datacenter-floor` | compute | An Epoch AI site of 100 MW or more appears, or a site's current power moves 25% and 50 MW | Removals and renames (Epoch edits names), small sites, owner and user edits |
+| `limits-floor` | pricing | A published limit present in both snapshots moves 10% or more, or goes to or from no limit; one alert per model | New and retired models and tiers (a new model is a `model-floor` alert), prose rows |
+| `pay-floor` | hiring | A cell's 7-day median of posted pay holds a move of 5% or more against the 7 days before, every day of one window beyond every day of the other, on 30 bands or more | A median that flips as one role opens or closes; a lasting move alerts once in 14 days |
+
+Posted-pay and the recipe's other stored rows are written only on a day a cell changes, so the pay
+rule carries the last stored day forward. `parents` is not a rule: the same investee facts alert
+as `filed-fact-floor` series, so its waiver is `covered`.
 
 ## The candidates
 

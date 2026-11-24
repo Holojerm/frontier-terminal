@@ -26,6 +26,14 @@ export const RULE_TEXT: Record<AlertView['rule'], string> = {
     'Set by a fixed rule. A capex figure in a hyperscaler’s earnings release is an alert, quoting the release, and critical when the range moves. Each 10-Q and 10-K is checked against the newest figure.',
   'gpu-median-floor':
     'Set by a fixed rule. A move of 5% or more in seven days in the H100 or B200 rental median is an alert. It counts only providers and configurations priced on both days.',
+  'adoption-floor':
+    'Set by a fixed rule. A package-download or coding-agent week, or a Ramp vendor’s month, that moves by 25% (2 points for Ramp) or more and at least three times its usual move is an alert. Only a complete period counts, and never one counted after the fact.',
+  'datacenter-floor':
+    'Set by a fixed rule. A new Epoch AI data center of 100 MW or more, or a site whose current power moves 25% and 50 MW or more between two snapshots, is an alert.',
+  'limits-floor':
+    'Set by a fixed rule. A published API rate limit that moves 10% or more, or goes to or from no limit, is an alert, one per model. New and retired models and tiers don’t count.',
+  'pay-floor':
+    'Set by a fixed rule. A lab’s posted-pay median for all roles, research or software engineering that holds a move of 5% or more over a week is an alert. A median that flips back and forth doesn’t count.',
   'agent-judge': 'Judged by a model. It can cite only fields from the changes it links to.',
 }
 
