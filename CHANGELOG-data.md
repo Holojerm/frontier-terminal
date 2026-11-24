@@ -23,6 +23,14 @@ is smaller than its changes need. `bun run schema:lock` rewrites the lock only
 when the newest release in `layers/core/server/utils/data-schema.ts` says
 exactly which columns changed.
 
+## 1.29.0 (2026-11-23)
+
+`claim_status_changes` joins the export: the revision trail of every thesis
+claim, one row each time its computed status changed, with the status it left,
+the reading date and the reason. Rows are append-only; the newest per claim is
+its status now. `source_url` is the thesis page and `fetched_at` is when the
+change was recorded.
+
 ## 1.28.3 (2026-11-22)
 
 PyPI downloads go back further. Each package is read back to its first day

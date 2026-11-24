@@ -203,6 +203,8 @@ export async function evaluateTheses(
           reading_date: evaluation.reading_date,
           reason: evaluation.reason,
           changed_at,
+          source_url: `https://frontierterm.com/theses/${thesis.id}`,
+          fetched_at: changed_at,
         })
       }
       runs.push({

@@ -13,6 +13,16 @@ export const THESES_DICTIONARY: Readonly<Record<string, DictionaryEntry>> = {
     joins: [],
     feeds: ['all', 'recipes'],
   },
+  claim_status_changes: {
+    grain: 'One row per change of a thesis claim’s computed status.',
+    cadence: 'When a survey or a judge run computes a status that differs from the claim’s last.',
+    event: 'changed_at',
+    knowledge: 'changed_at',
+    cut: 'Rows with changed_at at or before as_of: a status change is never rewritten, so the trail is exact at any past moment.',
+    start: LIVE,
+    joins: [],
+    feeds: ['all', 'recipes'],
+  },
   claim_verdicts: {
     grain: 'One row per candidate event the judge rated for a claim.',
     cadence: 'When the judge runs.',

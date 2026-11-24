@@ -161,6 +161,12 @@ export const EXPORT_HISTORY: Readonly<Record<string, HistoryRule>> = {
     'computed_at',
     tables.claimReadings.date,
   ),
+  claim_status_changes: windowed(
+    ['changed_at'],
+    'changed_at, when the status change was recorded',
+    'changed_at',
+    tables.claimStatusChanges.changed_at,
+  ),
   claim_verdicts: windowed(
     ['detected_at'],
     'detected_at, when we saw the change it rates',
