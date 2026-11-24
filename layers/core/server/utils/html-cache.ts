@@ -111,6 +111,34 @@ export function isStorableResponse(res: {
   return type !== undefined && type.includes('text/html')
 }
 
+/**
+ * Where COLD_RENDER_LIMITER is never counted: a local server. The browser suites
+ * reach `wrangler dev` from loopback and `nuxt dev` sees no client address, while
+ * in production Cloudflare always sets `cf-connecting-ip`, and never to loopback.
+ */
+export function isLocalClient(ip: string | undefined): boolean {
+  return ip === undefined || ip === '127.0.0.1' || ip === '::1' || ip === '::ffff:127.0.0.1'
+}
+
+/**
+ * The answer to a render over COLD_RENDER_LIMITER. Static, so it costs nothing
+ * to send; `no-store`, so no cache keeps the refusal past its window.
+ */
+export function refusedRender(retryAfterSeconds: number) {
+  return {
+    statusCode: 429,
+    statusMessage: 'Too Many Requests',
+    body:
+      '<!doctype html><html lang="en"><meta charset="utf-8"><title>Too many requests</title>' +
+      `<p>Too many pages in a minute from this address. Try again in ${retryAfterSeconds} seconds.</p></html>`,
+    headers: {
+      'content-type': 'text/html;charset=utf-8',
+      'retry-after': String(retryAfterSeconds),
+      'cache-control': 'no-store',
+    },
+  }
+}
+
 /** Case-insensitive lookup — h3 does not normalise what a render handler sets. */
 export function headerValue(
   headers: Record<string, string> | undefined,
