@@ -29,15 +29,11 @@ export const SURFACE_WAIVERS = {
   tearSheet: {
     '/api/call-guidance':
       'not yet: guidance is per listed company, not per lab; the lab page renders /ground-truth’s panels, the sheet does not',
-    '/api/adoption': 'not yet: adoption panels are on the lab page and /rankings only',
-    '/api/datacenters': 'not yet: data-center power is on the lab page, /hiring and /power only',
     '/api/disclosures': 'not yet: the disclosure summary is on the lab page and /disclosures only',
     '/api/hiring/listed':
       'not yet: listed-company hiring is on the lab page’s listed table and /hiring only',
-    '/api/limits': 'not yet: rate limits are on the lab page and /incidents only',
     '/api/parents':
-      'not yet: on the lab page only; the sheet reads /api/exposure for the same filers',
-    '/api/pay': 'not yet: posted pay is on the lab page and /hiring only',
+      'derived: the same investee-member facts are /api/exposure’s openai and anthropic series, which the sheet prints as hyperscaler filings',
     '/api/probes': 'not yet: measured strain is on the lab page and /incidents only',
     '/api/releases': 'not yet: new SKUs are on the lab page and /releases only',
     '/api/spend': 'not yet: implied spend share is on the lab page and /rankings only',

@@ -15,7 +15,7 @@ definePageMeta({
     priority: '0.6',
     title: 'Lab tear sheet',
     summary:
-      'One frontier lab on one printable page, with API prices and the last change, disclosed revenue and press reports scored against it, hyperscaler filings and listed companies that name it, OpenRouter demand share, open roles, incidents, the newest alerts, and every source with its fetch time.',
+      'One frontier lab on one printable page, with API prices and the last change, disclosed revenue and press reports scored against it, hyperscaler filings and listed companies that name it, OpenRouter demand share, Ramp adoption and package downloads, open roles and posted pay, data-center power, published rate limits, incidents, the newest alerts, and every source with its fetch time.',
   },
 })
 
@@ -99,6 +99,51 @@ const [prices, revenue, rankings, hiring, incidents, alerts, exposure, theses, t
     useFetch<ListedData>('/api/listed', { key: `sheet-listed:${lab}`, query: { lab } }),
   ])
 
+// The recipe-read panels (tear-sheet-recipes.ts), each narrowed to the lab here,
+// and slimmed to what the sheet prints: no weekly series, no archived limits, no site list.
+const [adoption, pay, limits, datacenters] = await Promise.all([
+  useFetch('/api/adoption', {
+    key: `sheet-adoption:${lab}`,
+    transform: (d: AdoptionData): NonNullable<RecipeInputs['adoption']> => ({
+      ramp: d.ramp && {
+        ...d.ramp,
+        series: d.ramp.series.filter((s) => s.key === 'overall' || s.lab === lab),
+      },
+      downloads: d.downloads
+        .filter((x) => x.lab === lab)
+        .map((x) => ({ ...x, weekly: [], normalized: [], share: [] })),
+      agent_prs: d.agent_prs
+        .filter((x) => x.lab === lab)
+        .map((x) => ({ ...x, days: [], weekly: x.weekly.slice(-2) })),
+      caveats: d.caveats,
+    }),
+  }),
+  useFetch('/api/pay', {
+    key: `sheet-pay:${lab}`,
+    transform: (d: PayData): NonNullable<RecipeInputs['pay']> => ({
+      boards: d.boards.filter((b) => b.lab === lab),
+      caveat: d.caveat,
+    }),
+  }),
+  useFetch('/api/limits', {
+    key: `sheet-limits:${lab}`,
+    transform: (d: LimitsData): NonNullable<RecipeInputs['limits']> => ({
+      pages: d.pages.filter((p) => p.lab === lab).map(({ archived: _archived, ...p }) => p),
+      caveat: d.caveat,
+    }),
+  }),
+  useFetch('/api/datacenters', {
+    key: `sheet-power:${lab}`,
+    transform: (d: DataCentersData): NonNullable<RecipeInputs['datacenters']> => ({
+      snapshot: d.snapshot,
+      labs: d.labs.filter((l) => l.lab === lab),
+      speculative_only: d.speculative_only,
+      source: d.source,
+      caveat: d.caveat,
+    }),
+  }),
+])
+
 const config = useRuntimeConfig()
 const appUrl = config.public.appUrl.replace(/\/+$/, '')
 const attribution = attributionLine(config.public.appName, appUrl)
@@ -119,27 +164,22 @@ const sheet = computed(() =>
       theses: theses.data.value,
       truth: truth.data.value,
       listed: listed.data.value,
+      adoption: adoption.data.value,
+      pay: pay.data.value,
+      limits: limits.data.value,
+      datacenters: datacenters.data.value,
       siteUrl: appUrl,
     },
     stamps.style.value,
   ),
 )
 const display = sheet.value.display
-const figureBlocks = computed(() => [
-  { id: 'demand', title: 'Demand', wide: false, figures: [sheet.value.demand] },
-  {
-    id: 'operations',
-    title: 'Operations',
-    wide: true,
-    figures: [sheet.value.hiring, sheet.value.incidents],
-  },
-])
 const asOf = computed(() => prices.data.value?.as_of ?? alerts.data.value?.as_of ?? null)
 
 useSeo({
   image: ogCardPath(route.path),
   title: `${display} tear sheet: prices, revenue, hiring, incidents`,
-  description: `${display} on one printable page: API prices, SEC revenue against the press, listed companies, demand, hiring, incidents and alerts, each sourced.`,
+  description: `${display} on one printable page: API prices, SEC revenue, listed companies, demand, hiring and pay, power, rate limits, incidents and alerts, each sourced.`,
   about: labOrganizationSchema({ name: display, url: LAB_SITE[lab] }),
   breadcrumb: [
     { name: display, path: labPath(lab) },
@@ -149,9 +189,22 @@ useSeo({
 })
 
 const failed = computed(() =>
-  [prices, revenue, rankings, hiring, incidents, alerts, exposure, theses, truth, listed].some(
-    (r) => r.error.value !== null && r.error.value !== undefined,
-  ),
+  [
+    prices,
+    revenue,
+    rankings,
+    hiring,
+    incidents,
+    alerts,
+    exposure,
+    theses,
+    truth,
+    listed,
+    adoption,
+    pay,
+    limits,
+    datacenters,
+  ].some((r) => r.error.value !== null && r.error.value !== undefined),
 )
 
 const printSheet = () => window.print()
@@ -173,7 +226,7 @@ const PRINT_INK = [
   'print:[--ui-border-accented:black]',
   // No print zoom: body type prints at 10.5pt and captions at 9pt. The
   // figures fill the first Letter page; for a lab with every axis populated,
-  // the alerts and the sources run onto a second. Sections never split.
+  // the filings, alerts and sources run onto the pages after. Sections never split.
 ].join(' ')
 </script>
 
@@ -276,39 +329,110 @@ const PRINT_INK = [
           </p>
         </TearSheetSection>
 
-        <!-- Demand sits beside revenue with the economics. Hiring and incidents
-             are how the lab runs, so they get a section of their own. -->
+        <!-- Demand and adoption sit beside revenue with the economics. Hiring and
+             incidents are how the lab runs, so they get a section of their own. -->
+        <TearSheetSection id="demand" title="Demand">
+          <TearSheetFigures :figures="[sheet.demand, ...sheet.adoption]" />
+        </TearSheetSection>
+
         <TearSheetSection
-          v-for="block in figureBlocks"
-          :id="block.id"
-          :key="block.id"
-          :title="block.title"
-          :class="block.wide ? 'sm:col-span-2 print:col-span-2' : undefined"
+          id="downloads"
+          title="Package downloads"
+          :note="
+            sheet.downloads.rows.length ? 'Last 28 days on record, against the 28 before' : null
+          "
+          class="sm:col-span-2 print:col-span-2"
         >
-          <dl
-            :class="
-              block.wide ? 'grid gap-x-6 gap-y-2 sm:grid-cols-2 print:grid-cols-2' : 'space-y-2'
-            "
+          <TerminalTable
+            v-if="sheet.downloads.rows.length"
+            :caption="`${display} SDK and coding-agent package downloads, last 28 days`"
+            :columns="[
+              { key: 'package', label: 'Package', class: 'font-mono' },
+              { key: 'registry', label: 'Registry' },
+              { key: 'kind', label: 'Kind' },
+              { key: 'last', label: 'Last 28 days', numeric: true, class: 'font-mono' },
+              { key: 'change', label: 'vs prior 28', numeric: true, class: 'font-mono' },
+              { key: 'through', label: 'Through', class: 'whitespace-nowrap font-mono' },
+            ]"
+            :rows="sheet.downloads.rows"
+            :row-key="(r) => r.key"
+            :gap="(r) => r.last === null"
+            :gap-columns="['last', 'change']"
+            nested
+            flow
           >
-            <div
-              v-for="f in block.figures"
-              :key="f.label"
-              class="flex flex-wrap items-baseline justify-between gap-x-3"
-            >
-              <dt class="text-xs text-muted">{{ f.label }}</dt>
-              <dd v-if="f.value !== null" class="text-right">
-                <span v-if="f.delta" class="mr-2 text-xs text-muted">{{ f.delta }}</span>
-                <span class="font-mono text-highlighted">{{ f.value }}</span
-                ><TearSheetRef :n="f.ref" />
-              </dd>
-              <dd v-else-if="f.gap" class="w-full">
-                <TearSheetGap :title="f.gap.title" :reason="f.gap.reason" />
-              </dd>
-              <dd v-for="line in f.lines" :key="line" class="w-full text-xs text-muted">
-                {{ line }}
-              </dd>
-            </div>
-          </dl>
+            <template #cell-package="{ row }"
+              >{{ row.package }}<TearSheetRef :n="row.ref"
+            /></template>
+            <template #gap>
+              <TearSheetGap title="No full 28 days on record" />
+            </template>
+          </TerminalTable>
+          <p v-else-if="sheet.downloads.gap">
+            <TearSheetGap :title="sheet.downloads.gap.title" :reason="sheet.downloads.gap.reason" />
+          </p>
+        </TearSheetSection>
+
+        <TearSheetSection id="operations" title="Operations" class="sm:col-span-2 print:col-span-2">
+          <TearSheetFigures :figures="[sheet.hiring, sheet.incidents]" wide />
+        </TearSheetSection>
+
+        <TearSheetSection
+          id="pay"
+          title="Posted pay"
+          :note="sheet.pay.rows.length ? 'Median midpoint of posted US salary bands' : null"
+          class="sm:col-span-2 print:col-span-2"
+        >
+          <TerminalTable
+            v-if="sheet.pay.rows.length"
+            :caption="`${display}’s posted US salary bands, median midpoint per role family`"
+            :columns="[
+              { key: 'label', label: 'Roles' },
+              { key: 'median', label: 'Median midpoint', numeric: true, class: 'font-mono' },
+              { key: 'range', label: 'Middle half', numeric: true, class: 'font-mono' },
+              { key: 'bands', label: 'Bands', numeric: true, class: 'font-mono' },
+              { key: 'change', label: 'Change' },
+            ]"
+            :rows="sheet.pay.rows"
+            :row-key="(r) => r.key"
+            nested
+            flow
+          >
+            <template #cell-median="{ row }"
+              >{{ row.median }}<TearSheetRef :n="row.ref"
+            /></template>
+          </TerminalTable>
+          <p v-else-if="sheet.pay.gap">
+            <TearSheetGap :title="sheet.pay.gap.title" :reason="sheet.pay.gap.reason" />
+          </p>
+        </TearSheetSection>
+
+        <TearSheetSection id="power" title="Power">
+          <TearSheetFigures :figures="[sheet.power]" />
+        </TearSheetSection>
+
+        <TearSheetSection id="limits" title="Published rate limits">
+          <TerminalTable
+            v-if="sheet.limits.rows.length"
+            :caption="`${display}’s published rate-limit pages, and when a limit last changed`"
+            :columns="[
+              { key: 'covers', label: 'Covers' },
+              { key: 'limits', label: 'Limits', numeric: true, class: 'font-mono' },
+              { key: 'change', label: 'Last change' },
+            ]"
+            :rows="sheet.limits.rows"
+            :row-key="(r) => r.key"
+            align="top"
+            nested
+            flow
+          >
+            <template #cell-covers="{ row }"
+              >{{ row.covers }}<TearSheetRef :n="row.ref"
+            /></template>
+          </TerminalTable>
+          <p v-else-if="sheet.limits.gap">
+            <TearSheetGap :title="sheet.limits.gap.title" :reason="sheet.limits.gap.reason" />
+          </p>
         </TearSheetSection>
 
         <TearSheetSection
@@ -466,6 +590,9 @@ const PRINT_INK = [
         </ol>
         <p v-else>No source loaded.</p>
         <p v-for="c in sheet.citations" :key="c">{{ c }}</p>
+        <p v-for="c in sheet.caveats" :key="c.label">
+          <span class="text-highlighted">{{ c.label }}:</span> {{ c.text }}
+        </p>
         <p>
           {{ attribution }} That covers the last {{ LICENSE_WINDOW_DAYS }} days. Older data is
           {{ HISTORY_LICENSE.short }} unless we published it before {{ LICENSE_SPLIT_EFFECTIVE }}.
