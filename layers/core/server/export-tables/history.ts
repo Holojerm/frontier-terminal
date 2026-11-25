@@ -27,7 +27,7 @@ export const HISTORY_TABLES = {
         type: 'text',
         key: true,
         meaning:
-          'SHA-256 (hex) of the entity key and the two content hashes, so the same change is never logged twice. A filed_fact change hashes its series, period, and accession instead; a guidance or guidance_check change, its filer, fiscal year and accessions; a gpu_price change, its GPU and UTC day; an adoption_series, data_center, rate_limit, pay_band or deal_score change, its rule, entity and period; a supplier_passage change, its rule, company and accession, plus the lab for each row after the first.',
+          'SHA-256 (hex) of the entity key and the two content hashes, so the same change is never logged twice. A filed_fact change hashes its series, period, and accession instead; a guidance or guidance_check change, its filer, fiscal year and accessions; a gpu_price change, its GPU and UTC day; an adoption_series, data_center, rate_limit, pay_band or deal_score change, its rule, entity and period; a supplier_passage change, its rule, company and accession, plus the lab for each row after the first; a revenue_score change, its rule, lab and accession.',
       },
       entity_key: {
         type: 'text',
@@ -36,7 +36,7 @@ export const HISTORY_TABLES = {
       entity_type: {
         type: 'text',
         meaning:
-          'The kind of row: model, job, incident, disclosure, disclosure_timeline, filer, revenue, filing, document, offering, statement, commitment, concentration, shares, risk_factors, recommendation, filed_fact (a hyperscaler series point a new filing moved, cited by its alert), guidance (a capex figure an earnings release printed, against the previous one, cited by its alert), guidance_check (a 10-Q or 10-K’s year-to-date capex against that figure, cited by its alert), gpu_price (the H100 or B200 rental median on two reads seven days apart, cited by its alert), adoption_series (a package-download, coding-agent or Ramp series on two periods), data_center (an Epoch AI site added or moved), rate_limit (one model’s published rate limits on two snapshots), pay_band (a posted-pay cell on two weeks), deal_score (a filed figure and the press reports of a deal’s size it scored) or supplier_passage (the new passages of one supplier filing that tie it to a lab or cloud, with one more row for each further lab they name), each cited by its alert. OpenRouter ranking rows are left out.',
+          'The kind of row: model, job, incident, disclosure, disclosure_timeline, filer, revenue, filing, document, offering, statement, commitment, concentration, shares, risk_factors, recommendation, filed_fact (a hyperscaler series point a new filing moved, cited by its alert), guidance (a capex figure an earnings release printed, against the previous one, cited by its alert), guidance_check (a 10-Q or 10-K’s year-to-date capex against that figure, cited by its alert), gpu_price (the H100 or B200 rental median on two reads seven days apart, cited by its alert), adoption_series (a package-download, coding-agent or Ramp series on two periods), data_center (an Epoch AI site added or moved), rate_limit (one model’s published rate limits on two snapshots), pay_band (a posted-pay cell on two weeks), deal_score (a filed figure and the press reports of a deal’s size it scored), revenue_score (a lab’s own filing and the press reports of its revenue it scored) or supplier_passage (the new passages of one supplier filing that tie it to a lab or cloud, with one more row for each further lab they name), each cited by its alert. OpenRouter ranking rows are left out.',
       },
       provider: PROVIDER,
       change_type: { type: 'text', meaning: 'added, removed, or modified.' },
@@ -515,7 +515,7 @@ export const HISTORY_TABLES = {
       rule: {
         type: 'text',
         meaning:
-          'What wrote it: agent-judge (the judge routine), or a deterministic rule: s1-floor, periodic-floor, cik-resolved, model-floor, prospectus-floor, hiring-rollup, filed-fact-floor, guidance-floor, gpu-median-floor, adoption-floor, datacenter-floor, limits-floor, pay-floor, deal-score-floor, supplier-passage-floor.',
+          'What wrote it: agent-judge (the judge routine), or a deterministic rule: s1-floor, periodic-floor, cik-resolved, model-floor, prospectus-floor, hiring-rollup, filed-fact-floor, guidance-floor, gpu-median-floor, adoption-floor, datacenter-floor, limits-floor, pay-floor, deal-score-floor, revenue-score-floor, supplier-passage-floor.',
       },
       created_at: {
         type: 'timestamp',
