@@ -1,6 +1,7 @@
 // One lab on one printed page: the lab page's readout, press reports against the filings,
-// the hyperscaler lines and listed companies that name the lab, the newest alerts and the
-// thesis, each figure numbered against a source list at the foot. Built from the lab
+// the hyperscaler lines and listed companies that name the lab, the recipe-read sections
+// (tear-sheet-recipes.ts), the newest alerts and the thesis, each figure numbered against
+// a source list at the foot. Built from the lab
 // page's payloads through summarizeLab, so the sheet and the lab page cannot disagree.
 //
 // A printed page has no tooltips or popovers, so every gap carries its reason as text and
@@ -97,6 +98,12 @@ export interface TearSheet {
   demand: SheetFigure
   hiring: SheetFigure
   incidents: SheetFigure
+  /** Ramp adoption and coding-agent PRs, read beside the OpenRouter share. */
+  adoption: SheetFigure[]
+  downloads: SheetRecipes['downloads']
+  pay: SheetRecipes['pay']
+  power: SheetFigure
+  limits: SheetRecipes['limits']
   alerts: SheetAlert[]
   thesis: {
     path: string
@@ -107,10 +114,12 @@ export interface TearSheet {
   } | null
   /** Upstream attribution a source requires (OpenRouter's CC BY string), verbatim. */
   citations: string[]
+  /** The caveat of each recipe dataset the sheet prints. */
+  caveats: SheetCaveat[]
   sources: SheetSource[]
 }
 
-export interface TearSheetInputs extends LabInputs {
+export interface TearSheetInputs extends LabInputs, RecipeInputs {
   /** Only `matrix` is read; `tier_note` is printed under the price table. */
   prices?: Pick<PricesData, 'matrix'> | null
   /** `window_days` names the incident window on the sheet. */
@@ -493,6 +502,9 @@ export function buildTearSheet(
           ref: null,
         }
 
+  const recipes = buildRecipeSections(lab, s.display, input, cite)
+  citations.push(...recipes.citations)
+
   const alerts: SheetAlert[] = s.alerts
     .filter((a) => a.severity !== 'info')
     .slice(0, SHEET_ALERTS)
@@ -529,9 +541,15 @@ export function buildTearSheet(
     demand,
     hiring,
     incidents,
+    adoption: recipes.adoption,
+    downloads: recipes.downloads,
+    pay: recipes.pay,
+    power: recipes.power,
+    limits: recipes.limits,
     alerts,
     thesis,
     citations,
+    caveats: recipes.caveats,
     sources,
   }
 }
