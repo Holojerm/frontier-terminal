@@ -1,5 +1,5 @@
 // One run of the suppliers reader, after each filings-lane poll. Hand-read rows
-// are seeded once (store.ts); each filer's new documents of its forms (filers.ts)
+// are seeded once and stored rows the counterparty list now knows are relabeled (store.ts); each filer's new documents of its forms (filers.ts)
 // are fetched, at most DOCS_PER_RUN a run, and stored in R2, read once each; rows
 // a later same-form document repeats are restamped; a document naming a
 // counterparty or customer share waits for the judge (review.ts), and one naming
@@ -18,6 +18,7 @@ import { supplierExcerpts } from './excerpts'
 import { SUPPLIER_FILERS, type SupplierFiler } from './filers'
 import {
   handReadThrough,
+  relabelPassages,
   restampPassages,
   seedHandPassages,
   settleDocument,
@@ -126,6 +127,7 @@ interface SupplierDeps {
 
 export interface SupplierReadReport {
   seeded: number
+  relabeled: number
   read: { ticker: string; accession_no: string; form: string; status: string; excerpts: number }[]
   restamped: number
   ended: number
@@ -141,6 +143,7 @@ export async function runSupplierReads(
   const now = deps.now.toISOString()
   const report: SupplierReadReport = {
     seeded: await seedHandPassages(db),
+    relabeled: await relabelPassages(db),
     read: [],
     restamped: 0,
     ended: 0,

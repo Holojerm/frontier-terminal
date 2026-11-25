@@ -89,7 +89,7 @@ export const COUNTERPARTIES: readonly Counterparty[] = [
   { name: 'Microsoft', spellings: ['Microsoft'], ticker: 'MSFT', lab: null },
   {
     name: 'Amazon',
-    spellings: ['Amazon Web Services', 'Amazon', 'AWS'],
+    spellings: ['Amazon Web Services', 'Amazon.com', 'Amazon', 'AWS'],
     ticker: 'AMZN',
     lab: null,
   },
@@ -107,10 +107,31 @@ export const COUNTERPARTIES: readonly Counterparty[] = [
   { name: 'Fluidstack', spellings: ['Fluidstack', 'FluidStack'], ticker: null, lab: null },
 ]
 
+/**
+ * The legal-form words a filing writes after a name ("Google LLC", "Anthropic, PBC", "Alibaba
+ * Group Holding Limited"). Only whole trailing words go, so "Meta Materials" stays itself.
+ */
+const LEGAL_FORM =
+  /[\s,]+(?:inc|incorporated|corp|corporation|co|company|llc|l\.l\.c|ltd|limited|plc|p\.l\.c|pbc|lp|l\.p|llp|gmbh|ag|sa|s\.a|sas|s\.a\.s|se|nv|n\.v|bv|b\.v|pte|kk|opco|holdings?|group)\.?$/i
+
+/** A name as a counterparty key: lowercase, no leading "The", no legal-form words, no stray punctuation. */
+export function nameKey(name: string): string {
+  let key = name
+    .replace(/[‘’]/g, "'")
+    .replace(/\s+/g, ' ')
+    .trim()
+    .replace(/^the\s+/i, '')
+  for (;;) {
+    const next = key.replace(LEGAL_FORM, '').replace(/[\s,.]+$/, '')
+    if (next === key || next === '') return key.toLowerCase()
+    key = next
+  }
+}
+
 const BY_NAME = new Map(
-  COUNTERPARTIES.flatMap((c) => [c.name, ...c.spellings].map((n) => [n.toLowerCase(), c] as const)),
+  COUNTERPARTIES.flatMap((c) => [c.name, ...c.spellings].map((n) => [nameKey(n), c] as const)),
 )
 
-/** The counterparty a name or one of its spellings is, or null. */
+/** The counterparty a name or one of its spellings is, legal-form words aside, or null. */
 export const counterpartyNamed = (name: string): Counterparty | null =>
-  BY_NAME.get(name.trim().toLowerCase()) ?? null
+  BY_NAME.get(nameKey(name)) ?? null

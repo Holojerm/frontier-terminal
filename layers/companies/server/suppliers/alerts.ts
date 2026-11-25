@@ -14,7 +14,9 @@
 //     figure no earlier row of that tie stated.
 // A backfill (the reader's first year of filings, a re-read, a new filer) therefore alerts on
 // nothing older than FRESH_DAYS and nothing from a company new to the reader, and one filing
-// that ties a company to several labs is one alert. Ids hash the company and the accession, so a re-run writes nothing twice.
+// that ties a company to several labs is one alert. It cites one row per lab its new passages
+// name, so the lab filter finds it under each. Ids hash the company and the accession (and the
+// lab, for each row after the first), so a re-run writes nothing twice.
 //
 // Severity starts at info. A filing is notable when a new passage names a tracked lab or cloud
 // and states a figure (each figure is already checked to be written in the quote).
@@ -31,7 +33,7 @@ import {
   type SupplierFigure,
   type SupplierRelation,
 } from '../../shared/utils/suppliers'
-import { SUPPLIER_FILERS } from './filers'
+import { SUPPLIER_FILERS, nameKey } from './filers'
 
 export const SUPPLIER_RULE = 'supplier-passage-floor' as const
 
@@ -51,7 +53,7 @@ const COMPANY = new Map(SUPPLIER_FILERS.map((f) => [f.ticker, f.company]))
 
 const figuresOf = (p: Passage): SupplierFigure[] => JSON.parse(p.figures) as SupplierFigure[]
 const figureKey = (f: SupplierFigure) => `${f.unit}:${f.value}`
-const tieKey = (p: Passage) => `${p.relation}|${p.counterparty.toLowerCase()}`
+const tieKey = (p: Passage) => `${p.relation}|${nameKey(p.counterparty)}`
 /** A lab or a cloud the counterparty list knows (filers.ts › COUNTERPARTIES). */
 const tracked = (p: Passage) =>
   p.relation !== 'concentration' && (p.counterparty_lab !== null || p.counterparty_ticker !== null)
@@ -99,11 +101,40 @@ const names = (values: readonly string[]) =>
     ? values.join(' and ')
     : `${values.slice(0, -1).join(', ')}, and ${values.at(-1)}`
 
+/** The passage a group leads with: a tracked tie with a figure, else a tracked tie, else the first. */
+const leadOf = (group: readonly Passage[]) =>
+  group.find((p) => tracked(p) && figuresOf(p).length > 0) ?? group.find(tracked) ?? group[0]!
+
+/** A cited row's payload: the filing, the passages it covers, and the one it leads with. */
+function citedAfter(doc: Doc, company: string, group: readonly Passage[]) {
+  const first = leadOf(group)
+  const counterparties = [...new Set(group.map((p) => p.counterparty))]
+  const labs = [...new Set(group.flatMap((p) => (p.counterparty_lab ? [p.counterparty_lab] : [])))]
+  return {
+    summary: `${company} · ${doc.form} · ${doc.filed} · ${names(counterparties)} · ${group.length} new ${group.length === 1 ? 'passage' : 'passages'}`,
+    ticker: doc.ticker,
+    company,
+    form: doc.form,
+    filed: doc.filed,
+    accession_no: doc.accession_no,
+    period: first.period,
+    passages: group.length,
+    counterparties: counterparties.join(', '),
+    labs: labs.join(', ') || null,
+    relation: first.relation,
+    counterparty: first.counterparty,
+    figures: figuresOf(first)
+      .map((f) => supplierFigureText(f, compactUsd))
+      .join(', '),
+    quote: first.quote,
+  }
+}
+
 function finding(doc: Doc, news: readonly Passage[]): Finding {
   const company = COMPANY.get(doc.ticker) ?? news[0]!.company_name
-  const lead = news.find((p) => tracked(p) && figuresOf(p).length > 0)
-  const notable = lead !== undefined
-  const first = lead ?? news.find(tracked) ?? news[0]!
+  const notable = news.some((p) => tracked(p) && figuresOf(p).length > 0)
+  const first = leadOf(news)
+  const provider = (first.counterparty_lab ?? 'other') as Finding['provider']
   const counterparties = [...new Set(news.map((p) => p.counterparty))]
   const labs = [...new Set(news.flatMap((p) => (p.counterparty_lab ? [p.counterparty_lab] : [])))]
   const filing = `${company}’s ${doc.form}, filed ${doc.filed}`
@@ -120,28 +151,21 @@ function finding(doc: Doc, news: readonly Passage[]): Finding {
     rule: SUPPLIER_RULE,
     entity_type: 'supplier_passage',
     entity_key: `supplier_passage:${doc.ticker.toLowerCase()}`,
-    provider: (first.counterparty_lab ?? 'other') as Finding['provider'],
+    provider,
     period: doc.accession_no,
     change_type: 'added',
     before: null,
-    after: {
-      summary: `${company} · ${doc.form} · ${doc.filed} · ${names(counterparties)} · ${news.length} new ${news.length === 1 ? 'passage' : 'passages'}`,
-      ticker: doc.ticker,
-      company,
-      form: doc.form,
-      filed: doc.filed,
-      accession_no: doc.accession_no,
-      period: first.period,
-      passages: news.length,
-      counterparties: counterparties.join(', '),
-      labs: labs.join(', ') || null,
-      relation: first.relation,
-      counterparty: first.counterparty,
-      figures: figuresOf(first)
-        .map((f) => supplierFigureText(f, compactUsd))
-        .join(', '),
-      quote: first.quote,
-    },
+    after: citedAfter(doc, company, news),
+    also: labs
+      .filter((lab) => lab !== provider)
+      .map((lab) => ({
+        provider: lab as Finding['provider'],
+        after: citedAfter(
+          doc,
+          company,
+          news.filter((p) => p.counterparty_lab === lab),
+        ),
+      })),
     headline,
     explanation: [
       `${filing} (accession ${doc.accession_no}), says ${news.map((p) => tieText(p, company)).join(', and ')}.`,
