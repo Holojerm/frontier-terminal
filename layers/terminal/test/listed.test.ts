@@ -230,6 +230,56 @@ describe('listedForLab', () => {
   })
 })
 
+describe('listedHiringEvidence', () => {
+  const data = { as_of: null, computed_at: '2026-11-19T00:00:00.000Z', rule: '', ...listed }
+  const read = (total: number | null, datacenter: number) =>
+    ({ total, datacenter, read_at: '', source_url: '', fetched_at: '' }) as NonNullable<
+      ListedHiringBoard['latest']
+    >
+  const board = (ticker: string, latest: ListedHiringBoard['latest']) =>
+    ({ id: `listed-${ticker}`, ticker, company: ticker, latest }) as ListedHiringBoard
+  const hiring = {
+    computed_at: '2026-11-24T00:00:00.000Z',
+    as_of: null,
+    rule: '',
+    boards: [
+      board('HOST', read(316, 44)),
+      board('GOOGL', read(null, 1200)),
+      board('UTIL', null),
+      board('CRWV', read(90, 12)),
+    ],
+    cut: [],
+  } as ListedHiringData
+  const tickers = (d: ListedData) => d.companies.map((c) => c.ticker)
+  const evidence = (d: ListedData, h: ListedHiringData) =>
+    tickers(d).map((t) => listedHiringEvidence(h, t))
+
+  it('words the newest read and links to the board', () => {
+    expect(listedHiringEvidence(hiring, 'HOST')).toEqual([
+      { text: '316 open roles, 44 data-center', to: '/hiring#listed-HOST' },
+    ])
+    expect(listedHiringEvidence(hiring, 'GOOGL')[0]!.text).toBe('1,200 data-center roles open')
+    expect(listedHiringEvidence(hiring, 'UTIL')).toEqual([])
+    expect(listedHiringEvidence(null, 'HOST')).toEqual([])
+  })
+
+  it('gives a lab’s rows the same evidence from ?lab= as from every board', () => {
+    for (const lab of ['openai', 'anthropic', 'google', 'moonshot'] as const) {
+      const rows = listedForLab(data, lab)
+      const scoped = listedHiringForTickers(hiring, [...tickers(rows)].sort())
+      expect(evidence(rows, scoped), lab).toEqual(evidence(rows, hiring))
+    }
+  })
+
+  it('covers a pair’s rows with the first lab’s boards', () => {
+    const [a, b] = ['anthropic', 'google'] as const
+    const both = listedBoth(listedForLab(data, a), listedForLab(data, b))
+    expect(both.companies.length).toBeGreaterThan(0)
+    const scoped = listedHiringForTickers(hiring, tickers(listedForLab(data, a)))
+    expect(evidence(both, scoped)).toEqual(evidence(both, hiring))
+  })
+})
+
 describe('the hand-read suppliers file', () => {
   const suppliers = buildSuppliers({
     rows: curatedSuppliers.parse(curated).rows.map((r) => ({ ...r, basis: 'hand' as const })),
