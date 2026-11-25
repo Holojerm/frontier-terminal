@@ -83,6 +83,10 @@ export const entityTypeEnum = z.enum([
   // The deal-score rule (layers/press/server/pipeline/deal-alerts.ts): a filed figure and the
   // press reports of a deal's size it scored. Written only as the change its alert cites.
   'deal_score',
+  // The supplier-passage rule (layers/companies/server/suppliers/alerts.ts): the new passages of
+  // one supplier filing. Written only as the change its alert cites; the passages live in
+  // supplier_passages.
+  'supplier_passage',
 ])
 export const changeTypeEnum = z.enum(['added', 'removed', 'modified'])
 export const severityEnum = z.enum(['info', 'notable', 'critical'])
@@ -104,6 +108,7 @@ export const alertRuleEnum = z.enum([
   'limits-floor',
   'pay-floor',
   'deal-score-floor',
+  'supplier-passage-floor',
 ])
 // 'skipped': the source needs a credential the deploy does not have, so
 // nothing was attempted. Kept apart from 'failed' so a missing key is a

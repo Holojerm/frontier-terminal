@@ -47,7 +47,8 @@ export const AXIS_PATH: Record<AlertAxis, string> = {
  * rule reads the prices /api/gpu-prices serves, and they read in full on
  * /compute; the observation rules read what /api/datacenters, /api/limits,
  * /api/pay and /api/adoption serve; the deal-score rule reads the press figures
- * the reported pipeline stores, the table /api/reported serves. `bun run surfaces:check` reads this beside AXIS_PATH.
+ * the reported pipeline stores, the table /api/reported serves. The supplier-passage
+ * rule reads the passages /api/suppliers serves. `bun run surfaces:check` reads this beside AXIS_PATH.
  */
 export const AXIS_ROUTES: Partial<Record<AlertAxis, readonly string[]>> = {
   compute: ['/api/gpu-prices', '/api/datacenters'],
@@ -55,6 +56,7 @@ export const AXIS_ROUTES: Partial<Record<AlertAxis, readonly string[]>> = {
   hiring: ['/api/pay'],
   demand: ['/api/adoption'],
   revenue: ['/api/reported'],
+  exposure: ['/api/suppliers'],
 }
 
 /** The axis each change entity type sits on. The signal band (terminal-alerts.ts › AXIS_OF) buckets by it too. */
@@ -85,6 +87,7 @@ export const ENTITY_AXIS: Record<ChangeView['entity_type'], AlertAxis> = {
   rate_limit: 'pricing',
   pay_band: 'hiring',
   deal_score: 'revenue',
+  supplier_passage: 'exposure',
 }
 
 export const ALERT_AXES = Object.keys(AXIS_DISPLAY) as [AlertAxis, ...AlertAxis[]]

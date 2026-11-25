@@ -217,6 +217,12 @@ function termsOf(change: ChangeRow): SearchTerms | null {
       // The press story came first by construction, and the filing has its own alert
       // (filed-fact-floor, prospectus-floor): a search would only find the articles we scored.
       return null
+    case 'supplier_passage': {
+      // A supplier's filing tying it to a lab: a story names both. A tie to a cloud alone isn't
+      // searched, as the GKG vocabulary keeps rows naming a lab, a tracked filer or a model.
+      const company = str(p.company)
+      return lab.length && company ? { who: lab, what: [company], also: [] } : null
+    }
     default:
       return null
   }

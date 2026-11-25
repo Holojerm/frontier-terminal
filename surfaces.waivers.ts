@@ -65,8 +65,6 @@ export const SURFACE_WAIVERS = {
     '/api/signals':
       'internal: scores the other datasets against stock returns; it raises no alert of its own',
     '/api/spend': 'derived: joins OpenRouter share (demand) to list prices (pricing), both axes',
-    '/api/suppliers':
-      'not yet: a judge-read passage raises no alert (docs/alerts-expansion.md › 6)',
     '/api/theses': 'not yet: thesis status changes go to the weekly digest, not the alert feed',
     '/api/track-record': 'internal: grades the alerts; it cannot raise one',
     '/api/utilization': 'not yet: recipe observations raise no alert',

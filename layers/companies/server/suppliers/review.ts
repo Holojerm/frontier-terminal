@@ -4,12 +4,15 @@
 // offered and unsettled, quoted verbatim (see contains), counterparty named in the
 // quote or by a defined alias, every figure written in its unit. Ticker, company,
 // form, dates, counterparty ticker and lab, and provenance are set here, never by
-// the model. A failing passage is dropped with an ops event.
+// the model. A failing passage is dropped with an ops event. Once the readings are stored, a
+// newly read filing with a new tie raises its alert (alerts.ts).
 
 import { z } from 'zod'
 
 import { contains, documentText } from '#layers/core/server/pipeline/document-text'
 import * as tables from '#server/db/schema'
+import { recordOpsEvent } from '#server/utils/ops'
+import { writeSupplierAlerts } from './alerts'
 import { figureWritten, supplierExcerpts } from './excerpts'
 import { SUPPLIER_FILERS, counterpartyNamed } from './filers'
 import { documentRef, pendingDocuments } from './ingest'
@@ -214,13 +217,40 @@ export async function applySupplierReadings(
   return report
 }
 
+/**
+ * Store one judge run's readings, then write the alerts they raise. An alert that fails to
+ * write is spooled and retried on the next run: the rule reads only stored rows.
+ */
+export async function applySupplierReview(
+  db: PipelineDb,
+  readRaw: RawReader,
+  readings: readonly JudgeSupplierReading[],
+  now: Date,
+): Promise<SupplierReport & { alerts: number }> {
+  const report = await applySupplierReadings(db, readRaw, readings, now)
+  if (report.settled === 0) return { ...report, alerts: 0 }
+  const alerts = await writeSupplierAlerts(db, now).then(
+    (r) => r.written,
+    async (error: unknown) => {
+      await recordOpsEvent(db, {
+        kind: 'observation_alerts_failed',
+        detail: `suppliers: ${String(error)}`,
+      })
+      return 0
+    },
+  )
+  return { ...report, alerts }
+}
+
 /** The supplier review (server/registries/judge.ts): passages of a supplier's new SEC document. */
 export const SUPPLIER_REVIEW = judgeReview({
   key: 'suppliers',
   reading: JudgeSupplierReading,
   max: 20,
-  empty: { accepted: 0, ended: 0, settled: 0, rejected: [] } as SupplierReport,
-  apply: ({ db, readRaw, now }, readings) => applySupplierReadings(db, readRaw, readings, now),
+  empty: { accepted: 0, ended: 0, settled: 0, rejected: [], alerts: 0 } as SupplierReport & {
+    alerts: number
+  },
+  apply: ({ db, readRaw, now }, readings) => applySupplierReview(db, readRaw, readings, now),
   rejected: { noun: 'supplier passage(s)', subject: 'document_id' },
   offer: { key: 'supplier_review', read: ({ db, readRaw }) => supplierReview(db, readRaw) },
 })

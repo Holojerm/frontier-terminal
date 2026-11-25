@@ -1,8 +1,10 @@
 // The shared half of the recipe-observation rules (adoption, data centers, rate limits, posted
-// pay) and the deal-score rule (layers/press/server/pipeline/deal-alerts.ts): a rule turns two reads of a recipe into findings, and this turns a finding into one
-// change row and one alert, written once. Findings state facts from the cited row only, never
-// advice, and are always `notable`: these rules never write `critical`, which posts to X and
-// Bluesky (layers/alerts/server/pipeline/social.ts), and nothing here mails anyone.
+// pay), the deal-score rule (layers/press/server/pipeline/deal-alerts.ts) and the supplier-passage
+// rule (layers/companies/server/suppliers/alerts.ts): a rule turns two reads into findings, and
+// this turns a finding into one change row and one alert, written once. Findings state facts
+// from the cited row only, never advice, and are `notable` unless the rule says `info`: these
+// rules never write `critical`, which posts to X and Bluesky
+// (layers/alerts/server/pipeline/social.ts), and nothing here mails anyone.
 //
 // The change row's id and the alert's id hash the rule, the entity and the period the finding is
 // about, so a re-run of the same reads writes nothing a second time.
@@ -22,6 +24,7 @@ export type ObservationRule =
   | 'limits-floor'
   | 'pay-floor'
   | 'deal-score-floor'
+  | 'supplier-passage-floor'
 
 export type ObservationEntity =
   | 'adoption_series'
@@ -29,6 +32,7 @@ export type ObservationEntity =
   | 'rate_limit'
   | 'pay_band'
   | 'deal_score'
+  | 'supplier_passage'
 
 export interface Finding {
   rule: ObservationRule
@@ -46,6 +50,8 @@ export interface Finding {
   explanation: string
   source_url: string
   fetched_at: string
+  /** `notable` when absent. */
+  severity?: 'info' | 'notable'
 }
 
 export function findingRows(f: Finding, now: Date): { change: ChangeRow; alert: AlertRow } {
@@ -66,7 +72,7 @@ export function findingRows(f: Finding, now: Date): { change: ChangeRow; alert: 
   })
   const alert = AlertRow.parse({
     id: contentHash({ rule: f.rule, change_id: change.id }),
-    severity: 'notable',
+    severity: f.severity ?? 'notable',
     headline: f.headline,
     explanation: f.explanation,
     change_ids: JSON.stringify([change.id]),
