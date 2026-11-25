@@ -15,7 +15,7 @@ definePageMeta({
     priority: '0.6',
     title: 'Lab tear sheet',
     summary:
-      'One frontier lab on one printable page, with API prices and the last change, disclosed revenue and press reports scored against it, hyperscaler filings and listed companies that name it, OpenRouter demand share, Ramp adoption and package downloads, open roles and posted pay, data-center power, published rate limits, incidents, the newest alerts, and every source with its fetch time.',
+      'One frontier lab on one printable page, with API prices and the last change, disclosed revenue and press reports scored against it, hyperscaler filings and listed companies that name it, new SKUs, OpenRouter demand and implied spend share, Ramp adoption and package downloads, open roles and posted pay, measured latency strain, misalignment disclosures, data-center power, published rate limits, incidents, the tied companies’ hiring and earnings-call guidance, the newest alerts, and every source with its fetch time.',
   },
 })
 
@@ -144,6 +144,65 @@ const [adoption, pay, limits, datacenters] = await Promise.all([
   }),
 ])
 
+// The lab page's other panels (tear-sheet-panels.ts) and the listed companies' hiring and
+// call guidance (tear-sheet-listed.ts). Probes, disclosures, listed hiring and call
+// guidance take `?lab=`; releases and spend are narrowed here, as on the lab page.
+const [releases, spend, probes, disclosures, listedHiring, calls] = await Promise.all([
+  useFetch('/api/releases', {
+    key: `sheet-releases:${lab}`,
+    transform: (d: ReleasesData) => releasesInput(d, lab),
+  }),
+  useFetch('/api/spend', {
+    key: `sheet-spend:${lab}`,
+    transform: (d: SpendData): NonNullable<PanelInputs['spend']> => ({
+      status: d.status,
+      window: d.window,
+      // Each model is kept for its price citation only.
+      providers: d.providers
+        .filter((p) => p.provider === lab)
+        .map((p) => ({ ...p, models: p.models.filter((m) => m.price_source_url !== null) })),
+      excluded: d.excluded.filter((e) => e.provider === lab),
+      rankings: { provenance: d.rankings.provenance },
+      caveat: d.caveat,
+    }),
+  }),
+  useFetch('/api/probes', {
+    key: `sheet-probes:${lab}`,
+    query: { lab },
+    // The newest complete day is the figure; the other placements are kept for the gap only.
+    transform: (d: ProbesData): NonNullable<PanelInputs['probes']> => ({
+      labs: d.labs.map((l) => ({
+        ...l,
+        days: l.days.filter((x) => x.complete).slice(0, 1),
+        other_series: l.other_series.map((s) => ({ ...s, days: [] })),
+      })),
+      placement: d.placement,
+      caveat: d.caveat,
+    }),
+  }),
+  useFetch('/api/disclosures', {
+    key: `sheet-disclosures:${lab}`,
+    query: { lab },
+    transform: (d: DisclosuresData): NonNullable<PanelInputs['disclosures']> => ({
+      providers: d.providers,
+    }),
+  }),
+  useFetch('/api/hiring/listed', {
+    key: `sheet-listed-hiring:${lab}`,
+    query: { lab },
+    transform: (d: ListedHiringData): NonNullable<ListedPanelInputs['listedHiring']> => ({
+      boards: d.boards.map((b) => ({ ...b, weeks: b.weeks.slice(-1), datacenter_roles: [] })),
+      cut: d.cut,
+      rule: d.rule,
+    }),
+  }),
+  useFetch('/api/call-guidance', {
+    key: `sheet-calls:${lab}`,
+    query: { lab },
+    transform: (d: CallGuidanceData) => callsInput(d),
+  }),
+])
+
 const config = useRuntimeConfig()
 const appUrl = config.public.appUrl.replace(/\/+$/, '')
 const attribution = attributionLine(config.public.appName, appUrl)
@@ -168,6 +227,12 @@ const sheet = computed(() =>
       pay: pay.data.value,
       limits: limits.data.value,
       datacenters: datacenters.data.value,
+      releases: releases.data.value,
+      spend: spend.data.value,
+      probes: probes.data.value,
+      disclosures: disclosures.data.value,
+      listedHiring: listedHiring.data.value,
+      calls: calls.data.value,
       siteUrl: appUrl,
     },
     stamps.style.value,
@@ -204,6 +269,12 @@ const failed = computed(() =>
     pay,
     limits,
     datacenters,
+    releases,
+    spend,
+    probes,
+    disclosures,
+    listedHiring,
+    calls,
   ].some((r) => r.error.value !== null && r.error.value !== undefined),
 )
 
@@ -309,6 +380,45 @@ const PRINT_INK = [
           <p v-else class="text-xs text-muted">The price matrix didn’t load.</p>
         </TearSheetSection>
 
+        <TearSheetSection
+          id="releases"
+          title="New SKUs"
+          :note="
+            sheet.releases.rows.length
+              ? 'First listed on a tracked page, with the launch price'
+              : null
+          "
+          class="sm:col-span-2 print:col-span-2"
+        >
+          <template v-if="sheet.releases.rows.length">
+            <TerminalTable
+              :caption="`${display} SKUs first listed on a tracked price page, newest first`"
+              :columns="[
+                { key: 'date', label: 'First seen', class: 'whitespace-nowrap font-mono' },
+                { key: 'model', label: 'Model', class: 'font-mono' },
+                { key: 'tier', label: 'Tier' },
+                { key: 'input', label: 'In', numeric: true, class: 'font-mono' },
+                { key: 'output', label: 'Out', numeric: true, class: 'font-mono' },
+              ]"
+              :rows="sheet.releases.rows"
+              :row-key="(r) => r.key"
+              nested
+              flow
+            >
+              <template #cell-model="{ row }"
+                >{{ row.model }}<TearSheetRef :n="row.ref"
+              /></template>
+              <template #cell-tier="{ row }">{{ row.tier ?? '—' }}</template>
+            </TerminalTable>
+            <p v-if="sheet.releases.more" class="text-xs text-muted">
+              {{ sheet.releases.more }} earlier on the {{ display }} page.
+            </p>
+          </template>
+          <p v-else-if="sheet.releases.gap">
+            <TearSheetGap :title="sheet.releases.gap.title" :reason="sheet.releases.gap.reason" />
+          </p>
+        </TearSheetSection>
+
         <TearSheetSection id="revenue" title="Disclosed revenue" :note="sheet.revenue.scope">
           <TerminalTable
             v-if="sheet.revenue.lines.length"
@@ -332,7 +442,7 @@ const PRINT_INK = [
         <!-- Demand and adoption sit beside revenue with the economics. Hiring and
              incidents are how the lab runs, so they get a section of their own. -->
         <TearSheetSection id="demand" title="Demand">
-          <TearSheetFigures :figures="[sheet.demand, ...sheet.adoption]" />
+          <TearSheetFigures :figures="[sheet.demand, sheet.spend, ...sheet.adoption]" />
         </TearSheetSection>
 
         <TearSheetSection
@@ -374,7 +484,10 @@ const PRINT_INK = [
         </TearSheetSection>
 
         <TearSheetSection id="operations" title="Operations" class="sm:col-span-2 print:col-span-2">
-          <TearSheetFigures :figures="[sheet.hiring, sheet.incidents]" wide />
+          <TearSheetFigures
+            :figures="[sheet.hiring, sheet.incidents, sheet.probes, sheet.disclosures]"
+            wide
+          />
         </TearSheetSection>
 
         <TearSheetSection
@@ -530,6 +643,89 @@ const PRINT_INK = [
           </template>
           <p v-else-if="sheet.listed.gap">
             <TearSheetGap :title="sheet.listed.gap.title" :reason="sheet.listed.gap.reason" />
+          </p>
+        </TearSheetSection>
+
+        <TearSheetSection
+          id="listed-hiring"
+          title="Hiring at listed companies"
+          :note="sheet.boards.rows.length ? 'Each tied company’s job board, newest read' : null"
+          class="sm:col-span-2 print:col-span-2"
+        >
+          <TerminalTable
+            v-if="sheet.boards.rows.length"
+            :caption="`Open roles at the listed companies tied to ${display}, from each company’s job board`"
+            :columns="[
+              { key: 'ticker', label: 'Ticker', class: 'font-mono' },
+              { key: 'company', label: 'Company' },
+              { key: 'open', label: 'Open roles', numeric: true, class: 'font-mono' },
+              { key: 'datacenter', label: 'Data-center', numeric: true, class: 'font-mono' },
+              { key: 'change', label: 'On the week before' },
+              { key: 'read', label: 'Read', class: 'font-mono' },
+            ]"
+            :rows="sheet.boards.rows"
+            :row-key="(r) => r.key"
+            :gap="(r) => r.gap !== null"
+            :gap-columns="['open', 'datacenter', 'change', 'read']"
+            nested
+            flow
+          >
+            <template #cell-open="{ row }">{{ row.open ?? '—' }}</template>
+            <template #cell-datacenter="{ row }"
+              >{{ row.datacenter }}<TearSheetRef :n="row.ref"
+            /></template>
+            <template #gap="{ row }">
+              <TearSheetGap :title="row.gap!.title" :reason="row.gap!.reason" />
+            </template>
+          </TerminalTable>
+          <p v-for="n in sheet.boards.notes" :key="n" class="text-xs text-muted">{{ n }}</p>
+          <p v-if="sheet.boards.gap">
+            <TearSheetGap :title="sheet.boards.gap.title" :reason="sheet.boards.gap.reason" />
+          </p>
+        </TearSheetSection>
+
+        <TearSheetSection
+          id="calls"
+          title="Earnings-call guidance"
+          :note="
+            sheet.calls.rows.length ? 'What each tied company guided, against what it filed' : null
+          "
+          class="sm:col-span-2 print:col-span-2"
+        >
+          <p v-if="sheet.calls.summary" class="text-xs text-muted">{{ sheet.calls.summary }}</p>
+          <TerminalTable
+            v-if="sheet.calls.rows.length"
+            :caption="`Earnings-call guidance from the listed companies tied to ${display}, scored against later filings`"
+            :columns="[
+              { key: 'ticker', label: 'Ticker', class: 'font-mono' },
+              { key: 'company', label: 'Company' },
+              {
+                key: 'scored',
+                label: 'Scored',
+                numeric: true,
+                class: 'whitespace-nowrap font-mono',
+              },
+              { key: 'results', label: 'Results' },
+              { key: 'newest', label: 'Newest scored figure' },
+            ]"
+            :rows="sheet.calls.rows"
+            :row-key="(r) => r.ticker"
+            :gap="(r) => r.gap !== null"
+            :gap-columns="['scored', 'results', 'newest']"
+            align="top"
+            nested
+            flow
+          >
+            <template #cell-newest="{ row }">
+              <template v-if="row.newest">{{ row.newest }}<TearSheetRef :n="row.refs" /></template>
+              <span v-else class="text-muted">None filed yet</span>
+            </template>
+            <template #gap="{ row }">
+              <TearSheetGap :title="row.gap!.title" :reason="row.gap!.reason" />
+            </template>
+          </TerminalTable>
+          <p v-else-if="sheet.calls.gap">
+            <TearSheetGap :title="sheet.calls.gap.title" :reason="sheet.calls.gap.reason" />
           </p>
         </TearSheetSection>
 

@@ -1,8 +1,9 @@
 // One lab on one printed page: the lab page's readout, press reports against the filings,
-// the hyperscaler lines and listed companies that name the lab, the recipe-read sections
-// (tear-sheet-recipes.ts), the newest alerts and the thesis, each figure numbered against
-// a source list at the foot. Built from the lab
-// page's payloads through summarizeLab, so the sheet and the lab page cannot disagree.
+// the hyperscaler lines and listed companies that name the lab with their hiring and call
+// guidance (tear-sheet-listed.ts), the recipe-read sections (tear-sheet-recipes.ts), the
+// lab page's other panels (tear-sheet-panels.ts), the newest alerts and the thesis, each
+// figure numbered against a source list at the foot. Built from the lab page's payloads
+// through summarizeLab, so the sheet and the lab page cannot disagree.
 //
 // A printed page has no tooltips or popovers, so every gap carries its reason as text and
 // every citation is a numbered footnote with the URL spelled out.
@@ -52,6 +53,8 @@ export interface SheetFigure {
   lines: string[]
   gap: SheetGap | null
   ref: number | null
+  /** Further footnotes, for a figure that rests on more than one read (implied spend). */
+  refs?: number[]
 }
 
 export interface SheetListed {
@@ -95,9 +98,19 @@ export interface TearSheet {
   truth: { summary: string[]; lines: SheetTruthLine[]; gap: SheetGap | null }
   /** The ties are the site's own reading of filings and cited pages, so one ref points at that table. */
   listed: { rows: SheetListed[]; ref: number | null; gap: SheetGap | null }
+  /** Open roles at the listed companies tied to the lab (tear-sheet-listed.ts). */
+  boards: SheetListedPanels['boards']
+  /** Their earnings-call guidance against later filings. */
+  calls: SheetListedPanels['calls']
+  /** New SKUs, newest first (tear-sheet-panels.ts). */
+  releases: SheetPanels['releases']
   demand: SheetFigure
+  /** Implied spend share, read beside the OpenRouter share. */
+  spend: SheetFigure
   hiring: SheetFigure
   incidents: SheetFigure
+  probes: SheetFigure
+  disclosures: SheetFigure
   /** Ramp adoption and coding-agent PRs, read beside the OpenRouter share. */
   adoption: SheetFigure[]
   downloads: SheetRecipes['downloads']
@@ -119,7 +132,8 @@ export interface TearSheet {
   sources: SheetSource[]
 }
 
-export interface TearSheetInputs extends LabInputs, RecipeInputs {
+export interface TearSheetInputs
+  extends Omit<LabInputs, 'spend'>, RecipeInputs, PanelInputs, ListedPanelInputs {
   /** Only `matrix` is read; `tier_note` is printed under the price table. */
   prices?: Pick<PricesData, 'matrix'> | null
   /** `window_days` names the incident window on the sheet. */
@@ -264,7 +278,8 @@ export function buildTearSheet(
   input: TearSheetInputs,
   style: StampStyle = UTC_STYLE,
 ): TearSheet {
-  const s = summarizeLab(lab, input)
+  // The sheet's spend payload is slimmed for print; the panels read it, not the summary.
+  const s = summarizeLab(lab, { ...input, spend: null })
 
   const sources: SheetSource[] = []
   const byUrl = new Map<string, SheetSource>()
@@ -504,6 +519,8 @@ export function buildTearSheet(
 
   const recipes = buildRecipeSections(lab, s.display, input, cite)
   citations.push(...recipes.citations)
+  const panels = buildLabPanels(lab, s.display, input, cite)
+  const around = buildListedPanels(s.display, input, cite)
 
   const alerts: SheetAlert[] = s.alerts
     .filter((a) => a.severity !== 'info')
@@ -538,9 +555,15 @@ export function buildTearSheet(
     exposure: { lines: exposureLines, gaps: exposureGaps, filers: exposure?.filers.length ?? 0 },
     truth,
     listed,
+    boards: around.boards,
+    calls: around.calls,
+    releases: panels.releases,
     demand,
+    spend: panels.spend,
     hiring,
     incidents,
+    probes: panels.probes,
+    disclosures: panels.disclosures,
     adoption: recipes.adoption,
     downloads: recipes.downloads,
     pay: recipes.pay,
@@ -549,7 +572,7 @@ export function buildTearSheet(
     alerts,
     thesis,
     citations,
-    caveats: recipes.caveats,
+    caveats: [...recipes.caveats, ...panels.caveats, ...around.caveats],
     sources,
   }
 }
