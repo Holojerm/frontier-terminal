@@ -151,6 +151,39 @@ export interface FiledAggregate {
   fetched_at: string
 }
 
+/** Pure: each lab's aggregate obligations, one per filing of its prospectus that states them. */
+export function aggregatesOf(
+  issuers: readonly {
+    provider: LabId
+    commitments: readonly Pick<
+      CommitmentView,
+      | 'schedule'
+      | 'lines'
+      | 'filed'
+      | 'form'
+      | 'accession_no'
+      | 'filing_url'
+      | 'source_url'
+      | 'fetched_at'
+    >[]
+  }[],
+): FiledAggregate[] {
+  return issuers.flatMap((issuer) =>
+    issuer.commitments
+      .filter((c) => c.schedule === 'obligations_aggregate' && c.lines[0])
+      .map((c) => ({
+        lab: issuer.provider,
+        value: c.lines[0]!.total,
+        filed: c.filed,
+        form: c.form,
+        accession_no: c.accession_no,
+        filing_url: c.filing_url,
+        source_url: c.source_url,
+        fetched_at: c.fetched_at,
+      })),
+  )
+}
+
 /** A filed figure with the period it covers: `start` is null for a balance. */
 type Figure = GroundTruthDealFiled & { start: string | null; end: string }
 

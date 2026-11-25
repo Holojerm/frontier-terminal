@@ -53,7 +53,7 @@ export const SURFACE_WAIVERS = {
       'derived: joins filed exposure facts and prospectus commitments (sec, through /api/prospectus)',
     '/api/grid-load': 'not yet: a load reading raises no alert',
     '/api/ground-truth':
-      'derived: scores press reports against filings (revenue axis) and capex guidance against filed capex (exposure axis, guidance-floor)',
+      'derived: scores press reports against filings (revenue axis, deal-score-floor for deal sizes) and capex guidance against filed capex (exposure axis, guidance-floor)',
     '/api/identifiers': 'internal: reference data, read by hand',
     '/api/listed':
       'derived: joins /api/dependencies, /api/suppliers, /api/power-sites and the /api/prints ties',
@@ -72,7 +72,6 @@ export const SURFACE_WAIVERS = {
     '/api/reliability': 'internal: the feed’s own track record; failures spool ops events',
     '/api/signals':
       'internal: scores the other datasets against stock returns; it raises no alert of its own',
-    '/api/reported': 'not yet: press headlines are judged for the track record, not alerted',
     '/api/spend': 'derived: joins OpenRouter share (demand) to list prices (pricing), both axes',
     '/api/suppliers':
       'not yet: a judge-read passage raises no alert (docs/alerts-expansion.md › 6)',

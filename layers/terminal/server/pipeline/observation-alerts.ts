@@ -1,5 +1,5 @@
-// The four recipe-observation alert rules, run on the survey tick after the recipes have
-// stored their reads. A rule that throws is spooled as an ops event and never stops the others
+// The four recipe-observation alert rules and the deal-score rule, run on the survey tick after
+// the recipes have stored their reads (the deal rule reads the stored press figures and filings). A rule that throws is spooled as an ops event and never stops the others
 // or the tick: the rules only read what the recipes stored.
 
 import type { PipelineDb } from '#layers/core/server/utils/pipeline-store'
@@ -8,12 +8,14 @@ import { writeAdoptionAlerts } from '#layers/adoption/server/pipeline/adoption-a
 import { writeDatacenterAlerts } from '#layers/compute/server/pipeline/datacenter-alerts'
 import { writeLimitsAlerts } from '#layers/pricing/server/pipeline/limits-alerts'
 import { writePayAlerts } from '#layers/talent/server/pipeline/pay-alerts'
+import { writeDealAlerts } from '#layers/press/server/pipeline/deal-alerts'
 
 const RULES = {
   adoption: writeAdoptionAlerts,
   datacenters: writeDatacenterAlerts,
   limits: writeLimitsAlerts,
   pay: writePayAlerts,
+  deals: writeDealAlerts,
 } as const
 
 export async function runObservationAlerts(db: PipelineDb, now = new Date()) {

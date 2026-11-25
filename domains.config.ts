@@ -47,6 +47,8 @@ export const DOMAIN_LAYERS = {
       // The GKG file clock and the oldest unread file, which the shell's freshness reads.
       'server/pipeline/track-record/gkg.ts',
       'server/pipeline/track-record/search.ts',
+      // The deal-score rule the shell's survey tick runs.
+      'server/pipeline/deal-alerts.ts',
     ],
   },
   compute: {

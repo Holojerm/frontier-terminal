@@ -12,7 +12,7 @@ import { and, count, inArray, isNotNull, isNull, lte, max, eq } from 'drizzle-or
 
 import * as tables from '#server/db/schema'
 import { GKG_FROM } from '../pipeline/track-record/gkg'
-import { earliestPerHeadline, isDealMetric } from '../pipeline/reported/review'
+import { DEAL_METRICS, earliestPerHeadline, isDealMetric } from '../pipeline/reported/review'
 
 /** Headlines listed under "recent". */
 export const RECENT_LIMIT = 30
@@ -93,32 +93,22 @@ export type StoredDeal = Omit<StoredHeadline, 'metric' | 'period'> & {
   judged_at: string
 }
 
+type FigureRow = typeof tables.reportedFigures.$inferSelect
+type ArticleRow = typeof tables.reportedArticles.$inferSelect
+
 /**
- * Every figure the judge kept, at its headline's earliest copy, newest first,
- * and the headline keys read. Deal sizes are kept apart in `deals`: they are
- * not a lab's own revenue, valuation or funding.
+ * Pure: every figure at its headline's earliest copy, newest first, deal sizes
+ * kept apart in `deals` (they are not a lab's own revenue, valuation or funding).
  */
-export async function storedHeadlines(
-  db: PipelineDb,
-  at: string | null,
-): Promise<{
+export function joinFigures(
+  figures: readonly FigureRow[],
+  articles: readonly ArticleRow[],
+): {
   headlines: StoredHeadline[]
   deals: StoredDeal[]
-  keys: string[]
-  /** Each headline key's title, at its earliest copy. */
-  titles: Map<string, string>
-}> {
-  const [figures, articles] = await Promise.all([
-    db
-      .select()
-      .from(tables.reportedFigures)
-      .where(at ? lte(tables.reportedFigures.judged_at, at) : undefined),
-    db
-      .select()
-      .from(tables.reportedArticles)
-      .where(at ? lte(tables.reportedArticles.found_at, at) : undefined),
-  ])
-
+  /** Each headline key's earliest copy. */
+  earliest: Map<string, ArticleRow>
+} {
   const copies = new Map<string, Set<string>>()
   for (const a of articles) {
     copies.set(a.title_key, (copies.get(a.title_key) ?? new Set()).add(a.outlet))
@@ -158,12 +148,67 @@ export async function storedHeadlines(
   }
   headlines.sort((a, b) => b.published_at.localeCompare(a.published_at))
   deals.sort((a, b) => b.published_at.localeCompare(a.published_at))
+  return { headlines, deals, earliest }
+}
+
+/**
+ * Every figure the judge kept, at its headline's earliest copy, newest first,
+ * and the headline keys read. Deal sizes are kept apart in `deals`.
+ */
+export async function storedHeadlines(
+  db: PipelineDb,
+  at: string | null,
+): Promise<{
+  headlines: StoredHeadline[]
+  deals: StoredDeal[]
+  keys: string[]
+  /** Each headline key's title, at its earliest copy. */
+  titles: Map<string, string>
+}> {
+  const [figures, articles] = await Promise.all([
+    db
+      .select()
+      .from(tables.reportedFigures)
+      .where(at ? lte(tables.reportedFigures.judged_at, at) : undefined),
+    db
+      .select()
+      .from(tables.reportedArticles)
+      .where(at ? lte(tables.reportedArticles.found_at, at) : undefined),
+  ])
+  const { headlines, deals, earliest } = joinFigures(figures, articles)
   return {
     headlines,
     deals,
     keys: [...earliest.keys()],
     titles: new Map([...earliest].map(([key, a]) => [key, a.title])),
   }
+}
+
+/**
+ * The deal sizes the judge read as fact, as `storedHeadlines` lists them, reading only their
+ * headlines' copies: the deal alert rule runs on the survey tick, which never loads every article.
+ */
+export async function storedDeals(db: PipelineDb): Promise<StoredDeal[]> {
+  const figures = await db
+    .select()
+    .from(tables.reportedFigures)
+    .where(
+      and(
+        inArray(tables.reportedFigures.metric, [...DEAL_METRICS]),
+        eq(tables.reportedFigures.basis, 'reported'),
+      ),
+    )
+  const keys = [...new Set(figures.map((f) => f.title_key))]
+  const articles: ArticleRow[] = []
+  for (const group of chunk(keys, D1_MAX_BOUND_PARAMS)) {
+    articles.push(
+      ...(await db
+        .select()
+        .from(tables.reportedArticles)
+        .where(inArray(tables.reportedArticles.title_key, group))),
+    )
+  }
+  return joinFigures(figures, articles).deals
 }
 
 export async function queryReported(db: PipelineDb, ctx: QueryContext): Promise<ReportedData> {
