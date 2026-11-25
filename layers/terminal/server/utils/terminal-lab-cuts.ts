@@ -4,7 +4,8 @@
 // Each cut runs on the cached all-lab payload, so every lab page reads the one
 // KV entry the axis page fills. A payload that trims its lists before caching
 // can't be cut here, because the trim would hide the lab's older rows; ground
-// truth filters inside its query instead (queryGroundTruth's `lab`).
+// truth filters inside its query instead (queryGroundTruth's `lab`), and so does call
+// guidance (queryCallGuidance's scope).
 
 /** Tied to the lab by being it or its parent, by a filing that names it, or by a site it uses. */
 export const listedTiedTo = (c: ListedCompany, lab: LabId): boolean =>
@@ -15,3 +16,16 @@ export const listedForLab = (data: ListedData, lab: LabId): ListedData =>
     data,
     data.companies.filter((c) => listedTiedTo(c, lab)),
   )
+
+/** The boards, read and cut, of the given companies (a lab's listed ties). */
+export function listedHiringForTickers(
+  data: ListedHiringData,
+  tickers: readonly string[],
+): ListedHiringData {
+  const tied = new Set(tickers)
+  return {
+    ...data,
+    boards: data.boards.filter((b) => tied.has(b.ticker)),
+    cut: data.cut.filter((c) => tied.has(c.ticker)),
+  }
+}

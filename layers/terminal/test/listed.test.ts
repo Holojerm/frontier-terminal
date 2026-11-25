@@ -169,6 +169,28 @@ describe('buildListed', () => {
   })
 })
 
+describe('listedHiringForTickers', () => {
+  const board = (ticker: string) =>
+    ({ id: `listed-${ticker}`, ticker, company: ticker }) as ListedHiringBoard
+  const data = {
+    computed_at: '2026-11-24T00:00:00.000Z',
+    as_of: null,
+    rule: '',
+    boards: [board('CRWV'), board('NBIS'), board('GOOGL')],
+    cut: [
+      { ticker: 'MSFT', company: 'Microsoft', reason: 'Not read.' },
+      { ticker: 'DELL', company: 'Dell', reason: 'Not read.' },
+    ],
+  } as ListedHiringData
+
+  it('keeps the read and the cut boards of the tied companies only', () => {
+    const cut = listedHiringForTickers(data, ['GOOGL', 'MSFT', 'ORCL'])
+    expect(cut.boards.map((b) => b.ticker)).toEqual(['GOOGL'])
+    expect(cut.cut.map((c) => c.ticker)).toEqual(['MSFT'])
+    expect(listedHiringForTickers(data, []).boards).toEqual([])
+  })
+})
+
 describe('listedForLab', () => {
   const data = { as_of: null, computed_at: '2026-11-19T00:00:00.000Z', rule: '', ...listed }
 

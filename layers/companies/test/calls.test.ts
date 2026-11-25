@@ -682,6 +682,19 @@ describe('the reader', () => {
     expect(data.statements[0]).toMatchObject({ ticker: 'AMD', state: 'above', period: 'Q4 2025' })
     expect(data.statements[0]!.actual?.filing_url).toContain('000000248826000018')
     expect(data.tally).toMatchObject({ statements: 1, scored: 1, above: 1 })
+
+    // A lab's scope reads only its tied tickers, and an empty tie set reads nothing.
+    const ctx = queryContext(fixtureText('sources.yaml'), null)
+    const tied = await queryCallGuidance(db, ctx, { lab: 'openai', tickers: ['AMD', 'MSFT'] })
+    expect(tied.lab).toBe('openai')
+    expect(tied.companies.map((c) => c.ticker).sort()).toEqual(['AMD', 'MSFT'])
+    expect(tied.statements.map((s) => s.ticker)).toEqual(['AMD'])
+    const other = await queryCallGuidance(db, ctx, { lab: 'mistral', tickers: ['MSFT'] })
+    expect(other.statements).toEqual([])
+    expect(other.tally.statements).toBe(0)
+    const none = await queryCallGuidance(db, ctx, { lab: 'moonshot', tickers: [] })
+    expect(none.companies).toEqual([])
+    expect(none.statements).toEqual([])
   })
 
   it('collects a finished replay once, with its billed cost', async () => {

@@ -19,39 +19,6 @@ watch(
 )
 
 const pct = (n: number) => `${grouped(n, Number.isInteger(n) ? 0 : 1)}%`
-// Under a billion in millions: $650M, not $0.7B.
-const dollars = (n: number) => (n < 1e9 ? `$${grouped(n / 1e6)}M` : roundBillions(n))
-const one = (n: number, unit: CallStatement['unit']) => (unit === 'USD' ? dollars(n) : pct(n))
-
-const guided = (s: CallStatement) => {
-  const prefix = s.bound === 'at_least' ? 'At least ' : s.bound === 'at_most' ? 'At most ' : ''
-  const value =
-    s.low === s.high ? one(s.low, s.unit) : `${one(s.low, s.unit)} to ${one(s.high, s.unit)}`
-  const growth =
-    s.unit === 'growth_yoy' ? ' growth' : s.unit === 'growth_qoq' ? ' sequential growth' : ''
-  return `${prefix}${value}${growth}`
-}
-
-const what = (s: CallStatement) =>
-  s.segment ? `${CALL_METRIC_LABEL[s.metric]}: ${s.segment}` : CALL_METRIC_LABEL[s.metric]
-
-const resultText = (s: CallStatement) => {
-  switch (s.state) {
-    case 'met':
-      return 'Met'
-    case 'above':
-    case 'below': {
-      const e = s.error_share ?? 0
-      const size =
-        s.unit === 'USD' ? pct(Math.abs(e) * 100) : `${grouped(Math.abs(e) * 100, 1)} pts`
-      return `${size} ${s.state}`
-    }
-    case 'open':
-      return 'Not filed yet'
-    default:
-      return 'Not scored'
-  }
-}
 
 const clock = (ms: number) => {
   const t = Math.round(ms / 1000)
@@ -133,10 +100,10 @@ const stamps = useStamps()
             <span class="block text-xs text-muted">{{ row.call_period }}</span>
           </template>
           <template #cell-what="{ row }">
-            {{ what(row) }}
+            {{ callWhat(row) }}
             <span class="block text-xs text-muted">{{ row.period }}</span>
           </template>
-          <template #cell-guided="{ row }">{{ guided(row) }}</template>
+          <template #cell-guided="{ row }">{{ callGuided(row) }}</template>
           <template #cell-quote="{ row }">
             <span class="text-muted">“{{ row.quote }}”</span>
             <span class="block text-xs text-muted">
@@ -161,7 +128,7 @@ const stamps = useStamps()
                 target="_blank"
                 rel="noopener noreferrer"
                 class="underline underline-offset-2 hover:text-primary"
-                >{{ one(row.actual.value, row.unit) }}</a
+                >{{ callValue(row.actual.value, row.unit) }}</a
               >
               <span class="block font-sans text-xs text-muted"
                 >{{ row.actual.form }}, {{ row.actual.filed }}</span
@@ -170,7 +137,7 @@ const stamps = useStamps()
             <span v-else class="text-muted">—</span>
           </template>
           <template #cell-result="{ row }">
-            {{ resultText(row) }}
+            {{ callResult(row) }}
             <span v-if="row.reason" class="block text-xs text-muted">{{ row.reason }}</span>
           </template>
         </TerminalTable>

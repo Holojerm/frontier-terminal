@@ -3,6 +3,7 @@
 // row with both sources. As of T it counts what was first seen by T.
 
 import { and, inArray, lte, sql } from 'drizzle-orm'
+import type { SQLiteColumn } from 'drizzle-orm/sqlite-core'
 
 import * as tables from '#server/db/schema'
 import { NO_FILING_DAYS, unscorable } from '../calls/actuals'
@@ -52,13 +53,25 @@ export function callTally(rows: readonly CallStatement[]): CallTally {
   }
 }
 
+/**
+ * Which companies a read covers: every company, one ticker, or the tickers a lab's
+ * listed ties name (the shell's /api/call-guidance?lab=, which knows the ties).
+ */
+export type CallScope = { ticker: string } | { lab: LabId; tickers: readonly string[] } | null
+
 export async function queryCallGuidance(
   db: PipelineDb,
   ctx: QueryContext,
-  ticker: string | null = null,
+  scope: CallScope = null,
 ): Promise<CallGuidanceData> {
   const at = ctx.at
   const g = tables.filedGuidance
+  const ticker = scope && 'ticker' in scope ? scope.ticker : null
+  const lab = scope && 'lab' in scope ? scope.lab : null
+  const tickers = scope === null ? null : 'ticker' in scope ? [scope.ticker] : scope.tickers
+  // inArray on an empty list is no row, not every row.
+  const only = (column: SQLiteColumn) =>
+    tickers === null ? undefined : tickers.length ? inArray(column, [...tickers]) : sql`0`
   const [rows, resolutions, docs] = await Promise.all([
     db
       .select()
@@ -66,7 +79,7 @@ export async function queryCallGuidance(
       .where(
         and(
           inArray(g.source, [...CALL_SOURCES]),
-          ticker ? sql`${g.ticker} = ${ticker}` : undefined,
+          only(g.ticker),
           at ? lte(g.first_seen_at, at) : undefined,
         ),
       ),
@@ -75,7 +88,7 @@ export async function queryCallGuidance(
       .from(tables.guidanceResolutions)
       .where(
         and(
-          ticker ? sql`${tables.guidanceResolutions.ticker} = ${ticker}` : undefined,
+          only(tables.guidanceResolutions.ticker),
           at ? lte(tables.guidanceResolutions.first_seen_at, at) : undefined,
         ),
       ),
@@ -180,7 +193,7 @@ export async function queryCallGuidance(
   )
 
   const companies: CallCoverage[] = curatedCalls.companies
-    .filter((c) => !ticker || c.ticker === ticker)
+    .filter((c) => tickers === null || tickers.includes(c.ticker))
     .map((c) => {
       const mine = docs.filter((d) => d.ticker === c.ticker && d.status === 'read')
       const count = (kind: string) => mine.filter((d) => d.kind === kind).length
@@ -203,12 +216,13 @@ export async function queryCallGuidance(
       }
     })
 
-  const limit = ticker ? statements.length : CALL_GUIDANCE_LIMIT
+  const limit = scope ? statements.length : CALL_GUIDANCE_LIMIT
   return {
     as_of: ctx.as_of,
     computed_at: ctx.now().toISOString(),
     rule: CALL_GUIDANCE_RULE,
     ticker,
+    lab,
     statements: statements.slice(0, limit),
     omitted: Math.max(0, statements.length - limit),
     tally: callTally(statements),
