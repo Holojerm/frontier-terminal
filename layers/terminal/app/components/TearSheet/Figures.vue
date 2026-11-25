@@ -15,11 +15,12 @@ defineProps<{ figures: SheetFigure[]; wide?: boolean }>()
     >
       <!-- A gap can still rest on a read (sites at 0 MW), so its footnote sits on the label. -->
       <dt class="text-xs text-muted">
-        {{ f.label }}<TearSheetRef v-if="f.value === null" :n="f.ref" />
+        {{ f.label }}<TearSheetRef v-if="f.value === null" :n="[f.ref, ...(f.refs ?? [])]" />
       </dt>
       <dd v-if="f.value !== null" class="text-right">
         <span v-if="f.delta" class="mr-2 text-xs text-muted">{{ f.delta }}</span>
-        <span class="font-mono text-highlighted">{{ f.value }}</span><TearSheetRef :n="f.ref" />
+        <span class="font-mono text-highlighted">{{ f.value }}</span
+        ><TearSheetRef :n="[f.ref, ...(f.refs ?? [])]" />
       </dd>
       <dd v-else-if="f.gap" class="w-full">
         <TearSheetGap :title="f.gap.title" :reason="f.gap.reason" />

@@ -5,18 +5,11 @@
 // companies tied to that lab (as it or its parent, by filing, or by site), with counts for
 // that set. No `as_of`: two of the three have no point-in-time read.
 
-import { powerSitesStamp } from '#layers/compute/server/power/stamp'
-import { suppliersStamp } from '../../../companies/server/suppliers/store'
-
 export default defineEventHandler(async (event) => {
   await rateLimitTerminal(event, { name: 'listed', limit: 60, windowSeconds: 60 })
   const { lab } = await getValidatedQuery(event, labQuerySchema.parse)
-  const [power, suppliers] = await Promise.all([
-    powerSitesStamp(terminalDb),
-    suppliersStamp(terminalDb),
-  ])
   const data = await serveTerminal(event, 'listed', (ctx) => queryListed(terminalDb, ctx), {
-    variant: `${suppliers}:${power}`,
+    variant: await listedVariant(),
   })
   return lab ? listedForLab(data, lab) : data
 })

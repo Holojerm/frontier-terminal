@@ -99,6 +99,9 @@ export const DOMAIN_LAYERS = {
       'server/pipeline/pay-alerts.ts',
       // The archive trims the shell's lab, compare and tear-sheet pages apply.
       'app/utils/hiring-archive.ts',
+      // The listed-company boards, which the shell's /api/hiring/listed serves, cut to a
+      // lab's listed ties.
+      'server/listed-hiring/query.ts',
     ],
   },
   reliability: {
