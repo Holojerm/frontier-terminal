@@ -281,6 +281,7 @@ function summarize(entityType: string, payload: Json | null): string {
       'rate_limit',
       'pay_band',
       'deal_score',
+      'revenue_score',
       'supplier_passage',
     ].includes(entityType)
   ) {

@@ -26,6 +26,7 @@ export type ObservationRule =
   | 'limits-floor'
   | 'pay-floor'
   | 'deal-score-floor'
+  | 'revenue-score-floor'
   | 'supplier-passage-floor'
 
 export type ObservationEntity =
@@ -34,6 +35,7 @@ export type ObservationEntity =
   | 'rate_limit'
   | 'pay_band'
   | 'deal_score'
+  | 'revenue_score'
   | 'supplier_passage'
 
 export interface Finding {

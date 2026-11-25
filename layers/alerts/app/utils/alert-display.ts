@@ -36,6 +36,8 @@ export const RULE_TEXT: Record<AlertView['rule'], string> = {
     'Set by a fixed rule. A lab’s posted-pay median for all roles, research or software engineering that holds a move of 5% or more over a week is an alert. A median that flips back and forth doesn’t count.',
   'deal-score-floor':
     'Set by a fixed rule. A new filing that scores press reports of a deal’s size is an alert, one per filed figure, whether the reports matched or missed. Only reports on file before the filing count.',
+  'revenue-score-floor':
+    'Set by a fixed rule. A lab’s own new filing that scores press reports of its revenue is an alert, one per filing, whether the reports matched or missed. Only reports on file before the filing count.',
   'supplier-passage-floor':
     'Set by a fixed rule. A supplier’s new SEC filing that states a tie to a lab or cloud, or a figure for one, that its earlier filings didn’t is an alert, one per filing. A model finds the passage, and we check it word for word against the filing. It’s notable when it gives a figure for a tracked lab or cloud.',
   'agent-judge': 'Judged by a model. It can cite only fields from the changes it links to.',

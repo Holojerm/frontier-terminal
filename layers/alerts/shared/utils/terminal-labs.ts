@@ -87,6 +87,7 @@ export const ENTITY_AXIS: Record<ChangeView['entity_type'], AlertAxis> = {
   rate_limit: 'pricing',
   pay_band: 'hiring',
   deal_score: 'revenue',
+  revenue_score: 'revenue',
   supplier_passage: 'exposure',
 }
 

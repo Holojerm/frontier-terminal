@@ -6,7 +6,7 @@ Figures were read from production on 2026-11-20.
 Built: step 1 (the `exposure` axis and the `filed_fact` track-record terms), step 2
 (candidate 1, hyperscaler lab facts), step 3 (candidate 2, capex against guidance) and step 5's
 median half (candidate 4, the GPU median rule on the `compute` axis), step 4 (candidate 3,
-the `deal-score-floor` rule, below) and step 6 (candidate 6, the `supplier-passage-floor` rule,
+the `deal-score-floor` rule, below, and its revenue twin `revenue-score-floor`) and step 6 (candidate 6, the `supplier-passage-floor` rule,
 below). Left: single-provider GPU moves (waiting for a judge block) and latency strain (5).
 
 ## How alerts work today
@@ -30,6 +30,8 @@ with the source URL and fetch time of the read that found it. Alerts come from t
     domain, all run by `layers/terminal/server/pipeline/observation-alerts.ts` on the survey tick.
   - `deal-score-floor`: `layers/press/server/pipeline/deal-alerts.ts`, through the same writer and
     on the same tick. Below the recipe-observation rules.
+  - `revenue-score-floor`: `layers/press/server/pipeline/revenue-alerts.ts`, the same writer and
+    tick. After the deal-score rule.
 - **The judge.** The hourly routine reads `GET /api/judge/pending` (change rows since its last
   run) and sends back severity, headline and explanation. The Worker gates every field
   (`layers/core/server/pipeline/judge/`). It can only lower a severity
@@ -97,7 +99,20 @@ that scores many headlines is one alert. Ids hash the measure, period and access
 Two departures from the plan below. Restated reports don't alert: a headline that repeats a
 filed figure is the press repeating the filing. And the rule reads the same `reported_figures`
 table `/api/reported` serves, so it closes that route's `alerts` waiver (`AXIS_ROUTES` on
-`revenue`). Revenue headlines scored against a lab's own filing still raise no alert of their own.
+`revenue`).
+
+### Revenue headlines against the lab's own filing
+
+`revenue-score-floor`, built 2026-11-25. The revenue half of `/ground-truth` (`scoreReport`,
+grouped by `resolutionsOf`) under the same guard: a figure first filed in the last 14 days, a
+report the judge labeled on an earlier day than the filing, at most 365 days before it. Only a lab
+that files for itself (`disclosure: 'issuer'`) counts, never a parent's segment. One `notable`
+alert per filing, since one 10-K can settle reports on the year and on the quarter it gives by
+subtraction; it cites one `revenue_score` change row (revenue axis, kept from the judge,
+`not-searchable`) carrying the lead figure, the counts, the median error and the earliest report.
+Ids hash the lab and the accession. Anthropic is the one issuer today, and every figure its
+registration filings printed was first filed by 2026-11-02, so the first deploy writes nothing; the
+rule first fires on its first 10-Q or 10-K.
 
 ## The candidates
 

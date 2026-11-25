@@ -214,6 +214,7 @@ function termsOf(change: ChangeRow): SearchTerms | null {
       // construction. Not searched.
       return null
     case 'deal_score':
+    case 'revenue_score':
       // The press story came first by construction, and the filing has its own alert
       // (filed-fact-floor, prospectus-floor): a search would only find the articles we scored.
       return null
