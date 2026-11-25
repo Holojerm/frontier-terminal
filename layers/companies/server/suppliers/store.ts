@@ -1,7 +1,7 @@
 // The stored suppliers table: the hand-read rows it starts from, the rows a
 // reader sees, and what a newly read document does to the rows before it.
 
-import { and, count, desc, eq, isNull, max } from 'drizzle-orm'
+import { and, count, desc, eq, isNull, max, ne } from 'drizzle-orm'
 
 import * as tables from '#server/db/schema'
 import {
@@ -20,7 +20,7 @@ import {
   type PipelineDb,
 } from '#layers/core/server/utils/pipeline-store'
 import { contains } from '#layers/core/server/pipeline/document-text'
-import { PERIODIC_FORMS } from './filers'
+import { PERIODIC_FORMS, counterpartyNamed } from './filers'
 
 const HAND = curatedSuppliers.parse(curated).rows
 
@@ -111,6 +111,42 @@ export async function seedHandPassages(db: PipelineDb): Promise<number> {
     ),
   )
   return rows.length - (stored?.n ?? 0)
+}
+
+/**
+ * Give a stored row the name, ticker and lab of the counterparty it names, where the list now
+ * knows it and the row was stored without: a spelling added later, or a legal-form word an
+ * earlier match missed ("Google LLC"). Nothing else on the row moves. A relabel only joins a
+ * tie to its counterparty's other rows, so it can make a passage old news but never new
+ * (alerts.ts › newPassages), and an alert already written keeps its id.
+ */
+export async function relabelPassages(db: PipelineDb): Promise<number> {
+  const unmatched = await db
+    .select({ id: tables.supplierPassages.id, counterparty: tables.supplierPassages.counterparty })
+    .from(tables.supplierPassages)
+    .where(
+      and(
+        ne(tables.supplierPassages.relation, 'concentration'),
+        isNull(tables.supplierPassages.counterparty_ticker),
+        isNull(tables.supplierPassages.counterparty_lab),
+      ),
+    )
+  const updates = unmatched.flatMap((r) => {
+    const named = counterpartyNamed(r.counterparty)
+    if (!named || (named.name === r.counterparty && !named.ticker && !named.lab)) return []
+    return [
+      db
+        .update(tables.supplierPassages)
+        .set({
+          counterparty: named.name,
+          counterparty_ticker: named.ticker,
+          counterparty_lab: named.lab,
+        })
+        .where(eq(tables.supplierPassages.id, r.id)),
+    ]
+  })
+  await runStatements(db, updates)
+  return updates.length
 }
 
 /** The rows no later document has ended, newest document first. */

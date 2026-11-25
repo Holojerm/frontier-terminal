@@ -181,8 +181,9 @@ reads each supplier's new 10-Q, 10-K and 8-K (20-F and 6-K for a foreign filer),
 the passages that tie it to a lab or a cloud, and the Worker checks each quote and figure
 against the stored document (`layers/companies/server/suppliers/`). Once a run's readings are
 stored, the rule writes one alert per filing that says something the company's earlier rows
-didn't, citing one `supplier_passage` change row (exposure axis, kept from the judge) with the
-filing, the counterparties and the lead passage. `/api/suppliers` is on the axis through
+didn't, citing a `supplier_passage` change row (exposure axis, kept from the judge) with the
+filing, the counterparties and the lead passage, and one more row for each further lab the new
+passages name, so the lab filter finds a filing naming several labs under each. `/api/suppliers` is on the axis through
 `AXIS_ROUTES`, so its waiver is gone.
 
 A filing alerts only when all of these hold.
@@ -199,8 +200,16 @@ A filing alerts only when all of these hold.
 That is the flood guard. The reader's first run read a year of filings per company, and a
 re-read or a new filer does the same, but only filings from the last 14 days can alert, one
 alert each. On 2026-11-25 production held 2 judge-read passages, both from filings older than
-that, so the rule's first run writes nothing. Ids hash the company and the accession, so a re-run
-writes nothing twice.
+that, so the rule's first run writes nothing. Ids hash the company and the accession (each
+further lab row adds its lab; the alert's id hashes the first row only), so a re-run writes
+nothing twice.
+
+A counterparty is matched with its legal-form words aside ("Google LLC", "OpenAI OpCo, LLC",
+"Anthropic, PBC"), whole trailing words only, so "Meta Materials" stays apart from Meta
+(`filers.ts` › `nameKey`). The read lane relabels a stored row the list now knows. On
+2026-11-25 that was one production row, HUT's "Google LLC" guarantee, from a filing older than
+the window. A relabel only joins a tie to its counterparty's other rows, so it can turn a passage
+into old news but never into new, and an alert already written keeps its id.
 
 Tier, as planned: `info` by default, `notable` when a new passage names a tracked lab or cloud
 and states a figure (dollars, shares, gigawatts or a share of revenue, each already checked to
