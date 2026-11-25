@@ -8,6 +8,7 @@ import {
   writeSupplierAlerts,
 } from '../server/suppliers/alerts'
 import { applySupplierReview } from '../server/suppliers/review'
+import { relabelPassages } from '../server/suppliers/store'
 import { JUDGE_EXCLUDED_ENTITY_TYPES } from '#layers/core/server/pipeline/judge/pending'
 
 // The supplier-passage rule over made-up AMD and Credo filings. Every company, accession and
@@ -220,6 +221,29 @@ describe('the supplier-passage rule, pure', () => {
       `AMD’s 10-Q, filed ${d.filed}, names Anthropic, xAI, and Oracle in 3 new passages`,
     )
     expect(findings[0]!.explanation).toContain('And 1 more.')
+    // Led by Anthropic, it also cites a row for xAI; the cloud tie adds none.
+    expect(findings[0]!.provider).toBe('anthropic')
+    expect(findings[0]!.also).toEqual([
+      {
+        provider: 'xai',
+        after: expect.objectContaining({
+          summary: `AMD · 10-Q · ${d.filed} · xAI · 1 new passage`,
+          counterparty: 'xAI',
+          labs: 'xai',
+          passages: 1,
+        }),
+      },
+    ])
+  })
+
+  it('cites no further row for a filing naming one lab', () => {
+    const d = doc('AMD', '10-Q', dayAgo(2), read(2))
+    const p = passage(d, {
+      figures: usd(4.5e9),
+      quote: 'Anthropic committed to purchase $4.5 billion of AMD Instinct GPUs through 2028.',
+      first_seen_at: read(1),
+    })
+    expect(supplierFindings([d], [HAND, p], new Map(), NOW)[0]!.also).toEqual([])
   })
 })
 
@@ -232,6 +256,7 @@ describe('the supplier-passage rule over a seeded store', () => {
   beforeEach(async () => {
     for (const t of [
       schema.alerts,
+      schema.alertCites,
       schema.changes,
       schema.supplierPassages,
       schema.supplierDocuments,
@@ -344,6 +369,122 @@ describe('the supplier-passage rule over a seeded store', () => {
     // The same reading again: the document is settled, so nothing is offered or written.
     expect(await applySupplierReview(db, readRaw, [reading], NOW)).toMatchObject({ alerts: 0 })
     expect(await db.select().from(schema.alerts)).toHaveLength(1)
+  })
+
+  it('finds a filing naming two labs under each, one alert, and nothing on a re-run', async () => {
+    const d = doc('AMD', '10-Q', dayAgo(2), read(1))
+    await seed(
+      [HAND_DOC, d],
+      [
+        HAND,
+        passage(d, {
+          figures: usd(4.5e9),
+          quote: 'Anthropic committed to purchase $4.5 billion of AMD Instinct GPUs through 2028.',
+          first_seen_at: read(0.5),
+        }),
+        passage(d, {
+          counterparty: 'xAI',
+          counterparty_lab: 'xai',
+          quote: 'We began shipping MI500 systems to xAI for its Memphis data center.',
+          first_seen_at: read(0.5),
+        }),
+      ],
+    )
+    expect(await writeSupplierAlerts(db, NOW)).toEqual({ written: 1, findings: 1 })
+    const [alert, ...others] = await db.select().from(schema.alerts)
+    expect(others).toEqual([])
+    const changes = await db.select().from(schema.changes)
+    expect(changes.map((c) => c.provider).sort()).toEqual(['anthropic', 'xai'])
+    expect(JSON.parse(alert!.change_ids).sort()).toEqual(changes.map((c) => c.id).sort())
+    const cites = await db.select().from(schema.alertCites)
+    expect(cites.map((c) => c.provider).sort()).toEqual(['anthropic', 'xai'])
+    expect((await writeSupplierAlerts(db, NOW)).written).toBe(0)
+    expect((await writeSupplierAlerts(db, new Date(NOW.getTime() + DAY))).written).toBe(0)
+    expect(await db.select().from(schema.changes)).toHaveLength(2)
+  })
+
+  it('relabels a suffixed name without writing an alert', async () => {
+    // HUT's row as production holds it: "Google LLC", stored before the match read the suffix,
+    // from a filing older than the window. And a fresh filing that already alerted with one.
+    const old = doc('AMD', '10-Q', dayAgo(113), read(2))
+    const fresh = doc('AMD', '8-K', dayAgo(2), read(1))
+    const google = (d: Doc, quote: string, first_seen_at: string) =>
+      passage(d, {
+        relation: 'guarantee',
+        counterparty: 'Google LLC',
+        counterparty_lab: null,
+        quote,
+        first_seen_at,
+      })
+    await seed(
+      [HAND_DOC, old, fresh],
+      [
+        HAND,
+        google(
+          old,
+          'Google LLC provides a backstop for our lease obligations at the site.',
+          read(1.9),
+        ),
+        google(
+          fresh,
+          'Google LLC guarantees the lease payments of our second campus here.',
+          read(0.5),
+        ),
+        passage(fresh, {
+          quote: 'We announced a multi-year collaboration with Anthropic on data center GPUs.',
+          first_seen_at: read(0.5),
+        }),
+      ],
+    )
+    expect((await writeSupplierAlerts(db, NOW)).written).toBe(1)
+    expect(await relabelPassages(db)).toBe(2)
+    expect(await relabelPassages(db)).toBe(0)
+    const relabeled = (await db.select().from(schema.supplierPassages)).filter(
+      (p) => p.relation === 'guarantee',
+    )
+    expect(
+      relabeled.map((p) => [p.counterparty, p.counterparty_ticker, p.counterparty_lab]),
+    ).toEqual([
+      ['Google', 'GOOGL', 'google'],
+      ['Google', 'GOOGL', 'google'],
+    ])
+    expect((await writeSupplierAlerts(db, NOW)).written).toBe(0)
+    expect(await db.select().from(schema.alerts)).toHaveLength(1)
+  })
+
+  it('stores a suffixed name the judge sends under its counterparty, and alerts under it', async () => {
+    const d = doc('AMD', '8-K', dayAgo(2), read(1))
+    const quote =
+      'Google LLC agreed to guarantee $1.2 billion of the lease payments for the campus.'
+    const raw = new Map([[d.raw_key!, `<html><body><p>${quote}</p></body></html>`]])
+    const readRaw = async (key: string) => raw.get(key) ?? null
+    await seed([HAND_DOC, { ...d, judged_at: null }], [HAND])
+    const reading = {
+      document_id: d.accession_no,
+      passages: [
+        {
+          relation: 'guarantee' as const,
+          counterparty: 'Google LLC',
+          figures: [{ value: 1.2e9, unit: 'usd' as const, meaning: 'lease payments guaranteed' }],
+          quote,
+          alias: null,
+        },
+      ],
+    }
+    expect(await applySupplierReview(db, readRaw, [reading], NOW)).toMatchObject({
+      accepted: 1,
+      alerts: 1,
+    })
+    const [row] = (await db.select().from(schema.supplierPassages)).filter(
+      (p) => p.basis === 'judge',
+    )
+    expect(row).toMatchObject({
+      counterparty: 'Google',
+      counterparty_ticker: 'GOOGL',
+      counterparty_lab: 'google',
+    })
+    expect(await db.select().from(schema.alerts)).toMatchObject([{ severity: 'notable' }])
+    expect(await db.select().from(schema.changes)).toMatchObject([{ provider: 'google' }])
   })
 
   it('keeps its rows from the judge', () => {

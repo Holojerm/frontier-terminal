@@ -7,7 +7,9 @@
 // (layers/alerts/server/pipeline/social.ts), and nothing here mails anyone.
 //
 // The change row's id and the alert's id hash the rule, the entity and the period the finding is
-// about, so a re-run of the same reads writes nothing a second time.
+// about, so a re-run of the same reads writes nothing a second time. A finding about several labs
+// (one supplier filing naming two) cites one further row per lab, keyed by the lab too, so the
+// lab filter finds it under each; the alert's id still hashes the first row alone.
 
 import { and, eq, gte, inArray } from 'drizzle-orm'
 
@@ -54,36 +56,47 @@ export interface Finding {
   fetched_at: string
   /** `notable` when absent. */
   severity?: 'info' | 'notable'
+  /** Further rows the alert cites, one per other lab the finding is about. */
+  also?: readonly { provider: Provider; after: Json }[]
 }
 
-export function findingRows(f: Finding, now: Date): { change: ChangeRow; alert: AlertRow } {
+export function findingRows(f: Finding, now: Date): { changes: ChangeRow[]; alert: AlertRow } {
   const detected_at = now.toISOString()
-  const change = ChangeRow.parse({
-    id: contentHash({ rule: f.rule, entity_key: f.entity_key, period: f.period }),
-    entity_key: f.entity_key,
-    entity_type: f.entity_type,
-    provider: f.provider,
-    change_type: f.change_type,
-    before_hash: f.before ? contentHash(f.before) : null,
-    after_hash: contentHash(f.after),
-    before_json: f.before ? JSON.stringify(f.before) : null,
-    after_json: JSON.stringify(f.after),
-    detected_at,
-    source_url: f.source_url,
-    fetched_at: f.fetched_at,
-  })
+  const row = (id: string, provider: Provider, after: Json) =>
+    ChangeRow.parse({
+      id,
+      entity_key: f.entity_key,
+      entity_type: f.entity_type,
+      provider,
+      change_type: f.change_type,
+      before_hash: f.before ? contentHash(f.before) : null,
+      after_hash: contentHash(after),
+      before_json: f.before ? JSON.stringify(f.before) : null,
+      after_json: JSON.stringify(after),
+      detected_at,
+      source_url: f.source_url,
+      fetched_at: f.fetched_at,
+    })
+  const key = { rule: f.rule, entity_key: f.entity_key, period: f.period }
+  const lead = row(contentHash(key), f.provider, f.after)
+  const changes = [
+    lead,
+    ...(f.also ?? []).map((a) =>
+      row(contentHash({ ...key, provider: a.provider }), a.provider, a.after),
+    ),
+  ]
   const alert = AlertRow.parse({
-    id: contentHash({ rule: f.rule, change_id: change.id }),
+    id: contentHash({ rule: f.rule, change_id: lead.id }),
     severity: f.severity ?? 'notable',
     headline: f.headline,
     explanation: f.explanation,
-    change_ids: JSON.stringify([change.id]),
+    change_ids: JSON.stringify(changes.map((c) => c.id)),
     rule: f.rule,
     created_at: detected_at,
     source_url: f.source_url,
     fetched_at: f.fetched_at,
   })
-  return { change, alert }
+  return { changes, alert }
 }
 
 /** Writes the findings no earlier run wrote; returns how many were new. */
@@ -108,9 +121,12 @@ export async function writeFindings(
     ).map((r) => r.id),
   )
   let written = 0
-  for (const { change, alert } of rows) {
+  for (const { changes, alert } of rows) {
     if (have.has(alert.id)) continue
-    await db.insert(tables.changes).values(change).onConflictDoNothing()
+    // The changes go first: the alert's insert trigger reads them into alert_cites. One at a
+    // time, as nine lab rows in one insert would pass D1's bound-parameter cap.
+    for (const change of changes)
+      await db.insert(tables.changes).values(change).onConflictDoNothing()
     await db.insert(tables.alerts).values(alert).onConflictDoNothing()
     written += 1
   }
