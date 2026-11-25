@@ -167,7 +167,10 @@ export async function writeRevenueScoreAlerts(
   now = new Date(),
 ): Promise<{ written: number; findings: number }> {
   const [revenue, headlines] = await Promise.all([
-    queryRevenue(db, queryContext(sourcesYaml, null, () => now)),
+    queryRevenue(
+      db,
+      queryContext(sourcesYaml, null, () => now),
+    ),
     storedRevenueHeadlines(db),
   ])
   const issuers = revenue.providers

@@ -20,7 +20,11 @@ const CIK = '0002130357'
 const S1 = '0001628280-26-067168'
 const S1A = '0001628280-26-068676'
 const K10 = '0002130357-27-000004'
-const FILED: Record<string, string> = { [S1]: '2026-10-26', [S1A]: '2026-11-02', [K10]: '2027-02-25' }
+const FILED: Record<string, string> = {
+  [S1]: '2026-10-26',
+  [S1A]: '2026-11-02',
+  [K10]: '2027-02-25',
+}
 const FORM: Record<string, string> = { [S1]: 'S-1', [S1A]: 'S-1/A', [K10]: '10-K' }
 
 const filingUrl = (a: string) =>
