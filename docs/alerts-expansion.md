@@ -5,9 +5,9 @@ Figures were read from production on 2026-11-20.
 
 Built: step 1 (the `exposure` axis and the `filed_fact` track-record terms), step 2
 (candidate 1, hyperscaler lab facts), step 3 (candidate 2, capex against guidance) and step 5's
-median half (candidate 4, the GPU median rule on the `compute` axis) and step 4 (candidate 3,
-the `deal-score-floor` rule, below). Left: single-provider GPU moves (waiting for a judge block), supplier passages (6) and latency
-strain (5).
+median half (candidate 4, the GPU median rule on the `compute` axis), step 4 (candidate 3,
+the `deal-score-floor` rule, below) and step 6 (candidate 6, the `supplier-passage-floor` rule,
+below). Left: single-provider GPU moves (waiting for a judge block) and latency strain (5).
 
 ## How alerts work today
 
@@ -23,6 +23,8 @@ with the source URL and fetch time of the read that found it. Alerts come from t
   - `filed-fact-floor`: `layers/companies/server/exposure/alerts.ts`
   - `guidance-floor`: `layers/companies/server/exposure/guidance-alerts.ts`
   - `gpu-median-floor`: `layers/compute/server/pipeline/gpu-median-floor.ts`
+  - `supplier-passage-floor`: `layers/companies/server/suppliers/alerts.ts`, through the
+    recipe-observation writer, run when the judge's supplier readings are stored. Candidate 6.
   - `adoption-floor`, `datacenter-floor`, `limits-floor`, `pay-floor`: the recipe-observation rules,
     below. One writer (`layers/core/server/pipeline/observation-alerts.ts`), one rule file per
     domain, all run by `layers/terminal/server/pipeline/observation-alerts.ts` on the survey tick.
@@ -174,6 +176,44 @@ The median half is built (`gpu-median-floor`). What is left is a single provider
 
 ### 6. A new supplier passage
 
+Built 2026-11-25 as `supplier-passage-floor`, under the second option below. The filings lane
+reads each supplier's new 10-Q, 10-K and 8-K (20-F and 6-K for a foreign filer), the judge finds
+the passages that tie it to a lab or a cloud, and the Worker checks each quote and figure
+against the stored document (`layers/companies/server/suppliers/`). Once a run's readings are
+stored, the rule writes one alert per filing that says something the company's earlier rows
+didn't, citing one `supplier_passage` change row (exposure axis, kept from the judge) with the
+filing, the counterparties and the lead passage. `/api/suppliers` is on the axis through
+`AXIS_ROUTES`, so its waiver is gone.
+
+A filing alerts only when all of these hold.
+
+- It was filed in the last 14 days.
+- Its passages were read from it. A row a later filing repeats word for word is restamped onto
+  that filing before the judge reads it, and keeps the time it was first seen.
+- The company was read before: it has hand-read rows, or a document read before the 14 days
+  began. A filer added to the reader alerts nothing while its year of filings is read.
+- A passage is news: a counterparty and relation no earlier row of the company had, or a figure
+  no earlier row of that tie stated. Two filings read in one run that state the same new tie
+  count it once, for the earlier filing.
+
+That is the flood guard. The reader's first run read a year of filings per company, and a
+re-read or a new filer does the same, but only filings from the last 14 days can alert, one
+alert each. On 2026-11-25 production held 2 judge-read passages, both from filings older than
+that, so the rule's first run writes nothing. Ids hash the company and the accession, so a re-run
+writes nothing twice.
+
+Tier, as planned: `info` by default, `notable` when a new passage names a tracked lab or cloud
+and states a figure (dollars, shares, gigawatts or a share of revenue, each already checked to
+be written in the quote). A customer the filing doesn't name stays `info`. In the track record
+a lab tie is searched by the lab's names and the supplier's, and a tie to a cloud alone isn't
+searched (the GKG vocabulary keeps rows naming a lab, a tracked filer or a model).
+
+Two departures from the plan below. The rule is not a judge alert: the judge only finds the
+passage, and the alert's text is built from the stored row, so the judge's own severity gates
+don't apply. And a share of revenue counts as a figure for the tier, alongside dollars.
+
+The plan, as approved:
+
 - **Change row.** None exists yet. The filings lane reads each supplier's new filings and the
   judge reads the passages from them (`layers/companies/server/suppliers/`), checked against
   the stored document. The table started from 110 passages read by hand. What is left is the
@@ -205,7 +245,6 @@ The median half is built (`gpu-median-floor`). What is left is a single provider
    filings are read, so it isn't mostly unsettled.
 5. **GPU price moves (4).** The median is built. Single-provider moves wait for the judge
    block.
-6. **Supplier passages (6).** The deploy-diff option is cheap but adds little. The filing-watch
-   option is the useful one and the most work.
+6. **Supplier passages (6).** Built (`supplier-passage-floor`), as the filing-watch option.
 7. **Latency strain (5).** Not before 28 days of probes, and `info` until the OpenRouter
    cross-check has run for a month.

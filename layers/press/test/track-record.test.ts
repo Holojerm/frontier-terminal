@@ -180,6 +180,23 @@ describe('search terms', () => {
     expect(alertTerms([change({ entity_type: 'filed_fact', after: {} })])).toBeNull()
   })
 
+  it('searches a supplier passage by the lab and the supplier, and leaves a cloud-only tie out', () => {
+    const tie = change({
+      entity_type: 'supplier_passage',
+      provider: 'anthropic',
+      entity_key: 'supplier_passage:amd',
+      after: { company: 'AMD', form: '10-Q', counterparty: 'Anthropic' },
+    })
+    expect(alertTerms([tie])).toEqual({ who: ['Anthropic', 'Claude'], what: ['AMD'], also: [] })
+    const cloud = change({
+      entity_type: 'supplier_passage',
+      provider: 'other',
+      entity_key: 'supplier_passage:amd',
+      after: { company: 'AMD', form: '10-Q', counterparty: 'Oracle' },
+    })
+    expect(alertTerms([cloud])).toBeNull()
+  })
+
   it('does not search a GPU rental median: the press vocabulary names none of the providers', () => {
     const median = change({
       entity_type: 'gpu_price',
