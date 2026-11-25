@@ -30,7 +30,7 @@ export function registerFilingTools({ server, deps, read }: McpKit): void {
           await read(
             'call-guidance',
             as_of,
-            (ctx) => queryCallGuidance(deps.db, ctx, ticker ?? null),
+            (ctx) => queryCallGuidance(deps.db, ctx, ticker ? { ticker } : null),
             `${await callGuidanceStamp(deps.db)}${ticker ? `:${ticker}` : ''}`,
             'filed',
           ),
