@@ -30,6 +30,7 @@ export interface ChangeView extends Prov {
     | 'data_center'
     | 'rate_limit'
     | 'pay_band'
+    | 'deal_score'
   provider: ProviderId
   change_type: 'added' | 'removed' | 'modified'
   detected_at: string
@@ -59,6 +60,7 @@ export interface AlertView extends Prov {
     | 'datacenter-floor'
     | 'limits-floor'
     | 'pay-floor'
+    | 'deal-score-floor'
   created_at: string
   change_ids: string[]
   /** The cited rows, resolved; ids that resolve to nothing are listed in `missing`. */

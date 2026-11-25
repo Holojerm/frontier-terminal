@@ -274,7 +274,9 @@ function summarize(entityType: string, payload: Json | null): string {
       .join(' · ')
   }
   // The observation rules store the line themselves, built from the same row's figures.
-  if (['adoption_series', 'data_center', 'rate_limit', 'pay_band'].includes(entityType)) {
+  if (
+    ['adoption_series', 'data_center', 'rate_limit', 'pay_band', 'deal_score'].includes(entityType)
+  ) {
     return str(payload.summary) ?? entityType
   }
   return entityType

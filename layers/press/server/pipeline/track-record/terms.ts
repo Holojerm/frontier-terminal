@@ -213,6 +213,10 @@ function termsOf(change: ChangeRow): SearchTerms | null {
       // lab's numbers, not a story the press files under one: a search would be none-found by
       // construction. Not searched.
       return null
+    case 'deal_score':
+      // The press story came first by construction, and the filing has its own alert
+      // (filed-fact-floor, prospectus-floor): a search would only find the articles we scored.
+      return null
     default:
       return null
   }

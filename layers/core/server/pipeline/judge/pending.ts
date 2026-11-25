@@ -59,6 +59,7 @@ export const JUDGE_EXCLUDED_ENTITY_TYPES = [
   'data_center',
   'rate_limit',
   'pay_band',
+  'deal_score',
 ] as const
 
 /** The WHERE fragment that keeps excluded entity types out of a changes query. */

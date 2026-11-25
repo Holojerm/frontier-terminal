@@ -38,7 +38,7 @@ const FIGURE_METRICS = [
  * investment: what one company put into the lab. financing: what one company
  * lends it. commitment_total: everything the lab has agreed to buy, from all.
  */
-const DEAL_METRICS = ['commitment', 'investment', 'financing', 'commitment_total'] as const
+export const DEAL_METRICS = ['commitment', 'investment', 'financing', 'commitment_total'] as const
 export type DealMetric = (typeof DEAL_METRICS)[number]
 
 export const METRICS = [...FIGURE_METRICS, ...DEAL_METRICS] as const
