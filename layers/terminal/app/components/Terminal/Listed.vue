@@ -12,17 +12,13 @@ import type { LabId } from '../../../../core/shared/types/common'
 
 const props = defineProps<{ data: ListedData; lab?: LabId | readonly [LabId, LabId] }>()
 
-const { data: hiring } = await useFetch<ListedHiringData>('/api/hiring/listed')
-
-/** "316 open roles, 44 data-center" for a company whose board we read. */
-function hiringEvidence(ticker: string): { text: string; to: string }[] {
-  const b = hiring.value?.boards.find((x) => x.ticker === ticker && x.latest)
-  if (!b?.latest) return []
-  const dc = `${count(b.latest.datacenter)} data-center`
-  const text =
-    b.latest.total === null ? `${dc} roles open` : `${count(b.latest.total)} open roles, ${dc}`
-  return [{ text, to: `/hiring#listed-${ticker}` }]
-}
+// The boards of the lab's ties (/api/hiring/listed?lab=). A pair's rows are tied to both
+// labs, so the first lab's boards cover them.
+const hiringLab = typeof props.lab === 'string' ? props.lab : props.lab?.[0]
+const { data: hiring } = await useFetch<ListedHiringData>('/api/hiring/listed', {
+  key: `listed-hiring:${hiringLab ?? 'all'}`,
+  query: hiringLab ? { lab: hiringLab } : {},
+})
 
 const columns: TableColumn[] = [
   { key: 'ticker', label: 'Ticker' },
@@ -38,7 +34,10 @@ const rows = computed(() =>
     company: c.company,
     group: listedGroup(c),
     says: c.ties.map((t) => listedTieText(t, c)),
-    evidence: [...c.ties.map((t) => listedEvidence(t)), ...hiringEvidence(c.ticker)],
+    evidence: [
+      ...c.ties.map((t) => listedEvidence(t)),
+      ...listedHiringEvidence(hiring.value, c.ticker),
+    ],
   })),
 )
 
