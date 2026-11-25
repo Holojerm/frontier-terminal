@@ -3,7 +3,7 @@
 // commitment date comes from the newest filing that reports it (earlier figures
 // kept as superseded), like terminal-revenue.ts.
 
-import { inArray } from 'drizzle-orm'
+import { eq, inArray } from 'drizzle-orm'
 import type { z } from 'zod'
 
 import type { LabId, SourceRef } from '../../../core/shared/types/common'
@@ -214,6 +214,34 @@ function read<T>(schema: z.ZodType<T>, row: Stored): T | null {
     fetched_at: row.fetched_at,
   })
   return parsed.success ? parsed.data : null
+}
+
+/**
+ * Each lab's commitment schedules as `queryProspectus` lists them, read from the commitment
+ * rows alone: for a reader off the request path (the deal alert rule) with no query context.
+ */
+export async function labCommitments(
+  db: PipelineDb,
+): Promise<{ provider: LabId; commitments: CommitmentView[] }[]> {
+  const rows = await db
+    .select({
+      type: tables.entities.entity_type,
+      provider: tables.entities.provider,
+      payload: tables.entities.payload,
+      source_url: tables.entities.source_url,
+      fetched_at: tables.entities.fetched_at,
+    })
+    .from(tables.entities)
+    .where(eq(tables.entities.entity_type, 'commitment'))
+  return PROVIDER_ORDER.map((provider) => ({
+    provider: provider as LabId,
+    commitments: buildCommitments(
+      rows
+        .filter((r) => r.provider === provider)
+        .map((r) => read<CommitmentRow>(CommitmentRow, r))
+        .filter((r): r is CommitmentRow => r !== null),
+    ),
+  })).filter((issuer) => issuer.commitments.length > 0)
 }
 
 export async function queryProspectus(db: PipelineDb, ctx: QueryContext): Promise<ProspectusData> {

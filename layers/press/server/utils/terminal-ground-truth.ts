@@ -456,20 +456,7 @@ export async function queryGroundTruth(
     : all
   const guidance = await queryGuidance(db, ctx.at, facts, TOLERANCE_PCT)
 
-  const aggregates: FiledAggregate[] = prospectus.issuers.flatMap((issuer) =>
-    issuer.commitments
-      .filter((c) => c.schedule === 'obligations_aggregate' && c.lines[0])
-      .map((c) => ({
-        lab: issuer.provider,
-        value: c.lines[0]!.total,
-        filed: c.filed,
-        form: c.form,
-        accession_no: c.accession_no,
-        filing_url: c.filing_url,
-        source_url: c.source_url,
-        fetched_at: c.fetched_at,
-      })),
-  )
+  const aggregates = aggregatesOf(prospectus.issuers)
   const deals = scoreDeals(stored.deals, { facts, aggregates, tolerance_pct: TOLERANCE_PCT })
   const labeled = stored.deals.map((d) => d.judged_at).sort()
 

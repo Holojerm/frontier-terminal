@@ -5,8 +5,8 @@ Figures were read from production on 2026-11-20.
 
 Built: step 1 (the `exposure` axis and the `filed_fact` track-record terms), step 2
 (candidate 1, hyperscaler lab facts), step 3 (candidate 2, capex against guidance) and step 5's
-median half (candidate 4, the GPU median rule on the `compute` axis). Left: deal scoring (3),
-single-provider GPU moves (waiting for a judge block), supplier passages (6) and latency
+median half (candidate 4, the GPU median rule on the `compute` axis) and step 4 (candidate 3,
+the `deal-score-floor` rule, below). Left: single-provider GPU moves (waiting for a judge block), supplier passages (6) and latency
 strain (5).
 
 ## How alerts work today
@@ -26,6 +26,8 @@ with the source URL and fetch time of the read that found it. Alerts come from t
   - `adoption-floor`, `datacenter-floor`, `limits-floor`, `pay-floor`: the recipe-observation rules,
     below. One writer (`layers/core/server/pipeline/observation-alerts.ts`), one rule file per
     domain, all run by `layers/terminal/server/pipeline/observation-alerts.ts` on the survey tick.
+  - `deal-score-floor`: `layers/press/server/pipeline/deal-alerts.ts`, through the same writer and
+    on the same tick. Below the recipe-observation rules.
 - **The judge.** The hourly routine reads `GET /api/judge/pending` (change rows since its last
   run) and sends back severity, headline and explanation. The Worker gates every field
   (`layers/core/server/pipeline/judge/`). It can only lower a severity
@@ -74,6 +76,26 @@ judge and `not-searchable` in the track record.
 Posted-pay and the recipe's other stored rows are written only on a day a cell changes, so the pay
 rule carries the last stored day forward. `parents` is not a rule: the same investee facts alert
 as `filed-fact-floor` series, so its waiver is `covered`.
+
+## The deal-score rule
+
+Candidate 3, built 2026-11-24. When a filing scores press reports of a deal's size (the deal half
+of `/ground-truth`, `scoreDeal`), one `notable` alert per filed figure states the figure and each
+report's error, a match and a miss alike. It cites one `deal_score` change row (revenue axis,
+kept from the judge, `not-searchable` in the track record) carrying the figure, the report count,
+the median error and the earliest report.
+
+A report counts only when the figure was first filed in the last 14 days, the judge labeled the
+report on an earlier day than the filing, and the report came at most 365 days before it. The
+second condition is the flood guard. A headline read back from GDELT's archive, or read again
+for deals, is labeled after the filings that score it, so a backfill alerts on nothing, and the
+rule's first run over stored deals alerts only on a filing from its last 14 days. One filing
+that scores many headlines is one alert. Ids hash the measure, period and accession.
+
+Two departures from the plan below. Restated reports don't alert: a headline that repeats a
+filed figure is the press repeating the filing. And the rule reads the same `reported_figures`
+table `/api/reported` serves, so it closes that route's `alerts` waiver (`AXIS_ROUTES` on
+`revenue`). Revenue headlines scored against a lab's own filing still raise no alert of their own.
 
 ## The candidates
 
@@ -179,7 +201,7 @@ The median half is built (`gpu-median-floor`). What is left is a single provider
 1. **The `filed_fact` axis and track-record terms.** Built.
 2. **Hyperscaler lab facts (1).** Built.
 3. **Capex guidance revisions and the 10-Q check (2).** Built.
-4. **Deal scoring (3).** A rule, but outside the track record. Wait until more counterparties'
+4. **Deal scoring (3).** Built (`deal-score-floor`). A rule, but outside the track record. Wait until more counterparties'
    filings are read, so it isn't mostly unsettled.
 5. **GPU price moves (4).** The median is built. Single-provider moves wait for the judge
    block.

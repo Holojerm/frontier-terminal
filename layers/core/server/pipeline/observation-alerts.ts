@@ -1,5 +1,5 @@
 // The shared half of the recipe-observation rules (adoption, data centers, rate limits, posted
-// pay): a rule turns two reads of a recipe into findings, and this turns a finding into one
+// pay) and the deal-score rule (layers/press/server/pipeline/deal-alerts.ts): a rule turns two reads of a recipe into findings, and this turns a finding into one
 // change row and one alert, written once. Findings state facts from the cited row only, never
 // advice, and are always `notable`: these rules never write `critical`, which posts to X and
 // Bluesky (layers/alerts/server/pipeline/social.ts), and nothing here mails anyone.
@@ -16,9 +16,19 @@ import { AlertRow, ChangeRow, contentHash, type Provider } from '../utils/contra
 
 type Json = Record<string, string | number | null>
 
-export type ObservationRule = 'adoption-floor' | 'datacenter-floor' | 'limits-floor' | 'pay-floor'
+export type ObservationRule =
+  | 'adoption-floor'
+  | 'datacenter-floor'
+  | 'limits-floor'
+  | 'pay-floor'
+  | 'deal-score-floor'
 
-export type ObservationEntity = 'adoption_series' | 'data_center' | 'rate_limit' | 'pay_band'
+export type ObservationEntity =
+  | 'adoption_series'
+  | 'data_center'
+  | 'rate_limit'
+  | 'pay_band'
+  | 'deal_score'
 
 export interface Finding {
   rule: ObservationRule
