@@ -4,6 +4,9 @@
 // and the hardware makers whose monthly prints /compute reads. Nothing here is new data:
 // each tie points back at the table that holds its figures and quotes.
 
+// Imported: listedEvidence's local `count` hides the auto-import from this file.
+import { count } from '../../../core/shared/utils/terminal-format'
+
 /** A filer on the graph: the lines its own XBRL draws to another company. */
 export interface ListedGraphTie {
   source: 'graph'
@@ -180,4 +183,17 @@ export function listedBoth(a: ListedData, b: ListedData): ListedData {
     a,
     a.companies.filter((c) => tickers.has(c.ticker)),
   )
+}
+
+/** "316 open roles, 44 data-center" for a company whose job board we read, linking to /hiring. */
+export function listedHiringEvidence(
+  hiring: ListedHiringData | null | undefined,
+  ticker: string,
+): { text: string; to: string }[] {
+  const b = hiring?.boards.find((x) => x.ticker === ticker && x.latest)
+  if (!b?.latest) return []
+  const dc = `${count(b.latest.datacenter)} data-center`
+  const text =
+    b.latest.total === null ? `${dc} roles open` : `${count(b.latest.total)} open roles, ${dc}`
+  return [{ text, to: `/hiring#listed-${ticker}` }]
 }
