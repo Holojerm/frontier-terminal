@@ -514,6 +514,13 @@ export function longDate(iso: string): string {
   return `${MONTHS[d.getUTCMonth()]} ${d.getUTCDate()}, ${d.getUTCFullYear()}`
 }
 
+/** 'Oct 2026' from '2026-10-01': a monthly series' month, never moved by a zone. */
+export function monthYear(day: string): string {
+  const [year, month] = day.split('-').map(Number)
+  if (!year || !month || month > 12) return day
+  return `${MONTHS[month - 1]} ${year}`
+}
+
 /** '$4.00 per million input tokens and $20.00 per million output tokens'; null when neither is set. */
 export function pricePhrase(input: number | null, output: number | null): string | null {
   const parts = [

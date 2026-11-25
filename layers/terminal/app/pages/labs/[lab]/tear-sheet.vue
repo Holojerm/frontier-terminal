@@ -179,7 +179,7 @@ const asOf = computed(() => prices.data.value?.as_of ?? alerts.data.value?.as_of
 useSeo({
   image: ogCardPath(route.path),
   title: `${display} tear sheet: prices, revenue, hiring, incidents`,
-  description: `${display} on one printable page: API prices, SEC revenue against the press, listed companies, demand and adoption, hiring and pay, power, rate limits, incidents and alerts, each sourced.`,
+  description: `${display} on one printable page: API prices, SEC revenue, listed companies, demand, hiring and pay, power, rate limits, incidents and alerts, each sourced.`,
   about: labOrganizationSchema({ name: display, url: LAB_SITE[lab] }),
   breadcrumb: [
     { name: display, path: labPath(lab) },

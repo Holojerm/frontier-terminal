@@ -66,13 +66,6 @@ type Cite = (prov: Prov, label: string) => number
 
 const EPOCH_LICENSE = 'Data-center power: CC BY 4.0, Epoch AI.'
 
-const monthLabel = (m: string) =>
-  new Date(`${m}T00:00:00Z`).toLocaleString('en-US', {
-    month: 'short',
-    year: 'numeric',
-    timeZone: 'UTC',
-  })
-
 const sites = (n: number) => `${count(n)} ${n === 1 ? 'site' : 'sites'}`
 
 const gapFigure = (label: string, title: string, reason: string | null = null): SheetFigure => ({
@@ -107,9 +100,9 @@ function rampFigure(
   return {
     label: RAMP_LABEL,
     value: `${grouped(now, 1)}%`,
-    delta: year === null ? null : `${ppLabel(now - year)} on ${monthLabel(ramp.months[n - 13]!)}`,
+    delta: year === null ? null : `${ppLabel(now - year)} on ${monthYear(ramp.months[n - 13]!)}`,
     lines: [
-      `${monthLabel(ramp.months[n - 1]!)}, from Ramp’s release first stored ${ramp.release_seen}.${
+      `${monthYear(ramp.months[n - 1]!)}, from Ramp’s release first stored ${ramp.release_seen}.${
         overall === null ? '' : ` Any AI vendor: ${grouped(overall, 1)}%.`
       }`,
     ],

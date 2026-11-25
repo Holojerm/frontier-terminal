@@ -270,6 +270,13 @@ describe('tear sheet recipe sections', () => {
   })
 })
 
+describe('monthYear', () => {
+  it('names a series month in UTC, and passes a malformed one through', () => {
+    expect(monthYear('2026-10-01')).toBe('Oct 2026')
+    expect(monthYear('2026-13-01')).toBe('2026-13-01')
+  })
+})
+
 describe('tear sheet recipe gaps', () => {
   it('states a zero-MW site as no power yet, still citing Epoch', () => {
     const power = buildTearSheet('mistral', inputs).power
