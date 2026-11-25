@@ -83,6 +83,9 @@ export const entityTypeEnum = z.enum([
   // The deal-score rule (layers/press/server/pipeline/deal-alerts.ts): a filed figure and the
   // press reports of a deal's size it scored. Written only as the change its alert cites.
   'deal_score',
+  // The revenue-score rule (layers/press/server/pipeline/revenue-alerts.ts): a lab's own filing
+  // and the press reports of its revenue it scored. Written only as the change its alert cites.
+  'revenue_score',
   // The supplier-passage rule (layers/companies/server/suppliers/alerts.ts): the new passages of
   // one supplier filing. Written only as the change its alert cites; the passages live in
   // supplier_passages.
@@ -108,6 +111,7 @@ export const alertRuleEnum = z.enum([
   'limits-floor',
   'pay-floor',
   'deal-score-floor',
+  'revenue-score-floor',
   'supplier-passage-floor',
 ])
 // 'skipped': the source needs a credential the deploy does not have, so

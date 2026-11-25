@@ -45,7 +45,7 @@ export const SURFACE_WAIVERS = {
       'derived: joins filed exposure facts and prospectus commitments (sec, through /api/prospectus)',
     '/api/grid-load': 'not yet: a load reading raises no alert',
     '/api/ground-truth':
-      'derived: scores press reports against filings (revenue axis, deal-score-floor for deal sizes) and capex guidance against filed capex (exposure axis, guidance-floor)',
+      'derived: scores press reports against filings (revenue axis: revenue-score-floor for a lab’s revenue, deal-score-floor for deal sizes) and capex guidance against filed capex (exposure axis, guidance-floor)',
     '/api/identifiers': 'internal: reference data, read by hand',
     '/api/listed':
       'derived: joins /api/dependencies, /api/suppliers, /api/power-sites and the /api/prints ties',

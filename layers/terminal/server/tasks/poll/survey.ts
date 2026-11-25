@@ -54,7 +54,7 @@ const task = defineTask({
         })
       : null
     // Adoption, data centers, rate limits and posted pay read the same stored recipes.
-    const observationAlerts = recipes ? await runObservationAlerts(db) : null
+    const observationAlerts = recipes ? await runObservationAlerts(db, sourcesYaml) : null
     const theses = await evaluateTheses(db, { sourcesYaml, now: () => new Date() }).catch(
       async (error: unknown) => {
         await recordOpsEvent(db, { kind: 'theses_evaluate_failed', detail: String(error) })

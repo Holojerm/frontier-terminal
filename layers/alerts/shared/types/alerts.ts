@@ -31,6 +31,7 @@ export interface ChangeView extends Prov {
     | 'rate_limit'
     | 'pay_band'
     | 'deal_score'
+    | 'revenue_score'
     | 'supplier_passage'
   provider: ProviderId
   change_type: 'added' | 'removed' | 'modified'
@@ -62,6 +63,7 @@ export interface AlertView extends Prov {
     | 'limits-floor'
     | 'pay-floor'
     | 'deal-score-floor'
+    | 'revenue-score-floor'
     | 'supplier-passage-floor'
   created_at: string
   change_ids: string[]

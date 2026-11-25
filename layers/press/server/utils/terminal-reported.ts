@@ -198,6 +198,43 @@ export async function storedDeals(db: PipelineDb): Promise<StoredDeal[]> {
         eq(tables.reportedFigures.basis, 'reported'),
       ),
     )
+  return joinFigures(figures, await articlesOf(db, figures)).deals
+}
+
+/** A lab's reported USD revenue headline, with when the judge labeled it. */
+export type JudgedHeadline = StoredHeadline & { judged_at: string }
+
+/**
+ * The USD revenue figures the judge read as fact, as `storedHeadlines` lists them, each with its
+ * judged_at: the revenue-score rule (layers/press/server/pipeline/revenue-alerts.ts) runs on the
+ * survey tick, and its flood guard is the day each headline was labeled.
+ */
+export async function storedRevenueHeadlines(db: PipelineDb): Promise<JudgedHeadline[]> {
+  const figures = await db
+    .select()
+    .from(tables.reportedFigures)
+    .where(
+      and(
+        eq(tables.reportedFigures.metric, 'revenue'),
+        eq(tables.reportedFigures.basis, 'reported'),
+        eq(tables.reportedFigures.currency, 'USD'),
+      ),
+    )
+  const copies = new Map<string, ArticleRow[]>()
+  for (const a of await articlesOf(db, figures)) {
+    copies.set(a.title_key, [...(copies.get(a.title_key) ?? []), a])
+  }
+  // One figure at a time, so each headline keeps its own figure's judged_at.
+  return figures.flatMap((f) =>
+    joinFigures([f], copies.get(f.title_key) ?? []).headlines.map((h) => ({
+      ...h,
+      judged_at: f.judged_at,
+    })),
+  )
+}
+
+/** Every stored copy of the figures' headlines. */
+async function articlesOf(db: PipelineDb, figures: readonly FigureRow[]): Promise<ArticleRow[]> {
   const keys = [...new Set(figures.map((f) => f.title_key))]
   const articles: ArticleRow[] = []
   for (const group of chunk(keys, D1_MAX_BOUND_PARAMS)) {
@@ -208,7 +245,7 @@ export async function storedDeals(db: PipelineDb): Promise<StoredDeal[]> {
         .where(inArray(tables.reportedArticles.title_key, group))),
     )
   }
-  return joinFigures(figures, articles).deals
+  return articles
 }
 
 export async function queryReported(db: PipelineDb, ctx: QueryContext): Promise<ReportedData> {
