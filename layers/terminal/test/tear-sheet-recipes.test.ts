@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
+import { monthYear } from '../../core/shared/utils/terminal-format'
 import { buildTearSheet } from '../app/utils/tear-sheet'
 import type { RecipeInputs } from '../app/utils/tear-sheet-recipes'
 
