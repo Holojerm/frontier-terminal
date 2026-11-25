@@ -43,7 +43,7 @@
   "deploy": "workers-builds",
   "template": {
     "repo": "Holojerm/nuxt-cf-template",
-    "syncedSha": "dc28a558f1799f2f62bb3c77ce84d64a47021e46",
+    "syncedSha": "4283f2348077ed46c1d18063e9c6f98424b57411",
     "customized": [
       ".github/workflows/browser-suites.yml",
       "app/components/Auth/",
