@@ -59,9 +59,11 @@ because the Workers Builds image can't launch Chromium.
 ## Deploy
 
 Pushing to `main` builds and deploys through Workers Builds. Its deploy command,
-`bun run deploy:ci`, applies pending D1 migrations first, so a migration that fails stops the
-deploy. It then runs `deploy:smoke`, which fails the build if `/` or `/api/health` isn't
-serving. A manual `bun run deploy` skips both, so run `bun run db:migrate:remote` after one.
+`bun run deploy:ci`, first checks the Worker has every secret `fleet.json` › `secrets` names
+(`deploy:secrets`), then applies pending D1 migrations, so a missing secret or a migration that
+fails stops the deploy and production stays on the previous build. It then runs `deploy:smoke`,
+which fails the build if `/` or `/api/health` isn't serving. A manual `bun run deploy` skips all
+three, so run `bun run db:migrate:remote` after one.
 `GET /api/status` reports `migrations.pending`, so you can see the gap from outside.
 
 Bindings live in `wrangler.toml` (one environment, no preview). `fleet.json` must match it, or
