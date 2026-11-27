@@ -71,9 +71,10 @@
     "migrations:check": "bun run scripts/check-migrations.ts",
     "surfaces:check": "bun run scripts/check-surfaces.ts",
     "domains:check": "bun run scripts/check-domains.ts",
+    "deploy:secrets": "bun run scripts/deploy-secrets.ts",
     "deploy:smoke": "bun run scripts/deploy-smoke.ts",
     "deploy": "nuxt build && wrangler --cwd .output deploy",
-    "deploy:ci": "bun run db:migrate:remote && wrangler --cwd .output deploy && bun run deploy:smoke"
+    "deploy:ci": "bun run deploy:secrets && bun run db:migrate:remote && wrangler --cwd .output deploy && bun run deploy:smoke"
   },
   "dependencies": {
     "@modelcontextprotocol/server": "2.0.0",
