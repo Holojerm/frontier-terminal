@@ -456,6 +456,8 @@ describe('the cards on a page that does not name its models', () => {
     // qwen4-max's card links to its doc page, whose last segment is the card's title.
     expect(alibaba.get('qwen4-max')).toContain('Complex reasoning and coding')
     expect(alibaba.get('qwen3.7-plus')).toContain('Balanced performance, speed, and cost')
+    // qwen3.8-flash's card read "Fast and cost-effective" until the 2026-11-27 re-capture.
+    expect([...alibaba.get('qwen3.8-flash')!]).toEqual(['Fast and low-cost'])
     // Only qwen4-max's card prints it; until 2026-11-16 it was qwen3.8-max's.
     expect(cardOwners(alibaba, 'Complex reasoning and coding')).toEqual(['qwen4-max'])
     expect(cardDescriptions('anthropic-models-md', FIXTURE).size).toBe(0)

@@ -215,7 +215,7 @@ export const MODEL_CLASS_MAP: ClassEntry[] = [
     provider: 'alibaba',
     class: 'economy',
     model_slug: 'qwen3.8-flash',
-    basis: 'Fast and cost-effective',
+    basis: 'Fast and low-cost',
     basis_source_id: 'alibaba-models-html',
   },
   // The served page prints no price (PRICE_GAPS).
