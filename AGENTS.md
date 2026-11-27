@@ -309,8 +309,26 @@ Claude Code are formatted by a PostToolUse hook (`scripts/format-edited.ts`).
 
 ## Agent tooling
 
-MCP servers, the NuxtUI skill, slash commands and the cloud routines:
+MCP servers, skills, slash commands and the cloud routines:
 [`.claude/docs/agent-setup.md`](.claude/docs/agent-setup.md).
+
+**Skills: load the named one (Skill tool) at its moment**, before writing. `DESIGN.md` is the
+brief and wins over every design skill, `.claude/docs/voice.md` wins over every copy skill, and
+this file wins over all of them.
+
+| Moment | Load |
+| --- | --- |
+| Building or changing a page or component | `nuxt-ui`; plus `frontend-design` for a new page or a redesign |
+| A multi-step flow or a component with many interacting states | `state-machine` |
+| A view that fetches, submits or saves | `loading-states`, `error-handling-ux`, `feedback-patterns` |
+| Interface copy (labels, errors, empty states) | `ux-writing` |
+| Landing or about-page copy | `copywriting` |
+| A new public page, or an SEO fix | `seo-audit` |
+| Writing or reviewing `server/` code or `wrangler.toml` | `workers-best-practices` |
+| A bug or failing test, before proposing a fix | `systematic-debugging` |
+| Before calling UI work done | `design-qa-checklist`, then `web-design-guidelines` on the changed files |
+| Designing an A/B test | `a-b-test-design` |
+| Writing or fixing a browser test | no skill: follow `test/a11y/accessibility.spec.ts` and run `bun run test:a11y` |
 
 Parallel agent worktrees under `.claude/worktrees/<name>` are supported, and every gate in
 `bun run ci` is scoped to its own checkout. The rules that keep it that way, and the three
