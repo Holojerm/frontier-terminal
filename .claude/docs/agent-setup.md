@@ -23,7 +23,7 @@ dev session.
 | Server | Type | Purpose |
 | --- | --- | --- |
 | `cloudflare-docs` | Remote HTTP | Workers, D1, KV, R2, Pages documentation (no credentials) |
-| `cloudflare-bindings` | Remote HTTP | Workers bindings and API reference (no credentials) |
+| `cloudflare` | Remote HTTP | The whole Cloudflare API through `search` + `execute` (OAuth sign-in on first use) |
 | `nuxt-ui` | Remote HTTP | NuxtUI v4 component API docs, composables, templates, migration guide (no credentials) |
 | `github` | Remote HTTP | GitHub repo/PR/issue context; needs `GITHUB_TOKEN` (a PAT with repo read scope) |
 | `nuxt` | Local SSE | Live project introspection (pages, components, auto-imports, config); needs `bun dev` |
@@ -35,10 +35,30 @@ is `https://<portless-name>.localhost/__mcp/sse` and must match `portless.name` 
 gets a per-worktree hostname); `bun dev` prints it, and `nuxt-mcp` repoints `.mcp.json` at it
 on boot.
 
-## NuxtUI Skill (`.claude/skills/nuxt-ui/`)
+## Skills (`.claude/skills/`)
 
-Installed with `npx skills add nuxt/ui --agent claude-code`. It covers NuxtUI's component
-patterns, theming and composables; the `nuxt-ui` MCP server adds live API lookups.
+Every skill here is listed in every session, and `AGENTS.md` › Agent tooling names the moment
+each one is loaded. A skill nobody is told to load never runs, so a new one comes with its row
+there. The pack comes from the template: each skill is a plain copy pinned in
+`skills-lock.json` (source, commit, hash), and a template sync carries it. Licences and
+copyright lines are in `.claude/skills/THIRD_PARTY_NOTICES.md`.
+
+| Skill | Source | Purpose |
+| --- | --- | --- |
+| `nuxt-ui` | nuxt/ui | NuxtUI v4 components, theming, forms, layouts. Complements the `nuxt-ui` MCP server (live API lookups) |
+| `frontend-design` | anthropics/skills | Visual direction for a new page or a redesign, inside `DESIGN.md` |
+| `web-design-guidelines` | vercel-labs/agent-skills | Reviews changed UI files against a pinned copy of the Web Interface Guidelines |
+| `design-qa-checklist` | Owl-Listener/designer-skills | Every state, touch target and edge case checked before UI work is called done |
+| `state-machine` | Owl-Listener/designer-skills | Enumerates a flow's states so none is impossible or a dead end |
+| `loading-states` | Owl-Listener/designer-skills | Waiting by duration tier, no layout shift, optimistic updates with rollback |
+| `error-handling-ux` | Owl-Listener/designer-skills | Error placement by context, preserved input, what/why/what-next messages |
+| `feedback-patterns` | Owl-Listener/designer-skills | Confirmations and toasts: where, how long, undo over "are you sure" |
+| `ux-writing` | Owl-Listener/designer-skills | Labels, errors, empty states, CTAs (voice comes from `.claude/docs/voice.md`) |
+| `a-b-test-design` | Owl-Listener/designer-skills | Hypothesis, one primary metric plus guardrails, sample size, when not to test |
+| `copywriting` | coreyhaines31/marketingskills | Landing copy whose every claim can be backed |
+| `seo-audit` | coreyhaines31/marketingskills | Technical and on-page SEO audit beyond `bun run seo:check` |
+| `workers-best-practices` | cloudflare/skills | Workers code and config rules, for sessions without the Cloudflare plugin |
+| `systematic-debugging` | obra/superpowers | Root cause before any fix |
 
 ## Slash Commands (`.claude/commands/`)
 
