@@ -835,11 +835,11 @@
       "path": "fixtures/pricing/alibaba-models.html",
       "source_id": "alibaba-models-html",
       "source_url": "https://www.alibabacloud.com/help/en/model-studio/models",
-      "fetched_at": "2026-11-16T13:22:44Z",
+      "fetched_at": "2026-11-27T00:38:42Z",
       "http_status": 200,
-      "raw_bytes": 47407,
+      "raw_bytes": 48023,
       "trim": "none — committed whole",
-      "note": "The 'Recommended models' page, read only for the three sentences Alibaba's class-map cells quote. Re-captured 2026-11-16: 'Complex reasoning and coding' moved from qwen3.8-max to qwen4-max. No ETag or Last-Modified."
+      "note": "The 'Recommended models' page, read only for the three sentences Alibaba's class-map cells quote. Re-captured 2026-11-16: 'Complex reasoning and coding' moved from qwen3.8-max to qwen4-max. Re-captured 2026-11-27: qwen3.8-flash's 'Fast and cost-effective' became 'Fast and low-cost'. No ETag or Last-Modified."
     },
     {
       "path": "fixtures/pricing/moonshot-models.md",
