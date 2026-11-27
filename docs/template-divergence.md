@@ -29,6 +29,8 @@ An entry ending in `/` is a directory prefix: it also declares template files th
 - `server/middleware/auth.ts` — session guard; no accounts (fleet.json features.auth is false)
 - `shared/utils/account.ts` — account shapes; no accounts (fleet.json features.auth is false)
 - `server/tasks/purge-expired-tokens.ts` — the template's example scheduled task: purges magic-link and connect-code tokens; no accounts (fleet.json features.auth is false)
+- `app/components/Account/` — the signed-in account page's components (linked sign-in methods); no accounts (fleet.json features.auth is false)
+- `server/utils/identity-link.ts`, `server/utils/oauth-callback.ts`, `server/utils/oauth-sign-in.ts`, `server/utils/user-identities.ts` — OAuth sign-in and the `user_identities` table that links a second sign-in method to an account; no accounts (fleet.json features.auth is false)
 
 ## Removed: admin console
 
@@ -59,6 +61,7 @@ An entry ending in `/` is a directory prefix: it also declares template files th
 - `shared/utils/onboarding.ts` — onboarding rules; no accounts (fleet.json features.auth is false)
 - `shared/utils/referral-code.ts` — referral code alphabet and shape, read by attribution.ts; no accounts (fleet.json features.auth is false)
 - `server/utils/signup-contributors.ts` — the seam features add columns and welcome grants to a new account through; no accounts (fleet.json features.auth is false)
+- `server/utils/lifecycle-definitions.ts`, `server/utils/lifecycle-runtime.ts`, `server/plugins/lifecycle.ts` — lifecycle email steps as data, and the runtime that sends them; no customers to email
 
 ## Removed: customer email and notifications
 
@@ -71,6 +74,9 @@ An entry ending in `/` is a directory prefix: it also declares template files th
 - `server/utils/notifications.ts` — per-user notification preferences; no accounts (fleet.json features.auth is false)
 - `server/utils/unsubscribe.ts` — unsubscribe tokens; no mailing list
 - `shared/utils/notifications.ts` — notification preference shapes; no accounts (fleet.json features.auth is false)
+- `app/components/Updates/`, `app/pages/updates/`, `server/plugins/subscribers.ts`, `server/utils/subscriber-requests.ts`, `server/utils/subscriber-tokens.ts`, `server/utils/subscribers.ts` — the template's visitor email capture (double opt-in list, `email_subscribers`); the alerts layer runs this app's own digest subscribers (`layers/alerts/server/utils/subscribers.ts`), so a second list would split them, and the template's `subscribers.ts` would collide with that auto-imported name
+- `scripts/announcement-source.ts`, `shared/utils/announcements.ts`, `server/utils/announcements.ts`, `server/utils/announcement-audience.ts`, `server/utils/announcement-delivery.ts`, `server/utils/email-notes.ts` — announcements mailed to users and subscribers from `content/announcements/`; no customer list to announce to
+- `scripts/email-build.ts`, `scripts/lib/email-compile.ts` — the template's versions also compile `content/announcements/` into `server/emails/announcements.generated.ts`; this app has no announcements, so it keeps the templates-only build
 
 ## Removed: analytics and attribution
 
@@ -84,6 +90,8 @@ An entry ending in `/` is a directory prefix: it also declares template files th
 - `app/composables/useFragmentParams.ts` — reads credentials from the URL fragment of sign-in and unsubscribe links; no accounts (fleet.json features.auth is false)
 - `shared/utils/attribution.ts` — signup attribution shapes; no signups
 - `server/utils/fleet-funnel.ts` — signup-to-paid funnel counters for /api/fleet; no signups or payments
+- `server/utils/fleet-cohorts.ts`, `server/utils/fleet-email.ts`, `shared/utils/landing-path.ts` — weekly signup cohorts, landing-page and campaign counts, and lifecycle email sends for /api/fleet; no signups or customer email
+- `scripts/flags.ts`, `scripts/lib/flags.ts` — creates and rolls out `growth-*` PostHog flags; fleet.json features.posthog is null
 
 ## Removed: blog, changelog and legal pages
 
@@ -105,6 +113,9 @@ An entry ending in `/` is a directory prefix: it also declares template files th
 - `scripts/check-forkless.ts` (and the `forkless:check` / `ci:forkless` steps) — the template's proof that a fork can drop billing, referral and lifecycle email; it builds those forks in temp copies, so it is the template's gate, not a fork's
 - `scripts/check-mcp.ts` (and the `mcp:check` step), `scripts/mcp-pack.ts`, `scripts/mcp-publish.ts`, `scripts/lib/mcp-context.ts`, `scripts/lib/mcp-listing.ts`, `scripts/lib/mcp-tools.ts` — the template's tooling for a separate MCP worker in `mcp/` and its directory listings; this app has no `mcp/` worker (the core layer serves /mcp itself) and is listed in no MCP directory
 - `server/types/extension-types.ts`, `test/lib/layers.ts` — what the template's full extensions registry and its billing-aware browser specs import; this app's trimmed `extensions.ts` and its own a11y/CSP route lists use neither
+- `app/components/Collection/`, `app/composables/useCollectionPage.ts`, `app/pages/glossary/`, `server/api/collection-pages/`, `server/plugins/page-collections.ts`, `server/utils/page-collections.ts`, `shared/page-collections/`, `shared/utils/page-collections.ts`, `shared/utils/page-guards.ts`, `scripts/lib/page-collections-check.ts` — page collections (one generated page per row, with the template's glossary as the example); not adopted. This app's pages are its data pages, and a generated collection would be a product decision, not a sync
+- `scripts/check-routine-models.ts`, `scripts/routine-models.ts`, `scripts/lib/routine-models.ts` (and the `routines:check` step) — the template's routine model tiers (`.claude/routines/models.json`); this app's routines still name the model in their own frontmatter, so the tier table and its weekly check are not adopted yet
+- `server/plugins/script-nonce.ts`, `shared/script-nonce.ts` — the template's per-page script nonce in place of `'unsafe-inline'`. It is built on `shared/security-headers.ts`, which this app does not have (its CSP is in `nuxt.config.ts`), and the core layer's HTML cache serves a stored body before any render hook runs, so a nonce would need its own design here. Not ported yet; see `nuxt.config.ts` › `script-src`
 
 ## Customized: kept on purpose
 
@@ -117,8 +128,9 @@ An entry ending in `/` is a directory prefix: it also declares template files th
 - `scripts/check-design-tokens.ts` — the app's own palette ramp in the allowed-color list is `iris`, not `clay`
 - `scripts/check-mirrors.ts` — reference pass only; the template's mirror pass compares server/utils/users.ts with mcp/src/server.ts, neither of which exists here (upstream candidate: skip a mirror whose files are absent)
 - `scripts/check-seo.ts` — no content/blog pass; adds a rule that every publicPage value is a literal, because Nuxt drops the whole key otherwise (upstream candidate)
-- `scripts/ci.ts` — the gate list matches this app's checks: no `forkless:check` and no `mcp:check` (see the MCP-worker tooling above) (not a template fork shape with optional billing/referral layers to strip); adds `globals:check`, the module-load gate for Workers' deploy error 10021 (upstream candidate), `surfaces:check`, which reads this product's routes, MCP tools and export tables (product-specific), and `domains:check`, which holds the fork-owned layers to domains.config.ts (product-specific)
+- `scripts/ci.ts` — the gate list matches this app's checks: no `forkless:check` and no `mcp:check` (see the MCP-worker tooling above) (not a template fork shape with optional billing/referral layers to strip), and no `routines:check` (see the routine model tiers above); adds `globals:check`, the module-load gate for Workers' deploy error 10021 (upstream candidate), `surfaces:check`, which reads this product's routes, MCP tools and export tables (product-specific), and `domains:check`, which holds the fork-owned layers to domains.config.ts (product-specific)
 - `scripts/generate-brand-assets.ts` — display face at weight 500 and waits for the font stylesheets before shooting the OG image (upstream candidate: the stylesheet wait)
+- `scripts/brand-inputs.ts` — `GENERATOR_VERSION` stays at '5'. The template's '6' marks its og.png starting to wait for webfonts, which this app's `generate-brand-assets.ts` already did, so the bump would force a regenerate that changes nothing
 - `server/api/status.get.ts` — public, with per-source freshness: the status payload is built by collectStatus() in fleet-status.ts, which the MCP get_status tool shares
 - `server/plugins/error-logger.ts` — no PostHog $exception capture or session lookup; logs errorDetail() from the core layer so the cause of a D1 fault reaches the digest
 - `server/routes/llms.txt.get.ts` — no blog; a static map (no D1) that adds the data tables, the MCP endpoint and the licence block, shared with the MCP describe tool via crawler-pages.ts

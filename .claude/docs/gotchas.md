@@ -48,8 +48,11 @@ Worker querying a table that does not exist, and it shows up as a 500 on a route
 dev.
 
 Workers Builds closes the gap with its deploy command, `bun run deploy:ci`: it runs
-`db:migrate:remote`, then `wrangler --cwd .output deploy`, so the schema lands before the code
-that needs it. Three consequences:
+`deploy:secrets` (holds the deploy while the Worker lacks a secret `fleet.json` › `secrets`
+names), `db:migrate:remote`, then `wrangler --cwd .output deploy`, so the schema lands before the
+code that needs it. Add a new required secret to `fleet.json` › `secrets` in the same commit that
+starts reading it, and put it on the Worker before that commit merges, or the deploy is held.
+Three consequences:
 
 - The build token needs **D1 Edit**. The token Workers Builds generates has only Workers
   Scripts, KV, R2 and Routes permissions. Without D1 Edit the migrate step fails and the deploy
